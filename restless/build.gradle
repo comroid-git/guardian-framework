@@ -51,7 +51,8 @@ dependencies {
     java11compatCompileOnly 'org.jetbrains:annotations:19.0.0'
 
     if (isAutoDeploy) {
-        api project(':common-util')
+        api 'com.github.comroid-git.common-util:common-util:master-SNAPSHOT'
+
         java8compatCompileOnly project(':restless')
         java11compatCompileOnly project(':restless')
 
@@ -61,14 +62,6 @@ dependencies {
         api project(':varbind')
         java8compatImplementation project(':varbind')
         java11compatImplementation project(':varbind')
-
-        // websocket dependencies
-        api project(':listnr')
-        java8compatImplementation project(':listnr')
-        java11compatImplementation project(':listnr')
-        api project(':dreadpool')
-        java8compatImplementation project(':dreadpool')
-        java11compatImplementation project(':dreadpool')
     } else {
         api project(':common-util:common-util')
         java8compatCompileOnly project(':guardian:restless')
@@ -80,16 +73,6 @@ dependencies {
         api project(':guardian:varbind')
         java8compatImplementation project(':guardian:varbind')
         java11compatImplementation project(':guardian:varbind')
-
-        // websocket dependencies
-        api project(':common-util:listnr')
-        java8compatImplementation project(':common-util:listnr')
-        java11compatImplementation project(':common-util:listnr')
-        api project(':common-util:dreadpool')
-        java8compatImplementation project(':common-util:dreadpool')
-        java11compatImplementation project(':common-util:dreadpool')
-        testRuntimeOnly project(':common-util:listnr')
-        testRuntimeOnly project(':common-util:dreadpool')
     }
 
     // http adapter dependencies
