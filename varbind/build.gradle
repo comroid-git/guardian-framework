@@ -15,12 +15,12 @@ ext {
 
 dependencies {
     if (isAutoDeploy) {
-        api project(':uniform')
         api project(':mutatio')
-        api project(':spellbind')
+        api project(':uniform')
+        api 'com.github.comroid-git.common-util:spellbind:master-SNAPSHOT'
     } else {
-        api project(':guardian:uniform')
         api project(':guardian:mutatio')
+        api project(':guardian:uniform')
         api project(':common-util:spellbind')
     }
 
