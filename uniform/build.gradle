@@ -57,7 +57,7 @@ dependencies {
         java11compatCompileOnly project(':uniform')
     } else {
         api project(':common-util:common-util')
-        
+
         java8compatCompileOnly project(':guardian:uniform')
         java11compatCompileOnly project(':guardian:uniform')
     }
