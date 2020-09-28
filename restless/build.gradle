@@ -1,0 +1,103 @@
+version = '0.16.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext {
+    projectDescription = "Java Uniform Adapters"
+}
+
+configurations {
+    main
+    java8compat {
+        extendsFrom main
+    }
+    java11compat {
+        extendsFrom main
+    }
+}
+
+sourceSets {
+    java8compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java8compat")
+    java11compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java11compat")
+}
+
+compileJava8compatJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+compileJava11compatJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+}
+
+jar {
+    from files(sourceSets.main.output.classesDirs,
+            sourceSets.java8compat.output.classesDirs,
+            sourceSets.java11compat.output.classesDirs)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+dependencies {
+    java8compatCompileOnly 'org.jetbrains:annotations:19.0.0'
+    java11compatCompileOnly 'org.jetbrains:annotations:19.0.0'
+
+    if (isAutoDeploy) {
+        api project(':common-util')
+        java8compatCompileOnly project(':restless')
+        java11compatCompileOnly project(':restless')
+
+        api project(':uniform')
+        java8compatImplementation project(':uniform')
+        java11compatImplementation project(':uniform')
+        api project(':varbind')
+        java8compatImplementation project(':varbind')
+        java11compatImplementation project(':varbind')
+
+        // websocket dependencies
+        api project(':listnr')
+        java8compatImplementation project(':listnr')
+        java11compatImplementation project(':listnr')
+        api project(':dreadpool')
+        java8compatImplementation project(':dreadpool')
+        java11compatImplementation project(':dreadpool')
+    } else {
+        api project(':common-util:common-util')
+        java8compatCompileOnly project(':common-util:restless')
+        java11compatCompileOnly project(':common-util:restless')
+
+        api project(':common-util:uniform')
+        java8compatImplementation project(':common-util:uniform')
+        java11compatImplementation project(':common-util:uniform')
+        api project(':common-util:varbind')
+        java8compatImplementation project(':common-util:varbind')
+        java11compatImplementation project(':common-util:varbind')
+
+        // websocket dependencies
+        api project(':common-util:listnr')
+        java8compatImplementation project(':common-util:listnr')
+        java11compatImplementation project(':common-util:listnr')
+        api project(':common-util:dreadpool')
+        java8compatImplementation project(':common-util:dreadpool')
+        java11compatImplementation project(':common-util:dreadpool')
+        testRuntimeOnly project(':common-util:listnr')
+        testRuntimeOnly project(':common-util:dreadpool')
+    }
+
+    // http adapter dependencies
+    java8compatCompileOnly 'com.squareup.okhttp3:okhttp:4.7.2'
+
+    implementation 'com.google.flogger:flogger:0.5.1'
+    java8compatImplementation 'com.google.flogger:flogger:0.5.1'
+    java11compatImplementation 'com.google.flogger:flogger:0.5.1'
+
+    testImplementation sourceSets.java8compat.output.classesDirs
+    testImplementation sourceSets.java11compat.output.classesDirs
+    testRuntimeOnly 'com.squareup.okhttp3:okhttp:4.5.0'
+    testImplementation 'com.alibaba:fastjson:1.2.71'
+}
+
+apply from: "$parent.projectDir/gradle/publishing.gradle"
+

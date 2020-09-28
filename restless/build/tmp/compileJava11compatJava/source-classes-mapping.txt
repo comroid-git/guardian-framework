@@ -1,0 +1,2 @@
+org/comroid/restless/adapter/jdk/JavaHttpAdapter.java
+ org.comroid.restless.adapter.jdk.JavaHttpAdapter

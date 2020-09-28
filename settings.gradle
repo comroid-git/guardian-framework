@@ -1,0 +1,6 @@
+rootProject.name = 'guardian'
+
+include(':mutatio')
+include(':uniform')
+include(':restless')
+include(':varbind')

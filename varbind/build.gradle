@@ -1,0 +1,29 @@
+version = '0.30.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext {
+    projectDescription = "Event Handling solution"
+}
+
+dependencies {
+    if (isAutoDeploy) {
+        api project(':uniform')
+        api project(':mutatio')
+        api project(':spellbind')
+    } else {
+        api project(':common-util:uniform')
+        api project(':common-util:mutatio')
+        api project(':common-util:spellbind')
+    }
+
+    testImplementation 'com.alibaba:fastjson:1.2.71'
+}
+
+compileTestJava {
+    sourceCompatibility = 9
+    targetCompatibility = 9
+}
+
+apply from: "$parent.projectDir/gradle/publishing.gradle"

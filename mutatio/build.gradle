@@ -1,0 +1,10 @@
+version = '0.11.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext {
+    projectDescription = "JVM value mutation Tools"
+}
+
+apply from: "$parent.projectDir/gradle/publishing.gradle"

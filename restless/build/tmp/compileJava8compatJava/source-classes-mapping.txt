@@ -1,0 +1,2 @@
+org/comroid/restless/adapter/okhttp/v4/OkHttp3Adapter.java
+ org.comroid.restless.adapter.okhttp.v4.OkHttp3Adapter

@@ -1,0 +1,20 @@
+group 'org.comroid.guardian'
+
+tasks.findByName('wrapper')?.configure {
+    gradleVersion = '6.2'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+configurations {
+    compileClasspath {
+        resolutionStrategy.activateDependencyLocking()
+    }
+}
+
+subprojects {
+    group 'org.comroid'
+    apply plugin: 'java-library'
+    apply from: "$parent.projectDir/gradle/vars.gradle"
+    apply from: "$parent.projectDir/gradle/javadoc.gradle"
+    apply from: "$parent.projectDir/gradle/global.gradle"
+}

@@ -1,0 +1,77 @@
+version = '0.16.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext {
+    projectDescription = "Java Uniform Adapters"
+}
+
+configurations {
+    main
+    java8compat {
+        extendsFrom main
+    }
+    java11compat {
+        extendsFrom main
+    }
+}
+
+sourceSets {
+    java8compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java8compat")
+    java11compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java11compat")
+}
+
+compileJava8compatJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+compileJava11compatJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+}
+
+jar {
+    from files(sourceSets.main.output.classesDirs,
+            sourceSets.java8compat.output.classesDirs,
+            sourceSets.java11compat.output.classesDirs)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+dependencies {
+    java8compatCompileOnly 'org.jetbrains:annotations:19.0.0'
+    java11compatCompileOnly 'org.jetbrains:annotations:19.0.0'
+
+    if (isAutoDeploy) {
+        api project(':common-util')
+        java8compatCompileOnly project(':uniform')
+        java11compatCompileOnly project(':uniform')
+    } else {
+        api project(':common-util:common-util')
+        java8compatCompileOnly project(':common-util:uniform')
+        java11compatCompileOnly project(':common-util:uniform')
+    }
+
+    // json adapter dependencies
+    java8compatCompileOnly 'com.alibaba:fastjson:1.2.71'
+    java8compatCompileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
+    java8compatCompileOnly 'org.json:json:20200518'
+
+    implementation 'com.google.flogger:flogger:0.5.1'
+    java8compatImplementation 'com.google.flogger:flogger:0.5.1'
+    java11compatImplementation 'com.google.flogger:flogger:0.5.1'
+
+    java8compatCompileOnly 'com.alibaba:fastjson:1.2.71'
+    java8compatCompileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    java8compatCompileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.2'
+    java8compatCompileOnly 'org.json:json:20200518'
+
+    testImplementation sourceSets.java8compat.output.classesDirs
+    testImplementation sourceSets.java11compat.output.classesDirs
+    testImplementation 'com.alibaba:fastjson:1.2.70'
+}
+
+apply from: "$parent.projectDir/gradle/publishing.gradle"
+

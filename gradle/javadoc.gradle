@@ -1,0 +1,7 @@
+javadoc {
+    dependsOn += subprojects.collect { it.classes }
+    source = subprojects.collect { it.sourceSets.main.allJava }
+    options {
+        encoding = 'UTF-8'
+    }
+}

@@ -1,0 +1,40 @@
+org/comroid/uniform/node/UniValueNode.java
+ org.comroid.uniform.node.UniValueNode
+ org.comroid.uniform.node.UniValueNode$Adapter
+ org.comroid.uniform.node.UniValueNode$Adapter$ViaString
+org/comroid/uniform/cache/CacheReference.java
+ org.comroid.uniform.cache.CacheReference
+ org.comroid.uniform.cache.CacheReference$1
+org/comroid/uniform/StructureTypeMismatchException.java
+ org.comroid.uniform.StructureTypeMismatchException
+org/comroid/uniform/DataStructureType.java
+ org.comroid.uniform.DataStructureType
+ org.comroid.uniform.DataStructureType$Arr
+ org.comroid.uniform.DataStructureType$Obj
+ org.comroid.uniform.DataStructureType$Primitive
+org/comroid/uniform/node/UniObjectNode.java
+ org.comroid.uniform.node.UniObjectNode
+ org.comroid.uniform.node.UniObjectNode$1MergedAdapter
+ org.comroid.uniform.node.UniObjectNode$Adapter
+ org.comroid.uniform.node.UniObjectNode$KeyAccessor
+org/comroid/uniform/ValueType.java
+ org.comroid.uniform.ValueType
+org/comroid/uniform/SerializationAdapter.java
+ org.comroid.uniform.SerializationAdapter
+org/comroid/uniform/node/UniNode.java
+ org.comroid.uniform.node.UniNode
+ org.comroid.uniform.node.UniNode$1
+ org.comroid.uniform.node.UniNode$Adapter
+ org.comroid.uniform.node.UniNode$Type
+org/comroid/uniform/node/UniArrayNode.java
+ org.comroid.uniform.node.UniArrayNode
+ org.comroid.uniform.node.UniArrayNode$1Accessor
+ org.comroid.uniform.node.UniArrayNode$Adapter
+org/comroid/uniform/cache/AbstractCache.java
+ org.comroid.uniform.cache.AbstractCache
+org/comroid/uniform/cache/Cache.java
+ org.comroid.uniform.cache.Cache
+org/comroid/uniform/cache/ProvidedCache.java
+ org.comroid.uniform.cache.ProvidedCache
+org/comroid/uniform/cache/BasicCache.java
+ org.comroid.uniform.cache.BasicCache
