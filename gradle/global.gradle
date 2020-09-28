@@ -62,7 +62,7 @@ repositories {
 dependencies {
     if (project.name != 'interfaces') {
         if (isAutoDeploy) {
-            api 'com.github.comroid-git.common-util:interfaces:master-SNAPSHOT'
+            api 'com.github.comroid-git:api:master-SNAPSHOT'
         } else {
             api project(':api')
         }
