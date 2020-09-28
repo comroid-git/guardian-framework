@@ -1,4 +1,10 @@
 version = '0.16.1-SNAPSHOT'
+group 'org.comroid'
+
+apply plugin: 'java-library'
+apply from: "$parent.projectDir/gradle/vars.gradle"
+apply from: "$parent.projectDir/gradle/javadoc.gradle"
+apply from: "$parent.projectDir/gradle/global.gradle"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -50,8 +56,8 @@ dependencies {
         java11compatCompileOnly project(':uniform')
     } else {
         api project(':common-util:common-util')
-        java8compatCompileOnly project(':common-util:uniform')
-        java11compatCompileOnly project(':common-util:uniform')
+        java8compatCompileOnly project(':guardian:uniform')
+        java11compatCompileOnly project(':guardian:uniform')
     }
 
     // json adapter dependencies

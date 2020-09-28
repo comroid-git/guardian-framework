@@ -1,4 +1,10 @@
 version = '0.16.0-SNAPSHOT'
+group 'org.comroid'
+
+apply plugin: 'java-library'
+apply from: "$parent.projectDir/gradle/vars.gradle"
+apply from: "$parent.projectDir/gradle/javadoc.gradle"
+apply from: "$parent.projectDir/gradle/global.gradle"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -65,15 +71,15 @@ dependencies {
         java11compatImplementation project(':dreadpool')
     } else {
         api project(':common-util:common-util')
-        java8compatCompileOnly project(':common-util:restless')
-        java11compatCompileOnly project(':common-util:restless')
+        java8compatCompileOnly project(':guardian:restless')
+        java11compatCompileOnly project(':guardian:restless')
 
-        api project(':common-util:uniform')
-        java8compatImplementation project(':common-util:uniform')
-        java11compatImplementation project(':common-util:uniform')
-        api project(':common-util:varbind')
-        java8compatImplementation project(':common-util:varbind')
-        java11compatImplementation project(':common-util:varbind')
+        api project(':guardian:uniform')
+        java8compatImplementation project(':guardian:uniform')
+        java11compatImplementation project(':guardian:uniform')
+        api project(':guardian:varbind')
+        java8compatImplementation project(':guardian:varbind')
+        java11compatImplementation project(':guardian:varbind')
 
         // websocket dependencies
         api project(':common-util:listnr')

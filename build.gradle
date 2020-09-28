@@ -10,11 +10,3 @@ configurations {
         resolutionStrategy.activateDependencyLocking()
     }
 }
-
-subprojects {
-    group 'org.comroid'
-    apply plugin: 'java-library'
-    apply from: "$parent.projectDir/gradle/vars.gradle"
-    apply from: "$parent.projectDir/gradle/javadoc.gradle"
-    apply from: "$parent.projectDir/gradle/global.gradle"
-}
