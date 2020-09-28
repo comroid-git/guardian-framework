@@ -51,11 +51,13 @@ dependencies {
     java11compatCompileOnly 'org.jetbrains:annotations:19.0.0'
 
     if (isAutoDeploy) {
-        api project(':common-util')
+        api 'com.github.comroid-git.common-util:common-util:master-SNAPSHOT'
+
         java8compatCompileOnly project(':uniform')
         java11compatCompileOnly project(':uniform')
     } else {
         api project(':common-util:common-util')
+        
         java8compatCompileOnly project(':guardian:uniform')
         java11compatCompileOnly project(':guardian:uniform')
     }
