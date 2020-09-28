@@ -18,7 +18,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
-public interface Pipe<O> extends ReferenceIndex<O>, Consumer<Reference<Object>>, AutoCloseable {
+public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
     StageAdapter<? extends Object, O> getAdapter();
 
     default boolean isSorted() {
@@ -168,14 +168,6 @@ public interface Pipe<O> extends ReferenceIndex<O>, Consumer<Reference<Object>>,
     }
 
     <X> BiPipe<O, X, O, X> bi(Function<O, X> mapper);
-
-    /**
-     * Only meant for use from a {@link Pump} instance.
-     */
-    @Override
-    default void accept(Reference<Object> input) {
-        throw new UnsupportedOperationException("Method #accept is only meant for use from a Pump instance");
-    }
 
     default Span<O> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);

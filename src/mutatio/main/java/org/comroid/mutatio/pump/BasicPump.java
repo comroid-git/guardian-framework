@@ -45,7 +45,7 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     }
 
     @Override
-    public void accept(Reference<Object> in) {
+    public void accept(Reference<? super T> in) {
         //noinspection unchecked
         final O item = (O) in.get();
         refs.add(item);

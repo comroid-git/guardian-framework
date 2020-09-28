@@ -79,11 +79,6 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public void accept(Reference<Object> other) {
-        refs.add(other.into(Polyfill::<O>uncheckedCast));
-    }
-
-    @Override
     public Pipe<T> pipe() {
         return new BasicPipe<>(refs);
     }

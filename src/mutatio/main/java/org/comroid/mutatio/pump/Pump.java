@@ -8,8 +8,9 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 
 import java.util.Collection;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
-public interface Pump<T> extends Pipe<T>, ExecutorBound {
+public interface Pump<T> extends Pipe<T>, Consumer<Reference<? super T>>, ExecutorBound {
     static <T> Pump<T> create() {
         return create(Runnable::run);
     }
