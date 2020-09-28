@@ -36,10 +36,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
 
     static <T> Pipe<T> of(Collection<T> collection) {
         final Pipe<T> pipe = create();
-        collection.stream()
-                .map(Reference::constant)
-                .map(ref -> ref.map(Object.class::cast))
-                .forEach(pipe);
+        collection.forEach(pipe::add);
 
         return pipe;
     }
