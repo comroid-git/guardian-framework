@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Properties;
 
-public class JavaPropertiesSerializationAdapter extends SerializationAdapter<Properties, Properties, Properties> {
+public final class JavaPropertiesSerializationAdapter extends SerializationAdapter<Properties, Properties, Properties> {
     public static final @Instance
     JavaPropertiesSerializationAdapter JavaPropertiesAdapter
             = new JavaPropertiesSerializationAdapter();
