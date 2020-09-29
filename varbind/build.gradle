@@ -17,7 +17,7 @@ dependencies {
     if (isAutoDeploy) {
         api project(':mutatio')
         api project(':uniform')
-        api 'com.github.comroid-git.common-util:spellbind:master-SNAPSHOT'
+        api project(':spellbind')
     } else {
         api project(':guardian:mutatio')
         api project(':guardian:uniform')
