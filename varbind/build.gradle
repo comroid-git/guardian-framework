@@ -21,7 +21,7 @@ dependencies {
     } else {
         api project(':guardian:mutatio')
         api project(':guardian:uniform')
-        api project(':common-util:spellbind')
+        api project(':guardian:spellbind')
     }
 
     testImplementation 'com.alibaba:fastjson:1.2.71'

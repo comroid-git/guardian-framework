@@ -1,0 +1,16 @@
+version = '0.22.1-SNAPSHOT'
+group 'org.comroid'
+
+apply plugin: 'java-library'
+apply from: "$parent.projectDir/gradle/vars.gradle"
+apply from: "$parent.projectDir/gradle/javadoc.gradle"
+apply from: "$parent.projectDir/gradle/global.gradle"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext {
+    projectDescription = "Blackmagic Proxies"
+}
+
+apply from: "$parent.projectDir/gradle/publishing.gradle"
