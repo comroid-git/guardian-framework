@@ -13,4 +13,12 @@ ext {
     projectDescription = "Blackmagic Proxies"
 }
 
+dependencies {
+    if (isAutoDeploy) {
+        api project(':core')
+    } else {
+        api project(':guardian:core')
+    }
+}
+
 apply from: "$parent.projectDir/gradle/publishing.gradle"
