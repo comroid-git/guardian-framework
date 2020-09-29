@@ -8,10 +8,10 @@
   <!-- do_not_remove: published-with-gradle-metadata -->
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.comroid</groupId>
-  <artifactId>mutatio</artifactId>
-  <version>0.11.0-SNAPSHOT</version>
+  <artifactId>core</artifactId>
+  <version>0.10.0-SNAPSHOT</version>
   <name>repo</name>
-  <description>JVM value mutation Tools</description>
+  <description>Core Utility Module</description>
   <url>https://github.com/comroid-git/repo</url>
   <inceptionYear>2020</inceptionYear>
   <licenses>
@@ -37,6 +37,12 @@
       <groupId>org.comroid</groupId>
       <artifactId>api</artifactId>
       <version>0.10.2-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.comroid</groupId>
+      <artifactId>mutatio</artifactId>
+      <version>0.11.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

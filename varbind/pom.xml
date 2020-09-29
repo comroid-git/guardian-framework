@@ -35,20 +35,20 @@
   <dependencies>
     <dependency>
       <groupId>org.comroid</groupId>
-      <artifactId>interfaces</artifactId>
+      <artifactId>api</artifactId>
       <version>0.10.2-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.comroid</groupId>
-      <artifactId>uniform</artifactId>
-      <version>0.16.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.comroid</groupId>
       <artifactId>mutatio</artifactId>
       <version>0.11.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.comroid</groupId>
+      <artifactId>uniform</artifactId>
+      <version>0.16.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
