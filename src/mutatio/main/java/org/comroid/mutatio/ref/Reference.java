@@ -145,8 +145,14 @@ public interface Reference<T> extends CachedValue<T>, Supplier<T> {
         return Pipe.of(get());
     }
 
-    default boolean test(Predicate<? super T> predicate) {
+    default boolean test(Predicate<@Nullable ? super T> predicate) {
         return predicate.test(get());
+    }
+
+    default boolean testIfPresent(Predicate<@NotNull ? super T> predicate) {
+        if (isNull())
+            return false;
+        return predicate.test(requireNonNull());
     }
 
     default <R> R into(Function<? super T, R> remapper) {
