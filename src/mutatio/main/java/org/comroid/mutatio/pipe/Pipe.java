@@ -104,12 +104,17 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return addStage(StageAdapter.filter(predicate));
     }
 
+    @Deprecated
     default <R> Pipe<R> map(Class<R> target) {
-        return filter(target::isInstance).map(target::cast);
+        return flatMap(target);
     }
 
     default <R> Pipe<R> map(Function<? super O, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
+    }
+
+    default <R> Pipe<R> flatMap(final Class<R> target) {
+        return filter(target::isInstance).map(target::cast);
     }
 
     default <R> Pipe<R> flatMap(Function<? super O, ? extends Reference<? extends R>> mapper) {
