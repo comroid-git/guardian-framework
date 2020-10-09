@@ -185,12 +185,12 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
             @Override
             public Stream<KeyedReference<K, V>> stream(Predicate<K> filter) {
-                return entryIndex.stream();
+                return entryIndex.stream().filter(ref -> filter.test(ref.getKey()));
             }
 
             @Override
             public Pipe<KeyedReference<K, V>> pipe(Predicate<K> filter) {
-                return entryIndex.pipe();
+                return entryIndex.pipe().filter(ref -> filter.test(ref.getKey()));
             }
 
             @Override
