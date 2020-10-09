@@ -37,7 +37,8 @@ public class OkHttp3Adapter implements HttpAdapter {
                 final Response response = call.execute();
                 final ResponseBody responseBody = response.body();
 
-                return new REST.Response(response.code(), request.getREST().getSerializationAdapter()
+                return new REST.Response(response.code(), request.getREST()
+                        .requireFromContext(SerializationAdapter.class)
                         .createUniNode(responseBody == null ? null : responseBody.string()));
             } catch (IOException e) {
                 throw new RuntimeException("Request failed", e);

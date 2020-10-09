@@ -18,11 +18,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class UniNode implements Specifiable<UniNode> {
+public abstract class UniNode implements Specifiable<UniNode>, ContextualTypeProvider<SerializationAdapter<?,?,?>> {
     protected final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final Type type;
     private final Map<String, Reference<String>> baseAccessors = new ConcurrentHashMap<>();
     private final Map<String, Processor<UniNode>> wrappedAccessors = new ConcurrentHashMap<>();
+
+    @Override
+    public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
+        return serializationAdapter;
+    }
 
     public String getSerializedString() {
         return toString();
@@ -30,6 +35,7 @@ public abstract class UniNode implements Specifiable<UniNode> {
 
     public abstract Object getBaseNode();
 
+    @Deprecated
     public final SerializationAdapter<?, ?, ?> getSerializationAdapter() {
         return serializationAdapter;
     }

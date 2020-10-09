@@ -1,13 +1,11 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.api.Invocable;
-import org.comroid.api.Provider;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.CachedValue;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.proc.Processor;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -17,20 +15,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
-import java.util.stream.Stream;
 
-public interface Reference<T> extends CachedValue<T>, Supplier<T> {
+public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
     boolean isMutable();
 
     default boolean isImmutable() {
         return !isMutable();
-    }
-
-    default boolean isNull() {
-        return test(Objects::isNull);
-    }
-    default boolean isNonNull() {
-        return test(Objects::nonNull);
     }
 
     @Deprecated
@@ -79,57 +69,6 @@ public interface Reference<T> extends CachedValue<T>, Supplier<T> {
         return provided(() -> optional.orElse(null));
     }
 
-    @Override
-    @Nullable T get();
-
-    default Optional<T> wrap() {
-        return Optional.ofNullable(get());
-    }
-
-    default Stream<T> stream() {
-        if (isNull())
-            return Stream.empty();
-        return Stream.of(get());
-    }
-
-    default @NotNull T requireNonNull() throws NullPointerException {
-        return Objects.requireNonNull(get());
-    }
-
-    default @NotNull T requireNonNull(String message) throws NullPointerException {
-        return Objects.requireNonNull(get(), message);
-    }
-
-    default @NotNull T requireNonNull(Supplier<String> messageSupplier) throws NullPointerException {
-        return Objects.requireNonNull(get(), messageSupplier);
-    }
-
-    default @NotNull T orElse(T other) {
-        if (isNull())
-            return other;
-        return requireNonNull("Assertion Failure");
-    }
-
-    default @NotNull T orElseGet(Supplier<T> otherProvider) {
-        if (isNull())
-            return otherProvider.get();
-        return requireNonNull("Assertion Failure");
-    }
-
-    default <EX extends Throwable> T orElseThrow(Supplier<EX> exceptionSupplier) throws EX {
-        if (isNull())
-            throw exceptionSupplier.get();
-        return requireNonNull("Assertion Failure");
-    }
-
-    default Provider<T> provider() {
-        return Provider.of(this);
-    }
-
-    default Invocable<T> invocable() {
-        return Invocable.ofProvider(Provider.of(this));
-    }
-
     default Processor<T> peek(Consumer<? super T> action) {
         return new Processor.Support.Remapped<>(this, it -> {
             action.accept(it);
@@ -143,66 +82,6 @@ public interface Reference<T> extends CachedValue<T>, Supplier<T> {
 
     default Pipe<T> pipe() {
         return Pipe.of(get());
-    }
-
-    default boolean test(Predicate<@Nullable ? super T> predicate) {
-        return predicate.test(get());
-    }
-
-    default boolean testIfPresent(Predicate<@NotNull ? super T> predicate) {
-        if (isNull())
-            return false;
-        return predicate.test(requireNonNull());
-    }
-
-    default <R> R into(Function<? super T, R> remapper) {
-        return remapper.apply(get());
-    }
-
-    default <R> @Nullable R into(Class<R> type) {
-        final T it = get();
-
-        if (type.isInstance(it))
-            return type.cast(it);
-        return null;
-    }
-
-    default boolean contentEquals(T other) {
-        if (other == null)
-            return isNull();
-        return into(other::equals);
-    }
-
-    default void consume(Consumer<T> consumer) {
-        consumer.accept(get());
-    }
-
-    default void ifPresent(Consumer<T> consumer) {
-        if (isPresent())
-            consume(consumer);
-    }
-
-    default void ifEmpty(Runnable task) {
-        if (isNull())
-            task.run();
-    }
-
-    default void ifPresentOrElse(Consumer<T> consumer, Runnable task) {
-        if (isPresent())
-            consume(consumer);
-        else task.run();
-    }
-
-    default <R> @Nullable R ifPresentMap(Function<T, R> consumer) {
-        if (isPresent())
-            return into(consumer);
-        return null;
-    }
-
-    default <R> R ifPresentMapOrElseGet(Function<T, R> consumer, Supplier<R> task) {
-        if (isPresent())
-            return into(consumer);
-        else return task.get();
     }
 
     /**
@@ -330,7 +209,7 @@ public interface Reference<T> extends CachedValue<T>, Supplier<T> {
             public final boolean set(T value) {
                 if (isImmutable())
                     return false;
-                
+
                 boolean doSet = doSet(value);
                 if (doSet) {
                     atom.set(value);

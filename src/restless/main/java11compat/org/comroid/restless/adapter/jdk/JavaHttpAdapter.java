@@ -51,7 +51,7 @@ public final class JavaHttpAdapter implements HttpAdapter {
                         return new REST.Response(response.statusCode());
 
                     final UniNode data = request.getREST()
-                            .getSerializationAdapter()
+                            .requireFromContext(SerializationAdapter.class)
                             .createUniNode(body);
 
                     return new REST.Response(response.statusCode(), data);

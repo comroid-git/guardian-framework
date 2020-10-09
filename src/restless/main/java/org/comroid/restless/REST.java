@@ -2,6 +2,7 @@ package org.comroid.restless;
 
 import com.google.common.flogger.FluentLogger;
 import com.sun.net.httpserver.Headers;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
@@ -41,20 +42,21 @@ import java.util.logging.Level;
 
 import static org.comroid.mutatio.proc.Processor.ofConstant;
 
-public final class REST<D> {
+public final class REST<D> implements ContextualProvider.Underlying {
     public static final FluentLogger logger = FluentLogger.forEnclosingClass();
-    private final HttpAdapter httpAdapter;
-    private final SerializationAdapter<?, ?, ?> serializationAdapter;
+    private final ContextualProvider context;
     private final Ratelimiter ratelimiter;
     private final Executor executor;
     private final D dependency;
 
+    @Deprecated
     public HttpAdapter getHttpAdapter() {
-        return httpAdapter;
+        return requireFromContext(HttpAdapter.class);
     }
 
+    @Deprecated
     public SerializationAdapter<?, ?, ?> getSerializationAdapter() {
-        return serializationAdapter;
+        return requireFromContext(SerializationAdapter.class);
     }
 
     public Ratelimiter getRatelimiter() {
@@ -65,87 +67,71 @@ public final class REST<D> {
         return executor;
     }
 
-    public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter
-    ) {
-        this(httpAdapter, serializationAdapter, (D) null);
+    @Override
+    public ContextualProvider getUnderlyingContextualProvider() {
+        return context;
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context
+    ) {
+        this(context, (D) null);
+    }
+
+    public REST(
+            ContextualProvider context,
             D dependency
-            ) {
-        this(httpAdapter, serializationAdapter, dependency, ForkJoinPool.commonPool());
+    ) {
+        this(context, dependency, ForkJoinPool.commonPool());
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             Executor requestExecutor
     ) {
-        this(httpAdapter, serializationAdapter, null, requestExecutor);
+        this(context, null, requestExecutor);
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             D dependency,
             Executor requestExecutor
     ) {
-        this(
-                httpAdapter,
-                serializationAdapter,
-                dependency,
-                requestExecutor,
-                Ratelimiter.INSTANT
-        );
+        this(context, dependency, requestExecutor, Ratelimiter.INSTANT);
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             ScheduledExecutorService scheduledExecutorService,
             RatelimitedEndpoint... pool
     ) {
-        this(httpAdapter, serializationAdapter, null, scheduledExecutorService, pool);
+        this(context, null, scheduledExecutorService, pool);
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             D dependency,
             ScheduledExecutorService scheduledExecutorService,
             RatelimitedEndpoint... pool
     ) {
-        this(
-                httpAdapter,
-                serializationAdapter,
-                dependency,
-                scheduledExecutorService,
-                Ratelimiter.ofPool(scheduledExecutorService, pool)
-        );
+        this(context, dependency, scheduledExecutorService, Ratelimiter.ofPool(scheduledExecutorService, pool));
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             Executor requestExecutor,
             Ratelimiter ratelimiter
     ) {
-        this(httpAdapter, serializationAdapter, null, requestExecutor, ratelimiter);
+        this(context, null, requestExecutor, ratelimiter);
     }
 
     public REST(
-            HttpAdapter httpAdapter,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             D dependency,
             Executor requestExecutor,
             Ratelimiter ratelimiter
     ) {
-        this.httpAdapter = Objects.requireNonNull(httpAdapter, "HttpAdapter");
-        this.serializationAdapter = Objects.requireNonNull(serializationAdapter, "SerializationAdapter");
+        this.context = context;
         this.dependency = dependency;
         this.executor = Objects.requireNonNull(requestExecutor, "RequestExecutor");
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
@@ -409,7 +395,7 @@ public final class REST<D> {
 
         @Deprecated
         public Response(REST rest, int statusCode, String body) {
-            this(statusCode, rest.serializationAdapter.createUniNode(body));
+            this(statusCode, rest.requireFromContext(SerializationAdapter.class).createUniNode(body));
         }
 
         @Deprecated
@@ -486,7 +472,7 @@ public final class REST<D> {
         }
 
         public <B extends UniNode> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
-            final B body = type.apply(serializationAdapter);
+            final B body = type.apply(requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
             return body(body.toString());
         }
@@ -505,7 +491,8 @@ public final class REST<D> {
             if (!execution.isDone()) {
                 logger.at(Level.FINE).log("Executing request %s @ %s");
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
-                        .thenComposeAsync(request -> httpAdapter.call(request, serializationAdapter.getMimeType()), executor)
+                        .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
+                                .call(request, requireFromContext(SerializationAdapter.class).getMimeType()), executor)
                         .thenAcceptAsync(response -> {
                             if (response.statusCode != expectedCode) {
                                 logger.at(Level.WARNING).log("Unexpected Response status code %d; expected %d", response.statusCode, expectedCode);
