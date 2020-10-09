@@ -212,6 +212,10 @@ public interface Reference<T> extends CachedValue<T>, Supplier<T> {
         return false;
     }
 
+    default boolean unset() {
+        return set(null);
+    }
+
     /**
      * @return The new value if it could be set, else the previous value.
      */
