@@ -41,8 +41,13 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         reloadData();
     }
 
+    protected void prepareDataForStorage() {
+    }
+
     @Override
     public final int storeData() throws IOException {
+        prepareDataForStorage();
+
         final UniObjectNode data = toObjectNode(serializationAdapter);
 
         try (FileWriter fw = new FileWriter(file, false)) {
