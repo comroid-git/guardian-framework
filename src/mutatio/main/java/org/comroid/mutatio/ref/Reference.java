@@ -2,6 +2,7 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.CachedValue;
+import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.proc.Processor;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -123,6 +124,16 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
     }
 
     void rebind(Supplier<T> behind);
+
+    /**
+     * Applies the provided consumer to the current value and attaches a ValueUpdateListener for future updates.
+     * @param action The action to apply
+     * @return The attached ValueUpdateListener
+     */
+    default ValueUpdateListener<T> apply(Consumer<T> action) {
+        ifPresent(action);
+        return onChange(action);
+    }
 
     default Processor<T> filter(Predicate<? super T> predicate) {
         return new Processor.Support.Filtered<>(this, predicate);
