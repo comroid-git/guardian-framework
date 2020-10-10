@@ -298,7 +298,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
             @Override
             public Object getValue() {
-                return underlying.getValue();
+                return underlying.getValue().get();
             }
 
             @Override
