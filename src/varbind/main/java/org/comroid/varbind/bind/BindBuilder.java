@@ -1,6 +1,7 @@
 package org.comroid.varbind.bind;
 
 import org.comroid.api.Builder;
+import org.comroid.api.HeldType;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.common.info.MessageSupplier;
@@ -35,7 +36,7 @@ public final class BindBuilder<SELF extends DataContainer<? super SELF>, EXTR, R
     private TypeFragmentProvider<PartialBind.Remapper<SELF, EXTR, REMAP>> remapperProvider = null;
     private TypeFragmentProvider<PartialBind.Finisher<REMAP, FINAL>> finisherProvider = null;
     private boolean required = false;
-    private ValueType<? extends EXTR> valueType = null;
+    private HeldType<?> valueType = null;
     private Function<EXTR, REMAP> remapper = null;
     private BiFunction<SELF, EXTR, REMAP> resolver = null;
     private Supplier<? extends Collection<REMAP>> collectionProvider = null;
@@ -92,7 +93,7 @@ public final class BindBuilder<SELF extends DataContainer<? super SELF>, EXTR, R
 
     @Contract(value = "-> this", mutates = "this")
     public BindBuilder<SELF, UniObjectNode, REMAP, FINAL> extractAsObject() {
-        this.valueType = null;
+        this.valueType = groupBind.getFromContext().objectValue;
         this.extractorProvider = uncheckedCast(ExtractingBind.objectExtractingProvider());
 
         return uncheckedCast(this);
@@ -100,7 +101,7 @@ public final class BindBuilder<SELF extends DataContainer<? super SELF>, EXTR, R
 
     @Contract(value = "-> this", mutates = "this")
     public BindBuilder<SELF, UniArrayNode, REMAP, FINAL> extractAsArray() {
-        this.valueType = null;
+        this.valueType = groupBind.getFromContext().arrayValue;
         this.extractorProvider = uncheckedCast(ExtractingBind.arrayExtractingProvider());
 
         return uncheckedCast(this);

@@ -1,5 +1,6 @@
 package org.comroid.varbind.container;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.SelfDeclared;
 import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.ref.Reference;
@@ -12,11 +13,12 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends SelfDeclared<S> {
+public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends Map<String, Object>, SelfDeclared<S> {
     GroupBind<S> getRootBind();
 
     Class<? extends S> getRepresentedType();
@@ -52,8 +54,10 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
         return getComputedReference(bind).process();
     }
 
-    default UniObjectNode toObjectNode(SerializationAdapter<?, ?, ?> serializationAdapter) {
-        return toObjectNode(serializationAdapter.createUniObjectNode(null));
+    default UniObjectNode toObjectNode(ContextualProvider context) {
+        //noinspection unchecked
+        return toObjectNode(context.requireFromContext(SerializationAdapter.class)
+                .createUniObjectNode(context.requireFromContext(SerializationAdapter.class).objectType.get()));
     }
 
     UniObjectNode toObjectNode(UniObjectNode node);

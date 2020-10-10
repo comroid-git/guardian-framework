@@ -1,8 +1,9 @@
 package org.comroid.varbind.bind;
 
+import org.comroid.api.ContextualTypeProvider;
 import org.comroid.api.Invocable;
-import org.comroid.api.Polyfill;
 import org.comroid.api.Named;
+import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
@@ -17,7 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named {
+public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
     final List<? extends VarBind<T, ?, ?, ?>> children = new ArrayList<>();
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final String groupName;
@@ -44,6 +45,11 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
 
     public List<GroupBind<? extends T>> getSubgroups() {
         return subgroups;
+    }
+
+    @Override
+    public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
+        return serializationAdapter;
     }
 
     public GroupBind(

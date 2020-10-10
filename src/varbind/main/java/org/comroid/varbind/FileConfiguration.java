@@ -1,20 +1,19 @@
 package org.comroid.varbind;
 
+import org.comroid.api.ContextualTypeProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.common.io.FileProcessor;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainerBase;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
-public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor {
+public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualTypeProvider<SerializationAdapter<?,?,?>> {
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
@@ -29,6 +28,11 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         return uuid;
     }
 
+    @Override
+    public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
+        return serializationAdapter;
+    }
+
     public FileConfiguration(
             SerializationAdapter<?, ?, ?> serializationAdapter,
             FileHandle file
@@ -41,14 +45,9 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         reloadData();
     }
 
-    protected void prepareDataForStorage() {
-    }
-
     @Override
     public final int storeData() throws IOException {
-        prepareDataForStorage();
-
-        final UniObjectNode data = toObjectNode(serializationAdapter);
+        final UniObjectNode data = toObjectNode(this);
 
         try (FileWriter fw = new FileWriter(file, false)) {
             fw.append(data.toString());
@@ -61,7 +60,8 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
     public final int reloadData() {
         final UniNode data = serializationAdapter.createUniNode(file.getContent());
 
-        updateFrom(data.asObjectNode());
+        if (data != null)
+            updateFrom(data.asObjectNode());
 
         return 1;
     }

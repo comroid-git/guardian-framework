@@ -1,10 +1,12 @@
 package org.comroid.uniform;
 
+import org.comroid.api.HeldType;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Provider;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class DataStructureType<SERI extends SerializationAdapter<BAS, ?, ?>, BAS, TAR extends BAS> implements Supplier<TAR> {

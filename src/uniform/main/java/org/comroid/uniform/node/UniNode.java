@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class UniNode implements Specifiable<UniNode>, ContextualTypeProvider<SerializationAdapter<?,?,?>> {
+public abstract class UniNode implements Specifiable<UniNode>, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
     protected final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final Type type;
     private final Map<String, Reference<String>> baseAccessors = new ConcurrentHashMap<>();
@@ -351,9 +351,15 @@ public abstract class UniNode implements Specifiable<UniNode>, ContextualTypePro
     }
 
     public enum Type {
-        OBJECT,
-        ARRAY,
-        VALUE
+        OBJECT(DataStructureType.Primitive.OBJECT),
+        ARRAY(DataStructureType.Primitive.ARRAY),
+        VALUE(null);
+
+        public final @Nullable DataStructureType.Primitive dst;
+
+        Type(DataStructureType.Primitive primitive) {
+            this.dst = primitive;
+        }
     }
 
     public interface Adapter<B> {

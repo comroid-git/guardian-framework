@@ -24,13 +24,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 @SuppressWarnings("unchecked")
-public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>> implements DataContainer<S> {
+public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends AbstractMap<String, Object> implements DataContainer<S> {
     private final GroupBind<S> rootBind;
     private final Map<String, Span<VarBind<? extends S, ?, ?, ?>>> binds = new ConcurrentHashMap<>();
     private final Map<String, Reference<Span<Object>>> vars = new ConcurrentHashMap<>();
@@ -230,10 +231,13 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
             if (span == null || span.isFixedSize())
                 return Span.<T>make()
                         .initialValues(value)
+                        .fixedSize(!bind.isListing())
                         .span();
             span.add(value);
             return span;
         });
+
+        getComputedReference(bind).outdate();
 
         return prev;
     }
@@ -279,6 +283,38 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         span.add(bind);
         return fieldName;
+    }
+
+    @NotNull
+    @Override
+    public Set<Entry<String, Object>> entrySet() {
+        class UnderlyingEntry implements Map.Entry<String, Object> {
+            private final Entry<String, Reference<Object>> underlying;
+
+            @Override
+            public String getKey() {
+                return underlying.getKey();
+            }
+
+            @Override
+            public Object getValue() {
+                return underlying.getValue();
+            }
+
+            @Override
+            public Object setValue(Object value) {
+                return underlying.getValue().set(value);
+            }
+
+            public UnderlyingEntry(Entry<String, Reference<Object>> underlying) {
+                this.underlying = underlying;
+            }
+        }
+
+        return computed.entrySet()
+                .stream()
+                .map(UnderlyingEntry::new)
+                .collect(Collectors.toSet());
     }
 
     public class ComputedReference<T, E> extends Reference.Support.Base<T> {

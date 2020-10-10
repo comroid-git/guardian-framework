@@ -103,7 +103,7 @@ public abstract class JacksonAdapter extends SerializationAdapter<JsonNode, Obje
 
     @Override
     public UniArrayNode createUniArrayNode(ArrayNode node) {
-        return new UniArrayNode(this, new UniArrayNode.Adapter(node) {
+        return new UniArrayNode(this, new UniArrayNode.Adapter<ArrayNode>(node) {
             @Override
             public int size() {
                 return node.size();

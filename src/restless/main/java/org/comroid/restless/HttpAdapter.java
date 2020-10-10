@@ -1,5 +1,6 @@
 package org.comroid.restless;
 
+import org.comroid.api.ContextualTypeProvider;
 import org.comroid.uniform.SerializationAdapter;
 
 import java.net.URI;
@@ -7,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @SuppressWarnings("rawtypes")
-public interface HttpAdapter {
+public interface HttpAdapter extends ContextualTypeProvider.This<HttpAdapter> {
     static HttpAdapter autodetect() {
         throw new UnsupportedOperationException();
     }
