@@ -129,12 +129,15 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                     Span<Object> extract = bind.extract(data);
 
                     getExtractionReference(bind).set(extract);
-                    // do not compute reference at first
-                    //getComputedReference(bind).update(bind.finish(extract));
+                    getComputedReference(bind).outdate();
                     changed.add(bind);
                 });
 
         return unmodifiableSet(changed);
+    }
+
+    public boolean containsKey(VarBind<?, ?, ?, ?> bind) {
+        return vars.containsKey(bind.getFieldName());
     }
 
     @Override
@@ -203,9 +206,15 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 return;
             }
 
-            if (them.isSingle())
-                applyValueToNode(applyTo, key, them.requireNonNull("AssertionFailure"));
-            else {
+            if (them.isSingle()) {
+
+                final Reference<?> comp = binds.get(key).into(this::getComputedReference);
+
+                if (comp.test(DataContainer.class::isInstance)) {
+                    applyValueToNode(applyTo, key, comp.flatMap(DataContainer.class)
+                            .into(db -> db.toObjectNode(rootBind.getFromContext())));
+                } else applyValueToNode(applyTo, key, them.requireNonNull("AssertionFailure"));
+            } else {
                 final UniArrayNode array = applyTo.putArray(key);
                 them.forEach(it -> applyValueToNode(array.addObject(), key, it));
             }
@@ -301,13 +310,13 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 return underlying.getValue().get();
             }
 
+            public UnderlyingEntry(Entry<String, Reference<Object>> underlying) {
+                this.underlying = underlying;
+            }
+
             @Override
             public Object setValue(Object value) {
                 return underlying.getValue().set(value);
-            }
-
-            public UnderlyingEntry(Entry<String, Reference<Object>> underlying) {
-                this.underlying = underlying;
             }
         }
 

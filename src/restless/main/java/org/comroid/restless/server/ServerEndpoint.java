@@ -3,7 +3,6 @@ package org.comroid.restless.server;
 import com.sun.net.httpserver.Headers;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
-import org.comroid.uniform.node.UniNode;
 
 import java.util.regex.Pattern;
 import java.util.stream.Stream;

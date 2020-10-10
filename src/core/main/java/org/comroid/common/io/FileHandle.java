@@ -1,7 +1,7 @@
 package org.comroid.common.io;
 
-import org.comroid.common.os.OSBasedFileMover;
 import org.comroid.api.Named;
+import org.comroid.common.os.OSBasedFileMover;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -50,18 +50,6 @@ public final class FileHandle extends File implements Named {
         return getContent(false);
     }
 
-    public String getContent(boolean createIfAbsent) {
-        if (!exists() && createIfAbsent) {
-            try {
-                createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return String.join("", getLines());
-    }
-
     public void setContent(String content) {
         validateExists();
         try (FileWriter writer = new FileWriter(this, false)) {
@@ -97,6 +85,18 @@ public final class FileHandle extends File implements Named {
         if (file instanceof FileHandle)
             return (FileHandle) file;
         return new FileHandle(file);
+    }
+
+    public String getContent(boolean createIfAbsent) {
+        if (!exists() && createIfAbsent) {
+            try {
+                createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return String.join("", getLines());
     }
 
     public FileHandle createSubFile(String name) {

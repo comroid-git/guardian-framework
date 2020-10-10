@@ -1,7 +1,7 @@
 package org.comroid.varbind.multipart;
 
-import org.comroid.api.Polyfill;
 import org.comroid.api.Named;
+import org.comroid.api.Polyfill;
 import org.comroid.api.ValuePointer;
 import org.comroid.mutatio.span.Span;
 import org.comroid.spellbind.annotation.Partial;

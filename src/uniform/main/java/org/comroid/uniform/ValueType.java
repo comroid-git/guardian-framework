@@ -1,9 +1,7 @@
 package org.comroid.uniform;
 
 import org.comroid.api.HeldType;
-import org.comroid.api.Junction;
 import org.comroid.api.Polyfill;
-import org.comroid.mutatio.span.Span;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,6 +33,7 @@ public final class ValueType<R> implements HeldType<R>, Predicate<Object> {
     private final Class<R> type;
     private final String name;
     private final Function<String, R> converter;
+
     @Override
     public String getName() {
         return name;

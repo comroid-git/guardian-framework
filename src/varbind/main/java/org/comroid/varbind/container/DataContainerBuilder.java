@@ -2,7 +2,6 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.Builder;
 import org.comroid.api.Invocable;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ArrayUtil;
 import org.comroid.varbind.bind.VarBind;

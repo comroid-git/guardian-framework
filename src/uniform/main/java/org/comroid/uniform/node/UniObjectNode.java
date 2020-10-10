@@ -1,10 +1,8 @@
 package org.comroid.uniform.node;
 
-import org.comroid.api.Named;
-import org.comroid.api.ValuePointer;
+import org.comroid.api.HeldType;
 import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.api.HeldType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
 import org.jetbrains.annotations.NotNull;
@@ -80,31 +78,6 @@ public final class UniObjectNode extends UniNode {
         return computeNode(fieldName, () -> new KeyAccessor(fieldName));
     }
 
-    private final class KeyAccessor extends Reference.Support.Base<String> {
-        private final String fieldName;
-
-        protected KeyAccessor(String fieldName) {
-            super(true);
-
-            this.fieldName = fieldName;
-        }
-
-        @Override
-        protected String doGet() {
-            return String.valueOf(adapter.getOrDefault(fieldName, null));
-        }
-
-        @Override
-        protected boolean doSet(String value) {
-            return adapter.put(fieldName, value) != value;
-        }
-
-        @Override
-        public boolean isOutdated() {
-            return true;
-        }
-    }
-
     @Override
     public @NotNull <T> UniNode put(String key, HeldType<T> type, T value) {
         UniNode node = unwrapNode(key, type, value);
@@ -174,5 +147,30 @@ public final class UniObjectNode extends UniNode {
         @NotNull
         @Override
         public abstract Set<Entry<String, Object>> entrySet();
+    }
+
+    private final class KeyAccessor extends Reference.Support.Base<String> {
+        private final String fieldName;
+
+        @Override
+        public boolean isOutdated() {
+            return true;
+        }
+
+        protected KeyAccessor(String fieldName) {
+            super(true);
+
+            this.fieldName = fieldName;
+        }
+
+        @Override
+        protected String doGet() {
+            return String.valueOf(adapter.getOrDefault(fieldName, null));
+        }
+
+        @Override
+        protected boolean doSet(String value) {
+            return adapter.put(fieldName, value) != value;
+        }
     }
 }

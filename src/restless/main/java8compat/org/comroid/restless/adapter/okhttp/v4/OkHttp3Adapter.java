@@ -6,10 +6,8 @@ import org.comroid.restless.REST;
 import org.comroid.uniform.SerializationAdapter;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 public class OkHttp3Adapter implements HttpAdapter {
     private final OkHttpClient httpClient = new OkHttpClient.Builder().build();

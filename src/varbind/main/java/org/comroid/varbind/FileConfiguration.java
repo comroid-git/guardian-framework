@@ -13,7 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 
-public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualTypeProvider<SerializationAdapter<?,?,?>> {
+public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
@@ -61,8 +61,7 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         final UniNode data = serializationAdapter.createUniNode(file.getContent());
 
         if (data != null)
-            updateFrom(data.asObjectNode());
-
-        return 1;
+            return updateFrom(data.asObjectNode()).size();
+        return 0;
     }
 }

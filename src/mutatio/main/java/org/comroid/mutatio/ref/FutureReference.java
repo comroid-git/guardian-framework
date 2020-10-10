@@ -3,7 +3,6 @@ package org.comroid.mutatio.ref;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public final class FutureReference<T> extends Reference.Support.Base<T> {
     public final CompletableFuture<T> future;

@@ -26,11 +26,6 @@ public class CacheReference<K, V> extends Reference.Support.Base<V> implements K
         return null;
     }
 
-    @Override
-    public V setValue(V value) {
-        return null;
-    }
-
     public CacheReference(K key) {
         super(true);
 
@@ -57,6 +52,11 @@ public class CacheReference<K, V> extends Reference.Support.Base<V> implements K
                 return false;
             }
         };
+    }
+
+    @Override
+    public V setValue(V value) {
+        return null;
     }
 
     @Override

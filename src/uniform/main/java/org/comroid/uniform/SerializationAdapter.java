@@ -8,7 +8,6 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,46 +21,6 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
     public final DataStructureType.Obj<SerializationAdapter<BAS, OBJ, ARR>, BAS, OBJ, ARR> objectType;
     public final HeldType<OBJ> objectValue;
     public final HeldType<ARR> arrayValue;
-
-    private final class ParsingValueType<T extends BAS> implements HeldType<T> {
-        private final DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst;
-        private final Function<String, T> converter;
-
-        @Override
-        public Function<String, T> getConverter() {
-            return converter;
-        }
-
-        @Override
-        public String getName() {
-            return dst.typ.name();
-        }
-
-        public ParsingValueType(DataStructureType<SerializationAdapter<BAS,OBJ,ARR>,? super T,?> dst) {
-            this.dst = dst;
-            this.converter = string -> {
-                final UniNode node = parse(string);
-
-                if (node.getType().dst != dst.typ)
-                    throw new IllegalArgumentException("String is not " + dst.typ.name());
-                return Polyfill.uncheckedCast(node.getBaseNode());
-            };
-        }
-
-        @Override
-        @Experimental
-        public <T1> T1 convert(T value, HeldType<T1> toType) {
-            //noinspection unchecked
-            final UniNode uni = dst.typ == DataStructureType.Primitive.OBJECT
-                    ? createUniObjectNode((OBJ) value)
-                    : createUniArrayNode(((ARR) value));
-
-            if (uni.size() == 1)
-                //noinspection unchecked
-                return (T1) uni.asList().get(0);
-            throw new UnsupportedOperationException("Node too large");
-        }
-    }
 
     public final String getMimeType() {
         return mimeType;
@@ -167,5 +126,45 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
     }
 
     public abstract UniArrayNode createUniArrayNode(ARR node);
+
+    private final class ParsingValueType<T extends BAS> implements HeldType<T> {
+        private final DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst;
+        private final Function<String, T> converter;
+
+        @Override
+        public Function<String, T> getConverter() {
+            return converter;
+        }
+
+        @Override
+        public String getName() {
+            return dst.typ.name();
+        }
+
+        public ParsingValueType(DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst) {
+            this.dst = dst;
+            this.converter = string -> {
+                final UniNode node = parse(string);
+
+                if (node.getType().dst != dst.typ)
+                    throw new IllegalArgumentException("String is not " + dst.typ.name());
+                return Polyfill.uncheckedCast(node.getBaseNode());
+            };
+        }
+
+        @Override
+        @Experimental
+        public <T1> T1 convert(T value, HeldType<T1> toType) {
+            //noinspection unchecked
+            final UniNode uni = dst.typ == DataStructureType.Primitive.OBJECT
+                    ? createUniObjectNode((OBJ) value)
+                    : createUniArrayNode(((ARR) value));
+
+            if (uni.size() == 1)
+                //noinspection unchecked
+                return (T1) uni.asList().get(0);
+            throw new UnsupportedOperationException("Node too large");
+        }
+    }
 
 }

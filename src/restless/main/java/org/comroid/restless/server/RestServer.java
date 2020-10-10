@@ -13,7 +13,6 @@ import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
-import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.io.*;

@@ -6,14 +6,11 @@ import org.comroid.restless.REST;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 public final class JavaHttpAdapter implements HttpAdapter {
     private final HttpClient httpClient;

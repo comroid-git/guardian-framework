@@ -1,11 +1,8 @@
 package org.comroid.common;
 
 import org.comroid.api.UUIDContainer;
-import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;

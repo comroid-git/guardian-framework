@@ -32,6 +32,11 @@ public interface FileProcessor extends Disposable {
         }
 
         @Override
+        default UUID getUUID() {
+            return getUnderlyingFileProcessor().getUUID();
+        }
+
+        @Override
         default int storeData() throws IOException {
             return getUnderlyingFileProcessor().storeData();
         }
@@ -39,11 +44,6 @@ public interface FileProcessor extends Disposable {
         @Override
         default int reloadData() throws IOException {
             return getUnderlyingFileProcessor().reloadData();
-        }
-
-        @Override
-        default UUID getUUID() {
-            return getUnderlyingFileProcessor().getUUID();
         }
     }
 }

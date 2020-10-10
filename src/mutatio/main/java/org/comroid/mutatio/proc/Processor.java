@@ -5,7 +5,6 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -225,15 +224,15 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
         public static final class Or<T> extends Base<T, T> {
             private final Supplier<T> other;
 
+            @Override
+            public boolean isOutdated() {
+                return true;
+            }
+
             public Or(Reference<T> base, Supplier<T> other) {
                 super(base, Function.identity());
 
                 this.other = other;
-            }
-
-            @Override
-            public boolean isOutdated() {
-                return true;
             }
 
             @Override

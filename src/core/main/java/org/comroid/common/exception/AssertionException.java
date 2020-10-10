@@ -1,7 +1,5 @@
 package org.comroid.common.exception;
 
-import org.jetbrains.annotations.Contract;
-
 import java.util.Objects;
 import java.util.function.BiPredicate;
 

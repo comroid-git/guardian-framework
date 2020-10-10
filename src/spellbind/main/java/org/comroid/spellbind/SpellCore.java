@@ -1,7 +1,8 @@
 package org.comroid.spellbind;
 
-import org.comroid.api.*;
-import org.comroid.common.exception.AssertionException;
+import org.comroid.api.Invocable;
+import org.comroid.api.Polyfill;
+import org.comroid.api.UUIDContainer;
 import org.comroid.spellbind.model.TypeFragment;
 import org.comroid.spellbind.model.TypeFragmentProvider;
 import org.jetbrains.annotations.ApiStatus.Internal;

@@ -1,22 +1,14 @@
 package org.comroid.uniform.cache;
 
 import org.comroid.api.Provider;
-import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceIndex;
-import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.AbstractMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BasicCache<K, V> extends AbstractCache<K, V> {
     public static final int DEFAULT_LARGE_THRESHOLD = 250;
@@ -26,11 +18,6 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
 
     public BasicCache() {
         this(DEFAULT_LARGE_THRESHOLD);
-    }
-
-    @Override
-    protected CacheReference<K, V> advanceIntoCacheRef(Reference<V> reference) {
-        return null; //todo
     }
 
     public BasicCache(int largeThreshold) {
@@ -53,6 +40,11 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
         this.largeThreshold = largeThreshold;
         this.cache = map;
         this.emptyValueProvider = emptyValueProvider;
+    }
+
+    @Override
+    protected CacheReference<K, V> advanceIntoCacheRef(Reference<V> reference) {
+        return null; //todo
     }
 
     @Override
