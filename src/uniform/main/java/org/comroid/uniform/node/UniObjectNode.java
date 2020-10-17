@@ -129,6 +129,10 @@ public final class UniObjectNode extends UniNode {
         return unsupported("COPY_FROM", Type.OBJECT);
     }
 
+    public Map<String,Object> asMap() {
+        return adapter;
+    }
+
     public static abstract class Adapter<B> extends AbstractMap<String, Object> implements UniNode.Adapter<B> {
         protected final B baseNode;
 

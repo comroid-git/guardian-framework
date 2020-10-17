@@ -119,13 +119,7 @@ public final class UniArrayNode extends UniNode {
 
     @Override
     public synchronized List<Object> asList() {
-        final List<Object> yields = new ArrayList<>();
-
-        for (int i = 0; i < size(); i++) {
-            yields.add(get(i).asRaw(null));
-        }
-
-        return yields;
+        return adapter;
     }
 
     @Override
