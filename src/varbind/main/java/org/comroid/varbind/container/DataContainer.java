@@ -29,11 +29,6 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
 
     <T> Optional<Reference<T>> getByName(String name);
 
-    @Deprecated
-    default <T> @NotNull Reference<T> ref(VarBind<? extends S, ?, ?, T> bind) {
-        return getComputedReference(bind);
-    }
-
     default <T> @Nullable T get(VarBind<? extends S, ?, ?, T> bind) {
         return getComputedReference(bind).get();
     }
