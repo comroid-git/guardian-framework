@@ -6,7 +6,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
@@ -40,7 +40,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
-import static org.comroid.mutatio.proc.Processor.ofConstant;
+import static org.comroid.mutatio.ref.Processor.ofConstant;
 
 public final class REST<D> implements ContextualProvider.Underlying {
     public static final FluentLogger logger = FluentLogger.forEnclosingClass();

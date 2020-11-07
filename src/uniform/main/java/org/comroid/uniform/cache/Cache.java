@@ -2,7 +2,7 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.concurrent.CompletableFuture;

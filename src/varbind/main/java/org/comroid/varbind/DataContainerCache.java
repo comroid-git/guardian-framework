@@ -3,7 +3,7 @@ package org.comroid.varbind;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.common.info.Dependent;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.cache.CacheReference;

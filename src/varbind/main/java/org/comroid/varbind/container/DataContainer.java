@@ -2,7 +2,7 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.SelfDeclared;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;

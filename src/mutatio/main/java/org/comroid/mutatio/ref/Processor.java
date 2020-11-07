@@ -1,6 +1,5 @@
-package org.comroid.mutatio.proc;
+package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.util.Objects;

@@ -2,7 +2,7 @@ package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.ThrowingRunnable;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.pump.BasicPump;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.Reference;
@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
 public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
-    StageAdapter<? extends Object, O> getAdapter();
+    StageAdapter<? extends Object, O, Reference<? extends Object>, Reference<O>> getAdapter();
 
     default boolean isSorted() {
         return false;
@@ -98,7 +98,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return span().unwrap();
     }
 
-    <R> Pipe<R> addStage(StageAdapter<O, R> stage);
+    <R> Pipe<R> addStage(StageAdapter<O, R, Reference<O>, Reference<R>> stage);
 
     default Pipe<O> filter(Predicate<? super O> predicate) {
         return addStage(StageAdapter.filter(predicate));
@@ -169,14 +169,14 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return new BasicPump<>(executor, this.map(Polyfill::uncheckedCast));
     }
 
-    <X> BiPipe<O, X, O, X> bi(Function<O, X> mapper);
+    <Y> BiPipe<O, Y> bi(Function<O, Y> mapper);
 
     default Span<O> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);
     }
 
     default CompletableFuture<O> next() {
-        class OnceCompletingStage implements StageAdapter<O, O> {
+        class OnceCompletingStage implements StageAdapter<O, O,Reference<O>,Reference<O>> {
             private final CompletableFuture<O> future = new CompletableFuture<>();
 
             @Override

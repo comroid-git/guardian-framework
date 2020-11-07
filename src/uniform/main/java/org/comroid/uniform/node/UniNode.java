@@ -2,7 +2,7 @@ package org.comroid.uniform.node;
 
 import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
