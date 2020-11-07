@@ -2,8 +2,9 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.SelfDeclared;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
@@ -34,8 +35,10 @@ import static org.comroid.api.Polyfill.uncheckedCast;
 public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends AbstractMap<String, Object> implements DataContainer<S> {
     private final GroupBind<S> rootBind;
     private final Map<String, Span<VarBind<? extends S, ?, ?, ?>>> binds = new ConcurrentHashMap<>();
-    private final Map<String, Reference<Span<Object>>> vars = new ConcurrentHashMap<>();
-    private final Map<String, Reference<Object>> computed = new ConcurrentHashMap<>();
+    private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
+    private final int computedRefs = baseRefs.biPipe()
+            .mapFirst(key -> binds.get(key).get())
+            .merge((varbind, values) -> varbind.finish(values))
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
