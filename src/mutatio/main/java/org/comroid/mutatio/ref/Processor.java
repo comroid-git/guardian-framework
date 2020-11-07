@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.stream.Stream;
  * Cloneable through {@link #process()}.
  */
 public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
-    Optional<Reference<?>> getParent();
+    Rewrapper<Reference<?>> getParent();
 
     static <T> Processor<T> ofReference(Reference<T> reference) {
         return new Support.Default<>(reference);
@@ -103,8 +104,8 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
             private final Predicate<O> setter;
 
             @Override
-            public Optional<Reference<?>> getParent() {
-                return Optional.of(parent);
+            public Rewrapper<Reference<?>> getParent() {
+                return () -> parent;
             }
 
             @Override

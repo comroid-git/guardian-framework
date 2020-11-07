@@ -60,7 +60,7 @@ public interface CachedValue<T> {
 
     abstract class Abstract<T> implements CachedValue<T> {
         protected final Set<CachedValue<?>> dependent = new HashSet<>();
-        private final CachedValue<?> parent;
+        protected final CachedValue<?> parent;
         private final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
         private final AtomicBoolean outdated = new AtomicBoolean(true);
 
