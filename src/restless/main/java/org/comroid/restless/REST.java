@@ -42,12 +42,11 @@ import java.util.logging.Level;
 
 import static org.comroid.mutatio.proc.Processor.ofConstant;
 
-public final class REST<D> implements ContextualProvider.Underlying {
+public final class REST implements ContextualProvider.Underlying {
     public static final FluentLogger logger = FluentLogger.forEnclosingClass();
     private final ContextualProvider context;
     private final Ratelimiter ratelimiter;
     private final Executor executor;
-    private final D dependency;
 
     @Deprecated
     public HttpAdapter getHttpAdapter() {
@@ -75,29 +74,14 @@ public final class REST<D> implements ContextualProvider.Underlying {
     public REST(
             ContextualProvider context
     ) {
-        this(context, (D) null);
-    }
-
-    public REST(
-            ContextualProvider context,
-            D dependency
-    ) {
-        this(context, dependency, ForkJoinPool.commonPool());
+        this(context, ForkJoinPool.commonPool());
     }
 
     public REST(
             ContextualProvider context,
             Executor requestExecutor
     ) {
-        this(context, null, requestExecutor);
-    }
-
-    public REST(
-            ContextualProvider context,
-            D dependency,
-            Executor requestExecutor
-    ) {
-        this(context, dependency, requestExecutor, Ratelimiter.INSTANT);
+        this(context, requestExecutor, Ratelimiter.INSTANT);
     }
 
     public REST(
@@ -105,34 +89,15 @@ public final class REST<D> implements ContextualProvider.Underlying {
             ScheduledExecutorService scheduledExecutorService,
             RatelimitedEndpoint... pool
     ) {
-        this(context, null, scheduledExecutorService, pool);
+        this(context, scheduledExecutorService, Ratelimiter.ofPool(scheduledExecutorService, pool));
     }
 
     public REST(
             ContextualProvider context,
-            D dependency,
-            ScheduledExecutorService scheduledExecutorService,
-            RatelimitedEndpoint... pool
-    ) {
-        this(context, dependency, scheduledExecutorService, Ratelimiter.ofPool(scheduledExecutorService, pool));
-    }
-
-    public REST(
-            ContextualProvider context,
-            Executor requestExecutor,
-            Ratelimiter ratelimiter
-    ) {
-        this(context, null, requestExecutor, ratelimiter);
-    }
-
-    public REST(
-            ContextualProvider context,
-            D dependency,
             Executor requestExecutor,
             Ratelimiter ratelimiter
     ) {
         this.context = context;
-        this.dependency = dependency;
         this.executor = Objects.requireNonNull(requestExecutor, "RequestExecutor");
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
     }
@@ -519,7 +484,7 @@ public final class REST<D> implements ContextualProvider.Underlying {
             return execute$body().thenApply(node -> {
                 switch (node.getType()) {
                     case OBJECT:
-                        return Span.singleton(tProducer.autoInvoke(dependency, node.asObjectNode()));
+                        return Span.singleton(tProducer.autoInvoke(context, node.asObjectNode()));
                     case ARRAY:
                         return node.asArrayNode()
                                 .asNodeList()
@@ -587,7 +552,7 @@ public final class REST<D> implements ContextualProvider.Underlying {
                             return old;
                         }
 
-                        return tProducer.autoInvoke(dependency, obj);
+                        return tProducer.autoInvoke(context, obj);
                     });
         }
     }
