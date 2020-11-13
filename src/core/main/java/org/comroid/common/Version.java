@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static java.lang.Integer.min;
 import static java.lang.Integer.parseInt;
 import static org.comroid.api.Polyfill.regexGroupOrDefault;
 
@@ -104,6 +105,10 @@ public final class Version implements Comparable<Version> {
         }
 
         return String.format("%d.%d.%d-%s_%d", major, minor, patch, releaseType, hotfix);
+    }
+
+    public String toSimpleString() {
+        return String.format("%d.%d", major, minor);
     }
 
     public enum ReleaseType {

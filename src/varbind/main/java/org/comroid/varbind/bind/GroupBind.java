@@ -192,24 +192,44 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public <R extends T> GroupBind<R> rootGroup(String subGroupName) {
-        return subGroup(subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
+        return rootGroup(this, subGroupName);
+    }
+
+    public <R extends T> GroupBind<R> rootGroup(GroupBind parent, String subGroupName) {
+        return subGroup(parent, subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
     }
 
     public <R extends T> GroupBind<R> subGroup(String subGroupName) {
-        return subGroup(subGroupName, (Invocable<R>) null);
+        return subGroup(this, subGroupName);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName) {
+        return subGroup(parent, subGroupName, (Invocable<R>) null);
     }
 
     public <R extends T> GroupBind<R> subGroup(String subGroupName, Class<? extends T> type) {
-        return subGroup(subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofClass(type)));
+        return subGroup(this, subGroupName, type);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Class<? extends T> type) {
+        return subGroup(parent, subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofClass(type)));
     }
 
     public <R extends T> GroupBind<R> subGroup(String subGroupName, Constructor<? extends T> type) {
-        return subGroup(subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofConstructor(type)));
+        return subGroup(this, subGroupName, type);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Constructor<? extends T> type) {
+        return subGroup(parent, subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofConstructor(type)));
     }
 
     public <R extends T> GroupBind<R> subGroup(String subGroupName, Invocable<? extends R> constructor) {
+        return subGroup(this, subGroupName, constructor);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Invocable<? extends R> constructor) {
         final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName, constructor);
-        subgroups.add(groupBind);
+        parent.subgroups.add(groupBind);
         return groupBind;
     }
 
