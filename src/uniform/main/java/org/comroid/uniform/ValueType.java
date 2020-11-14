@@ -40,8 +40,8 @@ public final class ValueType<R> implements HeldType<R>, Predicate<Object> {
     }
 
     @Override
-    public Function<String, R> getConverter() {
-        return converter;
+    public R parse(String data) {
+        return converter.apply(data);
     }
 
     public ValueType(Class<R> type, String name, Function<String, R> mapper) {

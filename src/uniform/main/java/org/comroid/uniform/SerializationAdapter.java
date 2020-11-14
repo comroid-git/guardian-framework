@@ -129,11 +129,10 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
 
     private final class ParsingValueType<T extends BAS> implements HeldType<T> {
         private final DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst;
-        private final Function<String, T> converter;
 
         @Override
-        public Function<String, T> getConverter() {
-            return converter;
+        public T parse(String data) {
+            return (T) SerializationAdapter.this.parse(data);
         }
 
         @Override
@@ -143,13 +142,6 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
 
         public ParsingValueType(DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst) {
             this.dst = dst;
-            this.converter = string -> {
-                final UniNode node = parse(string);
-
-                if (node.getType().dst != dst.typ)
-                    throw new IllegalArgumentException("String is not " + dst.typ.name());
-                return Polyfill.uncheckedCast(node.getBaseNode());
-            };
         }
 
         @Override
