@@ -6,7 +6,7 @@ import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.FutureReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.REST;
-import org.comroid.restless.socket.WebSocketPacket;
+import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.restless.socket.Websocket;
 
 import java.io.IOException;
@@ -20,11 +20,11 @@ import java.util.concurrent.Executor;
 public final class JavaWebsocket implements Websocket {
     private final Executor executor;
     private final URI uri;
-    private final Pump<? extends WebSocketPacket> pump;
+    private final Pump<? extends WebsocketPacket> pump;
     private final FutureReference<WebSocket> jSocket = new FutureReference<>();
 
     @Override
-    public Pump<? extends WebSocketPacket> getPacketPipeline() {
+    public Pump<? extends WebsocketPacket> getPacketPipeline() {
         return pump;
     }
 
@@ -54,7 +54,7 @@ public final class JavaWebsocket implements Websocket {
                 });
     }
 
-    private void feed(WebSocketPacket packet) {
+    private void feed(WebsocketPacket packet) {
         pump.accept(Reference.constant(packet));
     }
 
@@ -68,7 +68,7 @@ public final class JavaWebsocket implements Websocket {
 
         @Override
         public void onOpen(WebSocket webSocket) {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.OPEN));
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.OPEN));
         }
 
         @Override
@@ -90,7 +90,7 @@ public final class JavaWebsocket implements Websocket {
         }
 
         public void pushData() {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.DATA) {
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.DATA) {
                 final Processor<String> string = builder.map(StringBuilder::toString);
 
                 @Override
@@ -103,7 +103,7 @@ public final class JavaWebsocket implements Websocket {
 
         @Override
         public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.PING) {
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.PING) {
                 final String data = message.toString();
 
                 @Override
@@ -118,7 +118,7 @@ public final class JavaWebsocket implements Websocket {
 
         @Override
         public CompletionStage<?> onPong(WebSocket webSocket, ByteBuffer message) {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.PONG) {
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.PONG) {
                 final String data = message.toString();
 
                 @Override
@@ -133,7 +133,7 @@ public final class JavaWebsocket implements Websocket {
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.ERROR) {
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.ERROR) {
                 @Override
                 public Rewrapper<Throwable> getError() {
                     return () -> error;
@@ -145,7 +145,7 @@ public final class JavaWebsocket implements Websocket {
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            feed(new WebSocketPacket.Empty(WebSocketPacket.Type.CLOSE) {
+            feed(new WebsocketPacket.Empty(WebsocketPacket.Type.CLOSE) {
                 @Override
                 public Rewrapper<String> getData() {
                     return () -> reason;

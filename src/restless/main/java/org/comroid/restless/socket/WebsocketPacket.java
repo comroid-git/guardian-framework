@@ -3,7 +3,7 @@ package org.comroid.restless.socket;
 import org.comroid.api.Named;
 import org.comroid.api.Rewrapper;
 
-public interface WebSocketPacket {
+public interface WebsocketPacket {
     Type getType();
 
     default Rewrapper<Type> wrapType() {
@@ -22,7 +22,7 @@ public interface WebSocketPacket {
         return Rewrapper.empty();
     }
 
-    class Empty implements WebSocketPacket {
+    class Empty implements WebsocketPacket {
         private final Type type;
 
         @Override

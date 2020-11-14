@@ -7,7 +7,7 @@ import java.net.URI;
 import java.util.concurrent.Executor;
 
 public interface Websocket extends Closeable {
-    Pipe<? extends WebSocketPacket> getPacketPipeline();
+    Pipe<? extends WebsocketPacket> getPacketPipeline();
 
     URI getURI();
 

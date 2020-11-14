@@ -1,6 +1,7 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.pump.BasicPump;
@@ -117,7 +118,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return filter(target::isInstance).map(target::cast);
     }
 
-    default <R> Pipe<R> flatMap(Function<? super O, ? extends Reference<? extends R>> mapper) {
+    default <R> Pipe<R> flatMap(Function<? super O, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
