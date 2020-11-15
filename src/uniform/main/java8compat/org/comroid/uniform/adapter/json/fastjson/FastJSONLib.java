@@ -17,8 +17,7 @@ import java.io.IOException;
 import java.util.Set;
 
 public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JSONArray> {
-    public static @Instance
-    final FastJSONLib fastJsonLib = new FastJSONLib();
+    public static final @Instance FastJSONLib fastJsonLib = new FastJSONLib();
 
     private FastJSONLib() {
         super("application/json", JSONObject.class, JSONArray.class);
