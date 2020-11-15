@@ -398,6 +398,10 @@ public final class REST implements ContextualProvider.Underlying {
             return REST.this;
         }
 
+        public boolean isExecuted() {
+            return execution.isDone();
+        }
+
         public Request(Invocable<T> tProducer) {
             this.tProducer = tProducer;
             this.headers = new Header.List();
@@ -453,7 +457,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public synchronized CompletableFuture<REST.Response> execute() {
-            if (!execution.isDone()) {
+            if (!isExecuted()) {
                 logger.at(Level.FINE).log("Executing request %s @ %s");
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
