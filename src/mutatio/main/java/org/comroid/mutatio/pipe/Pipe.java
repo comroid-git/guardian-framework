@@ -105,6 +105,15 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return addStage(StageAdapter.filter(predicate));
     }
 
+    default Pipe<O> yield(Predicate<? super O> predicate, Consumer<O> elseConsume) {
+        return filter(it -> {
+            if (predicate.test(it))
+                return true;
+            elseConsume.accept(it);
+            return false;
+        });
+    }
+
     @Deprecated
     default <R> Pipe<R> map(Class<R> target) {
         return flatMap(target);
