@@ -12,6 +12,7 @@ import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
 import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.comroid.restless.endpoint.RatelimitedEndpoint;
+import org.comroid.restless.endpoint.TypeBoundEndpoint;
 import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.Cache;
@@ -114,6 +115,10 @@ public final class REST implements ContextualProvider.Underlying {
         //noinspection unchecked
         return request((Invocable<T>) Polyfill.uncheckedCast(group.getConstructor()
                 .orElseThrow(() -> new NoSuchElementException("No constructor applied to GroupBind"))));
+    }
+
+    public <T extends DataContainer<? super T>> Request<T> request(TypeBoundEndpoint<T> endpoint) {
+        return request(endpoint.getBoundType()).endpoint(endpoint);
     }
 
     public <T> Request<T> request(Invocable<T> creator) {
@@ -444,6 +449,12 @@ public final class REST implements ContextualProvider.Underlying {
             final B body = type.apply(requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
             return body(body.toString());
+        }
+
+        public Request<T> addHeaders(Header.List headers) {
+            headers.forEach(this::addHeader);
+
+            return this;
         }
 
         public Request<T> addHeader(String name, String value) {
