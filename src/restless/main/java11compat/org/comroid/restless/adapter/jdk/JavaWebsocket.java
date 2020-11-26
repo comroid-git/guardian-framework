@@ -14,6 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 
@@ -36,6 +37,16 @@ public final class JavaWebsocket implements Websocket {
     @Override
     public Executor getExecutor() {
         return executor;
+    }
+
+    @Override
+    public CompletableFuture<Websocket> send(String[] splitMessage) {
+        final WebSocket jSocket = this.jSocket.requireNonNull("Socket not available");
+
+        for (int i = 0; i < splitMessage.length; i++)
+            jSocket.sendText(splitMessage[i], i == splitMessage.length - 1);
+
+        return CompletableFuture.completedFuture(this);
     }
 
     JavaWebsocket(HttpClient httpClient, Executor executor, URI uri, REST.Header.List headers) {

@@ -30,4 +30,10 @@ public final class FutureReference<T> extends Reference.Support.Base<T> {
         future.complete(value);
         return true;
     }
+
+    public void complete(T value) {
+        if (future.isDone())
+            throw new IllegalStateException("Future is already done");
+        future.complete(value);
+    }
 }
