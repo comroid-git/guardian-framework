@@ -106,7 +106,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
     @Override
     public Rewrapper<S> self() {
-        return selfSupplier == null ? Polyfill.uncheckedCast(this) : selfSupplier.get();
+        return selfSupplier == null ? Polyfill.uncheckedCast(this) : Rewrapper.ofSupplier(selfSupplier);
     }
 
     private Set<VarBind<? extends S, Object, ?, Object>> updateVars(
