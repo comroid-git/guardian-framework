@@ -469,7 +469,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public synchronized CompletableFuture<REST.Response> execute() {
             if (!isExecuted()) {
-                logger.at(Level.FINE).log("Executing request %s @ %s");
+                logger.at(Level.FINE).log("Executing request %s @ %s", method, endpoint.getSpec());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
                                 .call(request, requireFromContext(SerializationAdapter.class).getMimeType()), executor)
