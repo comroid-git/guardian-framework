@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
+public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named, ContextualProvider.Member {
     final List<? extends VarBind<T, ?, ?, ?>> children = new ArrayList<>();
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final String groupName;

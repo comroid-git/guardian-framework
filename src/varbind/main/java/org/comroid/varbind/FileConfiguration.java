@@ -1,6 +1,6 @@
 package org.comroid.varbind;
 
-import org.comroid.api.ContextualTypeProvider;
+import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.common.io.FileProcessor;
 import org.comroid.uniform.SerializationAdapter;
@@ -13,7 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 
-public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
+public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualProvider.Member {
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
