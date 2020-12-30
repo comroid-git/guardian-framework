@@ -1,6 +1,8 @@
 package org.comroid.restless.adapter.jdk;
 
+import com.google.common.flogger.FluentLogger;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.FutureReference;
@@ -19,14 +21,16 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 
 public final class JavaWebsocket implements Websocket {
+    public static final FluentLogger LOGGER = FluentLogger.forEnclosingClass();
     private final Executor executor;
     private final URI uri;
     private final Pump<? extends WebsocketPacket> pump;
+    private final Pipe<? extends WebsocketPacket> pipeline;
     private final FutureReference<WebSocket> jSocket = new FutureReference<>();
 
     @Override
-    public Pump<? extends WebsocketPacket> getPacketPipeline() {
-        return pump;
+    public Pipe<? extends WebsocketPacket> getPacketPipeline() {
+        return pipeline;
     }
 
     @Override
@@ -53,6 +57,7 @@ public final class JavaWebsocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
+        this.pipeline = pump.peek(packet -> LOGGER.atFinest().log("WebSocket received packet: %s", packet));
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
