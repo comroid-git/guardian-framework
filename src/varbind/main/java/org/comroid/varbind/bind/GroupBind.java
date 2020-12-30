@@ -1,9 +1,6 @@
 package org.comroid.varbind.bind;
 
-import org.comroid.api.ContextualTypeProvider;
-import org.comroid.api.Invocable;
-import org.comroid.api.Named;
-import org.comroid.api.Polyfill;
+import org.comroid.api.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
@@ -53,10 +50,25 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public GroupBind(
+            ContextualProvider context,
+            String groupName
+    ) {
+        this(context.requireFromContext(SerializationAdapter.class), groupName);
+    }
+
+    public GroupBind(
             SerializationAdapter<?, ?, ?> serializationAdapter,
             String groupName
     ) {
         this(serializationAdapter, groupName, (Invocable<T>) null);
+    }
+
+    public GroupBind(
+            ContextualProvider context,
+            String groupName,
+            Class<? extends T> constructorClass
+    ) {
+        this(context.requireFromContext(SerializationAdapter.class), groupName, constructorClass);
     }
 
     public GroupBind(
@@ -68,11 +80,28 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public GroupBind(
+            ContextualProvider context,
+            String groupName,
+            Invocable<? extends T> invocable
+    ) {
+        this(context.requireFromContext(SerializationAdapter.class), groupName, invocable);
+    }
+
+    public GroupBind(
             SerializationAdapter<?, ?, ?> serializationAdapter,
             String groupName,
             Invocable<? extends T> invocable
     ) {
         this(Span.empty(), serializationAdapter, groupName, invocable);
+    }
+
+    private GroupBind(
+            GroupBind<? super T> parent,
+            ContextualProvider context,
+            String groupName,
+            @Nullable Invocable<? extends T> invocable
+    ) {
+        this(parent, context.requireFromContext(SerializationAdapter.class), groupName, invocable);
     }
 
     private GroupBind(
