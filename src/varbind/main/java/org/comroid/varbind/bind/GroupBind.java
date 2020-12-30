@@ -53,14 +53,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             ContextualProvider context,
             String groupName
     ) {
-        this(context.requireFromContext(SerializationAdapter.class), groupName);
-    }
-
-    public GroupBind(
-            SerializationAdapter<?, ?, ?> serializationAdapter,
-            String groupName
-    ) {
-        this(serializationAdapter, groupName, (Invocable<T>) null);
+        this(context, groupName, (Invocable<T>) null);
     }
 
     public GroupBind(
@@ -68,15 +61,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             String groupName,
             Class<? extends T> constructorClass
     ) {
-        this(context.requireFromContext(SerializationAdapter.class), groupName, constructorClass);
-    }
-
-    public GroupBind(
-            SerializationAdapter<?, ?, ?> serializationAdapter,
-            String groupName,
-            Class<? extends T> constructorClass
-    ) {
-        this(serializationAdapter, groupName, Invocable.ofConstructor(constructorClass, UniObjectNode.class));
+        this(context, groupName, Invocable.ofConstructor(constructorClass, UniObjectNode.class));
     }
 
     public GroupBind(
@@ -84,35 +69,18 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             String groupName,
             Invocable<? extends T> invocable
     ) {
-        this(context.requireFromContext(SerializationAdapter.class), groupName, invocable);
-    }
-
-    public GroupBind(
-            SerializationAdapter<?, ?, ?> serializationAdapter,
-            String groupName,
-            Invocable<? extends T> invocable
-    ) {
-        this(Span.empty(), serializationAdapter, groupName, invocable);
+        this(Span.empty(), context, groupName, invocable);
     }
 
     private GroupBind(
             GroupBind<? super T> parent,
             ContextualProvider context,
-            String groupName,
-            @Nullable Invocable<? extends T> invocable
-    ) {
-        this(parent, context.requireFromContext(SerializationAdapter.class), groupName, invocable);
-    }
-
-    private GroupBind(
-            GroupBind<? super T> parent,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
             String groupName,
             @Nullable Invocable<? extends T> invocable
     ) {
         this(
                 Span.singleton(Objects.requireNonNull(parent, "parents")),
-                serializationAdapter,
+                context,
                 groupName,
                 invocable
         );
@@ -120,12 +88,12 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
 
     private GroupBind(
             Span<GroupBind<? super T>> parents,
-            SerializationAdapter<?, ?, ?> serializationAdapter,
+            ContextualProvider context,
             String groupName,
             @Nullable Invocable<? extends T> invocable
     ) {
         this.parents = parents;
-        this.serializationAdapter = serializationAdapter;
+        this.serializationAdapter = context.requireFromContext(SerializationAdapter.class);
         this.groupName = groupName;
         this.constructor = invocable;
     }
