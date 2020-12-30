@@ -1,5 +1,6 @@
 package org.comroid.varbind.bind;
 
+import jdk.internal.reflect.CallerSensitive;
 import org.comroid.api.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
@@ -188,10 +189,12 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return Invocable.ofConstructor(resultType, typesUnordered);
     }
 
+    @CallerSensitive
     public <R extends T> GroupBind<R> rootGroup(String subGroupName) {
-        return rootGroup(this, subGroupName);
+        return subGroup(this, subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
     }
 
+    @CallerSensitive
     public <R extends T> GroupBind<R> rootGroup(GroupBind parent, String subGroupName) {
         return subGroup(parent, subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
     }
