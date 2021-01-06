@@ -31,6 +31,7 @@ public interface BiStageAdapter<InX, InY, OutX, OutY> extends StageAdapter<InY, 
         private final static class Map<IX, IY, OX, OY> implements BiStageAdapter<IX, IY, OX, OY> {
             @Override
             public KeyedReference<OX, OY> advance(KeyedReference<IX, IY> ref) {
+                return null; // todo
             }
         }
     }
