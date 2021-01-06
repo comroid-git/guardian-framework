@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -50,7 +49,7 @@ public final class OkHttp4WebSocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
-        this.pipeline = pump.peek(packet -> LOGGER.atFinest().log("WebSocket received packet: %s", packet));
+        this.pipeline = pump.peek(packet -> LOGGER.atInfo().log("WebSocket received packet: %s", packet));
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }
 

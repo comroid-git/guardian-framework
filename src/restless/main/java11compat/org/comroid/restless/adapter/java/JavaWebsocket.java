@@ -1,4 +1,4 @@
-package org.comroid.restless.adapter.jdk;
+package org.comroid.restless.adapter.java;
 
 import com.google.common.flogger.FluentLogger;
 import org.comroid.api.Rewrapper;

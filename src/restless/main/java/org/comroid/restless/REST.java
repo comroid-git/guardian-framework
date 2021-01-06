@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger;
 import com.sun.net.httpserver.Headers;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
+import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
 import org.comroid.mutatio.proc.Processor;
@@ -125,7 +126,7 @@ public final class REST implements ContextualProvider.Underlying {
         return new Request<>(creator);
     }
 
-    public enum Method {
+    public enum Method implements Named {
         GET,
 
         PUT,
@@ -140,6 +141,11 @@ public final class REST implements ContextualProvider.Underlying {
 
         @Override
         public String toString() {
+            return name();
+        }
+
+        @Override
+        public String getName() {
             return name();
         }
     }

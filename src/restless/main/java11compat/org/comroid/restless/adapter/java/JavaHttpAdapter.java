@@ -1,4 +1,4 @@
-package org.comroid.restless.adapter.jdk;
+package org.comroid.restless.adapter.java;
 
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
