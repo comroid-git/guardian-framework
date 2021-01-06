@@ -7,88 +7,88 @@ import org.comroid.mutatio.ref.ReferenceMap;
 import java.util.Comparator;
 import java.util.function.*;
 
-// todo
-public interface BiPipe<X, Y> extends Pipe<Y> {
+public interface BiPipe<K, V> extends Pipe<V> {
     @Override
-    <R> BiPipe<X, R> addStage(StageAdapter<Y, R, Reference<Y>, Reference<R>> stage);
-
-    <R> BiPipe<R, Y> addKeyStage(Function<X, R> keyMapper);
-
-    default BiPipe<X, Y> filterKey(Predicate<? super Y> predicate) {
-        return null;
+    default <R> Pipe<R> addStage(StageAdapter<V, R, Reference<V>, Reference<R>> stage) {
+        throw new UnsupportedOperationException("BiStageAdapter required");
     }
 
-    @Override
-    default BiPipe<X, Y> filter(Predicate<? super Y> predicate) {
-        return null;
-    }
+    <Rk, Rv> BiPipe<Rk, Rv> addBiStage(BiStageAdapter<K, V, Rk, Rv> stage);
 
-    default <R> BiPipe<R, Y> mapKey(Function<? super X, ? extends R> mapper) {
-        return null;
+    default BiPipe<K, V> filterKey(Predicate<? super K> predicate) {
+        return addBiStage(BiStageAdapter.filterKey(predicate));
     }
 
     @Override
-    default <R> BiPipe<X, R> map(Function<? super Y, ? extends R> mapper) {
-        return null;
+    default BiPipe<K, V> filter(Predicate<? super V> predicate) {
+        return addBiStage(BiStageAdapter.filterValue(predicate));
     }
 
-    default <R> BiPipe<R, Y> flatMapKey(final Class<R> target) {
-        return null;
-    }
-
-    @Override
-    default <R> BiPipe<X, R> flatMap(final Class<R> target) {
-        return null;
-    }
-
-    default <R> BiPipe<R, Y> flatMapKey(Function<? super X, ? extends Rewrapper<? extends Y>> mapper) {
-        return null;
+    default <R> BiPipe<R, V> mapKey(Function<? super K, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapKey(mapper));
     }
 
     @Override
-    default <R> BiPipe<X, R> flatMap(Function<? super Y, ? extends Rewrapper<? extends R>> mapper) {
-        return null;
+    default <R> BiPipe<K, R> map(Function<? super V, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapValue(mapper));
+    }
+
+    default <R> BiPipe<R, V> flatMapKey(final Class<R> target) {
+        return filterKey(target::isInstance).mapKey(target::cast);
     }
 
     @Override
-    default BiPipe<X, Y> peek(Consumer<? super Y> action) {
-        return null;
+    default <R> BiPipe<K, R> flatMap(final Class<R> target) {
+        return filter(target::isInstance).map(target::cast);
     }
 
-    default BiPipe<X, Y> peek(BiConsumer<? super X, ? super Y> action) {
-        return null;
-    }
-
-    default ReferenceMap<X, Y> distinctKeys() {
-        return null;
+    default <R> BiPipe<R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapKey(mapper));
     }
 
     @Override
-    default BiPipe<X, Y> distinct() {
-        return addStage(StageAdapter.distinct());
+    default <R> BiPipe<K, R> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapValue(mapper));
     }
 
-    default <R> Pipe<R> merge(BiFunction<? super X, ? super Y, ? extends R> merger) {
-        return null;
+    default BiPipe<K, V> peek(BiConsumer<? super K, ? super V> action) {
+        return addBiStage(BiStageAdapter.peek(action));
     }
 
-    @Override
-    default BiPipe<X, Y> limit(long maxSize) {
-        return addStage(StageAdapter.limit(maxSize));
-    }
-
-    @Override
-    default BiPipe<X, Y> skip(long skip) {
-        return null;
+    default ReferenceMap<K, V> distinctKeys() {
+        return null; // todo
     }
 
     @Override
-    default Pipe<Y> sorted() {
+    default BiPipe<K, V> distinct() {
+        return addBiStage(BiStageAdapter.distinctValue());
+    }
+
+    default <R> Pipe<R> merge(BiFunction<? super K, ? super V, ? extends R> merger) {
+        return null; // todo
+    }
+
+    @Override
+    default BiPipe<K, V> limit(long maxSize) {
+        return addBiStage(BiStageAdapter.limit(maxSize));
+    }
+
+    @Override
+    default BiPipe<K, V> skip(long skip) {
+        return addBiStage(BiStageAdapter.skip(skip));
+    }
+
+    @Override
+    default BiPipe<K, V> sorted() {
         return null;
     }
 
     @Override
-    default Pipe<Y> sorted(Comparator<? super Y> comparator) {
+    default BiPipe<K, V> sorted(Comparator<? super V> comparator) {
         return null;
+    }
+
+    default void forEach(BiConsumer<? super K, ? super V> action) {
+        addBiStage(BiStageAdapter.peek(action)).unwrap();
     }
 }

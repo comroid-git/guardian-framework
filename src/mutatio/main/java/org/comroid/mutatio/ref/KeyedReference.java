@@ -36,7 +36,7 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
     }
 
     final class Support {
-        final static class Base<K, V> extends Reference.Support.Base<V> implements KeyedReference<K, V> {
+        public static class Base<K, V> extends Reference.Support.Base<V> implements KeyedReference<K, V> {
             private final K key;
             private final Reference<V> valueHolder;
 
@@ -51,7 +51,7 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             }
 
             public Base(K key, Reference<V> valueHolder) {
-                super(valueHolder.isMutable());
+                super(valueHolder, valueHolder.isMutable());
 
                 this.key = key;
                 this.valueHolder = valueHolder;

@@ -27,10 +27,24 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
     }
 
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> peek(Consumer<? super T> action) {
-        class ConsumingFilter implements Predicate<T> {
+        return filter(new Structure.ConsumingFilter<>(action));
+    }
+
+    static <T> StageAdapter<T, T, Reference<T>, Reference<T>> limit(long limit) {
+        return filter(new Structure.Limiter<>(limit));
+    }
+
+    static <T> StageAdapter<T, T, Reference<T>, Reference<T>> skip(long skip) {
+        return filter(new Structure.Skipper<>(skip));
+    }
+
+    RO advance(RI ref);
+
+    final class Structure {
+        public static final class ConsumingFilter<T> implements Predicate<T> {
             private final Consumer<? super T> action;
 
-            private ConsumingFilter(Consumer<? super T> action) {
+            protected ConsumingFilter(Consumer<? super T> action) {
                 this.action = action;
             }
 
@@ -42,15 +56,11 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
             }
         }
 
-        return filter(new ConsumingFilter(action));
-    }
-
-    static <T> StageAdapter<T, T, Reference<T>, Reference<T>> limit(long limit) {
-        class Limiter implements Predicate<T> {
+        public static final class Limiter<T> implements Predicate<T> {
             private final long limit;
             private long c = 0;
 
-            private Limiter(long limit) {
+            protected Limiter(long limit) {
                 this.limit = limit;
             }
 
@@ -60,15 +70,11 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
             }
         }
 
-        return filter(new Limiter(limit));
-    }
-
-    static <T> StageAdapter<T, T, Reference<T>, Reference<T>> skip(long skip) {
-        class Skipper implements Predicate<T> {
+        public static final class Skipper<T> implements Predicate<T> {
             private final long skip;
             private long c = 0;
 
-            private Skipper(long skip) {
+            protected Skipper(long skip) {
                 this.skip = skip;
             }
 
@@ -77,14 +83,10 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
                 return c++ >= skip;
             }
         }
-
-        return filter(new Skipper(skip));
     }
 
-    RO advance(RI ref);
-
     final class Support {
-        private static final class Filter<T> implements StageAdapter<T, T, Reference<T>, Reference<T>> {
+        public static final class Filter<T> implements StageAdapter<T, T, Reference<T>, Reference<T>> {
             private final Predicate<? super T> predicate;
 
             public Filter(Predicate<? super T> predicate) {
@@ -97,7 +99,7 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
             }
         }
 
-        private static final class Map<O, T> implements StageAdapter<O, T, Reference<O>, Reference<T>> {
+        public static final class Map<O, T> implements StageAdapter<O, T, Reference<O>, Reference<T>> {
             private final Function<? super O, ? extends T> mapper;
 
             public Map(Function<? super O, ? extends T> mapper) {
@@ -109,5 +111,6 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
                 return new Processor.Support.Remapped<>(ref, mapper, null);
             }
         }
+
     }
 }
