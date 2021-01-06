@@ -48,13 +48,14 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
 
     @Override
     public void accept(Reference<? super T> in) {
-        //noinspection unchecked
-        final O item = (O) in.get();
-        refs.add(item);
+        refs.addReference(in);
 
         final Reference<T> out = getAdapter().advance(in.map(Polyfill::<O>uncheckedCast));
 
         if (item != null)
-            executor.execute(() -> subStages.forEach(sub -> sub.accept(out.map(Object.class::cast))));
+            subStages.forEach(sub -> executor.execute(() -> sub.accept(out.flatMap(Object.class))));
+
+        // compute this once
+        out.get();
     }
 }
