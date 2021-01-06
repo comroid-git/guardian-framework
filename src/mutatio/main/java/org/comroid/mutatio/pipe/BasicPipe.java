@@ -4,6 +4,8 @@ import org.comroid.api.Polyfill;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -15,14 +17,14 @@ public class BasicPipe<O, T> implements Pipe<T> {
     private final StageAdapter<O, T> adapter;
     private final int autoEmptyLimit;
     private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
-    private final List<AutoCloseable> children = new ArrayList<>();
+    private final List<Closeable> children = new ArrayList<>();
 
     @Override
     public StageAdapter<O, T> getAdapter() {
         return adapter;
     }
 
-    public final Collection<? extends AutoCloseable> getChildren() {
+    public final Collection<? extends Closeable> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
@@ -45,7 +47,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
         this.autoEmptyLimit = autoEmptyLimit;
     }
 
-    public final void addChildren(AutoCloseable child) {
+    public final void addChildren(Closeable child) {
         children.add(child);
     }
 
@@ -89,8 +91,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public void close() throws Exception {
-        for (AutoCloseable child : getChildren())
+    public void close() throws IOException {
+        for (Closeable child : getChildren())
             child.close();
     }
 }

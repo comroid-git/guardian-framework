@@ -1,6 +1,7 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.mutatio.ref.Processor;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.Reference;
 
 import java.util.HashSet;
@@ -17,8 +18,8 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
         return new Support.Map<>(mapper);
     }
 
-    static <O, T> StageAdapter<O, T, Reference<O>, Reference<T>> flatMap(Function<? super O, ? extends Reference<? extends T>> mapper) {
-        return new Support.Map<>(mapper.andThen(Reference::get));
+    static <O, T> StageAdapter<O, T, Reference<O>, Reference<T>> flatMap(Function<? super O, ? extends Rewrapper<? extends T>> mapper) {
+        return new Support.Map<>(mapper.andThen(Rewrapper::get));
     }
 
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> distinct() {

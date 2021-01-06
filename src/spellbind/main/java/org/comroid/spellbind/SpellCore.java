@@ -2,6 +2,7 @@ package org.comroid.spellbind;
 
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.UUIDContainer;
 import org.comroid.spellbind.model.TypeFragment;
 import org.comroid.spellbind.model.TypeFragmentProvider;
@@ -63,8 +64,8 @@ public class SpellCore<T extends TypeFragment<? super T>>
     }
 
     @Override
-    public T self() {
-        return proxyFuture.join();
+    public Rewrapper<T> self() {
+        return () -> proxyFuture.join();
     }
 
     @Override
@@ -77,7 +78,7 @@ public class SpellCore<T extends TypeFragment<? super T>>
         String methodString = methodString(method);
 
         if (method.getName().equals("self") && method.getParameterCount() == 0)
-            return self();
+            return self().get();
 
         Invocable<?> invocable = methods.get(methodString);
 

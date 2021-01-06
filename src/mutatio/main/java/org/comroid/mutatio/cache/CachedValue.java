@@ -3,12 +3,14 @@ package org.comroid.mutatio.cache;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public interface CachedValue<T> {
     /**
@@ -22,6 +24,8 @@ public interface CachedValue<T> {
 
     @Internal
     Collection<? extends CachedValue<?>> getDependents();
+
+    void cleanupDependents();
 
     /**
      * <p>Implementation Note: The value should already be stored when this method is called.</p>
@@ -59,8 +63,8 @@ public interface CachedValue<T> {
     boolean detach(ValueUpdateListener<T> listener);
 
     abstract class Abstract<T> implements CachedValue<T> {
-        protected final Set<CachedValue<?>> dependent = new HashSet<>();
-        protected final CachedValue<?> parent;
+        protected final Set<WeakReference<CachedValue<?>>> dependents = new HashSet<>();
+        private final CachedValue<?> parent;
         private final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
         private final AtomicBoolean outdated = new AtomicBoolean(true);
 
@@ -71,7 +75,12 @@ public interface CachedValue<T> {
 
         @Override
         public Collection<? extends CachedValue<?>> getDependents() {
-            return Collections.unmodifiableCollection(dependent);
+            cleanupDependents();
+
+            return dependents.stream()
+                    .map(WeakReference::get)
+                    //.filter(Objects::nonNull) // redundant
+                    .collect(Collectors.toSet());
         }
 
         protected Abstract(@Nullable CachedValue<?> parent) {
@@ -79,6 +88,11 @@ public interface CachedValue<T> {
 
             if (parent != null && !parent.addDependent(this))
                 throw new RuntimeException("Could not add new dependency to parent " + parent);
+        }
+
+        @Override
+        public void cleanupDependents() {
+            dependents.removeIf(ref -> ref.get() == null);
         }
 
         @Override
@@ -101,7 +115,7 @@ public interface CachedValue<T> {
 
         @Override
         public boolean addDependent(CachedValue<?> dependency) {
-            return dependent.add(dependency);
+            return dependents.add(new WeakReference<>(dependency));
         }
 
         @Override

@@ -36,7 +36,7 @@ public class AssertionException extends RuntimeException {
     }
 
     public static <X, Y> boolean expect(X expected, Y actual, BiPredicate<X, Y> condition, String detail) throws AssertionException {
-        if (condition.test(expected, actual))
+        if (!condition.test(expected, actual))
             throw new AssertionException(expected, actual, detail);
 
         return true;

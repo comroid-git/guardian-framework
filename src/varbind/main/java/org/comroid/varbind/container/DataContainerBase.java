@@ -1,6 +1,7 @@
 package org.comroid.varbind.container;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.SelfDeclared;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
@@ -107,8 +108,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     }
 
     @Override
-    public S self() {
-        return selfSupplier == null ? Polyfill.uncheckedCast(this) : selfSupplier.get();
+    public Rewrapper<S> self() {
+        return selfSupplier == null ? () -> Polyfill.uncheckedCast(this) : Rewrapper.ofSupplier(selfSupplier);
     }
 
     private Set<VarBind<? extends S, Object, ?, Object>> updateVars(
@@ -338,7 +339,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
             this.bind = uncheckedCast(bind);
             this.accessor = getExtractionReference(bind)
-                    .map(extr -> this.bind.process(self(), extr));
+                    .map(extr -> this.bind.process(self().get(), extr));
         }
 
         @Override

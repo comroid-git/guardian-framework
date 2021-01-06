@@ -46,6 +46,8 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
 
             @Override
             public CompletableFuture<REST.Request> apply(RatelimitedEndpoint restEndpoint, REST.Request request) {
+                if (request.isExecuted())
+                    throw new IllegalStateException("Request was already executed");
                 return CompletableFuture.completedFuture(request);
             }
         }
@@ -71,6 +73,8 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
 
             @Override
             public synchronized CompletableFuture<REST.Request> apply(RatelimitedEndpoint restEndpoint, REST.Request request) {
+                if (request.isExecuted())
+                    throw new IllegalStateException("Request was already executed");
                 if (Arrays.stream(pool).noneMatch(restEndpoint::equals))
                     throw new IllegalArgumentException("Given endpoint is not part of pool");
 

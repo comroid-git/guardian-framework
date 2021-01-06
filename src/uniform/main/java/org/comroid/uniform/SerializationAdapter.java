@@ -1,8 +1,7 @@
 package org.comroid.uniform;
 
-import org.comroid.api.ContextualTypeProvider;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.HeldType;
-import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -12,10 +11,9 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> implements ContextualTypeProvider.This<SerializationAdapter<BAS, OBJ, ARR>> {
+public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> implements ContextualProvider.This {
     public final String mimeType;
     public final DataStructureType.Arr<SerializationAdapter<BAS, OBJ, ARR>, BAS, OBJ, ARR> arrayType;
     public final DataStructureType.Obj<SerializationAdapter<BAS, OBJ, ARR>, BAS, OBJ, ARR> objectType;
@@ -129,11 +127,10 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
 
     private final class ParsingValueType<T extends BAS> implements HeldType<T> {
         private final DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst;
-        private final Function<String, T> converter;
 
         @Override
-        public Function<String, T> getConverter() {
-            return converter;
+        public T parse(String data) {
+            return (T) SerializationAdapter.this.parse(data);
         }
 
         @Override
@@ -143,13 +140,6 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
 
         public ParsingValueType(DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst) {
             this.dst = dst;
-            this.converter = string -> {
-                final UniNode node = parse(string);
-
-                if (node.getType().dst != dst.typ)
-                    throw new IllegalArgumentException("String is not " + dst.typ.name());
-                return Polyfill.uncheckedCast(node.getBaseNode());
-            };
         }
 
         @Override

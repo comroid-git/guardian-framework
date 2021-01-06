@@ -1,6 +1,7 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.pump.BasicPump;
@@ -10,6 +11,7 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Closeable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -18,7 +20,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
-public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
+public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
     StageAdapter<? extends Object, O, Reference<? extends Object>, Reference<O>> getAdapter();
 
     default boolean isSorted() {
@@ -104,6 +106,15 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return addStage(StageAdapter.filter(predicate));
     }
 
+    default Pipe<O> yield(Predicate<? super O> predicate, Consumer<O> elseConsume) {
+        return filter(it -> {
+            if (predicate.test(it))
+                return true;
+            elseConsume.accept(it);
+            return false;
+        });
+    }
+
     @Deprecated
     default <R> Pipe<R> map(Class<R> target) {
         return flatMap(target);
@@ -117,7 +128,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
         return filter(target::isInstance).map(target::cast);
     }
 
-    default <R> Pipe<R> flatMap(Function<? super O, ? extends Reference<? extends R>> mapper) {
+    default <R> Pipe<R> flatMap(Function<? super O, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 

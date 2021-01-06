@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class UniNode implements Specifiable<UniNode>, ContextualTypeProvider<SerializationAdapter<?, ?, ?>> {
+public abstract class UniNode implements Specifiable<UniNode>, ContextualProvider.Member {
     protected final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final Type type;
     private final Map<String, Reference<String>> baseAccessors = new ConcurrentHashMap<>();
