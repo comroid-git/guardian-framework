@@ -28,19 +28,19 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         this(executor, old, StageAdapter.map(it -> (T) it));
     }
 
-    public BasicPump(Executor executor, ReferenceIndex<O> old, StageAdapter<O, T> adapter) {
+    public BasicPump(Executor executor, ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter) {
         super(old, adapter, 50);
 
         this.executor = executor;
     }
 
     @Override
-    public <R> Pump<R> addStage(StageAdapter<T, R> stage) {
+    public <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
         return addStage(executor, stage);
     }
 
     @Override
-    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage) {
+    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
         return new BasicPump<>(executor, this, stage);
     }
 

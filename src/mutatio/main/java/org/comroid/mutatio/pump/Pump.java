@@ -30,7 +30,7 @@ public interface Pump<T> extends Pipe<T>, Consumer<Reference<? super T>>, Execut
     }
 
     @Override
-    <R> Pump<R> addStage(StageAdapter<T, R> stage);
+    <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage);
 
-    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage);
+    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage);
 }

@@ -14,14 +14,14 @@ public class BasicPipe<O, T> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
     protected final ReferenceIndex<O> refs;
     private final Collection<Pipe<?>> subs = new ArrayList<>();
-    private final StageAdapter<O, T> adapter;
+    private final StageAdapter<O, T, Reference<O>, Reference<T>> adapter;
     private final int autoEmptyLimit;
     private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
     private final List<Closeable> children = new ArrayList<>();
 
     @Override
-    public StageAdapter<O, T> getAdapter() {
-        return adapter;
+    public StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter() {
+        return Polyfill.uncheckedCast(adapter);
     }
 
     public final Collection<? extends Closeable> getChildren() {
@@ -37,11 +37,11 @@ public class BasicPipe<O, T> implements Pipe<T> {
         this(old, StageAdapter.map(it -> (T) it), autoEmptyLimit);
     }
 
-    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T> adapter) {
+    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter) {
         this(old, adapter, AUTOEMPTY_DISABLED);
     }
 
-    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T> adapter, int autoEmptyLimit) {
+    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter, int autoEmptyLimit) {
         this.refs = old;
         this.adapter = adapter;
         this.autoEmptyLimit = autoEmptyLimit;
@@ -52,13 +52,13 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public <R> Pipe<R> addStage(StageAdapter<T, R> stage) {
+    public <R> Pipe<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
         return new BasicPipe<>(this, stage);
     }
 
     @Override
-    public <X> BiPipe<T, X, T, X> bi(Function<T, X> source) {
-        return new BiPipe<>(this, source);
+    public <X> BiPipe<T, X> bi(Function<T, X> source) {
+        return null; // todo
     }
 
     @Override

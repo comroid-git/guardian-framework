@@ -19,9 +19,8 @@ import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-@SuppressWarnings("TypeParameterExplicitlyExtendsObject")
-public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
-    StageAdapter<? extends Object, O, Reference<? extends Object>, Reference<O>> getAdapter();
+public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
+    StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter();
 
     default boolean isSorted() {
         return false;
@@ -96,17 +95,17 @@ public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
     }
 
     @Override
-    default List<O> unwrap() {
+    default List<T> unwrap() {
         return span().unwrap();
     }
 
-    <R> Pipe<R> addStage(StageAdapter<O, R, Reference<O>, Reference<R>> stage);
+    <R> Pipe<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage);
 
-    default Pipe<O> filter(Predicate<? super O> predicate) {
+    default Pipe<T> filter(Predicate<? super T> predicate) {
         return addStage(StageAdapter.filter(predicate));
     }
 
-    default Pipe<O> yield(Predicate<? super O> predicate, Consumer<O> elseConsume) {
+    default Pipe<T> yield(Predicate<? super T> predicate, Consumer<T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
                 return true;
@@ -120,7 +119,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
         return flatMap(target);
     }
 
-    default <R> Pipe<R> map(Function<? super O, ? extends R> mapper) {
+    default <R> Pipe<R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
@@ -128,70 +127,70 @@ public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
         return filter(target::isInstance).map(target::cast);
     }
 
-    default <R> Pipe<R> flatMap(Function<? super O, ? extends Rewrapper<? extends R>> mapper) {
+    default <R> Pipe<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
-    default Pipe<O> peek(Consumer<? super O> action) {
+    default Pipe<T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
-    default void forEach(Consumer<? super O> action) {
+    default void forEach(Consumer<? super T> action) {
         addStage(StageAdapter.peek(action)).unwrap();
     }
 
-    default Pipe<O> distinct() {
+    default Pipe<T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
-    default Pipe<O> limit(long maxSize) {
+    default Pipe<T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
-    default Pipe<O> skip(long skip) {
+    default Pipe<T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
-    default Pipe<O> sorted() {
+    default Pipe<T> sorted() {
         return sorted(Polyfill.uncheckedCast(Comparator.naturalOrder()));
     }
 
-    default Pipe<O> sorted(Comparator<? super O> comparator) {
+    default Pipe<T> sorted(Comparator<? super T> comparator) {
         return new SortedResultingPipe<>(this, comparator);
     }
 
     @NotNull
-    default Processor<O> findFirst() {
+    default Processor<T> findFirst() {
         return sorted().findAny();
     }
 
     @NotNull
-    default Processor<O> findAny() {
+    default Processor<T> findAny() {
         return Processor.ofReference(Reference.conditional(() -> size() > 0, () -> get(0)));
     }
 
     @Override
-    default boolean remove(O item) throws UnsupportedOperationException {
+    default boolean remove(T item) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("remove() is not supported by pipe");
     }
 
     @Override
-    default Pump<O> pump(Executor executor) {
+    default Pump<T> pump(Executor executor) {
         return new BasicPump<>(executor, this.map(Polyfill::uncheckedCast));
     }
 
-    <Y> BiPipe<O, Y> bi(Function<O, Y> mapper);
+    <Y> BiPipe<T, Y> bi(Function<T, Y> mapper);
 
-    default Span<O> span() {
+    default Span<T> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);
     }
 
-    default CompletableFuture<O> next() {
-        class OnceCompletingStage implements StageAdapter<O, O,Reference<O>,Reference<O>> {
-            private final CompletableFuture<O> future = new CompletableFuture<>();
+    default CompletableFuture<T> next() {
+        class OnceCompletingStage implements StageAdapter<T, T,Reference<T>,Reference<T>> {
+            private final CompletableFuture<T> future = new CompletableFuture<>();
 
             @Override
-            public Reference<O> advance(Reference<O> ref) {
+            public Reference<T> advance(Reference<T> ref) {
                 if (!ref.isNull() && !future.isDone())
                     future.complete(ref.get());
                 return Reference.empty();
@@ -199,7 +198,7 @@ public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final Pipe<O> resulting = addStage(stage);
+        final Pipe<T> resulting = addStage(stage);
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;

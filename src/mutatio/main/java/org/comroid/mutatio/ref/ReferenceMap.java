@@ -1,6 +1,6 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.pipe.MapPipe;
+import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.pump.Pump;
@@ -105,11 +105,11 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
         return pipe().pump(executor);
     }
 
-    default MapPipe<K, V> biPipe() {
+    default BiPipe<K, V> biPipe() {
         return entryIndex()
                 .pipe()
                 .bi(Map.Entry::getValue)
-                .mapFirst(Map.Entry::getKey);
+                .mapKey(Map.Entry::getKey);
     }
 
     /**

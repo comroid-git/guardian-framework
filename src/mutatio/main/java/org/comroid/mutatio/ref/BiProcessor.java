@@ -70,14 +70,18 @@ public interface BiProcessor<K, V> extends Processor<V>, KeyedReference<K, V> {
             }
 
             @Override
-            public Rewrapper<Reference<?>> getParent() {
-                return parent instanceof Reference ? () -> (Reference<?>) parent : Rewrapper.empty();
-            }
-
-            @Override
             public @Nullable <R> Function<K, R> getKeyReverser() {
                 //noinspection unchecked
                 return (Function<K, R>) keyReverser;
+            }
+
+            @Override
+            public <R> Processor<R> merge(final BiFunction<? super K, ? super V, ? extends R> mergeFunction) {
+                return new Processor.Support.Remapped<>(
+                        this,
+                        value -> mergeFunction.apply(getKey(), value),
+                        null
+                );
             }
 
             public <OldV> Base(

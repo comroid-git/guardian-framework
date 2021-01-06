@@ -1,18 +1,20 @@
 package org.comroid.mutatio.cache;
 
+import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public interface CachedValue<T> {
+    Rewrapper<? extends CachedValue<?>> getParent();
+
     /**
      * @return Whether {@link #outdate()} was called on this container and it hasn't been {@linkplain #update(Object) updated} yet.
      */
@@ -69,17 +71,21 @@ public interface CachedValue<T> {
         private final AtomicBoolean outdated = new AtomicBoolean(true);
 
         @Override
+        public Rewrapper<? extends CachedValue<?>> getParent() {
+            return () -> parent;
+        }
+
+        @Override
         public boolean isOutdated() {
             return outdated.get() || (parent != null && parent.isOutdated());
         }
 
         @Override
-        public Collection<? extends CachedValue<?>> getDependents() {
+        public final Collection<? extends CachedValue<?>> getDependents() {
             cleanupDependents();
 
             return dependents.stream()
                     .map(WeakReference::get)
-                    //.filter(Objects::nonNull) // redundant
                     .collect(Collectors.toSet());
         }
 
@@ -91,7 +97,7 @@ public interface CachedValue<T> {
         }
 
         @Override
-        public void cleanupDependents() {
+        public final void cleanupDependents() {
             dependents.removeIf(ref -> ref.get() == null);
         }
 
