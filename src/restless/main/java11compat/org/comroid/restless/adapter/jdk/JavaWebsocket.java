@@ -77,6 +77,7 @@ public final class JavaWebsocket implements Websocket {
     @Override
     public void close() throws IOException {
         jSocket.future.join().sendClose(1000, "Websocket Closed");
+        pump.close();
     }
 
     private class Listener implements WebSocket.Listener {
