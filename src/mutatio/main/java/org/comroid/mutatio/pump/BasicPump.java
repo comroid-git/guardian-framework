@@ -41,7 +41,9 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
 
     @Override
     public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
-        return new BasicPump<>(executor, this, stage);
+        BasicPump<T, R> sub = new BasicPump<>(executor, this, stage);
+        subStages.add(sub);
+        return sub;
     }
 
     @Override
