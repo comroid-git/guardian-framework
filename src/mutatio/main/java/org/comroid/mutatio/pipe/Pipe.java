@@ -20,6 +20,11 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
+    @Override
+    default boolean addReference(Reference<T> in) {
+        throw new UnsupportedOperationException("Please add the Reference to the Pipe's base");
+    }
+
     StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter();
 
     default boolean isSorted() {

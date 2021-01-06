@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
-public interface Pump<T> extends Pipe<T>, Consumer<Reference<? super T>>, ExecutorBound {
+public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound {
     static <T> Pump<T> create() {
         return create(Runnable::run);
     }

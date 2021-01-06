@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface ReferenceIndex<T> extends Pipeable<T> {
@@ -17,7 +19,7 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
         return of(new ArrayList<>());
     }
 
-    static <T> ReferenceIndex<T> of(List<T> list) {
+    static <T> ReferenceIndex<T> of(List<Reference<T>> list) {
         return new Support.OfList<>(list);
     }
 
@@ -45,6 +47,8 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
     int size();
 
     boolean add(T item);
+
+    boolean addReference(Reference<T> in);
 
     boolean remove(T item);
 
@@ -90,48 +94,56 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
         public static final ReferenceIndex<?> EMPTY = ReferenceIndex.of(Collections.emptyList());
 
         private static final class OfList<T> implements ReferenceIndex<T> {
-            private final List<T> underlying;
+            private final List<Reference<T>> list;
 
-            private OfList(List<T> underlying) {
-                this.underlying = underlying;
+            private OfList() {
+                this(new ArrayList<>());
+            }
+
+            private OfList(List<Reference<T>> list) {
+                this.list = list;
             }
 
             @Override
             public boolean add(T item) {
-                return underlying.add(item);
+                return list.add(Reference.constant(item));
+            }
+
+            @Override
+            public boolean addReference(Reference<T> in) {
+                return list.add(in);
             }
 
             @Override
             public boolean remove(T item) {
-                return underlying.remove(item);
+                return list.removeIf(ref -> ref.contentEquals(item));
             }
 
             @Override
             public void clear() {
-                underlying.clear();
+                list.clear();
             }
 
             @Override
             public Pipe<T> pipe() {
-                return Pipe.of(underlying);
+                return Pipe.of(list).flatMap(Function.identity());
             }
 
             @Override
             public Reference<T> getReference(final int index) {
-                return Reference.conditional(
-                        () -> index < 0 || underlying.size() >= index,
-                        () -> underlying.get(index)
-                );
+                return list.get(index);
             }
 
             @Override
             public List<T> unwrap() {
-                return underlying;
+                return Collections.unmodifiableList(list.stream()
+                        .flatMap(Reference::stream)
+                        .collect(Collectors.toList()));
             }
 
             @Override
             public int size() {
-                return underlying.size();
+                return list.size();
             }
         }
     }

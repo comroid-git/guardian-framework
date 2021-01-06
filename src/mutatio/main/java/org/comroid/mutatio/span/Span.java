@@ -244,6 +244,11 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
         }
     }
 
+    @Override
+    public boolean addReference(Reference<T> in) {
+        return storage.addReference(in);
+    }
+
     public Processor<T> process(int index) {
         return getReference(index).process();
     }

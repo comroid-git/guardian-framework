@@ -234,6 +234,11 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
                 }
 
                 @Override
+                public boolean addReference(Reference<KeyedReference<K, V>> ref) {
+                    return false;
+                }
+
+                @Override
                 public boolean remove(KeyedReference<K, V> ref) {
                     final K key = ref.getKey();
 

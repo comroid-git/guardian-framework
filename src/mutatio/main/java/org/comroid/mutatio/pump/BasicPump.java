@@ -1,6 +1,5 @@
 package org.comroid.mutatio.pump;
 
-import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.BasicPipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
@@ -47,15 +46,12 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     }
 
     @Override
-    public void accept(Reference<? super T> in) {
-        refs.addReference(in);
-
-        final Reference<T> out = getAdapter().advance(in.map(Polyfill::<O>uncheckedCast));
-
-        if (item != null)
-            subStages.forEach(sub -> executor.execute(() -> sub.accept(out.flatMap(Object.class))));
+    public void accept(final Reference<?> in) {
+        final Reference<T> out = getAdapter().advance(in);
 
         // compute this once
         out.get();
+        // and then all substages
+        subStages.forEach(sub -> executor.execute(() -> sub.accept(out)));
     }
 }
