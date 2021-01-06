@@ -12,12 +12,12 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public class OkHttp3Adapter implements HttpAdapter {
+public final class OkHttp4Adapter implements HttpAdapter {
     private final OkHttpClient httpClient = new OkHttpClient.Builder().build();
 
     @Override
-    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers) {
-        throw new UnsupportedOperationException(); // todo
+    public CompletableFuture<OkHttp4WebSocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers) {
+        return CompletableFuture.completedFuture(new OkHttp4WebSocket(httpClient, executor, uri, headers));
     }
 
     @Override
