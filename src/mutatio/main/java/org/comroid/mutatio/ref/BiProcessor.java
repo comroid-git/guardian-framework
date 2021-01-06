@@ -98,7 +98,7 @@ public interface BiProcessor<K, V> extends Processor<V>, KeyedReference<K, V> {
                     @Nullable Function<V, OldV> valueReverser,
                     Supplier<V> computor
             ) {
-                this(parent, key, valueReverser, Function.identity(), computor);
+                this(parent, key, Function.identity(), valueReverser, computor);
             }
 
             public <OldK, OldV> Base(
