@@ -52,6 +52,6 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         // compute this once
         out.get();
         // and then all substages
-        subStages.forEach(sub -> executor.execute(() -> sub.accept(out)));
+        executor.execute(() -> subStages.forEach(sub -> sub.accept(out)));
     }
 }
