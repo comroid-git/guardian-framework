@@ -1,7 +1,7 @@
 package org.comroid.test.restless;
 
 import org.comroid.restless.REST;
-import org.comroid.restless.adapter.okhttp.v4.OkHttp3Adapter;
+import org.comroid.restless.adapter.okhttp.v4.OkHttp4Adapter;
 import org.comroid.test.FastJSONLib;
 import org.comroid.test.model.NGinXFSNode;
 import org.junit.Before;
@@ -19,7 +19,7 @@ public class TestRestJava8 {
 
     @Before
     public void setup() {
-        rest = new REST<>(new OkHttp3Adapter(), FastJSONLib.fastJsonLib);
+        rest = new REST<>(new OkHttp4Adapter(), FastJSONLib.fastJsonLib);
     }
 
     @Test
