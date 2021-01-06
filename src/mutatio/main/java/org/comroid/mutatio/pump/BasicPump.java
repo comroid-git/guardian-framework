@@ -49,6 +49,9 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     public void accept(final Reference<?> in) {
         final Reference<T> out = getAdapter().advance(in);
 
+        if (!(refs instanceof Pump))
+            add(out.get());
+
         // and then all substages
         executor.execute(() -> subStages.forEach(sub -> sub.accept(out)));
         // compute this once if hasnt already
