@@ -19,8 +19,10 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
         return of(new ArrayList<>());
     }
 
-    static <T> ReferenceIndex<T> of(List<Reference<T>> list) {
-        return new Support.OfList<>(list);
+    static <T> ReferenceIndex<T> of(List<T> list) {
+        Support.OfList<T> index = new Support.OfList<>();
+        list.forEach(index::add);
+        return index;
     }
 
     static <T> ReferenceIndex<T> empty() {
