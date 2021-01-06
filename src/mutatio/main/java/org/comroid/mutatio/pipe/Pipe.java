@@ -11,6 +11,7 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Closeable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -19,7 +20,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
-public interface Pipe<O> extends ReferenceIndex<O>, AutoCloseable {
+public interface Pipe<O> extends ReferenceIndex<O>, Closeable {
     StageAdapter<? extends Object, O> getAdapter();
 
     default boolean isSorted() {
