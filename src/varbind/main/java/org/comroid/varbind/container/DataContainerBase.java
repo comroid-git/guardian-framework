@@ -39,13 +39,9 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         extends AbstractMap<String, Object>
         implements DataContainer<S> {
     private final GroupBind<S> rootBind;
-    private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds = new ConcurrentHashMap<>();
-    private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
-    private final ReferenceMap<String, Object> computedRefs = baseRefs
-            .biPipe()
-            .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
-            .mapBoth(PartialBind.Finisher::finish)
-            .mapKey(PartialBind.Base::getName);
+    private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds;
+    private final ReferenceMap<String, Span<Object>> baseRefs;
+    private final ReferenceMap<String, Object> computedRefs;
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
@@ -77,6 +73,13 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         this.myType = (Class<? extends S>) (containingClass == null ? getClass() : containingClass);
         this.selfSupplier = selfSupplier;
+        this.binds = new ConcurrentHashMap<>();
+        this.baseRefs = ReferenceMap.create();
+        this.computedRefs = baseRefs
+                .biPipe()
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
+                .mapBoth(PartialBind.Finisher::finish)
+                .mapKey(PartialBind.Base::getName);
         this.rootBind = findRootBind(myType);
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
@@ -95,6 +98,13 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.rootBind = findRootBind(myType);
         this.initiallySet = unmodifiableSet(initialValues.keySet());
         initialValues.forEach((bind, value) -> getExtractionReference(bind).set(Span.singleton(value)));
+        baseRefs = ReferenceMap.create();
+        binds = new ConcurrentHashMap<>();
+        computedRefs = baseRefs
+                .biPipe()
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
+                .mapBoth(PartialBind.Finisher::finish)
+                .mapKey(PartialBind.Base::getName);
     }
 
     @Internal
@@ -285,7 +295,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
     @Override
     public <E> KeyedReference<String, Span<E>> getExtractionReference(String fieldName) {
-        return uncheckedCast(baseRefs.computeIfAbsent(fieldName, Span::new));
+        baseRefs.computeIfAbsent(fieldName, Span::new);
+        return uncheckedCast(baseRefs.getReference(fieldName));
     }
 
     @Override

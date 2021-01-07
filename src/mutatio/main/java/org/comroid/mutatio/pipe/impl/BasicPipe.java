@@ -2,6 +2,7 @@ package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.BiPipe;
+import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
@@ -60,8 +61,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public <X> BiPipe<T, X> bi(Function<T, X> source) {
-        return null; // todo
+    public <X> BiPipe<X, T> bi(Function<T, X> source) {
+        return new BasicBiPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
     }
 
     @Override
@@ -90,6 +91,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public Reference<T> getReference(int index) {
+        if (adapter instanceof BiStageAdapter && !accessors.containsKey(index))
+            throw new IllegalArgumentException("Unknown index: " + index);
         return accessors.computeIfAbsent(index, key -> adapter.advance(Polyfill.uncheckedCast(refs.getReference(index))));
     }
 

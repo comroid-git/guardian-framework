@@ -1,5 +1,6 @@
 package org.comroid.mutatio.pipe.impl;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
@@ -23,7 +25,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
     private final EntryIndex entryIndex;
 
     public BasicBiPipe(
-            BiPipe<InK, InV> old,
+            Pipe<InV> old,
             BiStageAdapter<InK, InV, K, V> adapter,
             int autoEmptyLimit
     ) {
@@ -32,22 +34,29 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         this.entryIndex = new EntryIndex();
 
         KeyedReference<InK, InV> test;
-        this.isSameKeyType = adapter instanceof BiStageAdapter.Support.Filter
-                || (test = (KeyedReference<InK, InV>) refs.getReference(0)).getKey().getClass()
-                .equals(adapter.advance(test).getKey().getClass());
+        this.isSameKeyType = adapter instanceof BiStageAdapter.Support.Filter;/*
+                || (refs instanceof BiPipe && (test = (KeyedReference<InK, InV>) refs
+                .getReference(0)).getKey().getClass()
+                .equals(adapter.advance(test).getKey().getClass()));*/
         refreshAccessors();
     }
 
     @SuppressWarnings({"SuspiciousMethodCalls", "unchecked"})
     private void refreshAccessors() {
-        Stream<? extends KeyedReference<InK, InV>> stream = ((BiPipe<InK, InV>) refs).streamRefs();
-        if (isSameKeyType)
-            stream = stream.filter(ref -> !accessors.containsKey(ref.getKey()));
-        stream.forEach(ref -> {
-            final KeyedReference<K, V> advance = ((BiStageAdapter<InK, InV, K, V>) adapter).advance(ref);
-            if (advance != null)
-                accessors.put(advance.getKey(), advance);
-        });
+        if (refs instanceof BiPipe) {
+            Stream<? extends KeyedReference<InK, InV>> stream = ((BiPipe<InK, InV>) refs).streamRefs();
+            if (isSameKeyType)
+                stream = stream.filter(ref -> !accessors.containsKey(ref.getKey()));
+            stream.forEach(ref -> {
+                final KeyedReference<K, V> advance = ((BiStageAdapter<InK, InV, K, V>) adapter).advance(ref);
+                if (advance != null)
+                    accessors.put(advance.getKey(), advance);
+            });
+        } else IntStream.range(0, refs.size())
+                .mapToObj(refs::getReference)
+                .map(ref -> new KeyedReference.Support.Base<>(new Object(), ref))
+                .map(ref -> ((BiStageAdapter<InK, InV, K, V>) adapter).advance(Polyfill.uncheckedCast(ref)))
+                .forEach(ref -> accessors.put(ref.getKey(), ref));
     }
 
     @Override
@@ -92,6 +101,11 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         return entryIndex.pipe();
     }
 
+    @Override
+    public KeyedReference<K, V> getReference(int index) {
+        return new ArrayList<>(accessors.entrySet()).get(0).getValue(); // todo LOL
+    }
+
     private final class EntryIndex implements ReferenceIndex<KeyedReference<K, V>> {
         private final Map<Integer, Reference<KeyedReference<K, V>>> indexAccessors = new ConcurrentHashMap<>();
 
@@ -124,7 +138,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         @Override
         public Reference<KeyedReference<K, V>> getReference(int index) {
             return indexAccessors.computeIfAbsent(index, k -> Reference
-                    .provided(() -> (KeyedReference<K, V>) BasicBiPipe.this.getReference(index)));
+                    .provided(() -> BasicBiPipe.this.getReference(index)));
         }
     }
 }

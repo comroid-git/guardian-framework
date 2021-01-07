@@ -74,6 +74,10 @@ public interface BiStageAdapter<InX, InY, OutX, OutY>
         return filterValue(new Structure.Skipper<>(skip));
     }
 
+    static <T, X> BiStageAdapter<Object, T, X, T> source(final Function<T, X> source) {
+        return ref -> KeyedReference.conditional(() -> true, () -> ref.into(source), ref);
+    }
+
     @Override
     KeyedReference<OutX, OutY> advance(KeyedReference<InX, InY> ref);
 

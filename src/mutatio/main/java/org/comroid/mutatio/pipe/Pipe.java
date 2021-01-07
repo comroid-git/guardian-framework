@@ -180,7 +180,7 @@ public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
         throw new UnsupportedOperationException("remove() is not supported by pipe");
     }
 
-    <Y> BiPipe<T, Y> bi(Function<T, Y> mapper);
+    <X> BiPipe<X, T> bi(Function<T, X> mapper);
 
     default Span<T> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);

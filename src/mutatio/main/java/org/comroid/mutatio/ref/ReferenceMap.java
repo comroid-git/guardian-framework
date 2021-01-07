@@ -8,10 +8,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -103,8 +100,9 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
     default BiPipe<K, V> biPipe() {
         return entryIndex()
                 .pipe()
-                .bi(Map.Entry::getValue)
-                .mapKey(Map.Entry::getKey);
+                .bi(Map.Entry::getKey)
+                .filterKey(Objects::nonNull)
+                .map(Map.Entry::getValue);
     }
 
     /**

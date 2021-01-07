@@ -25,7 +25,7 @@ public interface Cache<K, V> extends Iterable<CacheReference<K, V>>, ReferenceMa
     }
 
     @Override
-    default void forEach(BiConsumer<K, V> action) {
+    default void forEach(BiConsumer<? super K, ? super V> action) {
         forEach(entry -> action.accept(entry.getKey(), entry.getValue()));
     }
 }
