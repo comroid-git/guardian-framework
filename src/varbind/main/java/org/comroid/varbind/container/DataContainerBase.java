@@ -3,6 +3,7 @@ package org.comroid.varbind.container;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.SelfDeclared;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
@@ -40,10 +41,11 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private final GroupBind<S> rootBind;
     private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds = new ConcurrentHashMap<>();
     private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
-    private final ReferenceMap<? extends VarBind<? extends S, Object, Object, Object>, Object> computedRefs = baseRefs
+    private final ReferenceMap<String, Object> computedRefs = baseRefs
             .biPipe()
-            .mapKey(key -> binds.get(key).assertion("Missing Bind for key: " + key))
-            .mapBoth(PartialBind.Finisher::finish);
+            .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
+            .mapBoth(PartialBind.Finisher::finish)
+            .mapKey(PartialBind.Base::getName);
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
@@ -145,7 +147,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     }
 
     public boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {
-        return computedRefs.containsKey(bind);
+        return computedRefs.containsKey(bind.getFieldName());
     }
 
     @Override
@@ -166,7 +168,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
             return getRootBind().streamAllChildren()
                     .filter(bind -> bind.getFieldName().equals(name))
                     .findAny()
-                    .map(it -> getComputedReference(uncheckedCast(it)));
+                    .map(it -> getComputedReference(it.getFieldName()));
         }
 
         // any stage in the groupbind tree
@@ -188,7 +190,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 .filter(bind -> bind.getFieldName().equals(split[1]))
                 .findAny()
                 // get reference of bind
-                .map(it -> getComputedReference(uncheckedCast(it)));
+                .map(it -> getComputedReference(it.getFieldName()));
     }
 
     @Override
@@ -197,7 +199,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
             final @NotNull Span<Object> them = getExtractionReference(key).requireNonNull("Span is null");
 
             if (them.isEmpty()) {
-                final Reference<Object> ref = computed.get(key);
+                final Reference<Object> ref = computedRefs.getReference(key);
                 final Object it = ref.get();
 
                 // support array binds
@@ -275,63 +277,28 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
             else getComputedReference(bind).update((R) Span.singleton(value));
         } else {
             getExtractionReference(bind).set(Span.singleton(apply));
-            getComputedReference(bind).update(value);
+            getComputedReference(bind.getFieldName()).update(value);
         }
 
         return prev;
     }
 
     @Override
-    public <E> Reference<Span<E>> getExtractionReference(String fieldName) {
-        return uncheckedCast(vars.computeIfAbsent(fieldName,
-                key -> Reference.create(new Span<>())));
+    public <E> KeyedReference<String, Span<E>> getExtractionReference(String fieldName) {
+        return uncheckedCast(baseRefs.computeIfAbsent(fieldName, Span::new));
     }
 
     @Override
-    public <T, E> Reference<T> getComputedReference(VarBind<? extends S, E, ?, T> bind) {
-        return uncheckedCast(computed.computeIfAbsent(cacheBind(bind),
-                key -> uncheckedCast(new ComputedReference<>(bind))));
-    }
-
-    @Override
-    public <T> String cacheBind(VarBind<? extends S, ?, ?, ?> bind) {
-        final String fieldName = bind.getFieldName();
-        final Span<VarBind<? extends S, ?, ?, ?>> span = binds.computeIfAbsent(fieldName, key -> new Span<>());
-
-        span.add(bind);
-        return fieldName;
+    public <T, E> KeyedReference<String, T> getComputedReference(String name) {
+        return uncheckedCast(computedRefs.getReference(name));
     }
 
     @NotNull
     @Override
     public Set<Entry<String, Object>> entrySet() {
-        class UnderlyingEntry implements Map.Entry<String, Object> {
-            private final Entry<String, Reference<Object>> underlying;
-
-            @Override
-            public String getKey() {
-                return underlying.getKey();
-            }
-
-            @Override
-            public Object getValue() {
-                return underlying.getValue().get();
-            }
-
-            public UnderlyingEntry(Entry<String, Reference<Object>> underlying) {
-                this.underlying = underlying;
-            }
-
-            @Override
-            public Object setValue(Object value) {
-                return underlying.getValue().set(value);
-            }
-        }
-
-        return computed.entrySet()
+        return unmodifiableSet(computedRefs.entryIndex()
                 .stream()
-                .map(UnderlyingEntry::new)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet()));
     }
 
     public class ComputedReference<T, E> extends Reference.Support.Base<T> {

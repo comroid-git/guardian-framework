@@ -53,7 +53,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
     @Contract("null, _ -> fail; !null, false -> _; !null, true -> !null")
     @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent);
 
-    ReferenceIndex<? extends Map.Entry<K, V>> entryIndex();
+    ReferenceIndex<? extends KeyedReference<K, V>> entryIndex();
 
     default V get(K key) {
         return getReference(key, true).get();
@@ -156,7 +156,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             }
 
             @Override
-            public ReferenceIndex<? extends Map.Entry<K, V>> entryIndex() {
+            public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
                 return entryIndex;
             }
 

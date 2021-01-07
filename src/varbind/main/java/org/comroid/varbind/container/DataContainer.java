@@ -61,16 +61,17 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
 
     <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value);
 
-    <E> Reference<Span<E>> getExtractionReference(String fieldName);
-
-    default <E> Reference<Span<E>> getExtractionReference(VarBind<? extends S, E, ?, ?> bind) {
-        return getExtractionReference(cacheBind(bind));
+    default <E> Reference<Span<E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
+        return getExtractionReference(bind.getFieldName());
     }
 
-    <T, E> Reference<T> getComputedReference(VarBind<? extends S, E, ?, T> bind);
+    <E> Reference<Span<E>> getExtractionReference(String fieldName);
 
-    @Internal
-    <T> String cacheBind(VarBind<? extends S, ?, ?, ?> bind);
+    default <T, E> Reference<T> getComputedReference(VarBind<?, E, ?, T> bind) {
+        return getComputedReference(bind.getFieldName());
+    }
+
+    <T, E> Reference<T> getComputedReference(String name);
 
     interface Underlying<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
@@ -116,13 +117,8 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
         }
 
         @Override
-        default <T, E> Reference<T> getComputedReference(VarBind<? extends S, E, ?, T> bind) {
-            return getUnderlyingVarCarrier().getComputedReference(bind);
-        }
-
-        @Override
-        default <T> String cacheBind(VarBind<? extends S, ?, ?, ?> bind) {
-            return getUnderlyingVarCarrier().cacheBind(bind);
+        default <T, E> Reference<T> getComputedReference(String name) {
+            return getUnderlyingVarCarrier().getComputedReference(name);
         }
 
         @Override

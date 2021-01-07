@@ -62,7 +62,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
     }
 
     @Override
-    public ReferenceIndex<? extends Map.Entry<K, V>> entryIndex() {
+    public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
         return entryIndex;
     }
 
