@@ -38,10 +38,10 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private final GroupBind<S> rootBind;
     private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds = new ConcurrentHashMap<>();
     private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
-    private final ReferenceMap<String, Object> computedRefs = baseRefs.biPipe()
-            .mapKey(key -> binds.get(key).get())
+    private final ReferenceMap<? extends VarBind<? extends S, Object, Object, Object>, Object> computedRefs = baseRefs
+            .biPipe()
+            .mapKey(key -> binds.get(key).assertion("Missing Bind for key: " + key))
             .mapBoth(PartialBind.Finisher::finish)
-            .mapKey(PartialBind.Base::getName)
             .distinctKeys();
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;

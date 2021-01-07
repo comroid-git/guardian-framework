@@ -1,7 +1,6 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.Comparator;
 import java.util.function.*;
