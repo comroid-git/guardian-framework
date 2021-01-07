@@ -34,15 +34,16 @@ import static java.util.Collections.unmodifiableSet;
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 @SuppressWarnings("unchecked")
-public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends AbstractMap<String, Object> implements DataContainer<S> {
+public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>>
+        extends AbstractMap<String, Object>
+        implements DataContainer<S> {
     private final GroupBind<S> rootBind;
     private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds = new ConcurrentHashMap<>();
     private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
     private final ReferenceMap<? extends VarBind<? extends S, Object, Object, Object>, Object> computedRefs = baseRefs
             .biPipe()
             .mapKey(key -> binds.get(key).assertion("Missing Bind for key: " + key))
-            .mapBoth(PartialBind.Finisher::finish)
-            .distinctKeys();
+            .mapBoth(PartialBind.Finisher::finish);
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
@@ -143,8 +144,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         return unmodifiableSet(changed);
     }
 
-    public boolean containsKey(VarBind<?, ?, ?, ?> bind) {
-        return vars.containsKey(bind.getFieldName());
+    public boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {
+        return computedRefs.containsKey(bind);
     }
 
     @Override

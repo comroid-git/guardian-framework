@@ -1,6 +1,9 @@
-package org.comroid.mutatio.pipe;
+package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.api.Polyfill;
+import org.comroid.mutatio.pipe.BiPipe;
+import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 
@@ -14,8 +17,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
     protected final ReferenceIndex<O> refs;
     private final Collection<Pipe<?>> subs = new ArrayList<>();
-    private final StageAdapter<O, T, Reference<O>, Reference<T>> adapter;
-    private final int autoEmptyLimit;
+    protected final StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter;
+    protected final int autoEmptyLimit;
     private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
     private final List<Closeable> children = new ArrayList<>();
 
@@ -41,7 +44,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
         this(old, adapter, AUTOEMPTY_DISABLED);
     }
 
-    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter, int autoEmptyLimit) {
+    protected BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter, int autoEmptyLimit) {
         this.refs = old;
         this.adapter = adapter;
         this.autoEmptyLimit = autoEmptyLimit;
@@ -87,7 +90,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public Reference<T> getReference(int index) {
-        return accessors.computeIfAbsent(index, key -> adapter.advance(refs.getReference(index)));
+        return accessors.computeIfAbsent(index, key -> adapter.advance(Polyfill.uncheckedCast(refs.getReference(index))));
     }
 
     @Override

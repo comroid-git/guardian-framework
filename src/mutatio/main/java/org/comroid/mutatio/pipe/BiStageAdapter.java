@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.function.*;
 
-public interface BiStageAdapter<InX, InY, OutX, OutY> extends StageAdapter<InY, OutY, KeyedReference<InX, InY>, KeyedReference<OutX, OutY>> {
+public interface BiStageAdapter<InX, InY, OutX, OutY>
+        extends StageAdapter<InY, OutY, KeyedReference<InX, InY>, KeyedReference<OutX, OutY>> {
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Support.Filter<>(predicate, any -> true);
     }

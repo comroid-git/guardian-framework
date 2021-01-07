@@ -100,11 +100,6 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
     Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter);
 
-    @Override
-    default Pump<? extends V> pump(Executor executor) {
-        return pipe().pump(executor);
-    }
-
     default BiPipe<K, V> biPipe() {
         return entryIndex()
                 .pipe()
@@ -140,7 +135,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
         return getReference(key, true).computeIfAbsent(supplier);
     }
 
-    void forEach(BiConsumer<K, V> action);
+    void forEach(BiConsumer<? super K, ? super V> action);
 
     void clear();
 
@@ -193,7 +188,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             }
 
             @Override
-            public void forEach(BiConsumer<K, V> action) {
+            public void forEach(BiConsumer<? super K, ? super V> action) {
                 refMap.forEach((k, ref) -> ref.consume(it -> action.accept(k, it)));
             }
 

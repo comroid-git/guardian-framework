@@ -3,8 +3,9 @@ package org.comroid.mutatio.pipe;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
+import org.comroid.mutatio.pipe.impl.SortedResultingPipe;
 import org.comroid.mutatio.ref.Processor;
-import org.comroid.mutatio.pump.BasicPump;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
@@ -177,11 +178,6 @@ public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
     @Override
     default boolean remove(T item) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("remove() is not supported by pipe");
-    }
-
-    @Override
-    default Pump<T> pump(Executor executor) {
-        return new BasicPump<>(executor, this.map(Polyfill::uncheckedCast));
     }
 
     <Y> BiPipe<T, Y> bi(Function<T, Y> mapper);

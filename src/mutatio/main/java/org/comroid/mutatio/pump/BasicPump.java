@@ -1,6 +1,6 @@
 package org.comroid.mutatio.pump;
 
-import org.comroid.mutatio.pipe.BasicPipe;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
