@@ -16,6 +16,7 @@ import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
+import org.comroid.varbind.multipart.PartialBind;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -35,11 +36,13 @@ import static org.comroid.api.Polyfill.uncheckedCast;
 @SuppressWarnings("unchecked")
 public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends AbstractMap<String, Object> implements DataContainer<S> {
     private final GroupBind<S> rootBind;
-    private final Map<String, Span<VarBind<? extends S, ?, ?, ?>>> binds = new ConcurrentHashMap<>();
+    private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds = new ConcurrentHashMap<>();
     private final ReferenceMap<String, Span<Object>> baseRefs = ReferenceMap.create();
-    private final int computedRefs = baseRefs.biPipe()
-            .mapFirst(key -> binds.get(key).get())
-            .merge((varbind, values) -> varbind.finish(values))
+    private final ReferenceMap<String, Object> computedRefs = baseRefs.biPipe()
+            .mapKey(key -> binds.get(key).get())
+            .mapBoth(PartialBind.Finisher::finish)
+            .mapKey(PartialBind.Base::getName)
+            .distinctKeys();
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
