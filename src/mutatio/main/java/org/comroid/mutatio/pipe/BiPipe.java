@@ -1,6 +1,8 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.Comparator;
@@ -8,6 +10,9 @@ import java.util.function.*;
 import java.util.stream.Stream;
 
 public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
+    @Override
+    Stream<KeyedReference<K, V>> streamRefs();
+
     <Rk, Rv> BiPipe<Rk, Rv> addBiStage(BiStageAdapter<K, V, Rk, Rv> stage);
 
     default BiPipe<K, V> filterKey(Predicate<? super K> predicate) {

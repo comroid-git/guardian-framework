@@ -301,7 +301,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
     @Override
     public <T, E> KeyedReference<String, T> getComputedReference(String name) {
-        return uncheckedCast(computedRefs.getReference(name));
+        return uncheckedCast(computedRefs.getReference(name, true));
     }
 
     @NotNull

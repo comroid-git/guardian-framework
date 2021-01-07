@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
@@ -38,25 +37,6 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
                 || (refs instanceof BiPipe && (test = (KeyedReference<InK, InV>) refs
                 .getReference(0)).getKey().getClass()
                 .equals(adapter.advance(test).getKey().getClass()));*/
-        refreshAccessors();
-    }
-
-    @SuppressWarnings({"SuspiciousMethodCalls", "unchecked"})
-    private void refreshAccessors() {
-        if (refs instanceof BiPipe) {
-            Stream<? extends KeyedReference<InK, InV>> stream = ((BiPipe<InK, InV>) refs).streamRefs();
-            if (isSameKeyType)
-                stream = stream.filter(ref -> !accessors.containsKey(ref.getKey()));
-            stream.forEach(ref -> {
-                final KeyedReference<K, V> advance = ((BiStageAdapter<InK, InV, K, V>) adapter).advance(ref);
-                if (advance != null)
-                    accessors.put(advance.getKey(), advance);
-            });
-        } else IntStream.range(0, refs.size())
-                .mapToObj(refs::getReference)
-                .map(ref -> new KeyedReference.Support.Base<>(new Object(), ref))
-                .map(ref -> ((BiStageAdapter<InK, InV, K, V>) adapter).advance(Polyfill.uncheckedCast(ref)))
-                .forEach(ref -> accessors.put(ref.getKey(), ref));
     }
 
     @Override
@@ -66,7 +46,13 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
-        refreshAccessors();
+        if (!accessors.containsKey(key) && createIfAbsent)
+            refs.streamRefs()
+            .forEach(ref -> {
+                Reference<V> advance = adapter.advance(Polyfill.uncheckedCast(ref));
+
+                if (advance.) // todo createIfAbsent
+            });
         return accessors.get(key);
     }
 
@@ -106,12 +92,16 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         return new ArrayList<>(accessors.entrySet()).get(0).getValue(); // todo LOL
     }
 
+    @Override
+    public Stream<KeyedReference<K, V>> streamRefs() {
+        return accessors.values().stream();
+    }
+
     private final class EntryIndex implements ReferenceIndex<KeyedReference<K, V>> {
         private final Map<Integer, Reference<KeyedReference<K, V>>> indexAccessors = new ConcurrentHashMap<>();
 
         @Override
         public List<KeyedReference<K, V>> unwrap() {
-            refreshAccessors();
             return Collections.unmodifiableList(new ArrayList<>(accessors.values()));
         }
 
@@ -133,6 +123,11 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         @Override
         public void clear() {
             BasicBiPipe.this.clear();
+        }
+
+        @Override
+        public Stream<? extends Reference<KeyedReference<K, V>>> streamRefs() {
+            throw new UnsupportedOperationException();
         }
 
         @Override

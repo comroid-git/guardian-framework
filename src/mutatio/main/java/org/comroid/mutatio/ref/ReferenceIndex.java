@@ -60,6 +60,8 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
      */
     void clear();
 
+    Stream<? extends Reference<T>> streamRefs();
+
     default Stream<T> stream() {
         return unwrap().stream();
     }
@@ -120,6 +122,11 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
             @Override
             public void clear() {
                 list.clear();
+            }
+
+            @Override
+            public Stream<Reference<T>> streamRefs() {
+                return list.stream();
             }
 
             @Override

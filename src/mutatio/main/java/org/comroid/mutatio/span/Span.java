@@ -285,6 +285,11 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
     }
 
     @Override
+    public Stream<? extends Reference<T>> streamRefs() {
+        return storage.streamRefs();
+    }
+
+    @Override
     public Stream<T> stream() {
         return Stream.of(toArray()).map(Polyfill::uncheckedCast);
     }

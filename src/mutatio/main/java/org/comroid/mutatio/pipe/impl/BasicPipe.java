@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class BasicPipe<O, T> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
@@ -82,6 +83,11 @@ public class BasicPipe<O, T> implements Pipe<T> {
     @Override
     public void clear() {
         refs.clear();
+    }
+
+    @Override
+    public Stream<? extends Reference<T>> streamRefs() {
+        return accessors.values().stream();
     }
 
     @Override

@@ -244,6 +244,11 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
                 }
 
                 @Override
+                public Stream<? extends Reference<KeyedReference<K, V>>> streamRefs() {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
                 public Reference<KeyedReference<K, V>> getReference(int index) {
                     return indexAccessors.computeIfAbsent(index, k -> Reference.provided(() -> unwrap().get(index)));
                 }
