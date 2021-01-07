@@ -1,18 +1,12 @@
 package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.Comparator;
 import java.util.function.*;
 
 public interface BiPipe<K, V> extends Pipe<V> {
-    @Override
-    default <R> Pipe<R> addStage(StageAdapter<V, R, Reference<V>, Reference<R>> stage) {
-        throw new UnsupportedOperationException("BiStageAdapter required");
-    }
-
     <Rk, Rv> BiPipe<Rk, Rv> addBiStage(BiStageAdapter<K, V, Rk, Rv> stage);
 
     default BiPipe<K, V> filterKey(Predicate<? super K> predicate) {
@@ -24,6 +18,10 @@ public interface BiPipe<K, V> extends Pipe<V> {
         return addBiStage(BiStageAdapter.filterValue(predicate));
     }
 
+    default BiPipe<K, V> filterBoth(BiPredicate<? super K, ? super V> biPredicate) {
+        return addBiStage(BiStageAdapter.filterBoth(biPredicate));
+    }
+
     default <R> BiPipe<R, V> mapKey(Function<? super K, ? extends R> mapper) {
         return addBiStage(BiStageAdapter.mapKey(mapper));
     }
@@ -31,6 +29,10 @@ public interface BiPipe<K, V> extends Pipe<V> {
     @Override
     default <R> BiPipe<K, R> map(Function<? super V, ? extends R> mapper) {
         return addBiStage(BiStageAdapter.mapValue(mapper));
+    }
+
+    default <R> BiPipe<K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapBoth(mapper));
     }
 
     default <R> BiPipe<R, V> flatMapKey(final Class<R> target) {
@@ -49,6 +51,10 @@ public interface BiPipe<K, V> extends Pipe<V> {
     @Override
     default <R> BiPipe<K, R> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
         return addBiStage(BiStageAdapter.flatMapValue(mapper));
+    }
+
+    default <R> BiPipe<K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapBoth(mapper));
     }
 
     default BiPipe<K, V> peek(BiConsumer<? super K, ? super V> action) {
@@ -80,12 +86,12 @@ public interface BiPipe<K, V> extends Pipe<V> {
 
     @Override
     default BiPipe<K, V> sorted() {
-        return null;
+        return null; // todo
     }
 
     @Override
     default BiPipe<K, V> sorted(Comparator<? super V> comparator) {
-        return null;
+        return null; // todo
     }
 
     default void forEach(BiConsumer<? super K, ? super V> action) {

@@ -3,6 +3,8 @@ package org.comroid.mutatio.ref;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
     @Override
@@ -24,6 +26,14 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
 
     static <K, V> KeyedReference<K, V> create(boolean mutable, K key, @Nullable V initialValue) {
         return new Support.Base<>(mutable, key, initialValue);
+    }
+
+    static <K, V> KeyedReference<K, V> conditional(
+            BooleanSupplier condition,
+            Supplier<K> keySupplier,
+            Supplier<V> valueSupplier
+    ) {
+        return new Support.Conditional<>(condition, keySupplier, valueSupplier);
     }
 
     @Override
@@ -79,6 +89,42 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             @Override
             protected boolean doSet(V value) {
                 return valueHolder.set(value);
+            }
+        }
+
+        private static final class Conditional<K, V> extends Support.Base<K, V> {
+            private final BooleanSupplier condition;
+            private final Supplier<K> keySupplier;
+            private final Supplier<V> valueSupplier;
+
+            @Override
+            public boolean isOutdated() {
+                return true;
+            }
+
+            public Conditional(
+                    BooleanSupplier condition,
+                    Supplier<K> keySupplier,
+                    Supplier<V> valueSupplier
+            ) {
+                super(false, null, null);
+
+                this.condition = condition;
+                this.keySupplier = keySupplier;
+                this.valueSupplier = valueSupplier;
+            }
+
+
+            @Override
+            protected V doGet() {
+                if (condition.getAsBoolean())
+                    return valueSupplier.get();
+                return null;
+            }
+
+            @Override
+            public K getKey() {
+                return keySupplier.get();
             }
         }
     }

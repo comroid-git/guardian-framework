@@ -7,9 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 public interface BiStageAdapter<InX, InY, OutX, OutY> extends StageAdapter<InY, OutY, KeyedReference<InX, InY>, KeyedReference<OutX, OutY>> {
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
@@ -20,13 +18,24 @@ public interface BiStageAdapter<InX, InY, OutX, OutY> extends StageAdapter<InY, 
         return new Support.Filter<>(any -> true, predicate);
     }
 
+    static <K, V> BiStageAdapter<K, V, K, V> filterBoth(final BiPredicate<? super K, ? super V> predicate) {
+        return ref -> KeyedReference.conditional(() -> predicate.test(ref.getKey(), ref.getValue()), ref::getKey, ref);
+    }
+
     static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(Function<? super K, ? extends R> mapper) {
         return new Support.Map<>(mapper, Function.identity());
     }
 
-
     static <K, V, R> BiStageAdapter<K, V, K, R> mapValue(Function<? super V, ? extends R> mapper) {
         return new Support.Map<>(Function.identity(), mapper);
+    }
+
+    static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
+        return ref -> KeyedReference.conditional(
+                () -> true,
+                ref::getKey,
+                () -> mapper.apply(ref.getKey(), ref.getValue())
+        );
     }
 
     static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
@@ -35,6 +44,14 @@ public interface BiStageAdapter<InX, InY, OutX, OutY> extends StageAdapter<InY, 
 
     static <K, V, R> BiStageAdapter<K, V, K, R> flatMapValue(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
         return new Support.Map<>(Function.identity(), mapper.andThen(Rewrapper::get));
+    }
+
+    static <K, V, R> BiStageAdapter<K, V, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return ref -> KeyedReference.conditional(
+                () -> true,
+                ref::getKey,
+                () -> mapper.andThen(Rewrapper::get).apply(ref.getKey(), ref.getValue())
+        );
     }
 
     static <K, V> BiStageAdapter<K, V, K, V> distinctValue() {

@@ -5,6 +5,7 @@ import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.pump.BasicPump;
 import org.comroid.mutatio.pump.Pump;
+import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,7 +51,10 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
 
     boolean add(T item);
 
-    boolean addReference(Reference<T> in);
+    @OverrideOnly
+    default boolean addReference(Reference<T> in) {
+        return false;
+    }
 
     boolean remove(T item);
 
