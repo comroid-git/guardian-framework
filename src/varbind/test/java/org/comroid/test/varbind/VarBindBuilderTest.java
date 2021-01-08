@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.comroid.test.varbind.FastJSONLib.fastJsonLib;
 
-public class BindBuilderTest {
+public class VarBindBuilderTest {
     private GroupBind<Dummy, Dummy> group;
     private UniObjectNode objData;
 
@@ -64,7 +64,7 @@ public class BindBuilderTest {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
                 .extractAs(ValueType.STRING)
-                .andRemap(BindBuilderTest::reverse)
+                .andRemap(VarBindBuilderTest::reverse)
                 .onceEach()
                 .build();
 
