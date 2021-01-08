@@ -17,12 +17,12 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 // todo this class is still shit
-public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
+public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
     private final Map<K, KeyedReference<K, V>> accessors = new ConcurrentHashMap<>();
     private final boolean isSameKeyType;
     private final EntryIndex entryIndex;
 
-    public BasicBiPipe(
+    public KeyedPipe(
             Pipe<InV> old,
             BiStageAdapter<InK, InV, K, V> adapter,
             int autoEmptyLimit
@@ -40,7 +40,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public <Rk, Rv> BiPipe<Rk, Rv> addBiStage(BiStageAdapter<K, V, Rk, Rv> stage) {
-        return new BasicBiPipe<>(this, stage, autoEmptyLimit);
+        return new KeyedPipe<>(this, stage, autoEmptyLimit);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
         @Override
         public int size() {
-            return BasicBiPipe.this.size();
+            return KeyedPipe.this.size();
         }
 
         @Override
@@ -167,7 +167,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
         @Override
         public void clear() {
-            BasicBiPipe.this.clear();
+            KeyedPipe.this.clear();
         }
 
         @Override
@@ -178,7 +178,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
         @Override
         public Reference<KeyedReference<K, V>> getReference(int index) {
             return indexAccessors.computeIfAbsent(index, k -> Reference
-                    .provided(() -> BasicBiPipe.this.getReference(index)));
+                    .provided(() -> KeyedPipe.this.getReference(index)));
         }
     }
 }
