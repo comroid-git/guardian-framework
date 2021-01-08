@@ -161,7 +161,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                     Span<Object> extract = bind.extract(data);
 
                     getExtractionReference(bind).set(extract);
-                    getComputedReference(bind).outdate();
+                    //getComputedReference(bind).outdate();
                     changed.add(bind);
                 });
 
