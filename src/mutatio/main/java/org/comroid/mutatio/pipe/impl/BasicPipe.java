@@ -99,8 +99,6 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public Reference<T> getReference(int index) {
-        if (!accessors.containsKey(index))
-            throw new IllegalArgumentException("Unknown index: " + index);
         return accessors.computeIfAbsent(index, key -> adapter.advance(Polyfill.uncheckedCast(refs.getReference(index))));
     }
 
