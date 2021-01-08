@@ -1,13 +1,17 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
+import org.comroid.mutatio.pipe.StageAdapter;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
+import org.jetbrains.annotations.ApiStatus.Experimental;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,6 +92,27 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
 
     default @NotNull T requireNonNull(int index, String message) throws NullPointerException {
         return getReference(index).requireNonNull(message);
+    }
+
+    @Internal
+    @Experimental
+    default <
+            Out,
+            InRef extends Reference<T>,
+            OutRef extends Reference<Out>,
+            Count,
+            Adp extends StageAdapter<T, Out, InRef, OutRef>
+            > void generateAccessors(
+            final Map<Integer, OutRef> accessors,
+            final Adp adapter,
+            final BiFunction<Adp, InRef, OutRef> refAccumulator
+    ) {
+        for (int i = 0; i < size(); i++) {
+            //noinspection unchecked
+            InRef inRef = (InRef) getReference(i);
+            OutRef outRef = refAccumulator.apply(adapter, inRef);
+            accessors.put(i, outRef);
+        }
     }
 
     final class Support {

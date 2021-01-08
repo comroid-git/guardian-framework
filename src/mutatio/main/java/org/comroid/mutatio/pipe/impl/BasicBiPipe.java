@@ -106,6 +106,15 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
+        // generate references
+        for (int i = 0; i < size(); i++) {
+            //noinspection unchecked
+            InRef inRef = (InRef) getReference(i);
+            OutRef outRef = refAccumulator.apply(adapter, inRef);
+            accessors.put(i, outRef);
+        }
+
+        generateAccessors(accessors, (BiStageAdapter<InK, InV, K, V>) adapter, BiStageAdapter::advance);
         return accessors.values().stream();
     }
 

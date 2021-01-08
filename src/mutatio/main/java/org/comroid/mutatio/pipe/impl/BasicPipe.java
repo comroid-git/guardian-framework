@@ -87,6 +87,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public Stream<? extends Reference<T>> streamRefs() {
+        // generate accessors
+        refs.generateAccessors(accessors, Polyfill.uncheckedCast(getAdapter()), StageAdapter::advance);
         return accessors.values().stream();
     }
 
