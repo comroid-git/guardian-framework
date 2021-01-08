@@ -39,7 +39,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         extends AbstractMap<String, Object>
         implements DataContainer<S> {
     private final GroupBind<S> rootBind;
-    private final Map<String, Span<VarBind<? extends S, Object, Object, Object>>> binds;
+    private final Map<String, VarBind<? extends S, Object, Object, Object>> binds;
     private final ReferenceMap<String, Span<Object>> baseRefs;
     private final ReferenceMap<String, Object> computedRefs;
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
@@ -73,14 +73,14 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         this.myType = (Class<? extends S>) (containingClass == null ? getClass() : containingClass);
         this.selfSupplier = selfSupplier;
-        this.binds = new ConcurrentHashMap<>();
         this.baseRefs = ReferenceMap.create();
+        this.rootBind = findRootBind(myType);
+        this.binds = findAllBinds(rootBind);
         this.computedRefs = baseRefs
                 .biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth(PartialBind.Finisher::finish)
                 .mapKey(PartialBind.Base::getName);
-        this.rootBind = findRootBind(myType);
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
@@ -95,14 +95,14 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         this.myType = (Class<? extends S>) (containingClass == null ? getClass() : containingClass);
         this.selfSupplier = selfSupplier;
+        this.baseRefs = ReferenceMap.create();
         this.rootBind = findRootBind(myType);
+        this.binds = findAllBinds(rootBind);
         this.initiallySet = unmodifiableSet(initialValues.keySet());
         initialValues.forEach((bind, value) -> getExtractionReference(bind).set(Span.singleton(value)));
-        baseRefs = ReferenceMap.create();
-        binds = new ConcurrentHashMap<>();
-        computedRefs = baseRefs
+        this.computedRefs = baseRefs
                 .biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key).assertion("Missing Bind for key: " + key)))
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth(PartialBind.Finisher::finish)
                 .mapKey(PartialBind.Base::getName);
     }
@@ -121,6 +121,18 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         if (!groups.hasNext())
             throw new NoSuchElementException(String.format("No @RootBind annotated field found in %s", location.value()));
         return groups.next();
+    }
+
+    private static <S extends DataContainer<? super S>>
+    Map<String, VarBind<? extends S, Object, Object, Object>>
+    findAllBinds(GroupBind<S> rootBind) {
+        final Map<String, VarBind<? extends S, Object, Object, Object>> map = new ConcurrentHashMap<>();
+        rootBind.streamAllChildren()
+                .forEach(bind -> map.put(
+                        bind.getFieldName(),
+                        (VarBind<? extends S, Object, Object, Object>) bind)
+                );
+        return Collections.unmodifiableMap(map);
     }
 
     @Override
@@ -228,7 +240,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
             if (them.isSingle()) {
 
-                final Reference<?> comp = binds.get(key).into(this::getComputedReference);
+                final Reference<?> comp = getComputedReference(binds.get(key));
 
                 if (comp.test(DataContainer.class::isInstance)) {
                     applyValueToNode(applyTo, key, comp.flatMap(DataContainer.class)
