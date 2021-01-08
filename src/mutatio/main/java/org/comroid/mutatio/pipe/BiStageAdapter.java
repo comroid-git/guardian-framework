@@ -4,6 +4,7 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -82,8 +83,11 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         return filterValue(new Structure.Skipper<>(skip));
     }
 
-    static <T, X> BiStageAdapter<T, T, X, T> source(final Function<T, X> source) {
-        return new Support.BiSource<>(source);
+    static <T, X> BiStageAdapter<T, T, X, T> source(
+            Function<? super T, ? extends X> source,
+            Function<? super X, ? extends T> reverse
+    ) {
+        return new Support.BiSource<>(source, reverse);
     }
 
     @Override
@@ -165,11 +169,14 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             }
         }
 
+        @Internal
         public static class BiSource<T, X> implements BiStageAdapter<T, T, X, T> {
-            private final Function<T, X> source;
+            private final Function<? super T, ? extends X> source;
+            private final Function<? super X, ? extends T> reverse;
 
-            public BiSource(Function<T, X> source) {
+            public BiSource(Function<? super T, ? extends X> source, Function<? super X, ? extends T> reverse) {
                 this.source = source;
+                this.reverse = reverse;
             }
 
             @Override
@@ -185,6 +192,11 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             @Override
             public X convertKey(T value) {
                 return source.apply(value);
+            }
+
+            @Override
+            public T reverseKey(X key) {
+                return reverse.apply(key);
             }
         }
 
