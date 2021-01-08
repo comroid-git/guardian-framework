@@ -56,11 +56,12 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         }
 
         private @Nullable KeyedReference<K, V> getRef() {
+            //noinspection FuseStreamOperations -> doesnt work
             List<KeyedReference<K, V>> collect = refs.streamRefs()
                     .map(Polyfill::<KeyedReference<K, V>>uncheckedCast)
-                    .filter(Rewrapper::isNonNull)
-                    .sorted((a, b) -> a.accumulate(b, comparator::compare))
                     .collect(Collectors.toList());
+            collect.sort((a, b) -> a.accumulate(b, comparator::compare));
+
             if (accessedIndex >= collect.size())
                 return null;
             return collect.get(accessedIndex);
