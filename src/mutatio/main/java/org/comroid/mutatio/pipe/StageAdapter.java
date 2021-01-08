@@ -1,15 +1,17 @@
 package org.comroid.mutatio.pipe;
 
-import org.comroid.mutatio.ref.Processor;
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
 import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Reference<O>> {
+public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Reference<Out>> {
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> filter(Predicate<? super T> predicate) {
         return new Support.Filter<>(predicate);
     }
@@ -39,6 +41,11 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
     }
 
     RO advance(RI ref);
+
+    @OverrideOnly
+    default Out convertValue(In value) {
+        return Polyfill.uncheckedCast(value);
+    }
 
     final class Structure {
         public static final class ConsumingFilter<T> implements Predicate<T> {
@@ -110,7 +117,11 @@ public interface StageAdapter<I, O, RI extends Reference<I>, RO extends Referenc
             public Reference<T> advance(Reference<O> ref) {
                 return new Processor.Support.Remapped<>(ref, mapper, null);
             }
-        }
 
+            @Override
+            public T convertValue(O value) {
+                return mapper.apply(value);
+            }
+        }
     }
 }

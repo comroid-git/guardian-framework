@@ -1,16 +1,20 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.function.*;
 
-public interface BiStageAdapter<InX, InY, OutX, OutY>
-        extends StageAdapter<InY, OutY, KeyedReference<InX, InY>, KeyedReference<OutX, OutY>> {
+public interface BiStageAdapter<InK, InV, OutK, OutV>
+        extends StageAdapter<InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>> {
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Support.Filter<>(predicate, any -> true);
     }
@@ -75,11 +79,16 @@ public interface BiStageAdapter<InX, InY, OutX, OutY>
     }
 
     static <T, X> BiStageAdapter<Object, T, X, T> source(final Function<T, X> source) {
-        return ref -> KeyedReference.conditional(() -> true, () -> ref.into(source), ref);
+        return new Support.BiSource<>(source);
     }
 
     @Override
-    KeyedReference<OutX, OutY> advance(KeyedReference<InX, InY> ref);
+    KeyedReference<OutK, OutV> advance(KeyedReference<InK, InV> ref);
+
+    @OverrideOnly
+    default OutK convertKey(InK key) {
+        return Polyfill.uncheckedCast(key);
+    }
 
     final class Support {
         public final static class Filter<X, Y> implements BiStageAdapter<X, Y, X, Y> {
@@ -117,6 +126,30 @@ public interface BiStageAdapter<InX, InY, OutX, OutY>
                         keyMapper.apply(ref.getKey()),
                         ref.map(valueMapper)
                 );
+            }
+
+            @Override
+            public OX convertKey(IX key) {
+                return keyMapper.apply(key);
+            }
+
+            @Override
+            public OY convertValue(IY value) {
+                return valueMapper.apply(value);
+            }
+        }
+
+        public static class BiSource<T, X> implements BiStageAdapter<Object, T, X, T> {
+            @Internal
+            public final Function<T, X> source;
+
+            public BiSource(Function<T, X> source) {
+                this.source = source;
+            }
+
+            @Override
+            public KeyedReference<X, T> advance(KeyedReference<Object, T> ref) {
+                return KeyedReference.conditional(() -> true, () -> ref.into(source), ref);
             }
         }
 
