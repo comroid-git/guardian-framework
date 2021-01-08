@@ -50,7 +50,10 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
             if (refs instanceof ReferenceMap) {
                 ReferenceMap<InK, InV> cast = (ReferenceMap<InK, InV>) refs;
-                KeyedReference<K, V> advance = cast.stream(inK -> biAdapter.convertKey(inK).equals(key))
+                KeyedReference<K, V> advance = cast
+                        .stream(inK -> isSameKeyType
+                                ? inK.equals(key)
+                                : biAdapter.convertKey(inK).equals(key))
                         .findFirst()
                         .map(biAdapter::advance)
                         .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in parent: %s in %s", key, refs)));
