@@ -155,6 +155,12 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
                 return (T1) uni.asList().get(0);
             throw new UnsupportedOperationException("Node too large");
         }
+
+        @Override
+        public Class<T> getTargetClass() {
+            //noinspection unchecked
+            return (Class<T>) dst.tarClass;
+        }
     }
 
 }

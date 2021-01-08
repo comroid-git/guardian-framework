@@ -17,7 +17,6 @@ import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
-import org.comroid.varbind.multipart.PartialBind;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +79,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(PartialBind.Base::getName);
+                .mapKey(VarBind::getName);
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
@@ -103,8 +102,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.computedRefs = baseRefs
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
-                .mapBoth(PartialBind.Finisher::finish)
-                .mapKey(PartialBind.Base::getName);
+                .mapBoth(VarBind::finish)
+                .mapKey(VarBind::getName);
     }
 
     @Internal

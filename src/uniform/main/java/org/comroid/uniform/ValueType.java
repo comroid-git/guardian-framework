@@ -66,6 +66,11 @@ public final class ValueType<R> implements HeldType<R>, Predicate<Object> {
     }
 
     @Override
+    public Class<R> getTargetClass() {
+        return type;
+    }
+
+    @Override
     public String toString() {
         return String.format("ValueType{%s}", name);
     }

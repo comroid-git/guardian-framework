@@ -1,12 +1,52 @@
 package org.comroid.varbind.bind;
 
+import org.comroid.api.Named;
+import org.comroid.api.ValuePointer;
+import org.comroid.mutatio.span.Span;
+import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainer;
-import org.comroid.varbind.multipart.PartialBind;
 
-public interface VarBind<MEMBEROF extends DataContainer<? super MEMBEROF>, EXTR, REMAP, FINAL> extends
-        PartialBind.Base<MEMBEROF, EXTR, REMAP, FINAL>,
-        PartialBind.Grouped<MEMBEROF>,
-        PartialBind.Extractor<EXTR>,
-        PartialBind.Remapper<MEMBEROF, EXTR, REMAP>,
-        PartialBind.Finisher<REMAP, FINAL> {
+public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
+        extends Named, ValuePointer<EXTR> {
+    String getFieldName();
+
+    @Override
+    default String getName() {
+        return String.format("VarBind<%s>", getFieldName());
+    }
+
+    boolean isRequired();
+
+    default FINAL getFrom(UniObjectNode node) {
+        return getFrom(null, node);
+    }
+
+    default FINAL getFrom(final SELF dependencyObject, UniObjectNode node) {
+        return process(dependencyObject, extract(node));
+    }
+
+    default Span<REMAP> remapAll(final SELF context, Span<EXTR> from) {
+        return from.pipe()
+                .map(each -> remap(context, each))
+                .span();
+    }
+
+    default FINAL process(final SELF context, Span<EXTR> from) {
+        return finish(remapAll(context, from));
+    }
+
+    GroupBind<SELF> getGroup();
+
+    Span<EXTR> extract(UniNode data);
+
+    REMAP remap(SELF context, EXTR data);
+
+    boolean isListing();
+
+    FINAL finish(Span<REMAP> parts);
+
+    enum ExtractionMethod {
+        VALUE, OBJECT, ARRAY
+    }
 }

@@ -5,7 +5,6 @@ import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
-import org.comroid.varbind.multipart.PartialBind;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.comroid.test.varbind.FastJSONLib.fastJsonLib;
 
-public class BindBuilderTest {
+public class VarBindBuilderTest {
     private GroupBind<Dummy, Dummy> group;
     private UniObjectNode objData;
 
@@ -65,7 +64,7 @@ public class BindBuilderTest {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
                 .extractAs(ValueType.STRING)
-                .andRemap(BindBuilderTest::reverse)
+                .andRemap(VarBindBuilderTest::reverse)
                 .onceEach()
                 .build();
 

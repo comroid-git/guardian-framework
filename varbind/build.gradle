@@ -10,18 +10,16 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 ext {
-    projectDescription = "Event Handling solution"
+    projectDescription = "Serialization Solution"
 }
 
 dependencies {
     if (isAutoDeploy) {
         api project(':mutatio')
         api project(':uniform')
-        api project(':spellbind')
     } else {
         api project(':guardian:mutatio')
         api project(':guardian:uniform')
-        api project(':guardian:spellbind')
     }
 
     testImplementation 'com.alibaba:fastjson:1.2.71'
