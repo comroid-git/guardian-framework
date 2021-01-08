@@ -310,14 +310,19 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         baseRefs.computeIfAbsent(fieldName, Span::new);
         return uncheckedCast(Objects.requireNonNull(
                 baseRefs.getReference(fieldName),
-                "Missing base reference: " + fieldName));
+                String.format("Missing base reference %s @ %s", fieldName, toString())));
     }
 
     @Override
     public <T, E> KeyedReference<String, T> getComputedReference(String fieldName) {
         return uncheckedCast(Objects.requireNonNull(
                 computedRefs.getReference(fieldName, true),
-                "Missing computed reference: " + fieldName));
+                String.format("Missing computed reference %s @ %s", fieldName, toString())));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("DataContainerBase{rootBind=%s, binds=%s}", rootBind, binds);
     }
 
     @NotNull
