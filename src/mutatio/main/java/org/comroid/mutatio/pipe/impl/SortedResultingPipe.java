@@ -1,5 +1,6 @@
-package org.comroid.mutatio.pipe;
+package org.comroid.mutatio.pipe.impl;
 
+import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.Nullable;
 

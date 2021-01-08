@@ -1,15 +1,19 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.pipe.BasicPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
-import org.comroid.mutatio.pump.BasicPump;
-import org.comroid.mutatio.pump.Pump;
+import org.comroid.mutatio.pipe.StageAdapter;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
+import org.jetbrains.annotations.ApiStatus.Experimental;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface ReferenceIndex<T> extends Pipeable<T> {
@@ -18,7 +22,9 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
     }
 
     static <T> ReferenceIndex<T> of(List<T> list) {
-        return new Support.OfList<>(list);
+        Support.OfList<T> index = new Support.OfList<>();
+        list.forEach(index::add);
+        return index;
     }
 
     static <T> ReferenceIndex<T> empty() {
@@ -46,12 +52,19 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
 
     boolean add(T item);
 
+    @OverrideOnly
+    default boolean addReference(Reference<T> in) {
+        return false;
+    }
+
     boolean remove(T item);
 
     /**
      * Deletes all elements
      */
     void clear();
+
+    Stream<? extends Reference<T>> streamRefs();
 
     default Stream<T> stream() {
         return unwrap().stream();
@@ -60,11 +73,6 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
     @Override
     default Pipe<T> pipe() {
         return new BasicPipe<>(this);
-    }
-
-    @Override
-    default Pump<T> pump(Executor executor) {
-        return new BasicPump<>(executor, this);
     }
 
     Reference<T> getReference(int index);
@@ -86,52 +94,86 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
         return getReference(index).requireNonNull(message);
     }
 
+    @Internal
+    @Experimental
+    default <
+            Out,
+            InRef extends Reference<T>,
+            OutRef extends Reference<Out>,
+            Count,
+            Adp extends StageAdapter<T, Out, InRef, OutRef>
+            > void generateAccessors(
+            final Map<Integer, OutRef> accessors,
+            final Adp adapter,
+            final BiFunction<Adp, InRef, OutRef> refAccumulator
+    ) {
+        for (int i = 0; i < size(); i++) {
+            //noinspection unchecked
+            InRef inRef = (InRef) getReference(i);
+            OutRef outRef = refAccumulator.apply(adapter, inRef);
+            accessors.put(i, outRef);
+        }
+    }
+
     final class Support {
         public static final ReferenceIndex<?> EMPTY = ReferenceIndex.of(Collections.emptyList());
 
-        private static final class OfList<T> implements ReferenceIndex<T> {
-            private final List<T> underlying;
+        public static final class OfList<T> implements ReferenceIndex<T> {
+            private final List<Reference<T>> list;
 
-            private OfList(List<T> underlying) {
-                this.underlying = underlying;
+            private OfList() {
+                this(new ArrayList<>());
+            }
+
+            private OfList(List<Reference<T>> list) {
+                this.list = list;
             }
 
             @Override
             public boolean add(T item) {
-                return underlying.add(item);
+                return list.add(Reference.constant(item));
+            }
+
+            @Override
+            public boolean addReference(Reference<T> in) {
+                return list.add(in);
             }
 
             @Override
             public boolean remove(T item) {
-                return underlying.remove(item);
+                return list.removeIf(ref -> ref.contentEquals(item));
             }
 
             @Override
             public void clear() {
-                underlying.clear();
+                list.clear();
+            }
+
+            @Override
+            public Stream<Reference<T>> streamRefs() {
+                return list.stream();
             }
 
             @Override
             public Pipe<T> pipe() {
-                return Pipe.of(underlying);
+                return Pipe.of(list).flatMap(Function.identity());
             }
 
             @Override
             public Reference<T> getReference(final int index) {
-                return Reference.conditional(
-                        () -> index < 0 || underlying.size() >= index,
-                        () -> underlying.get(index)
-                );
+                return list.get(index);
             }
 
             @Override
             public List<T> unwrap() {
-                return underlying;
+                return Collections.unmodifiableList(list.stream()
+                        .flatMap(Reference::stream)
+                        .collect(Collectors.toList()));
             }
 
             @Override
             public int size() {
-                return underlying.size();
+                return list.size();
             }
         }
     }

@@ -79,9 +79,10 @@ dependencies {
     // http adapter dependencies
     java8compatCompileOnly 'com.squareup.okhttp3:okhttp:4.7.2'
 
-    implementation 'com.google.flogger:flogger:0.5.1'
-    java8compatImplementation 'com.google.flogger:flogger:0.5.1'
-    java11compatImplementation 'com.google.flogger:flogger:0.5.1'
+    // logging dependencies
+    implementation 'org.apache.logging.log4j:log4j-api:2.11.0'
+    java8compatImplementation 'org.apache.logging.log4j:log4j-api:2.11.0'
+    java11compatImplementation 'org.apache.logging.log4j:log4j-api:2.11.0'
 
     testImplementation sourceSets.java8compat.output.classesDirs
     testImplementation sourceSets.java11compat.output.classesDirs

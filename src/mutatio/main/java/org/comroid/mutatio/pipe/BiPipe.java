@@ -1,68 +1,113 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.util.Pair;
+import org.comroid.mutatio.ref.ReferenceMap;
 
+import java.util.Comparator;
 import java.util.function.*;
+import java.util.stream.Stream;
 
-public final class BiPipe<A, B, X, Y> extends BasicPipe<Pair<A, B>, Pair<X, Y>> {
-    <T> BiPipe(Pipe<A> base, Function<A, B> bMapper) {
-        super(base.map(a -> new Pair<>(a, bMapper.apply(a))));
+public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
+    @Override
+    Stream<KeyedReference<K, V>> streamRefs();
+
+    <Rk, Rv> BiPipe<Rk, Rv> addBiStage(BiStageAdapter<K, V, Rk, Rv> stage);
+
+    default BiPipe<K, V> filterKey(Predicate<? super K> predicate) {
+        return addBiStage(BiStageAdapter.filterKey(predicate));
     }
 
-    private BiPipe(BiPipe<?, ?, A, B> base, StageAdapter<Pair<A, B>, Pair<X, Y>> adapter) {
-        super(base, adapter);
+    @Override
+    default BiPipe<K, V> filter(Predicate<? super V> predicate) {
+        return addBiStage(BiStageAdapter.filterValue(predicate));
     }
 
-    public BiPipe<X, Y, X, Y> filter(BiPredicate<? super X, ? super Y> predicate) {
-        return new BiPipe<>(this, StageAdapter
-                .filter(pair -> predicate.test(pair.getFirst(), pair.getSecond())));
+    default BiPipe<K, V> filterBoth(BiPredicate<? super K, ? super V> biPredicate) {
+        return addBiStage(BiStageAdapter.filterBoth(biPredicate));
     }
 
-    public BiPipe<X, Y, X, Y> filterFirst(Predicate<? super X> predicate) {
-        return new BiPipe<>(this, StageAdapter
-                .filter(pair -> predicate.test(pair.getFirst())));
+    default <R> BiPipe<R, V> mapKey(Function<? super K, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapKey(mapper));
     }
 
-    public BiPipe<X, Y, X, Y> filterSecond(Predicate<? super Y> predicate) {
-        return new BiPipe<>(this, StageAdapter
-                .filter(pair -> predicate.test(pair.getSecond())));
+    @Override
+    default <R> BiPipe<K, R> map(Function<? super V, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapValue(mapper));
     }
 
-    public <R> BiPipe<X, Y, R, Y> mapFirst(Function<? super X, ? extends R> mapper) {
-        return new BiPipe<>(this, StageAdapter
-                .map(pair -> new Pair<>(mapper.apply(pair.getFirst()), pair.getSecond())));
+    default <R> BiPipe<K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
+        return addBiStage(BiStageAdapter.mapBoth(mapper));
     }
 
-    public <R> BiPipe<X, Y, X, R> mapSecond(Function<? super Y, ? extends R> mapper) {
-        return new BiPipe<>(this, StageAdapter
-                .map(pair -> new Pair<>(pair.getFirst(), mapper.apply(pair.getSecond()))));
+    default <R> BiPipe<R, V> flatMapKey(final Class<R> target) {
+        return filterKey(target::isInstance).mapKey(target::cast);
     }
 
-    public <R> BiPipe<X, Y, R, Y> flatMapFirst(Function<? super X, ? extends Reference<? extends R>> mapper) {
-        return new BiPipe<>(this, StageAdapter
-                .map(pair -> new Pair<>(mapper.apply(pair.getFirst()).get(), pair.getSecond())));
+    @Override
+    default <R> BiPipe<K, R> flatMap(final Class<R> target) {
+        return filter(target::isInstance).map(target::cast);
     }
 
-    public <R> BiPipe<X, Y, X, R> flatMapSecond(Function<? super Y, ? extends Reference<? extends R>> mapper) {
-        return new BiPipe<>(this, StageAdapter
-                .map(pair -> new Pair<>(pair.getFirst(), mapper.apply(pair.getSecond()).get())));
+    default <R> BiPipe<R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapKey(mapper));
     }
 
-    public <R> Pipe<R> merge(BiFunction<X, Y, R> mergeFunction) {
-        return map(pair -> mergeFunction.apply(pair.getFirst(), pair.getSecond()));
+    @Override
+    default <R> BiPipe<K, R> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapValue(mapper));
     }
 
-    public BiPipe<X, Y, X, Y> peek(BiConsumer<? super X, ? super Y> action) {
-        return new BiPipe<>(this, StageAdapter
-                .peek(pair -> action.accept(pair.getFirst(), pair.getSecond())));
+    default <R> BiPipe<K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return addBiStage(BiStageAdapter.flatMapBoth(mapper));
     }
 
-    public void forEach(BiConsumer<? super X, ? super Y> action) {
-        forEach(pair -> action.accept(pair.getFirst(), pair.getSecond()));
+    default BiPipe<K, V> peek(BiConsumer<? super K, ? super V> action) {
+        return addBiStage(BiStageAdapter.peek(action));
     }
 
-    public Pipe<X> drop() {
-        return map(Pair::getFirst);
+    @Override
+    default BiPipe<K, V> distinct() {
+        return addBiStage(BiStageAdapter.distinctValue());
+    }
+
+    default <R> Pipe<R> merge(BiFunction<? super K, ? super V, ? extends R> merger) {
+        return null; // todo
+    }
+
+    @Override
+    default BiPipe<K, V> limit(long maxSize) {
+        return addBiStage(BiStageAdapter.limit(maxSize));
+    }
+
+    @Override
+    default BiPipe<K, V> skip(long skip) {
+        return addBiStage(BiStageAdapter.skip(skip));
+    }
+
+    @Override
+    default BiPipe<K, V> sorted() {
+        return null; // todo
+    }
+
+    @Override
+    default BiPipe<K, V> sorted(Comparator<? super V> comparator) {
+        return null; // todo
+    }
+
+    @Override
+    default void forEach(BiConsumer<? super K, ? super V> action) {
+        addBiStage(BiStageAdapter.peek(action)).unwrap();
+    }
+
+    @Override
+    default Pipe<V> pipe() {
+        return this;
+    }
+
+    @Override
+    default Stream<V> stream() {
+        return unwrap().stream();
     }
 }

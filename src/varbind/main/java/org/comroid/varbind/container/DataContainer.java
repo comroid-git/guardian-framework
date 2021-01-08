@@ -2,7 +2,7 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.SelfDeclared;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
@@ -28,11 +28,6 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
     Set<VarBind<? extends S, Object, ?, Object>> initiallySet();
 
     <T> Optional<Reference<T>> getByName(String name);
-
-    @Deprecated
-    default <T> @NotNull Reference<T> ref(VarBind<? extends S, ?, ?, T> bind) {
-        return getComputedReference(bind);
-    }
 
     default <T> @Nullable T get(VarBind<? extends S, ?, ?, T> bind) {
         return getComputedReference(bind).get();
@@ -66,16 +61,17 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
 
     <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value);
 
-    <E> Reference<Span<E>> getExtractionReference(String fieldName);
-
-    default <E> Reference<Span<E>> getExtractionReference(VarBind<? extends S, E, ?, ?> bind) {
-        return getExtractionReference(cacheBind(bind));
+    default <E> Reference<Span<E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
+        return getExtractionReference(bind.getFieldName());
     }
 
-    <T, E> Reference<T> getComputedReference(VarBind<? extends S, E, ?, T> bind);
+    <E> Reference<Span<E>> getExtractionReference(String name);
 
-    @Internal
-    <T> String cacheBind(VarBind<? extends S, ?, ?, ?> bind);
+    default <T> Reference<T> getComputedReference(VarBind<?, ?, ?, T> bind) {
+        return getComputedReference(bind.getFieldName());
+    }
+
+    <T> Reference<T> getComputedReference(String name);
 
     interface Underlying<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
@@ -121,13 +117,8 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
         }
 
         @Override
-        default <T, E> Reference<T> getComputedReference(VarBind<? extends S, E, ?, T> bind) {
-            return getUnderlyingVarCarrier().getComputedReference(bind);
-        }
-
-        @Override
-        default <T> String cacheBind(VarBind<? extends S, ?, ?, ?> bind) {
-            return getUnderlyingVarCarrier().cacheBind(bind);
+        default <T> Reference<T> getComputedReference(String name) {
+            return getUnderlyingVarCarrier().getComputedReference(name);
         }
 
         @Override

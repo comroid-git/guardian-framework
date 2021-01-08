@@ -3,16 +3,12 @@ package org.comroid.mutatio.ref;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
-import org.comroid.mutatio.proc.Processor;
 import org.comroid.mutatio.pump.Pump;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -54,7 +50,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
     @Contract("null, _ -> fail; !null, false -> _; !null, true -> !null")
     @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent);
 
-    ReferenceIndex<? extends Map.Entry<K, V>> entryIndex();
+    ReferenceIndex<? extends KeyedReference<K, V>> entryIndex();
 
     default V get(K key) {
         return getReference(key, true).get();
@@ -101,16 +97,12 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
     Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter);
 
-    @Override
-    default Pump<? extends V> pump(Executor executor) {
-        return pipe().pump(executor);
-    }
-
-    default BiPipe<?, ?, ? extends K, ? extends V> biPipe() {
+    default BiPipe<K, V> biPipe() {
         return entryIndex()
                 .pipe()
-                .bi(Map.Entry::getValue)
-                .mapFirst(Map.Entry::getKey);
+                .bi(Map.Entry::getKey)
+                .filterKey(Objects::nonNull)
+                .map(Map.Entry::getValue);
     }
 
     /**
@@ -141,7 +133,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
         return getReference(key, true).computeIfAbsent(supplier);
     }
 
-    void forEach(BiConsumer<K, V> action);
+    void forEach(BiConsumer<? super K, ? super V> action);
 
     void clear();
 
@@ -162,7 +154,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             }
 
             @Override
-            public ReferenceIndex<? extends Map.Entry<K, V>> entryIndex() {
+            public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
                 return entryIndex;
             }
 
@@ -185,16 +177,19 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
             @Override
             public Stream<KeyedReference<K, V>> stream(Predicate<K> filter) {
-                return entryIndex.stream().filter(ref -> filter.test(ref.getKey()));
+                return refMap.values()
+                        .stream()
+                        .filter(ref -> filter.test(ref.getKey()));
             }
 
             @Override
             public Pipe<KeyedReference<K, V>> pipe(Predicate<K> filter) {
-                return entryIndex.pipe().filter(ref -> filter.test(ref.getKey()));
+                return entryIndex.pipe()
+                        .filter(ref -> filter.test(ref.getKey()));
             }
 
             @Override
-            public void forEach(BiConsumer<K, V> action) {
+            public void forEach(BiConsumer<? super K, ? super V> action) {
                 refMap.forEach((k, ref) -> ref.consume(it -> action.accept(k, it)));
             }
 
@@ -235,6 +230,11 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
                 }
 
                 @Override
+                public boolean addReference(Reference<KeyedReference<K, V>> ref) {
+                    return false;
+                }
+
+                @Override
                 public boolean remove(KeyedReference<K, V> ref) {
                     final K key = ref.getKey();
 
@@ -244,6 +244,11 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
                 @Override
                 public void clear() {
                     Basic.this.clear();
+                }
+
+                @Override
+                public Stream<? extends Reference<KeyedReference<K, V>>> streamRefs() {
+                    throw new UnsupportedOperationException();
                 }
 
                 @Override

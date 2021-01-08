@@ -1,7 +1,7 @@
 package org.comroid.uniform.cache;
 
 import org.comroid.api.Provider;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,11 +60,11 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
     @NotNull
     @Override
     public Iterator<CacheReference<K, V>> iterator() {
-        return null;
+        return cache.values().iterator();
     }
 
     @Override
     public void clear() {
-
+        cache.clear();
     }
 }

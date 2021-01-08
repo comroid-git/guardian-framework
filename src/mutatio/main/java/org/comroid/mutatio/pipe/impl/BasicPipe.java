@@ -1,6 +1,10 @@
-package org.comroid.mutatio.pipe;
+package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.api.Polyfill;
+import org.comroid.mutatio.pipe.BiPipe;
+import org.comroid.mutatio.pipe.BiStageAdapter;
+import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 
@@ -9,19 +13,20 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class BasicPipe<O, T> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
     protected final ReferenceIndex<O> refs;
     private final Collection<Pipe<?>> subs = new ArrayList<>();
-    private final StageAdapter<O, T> adapter;
-    private final int autoEmptyLimit;
+    protected final StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter;
+    protected final int autoEmptyLimit;
     private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
     private final List<Closeable> children = new ArrayList<>();
 
     @Override
-    public StageAdapter<O, T> getAdapter() {
-        return adapter;
+    public StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter() {
+        return Polyfill.uncheckedCast(adapter);
     }
 
     public final Collection<? extends Closeable> getChildren() {
@@ -37,11 +42,11 @@ public class BasicPipe<O, T> implements Pipe<T> {
         this(old, StageAdapter.map(it -> (T) it), autoEmptyLimit);
     }
 
-    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T> adapter) {
+    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter) {
         this(old, adapter, AUTOEMPTY_DISABLED);
     }
 
-    public BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T> adapter, int autoEmptyLimit) {
+    protected BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter, int autoEmptyLimit) {
         this.refs = old;
         this.adapter = adapter;
         this.autoEmptyLimit = autoEmptyLimit;
@@ -52,13 +57,13 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public <R> Pipe<R> addStage(StageAdapter<T, R> stage) {
+    public <R> Pipe<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
         return new BasicPipe<>(this, stage);
     }
 
     @Override
-    public <X> BiPipe<T, X, T, X> bi(Function<T, X> source) {
-        return new BiPipe<>(this, source);
+    public <X> BiPipe<X, T> bi(Function<T, X> source) {
+        return new BasicBiPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
     }
 
     @Override
@@ -81,13 +86,22 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
+    public Stream<? extends Reference<T>> streamRefs() {
+        // generate accessors
+        refs.generateAccessors(accessors, Polyfill.uncheckedCast(getAdapter()), StageAdapter::advance);
+        return accessors.values().stream();
+    }
+
+    @Override
     public Pipe<T> pipe() {
         return new BasicPipe<>(refs);
     }
 
     @Override
     public Reference<T> getReference(int index) {
-        return accessors.computeIfAbsent(index, key -> adapter.advance(refs.getReference(index)));
+        if (adapter instanceof BiStageAdapter && !accessors.containsKey(index))
+            throw new IllegalArgumentException("Unknown index: " + index);
+        return accessors.computeIfAbsent(index, key -> adapter.advance(Polyfill.uncheckedCast(refs.getReference(index))));
     }
 
     @Override

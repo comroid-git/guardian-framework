@@ -1,10 +1,11 @@
 package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.CachedValue;
-import org.comroid.mutatio.pipe.BasicPipe;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.jetbrains.annotations.Contract;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
-public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, ReferenceIndex<T>, Reference<T> {
+public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, ReferenceIndex<T>, Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
     private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
@@ -45,9 +46,10 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
         return fixedCapacity != UNFIXED_SIZE;
     }
 
-    @Override
     public boolean isMutable() {
-        return false;
+        return fixedCapacity == UNFIXED_SIZE
+                && modifyPolicy.canOverwrite(new Object(), new Object())
+                && modifyPolicy.canOverwrite(null, new Object());
     }
 
     public Span() {
@@ -242,6 +244,11 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
         }
     }
 
+    @Override
+    public boolean addReference(Reference<T> in) {
+        return storage.addReference(in);
+    }
+
     public Processor<T> process(int index) {
         return getReference(index).process();
     }
@@ -278,6 +285,11 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
     }
 
     @Override
+    public Stream<? extends Reference<T>> streamRefs() {
+        return storage.streamRefs();
+    }
+
+    @Override
     public Stream<T> stream() {
         return Stream.of(toArray()).map(Polyfill::uncheckedCast);
     }
@@ -285,11 +297,6 @@ public class Span<T> extends CachedValue.Abstract<T> implements Collection<T>, R
     @Override
     public Pipe<T> pipe() {
         return new BasicPipe<>(this, 512);
-    }
-
-    @Override
-    public void rebind(Supplier<T> behind) {
-        throw new UnsupportedOperationException("Cannot rebind Span");
     }
 
     @Override

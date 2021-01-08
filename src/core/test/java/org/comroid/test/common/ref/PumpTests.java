@@ -1,5 +1,6 @@
 package org.comroid.test.common.ref;
 
+import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
@@ -22,15 +23,13 @@ public class PumpTests {
         controlGroup = Collections.unmodifiableList(IntStream.range(0, 50)
                 .mapToObj(txt -> UUID.randomUUID())
                 .map(UUID::toString)
-                .map(String::toUpperCase)
                 .collect(Collectors.toList()));
     }
 
     @Test
     public void testFull() {
         final Pump<String> pump1 = Pump.create();
-        final Pump<String> remapOp = (Pump<String>) pump1
-                .map(String::toLowerCase);
+        final Pipe<Integer> remapOp = pump1.map(String::hashCode);
         // fill with existing
         controlGroup.forEach(getStringConsumer(pump1));
 
@@ -40,7 +39,7 @@ public class PumpTests {
 
         // check existing
         for (int i = 0; i < controlGroup.size(); i++)
-            Assert.assertEquals("index " + i, controlGroup.get(i).toLowerCase(), remapOp.get(i));
+            Assert.assertEquals("index " + i, controlGroup.get(i).hashCode(), (int) remapOp.requireNonNull(i));
 
         pump1.clear();
         // check if remap op is empty
@@ -49,8 +48,10 @@ public class PumpTests {
 
         final int[] count = {0};
         // define test for future strings
-        remapOp.forEach(str -> {
-            Assert.assertTrue("unknown future str: " + str, controlGroup.contains(str.toUpperCase()));
+        remapOp.forEach(hash -> {
+            Assert.assertTrue("unknown future hash: " + hash, controlGroup.stream()
+                    .map(String::hashCode)
+                    .anyMatch(hash::equals));
             count[0]++;
         });
         // and feed control group

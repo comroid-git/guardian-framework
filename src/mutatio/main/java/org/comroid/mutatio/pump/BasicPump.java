@@ -1,7 +1,6 @@
 package org.comroid.mutatio.pump;
 
-import org.comroid.api.Polyfill;
-import org.comroid.mutatio.pipe.BasicPipe;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
@@ -28,31 +27,35 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         this(executor, old, StageAdapter.map(it -> (T) it));
     }
 
-    public BasicPump(Executor executor, ReferenceIndex<O> old, StageAdapter<O, T> adapter) {
+    public BasicPump(Executor executor, ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter) {
         super(old, adapter, 50);
 
         this.executor = executor;
     }
 
     @Override
-    public <R> Pump<R> addStage(StageAdapter<T, R> stage) {
+    public <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
         return addStage(executor, stage);
     }
 
     @Override
-    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage) {
-        return new BasicPump<>(executor, this, stage);
+    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
+        BasicPump<T, R> sub = new BasicPump<>(executor, this, stage);
+        subStages.add(sub);
+        return sub;
     }
 
     @Override
-    public void accept(Reference<? super T> in) {
-        //noinspection unchecked
-        final O item = (O) in.get();
-        refs.add(item);
+    public void accept(final Reference<?> in) {
+        final Reference<T> out = getAdapter().advance(in);
 
-        final Reference<T> out = getAdapter().advance(in.map(Polyfill::<O>uncheckedCast));
+        if (!(refs instanceof Pump))
+            add(out.get());
 
-        if (item != null)
-            executor.execute(() -> subStages.forEach(sub -> sub.accept(out.map(Object.class::cast))));
+        // and then all substages
+        executor.execute(() -> subStages.forEach(sub -> sub.accept(out)));
+        // compute this once if hasnt already
+        if (out.isOutdated())
+            out.get();
     }
 }

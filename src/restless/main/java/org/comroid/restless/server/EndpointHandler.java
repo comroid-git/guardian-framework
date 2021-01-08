@@ -1,7 +1,7 @@
 package org.comroid.restless.server;
 
 import com.sun.net.httpserver.Headers;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.ValueType;

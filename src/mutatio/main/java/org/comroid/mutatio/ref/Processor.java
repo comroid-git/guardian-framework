@@ -1,6 +1,6 @@
-package org.comroid.mutatio.proc;
+package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.ref.Reference;
+import org.comroid.api.Polyfill;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.util.Objects;
@@ -14,10 +14,8 @@ import java.util.stream.Stream;
  * Cloneable through {@link #process()}.
  */
 public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
-    Optional<Reference<?>> getParent();
-
     static <T> Processor<T> ofReference(Reference<T> reference) {
-        return new Support.Default<>(reference);
+        return new Support.Identity<>(reference);
     }
 
     static <T> Processor<T> empty() {
@@ -36,20 +34,18 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
     }
 
     static <T> Processor<T> providedOptional(Supplier<Optional<T>> supplier) {
-        return new Support.Default<>(Reference.provided(() -> supplier.get().orElse(null)));
+        return new Support.Identity<>(Reference.provided(() -> supplier.get().orElse(null)));
     }
 
     default Stream<Reference<?>> upstream() {
         return Stream.concat(
                 Stream.of(this),
-                getParent()
-                        .map(ref -> {
+                getParent().ifPresentMapOrElseGet(
+                        ref -> {
                             if (ref instanceof Processor)
                                 return ((Processor<?>) ref).upstream();
                             else return Stream.of(ref);
-                        })
-                        .orElseGet(Stream::empty)
-        );
+                        }, Stream::empty));
     }
 
     /**
@@ -97,20 +93,14 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
 
     @Internal
     final class Support {
-        public static final Processor<?> EMPTY = new Default<>(Reference.empty());
+        public static final Processor<?> EMPTY = new Identity<>(Reference.empty());
 
         public static abstract class Base<I, O> extends Reference.Support.Base<O> implements Processor<O> {
-            protected final Reference<I> parent;
             private final Predicate<O> setter;
 
             @Override
-            public Optional<Reference<?>> getParent() {
-                return Optional.of(parent);
-            }
-
-            @Override
             public boolean isMutable() {
-                return parent.isMutable() || setter != null;
+                return getParent().test(Reference::isMutable) || setter != null;
             }
 
             protected Base(Reference<I> parent) {
@@ -129,7 +119,6 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
             protected Base(Reference<I> parent, Predicate<O> setter) {
                 super(Objects.requireNonNull(parent, "Parent missing"), setter != null);
 
-                this.parent = parent;
                 this.setter = setter;
             }
 
@@ -145,14 +134,14 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
             }
         }
 
-        public static class Default<T> extends Base<T, T> {
-            public Default(Reference<T> parent) {
+        public static class Identity<T> extends Base<T, T> {
+            public Identity(Reference<T> parent) {
                 super(parent);
             }
 
             @Override
             protected T doGet() {
-                return parent.get();
+                return getFromParent();
             }
         }
 
@@ -167,7 +156,7 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
 
             @Override
             protected T doGet() {
-                final T value = parent.get();
+                final T value = getFromParent();
 
                 if (value != null && filter.test(value))
                     return value;
@@ -190,7 +179,7 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
 
             @Override
             protected O doGet() {
-                final I in = parent.get();
+                final I in = getFromParent();
 
                 if (in != null)
                     return remapper.apply(in);
@@ -213,7 +202,7 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
 
             @Override
             protected O doGet() {
-                final I in = parent.get();
+                final I in = getFromParent();
 
                 if (in != null)
                     return remapper.apply(in).orElse(null);
@@ -237,7 +226,7 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
 
             @Override
             protected T doGet() {
-                final T in = parent.get();
+                final T in = getFromParent();
 
                 if (in == null)
                     return other.get();

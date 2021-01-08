@@ -2,7 +2,7 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +25,7 @@ public interface Cache<K, V> extends Iterable<CacheReference<K, V>>, ReferenceMa
     }
 
     @Override
-    default void forEach(BiConsumer<K, V> action) {
+    default void forEach(BiConsumer<? super K, ? super V> action) {
         forEach(entry -> action.accept(entry.getKey(), entry.getValue()));
     }
 }

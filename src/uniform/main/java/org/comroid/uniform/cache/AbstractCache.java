@@ -57,7 +57,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     }
 
     @Override
-    public ReferenceIndex<? extends Map.Entry<K, V>> entryIndex() {
+    public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
         return cache.entryIndex();
     }
 }

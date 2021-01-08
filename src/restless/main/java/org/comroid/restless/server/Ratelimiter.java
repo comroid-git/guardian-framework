@@ -1,6 +1,7 @@
 package org.comroid.restless.server;
 
-import com.google.common.flogger.FluentLogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.RatelimitedEndpoint;
@@ -16,7 +17,6 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("rawtypes")
 public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Request, CompletableFuture<REST.Request>> {
-    FluentLogger logger = FluentLogger.forEnclosingClass();
     Ratelimiter INSTANT = new Support.Instant();
 
     static Ratelimiter ofPool(ScheduledExecutorService executor, RatelimitedEndpoint... endpoints) {
@@ -40,6 +40,7 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
     CompletableFuture<REST.Request> apply(RatelimitedEndpoint restEndpoint, REST.Request request);
 
     final class Support {
+        private static final Logger logger = LogManager.getLogger();
         private static final class Instant implements Ratelimiter {
             private Instant() {
             }
@@ -91,7 +92,7 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
                         final int sendInMs = calculateOffset(rps, queue.size())
                                 + calculateOffset(globalRatelimit, currentQueueSize());
 
-                        logger.at(Level.FINE).log("Calculated execution offset of %dms for %s", request);
+                        logger.trace("Calculated execution offset of {}ms for {}", sendInMs, request);
 
                         queue.add(boxed);
                         executor.schedule(() -> {

@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
-public interface Pump<T> extends Pipe<T>, Consumer<Reference<? super T>>, ExecutorBound {
+public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound {
     static <T> Pump<T> create() {
         return create(Runnable::run);
     }
@@ -30,7 +30,7 @@ public interface Pump<T> extends Pipe<T>, Consumer<Reference<? super T>>, Execut
     }
 
     @Override
-    <R> Pump<R> addStage(StageAdapter<T, R> stage);
+    <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage);
 
-    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage);
+    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage);
 }

@@ -1,10 +1,10 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.CachedValue;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.proc.Processor;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +18,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 
 public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
+    @Override
+    Rewrapper<? extends Reference<?>> getParent();
+
     boolean isMutable();
 
     default boolean isImmutable() {
@@ -180,8 +183,18 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             private Supplier<T> overriddenSupplier = null;
 
             @Override
+            public Rewrapper<? extends Reference<?>> getParent() {
+                return () -> super.getParent().into(Reference.class);
+            }
+
+            @Override
             public boolean isMutable() {
                 return mutable;
+            }
+
+            @Internal
+            protected <X> X getFromParent() {
+                return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
             }
 
             protected Base(boolean mutable) {

@@ -1,13 +1,14 @@
 package org.comroid.restless;
 
-import com.google.common.flogger.FluentLogger;
 import com.sun.net.httpserver.Headers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
-import org.comroid.mutatio.proc.Processor;
+import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
@@ -42,10 +43,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
-import static org.comroid.mutatio.proc.Processor.ofConstant;
+import static org.comroid.mutatio.ref.Processor.ofConstant;
 
 public final class REST implements ContextualProvider.Underlying {
-    public static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final Ratelimiter ratelimiter;
     private final Executor executor;
@@ -475,13 +476,13 @@ public final class REST implements ContextualProvider.Underlying {
 
         public synchronized CompletableFuture<REST.Response> execute() {
             if (!isExecuted()) {
-                logger.at(Level.FINE).log("Executing request %s @ %s", method, endpoint.getSpec());
+                logger.trace("Executing request {} @ {}", method, endpoint.getSpec());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
                                 .call(request, requireFromContext(SerializationAdapter.class).getMimeType()), executor)
                         .thenAcceptAsync(response -> {
                             if (response.statusCode != expectedCode) {
-                                logger.at(Level.WARNING).log("Unexpected Response status code %d; expected %d", response.statusCode, expectedCode);
+                                logger.warn("Unexpected Response status code {}; expected {}", response.statusCode, expectedCode);
                             }
 
                             execution.complete(response);
