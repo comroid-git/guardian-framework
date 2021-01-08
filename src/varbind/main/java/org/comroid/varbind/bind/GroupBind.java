@@ -234,7 +234,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public BindBuilder<T, ?, ?, ?> createBind(String fieldName) {
-        return new BindBuilder<>(this, fieldName);
+        return new VarBindBuilder<>(this, fieldName);
     }
 
     @Internal

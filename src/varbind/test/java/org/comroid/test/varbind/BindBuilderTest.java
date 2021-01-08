@@ -5,7 +5,6 @@ import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
-import org.comroid.varbind.multipart.PartialBind;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
