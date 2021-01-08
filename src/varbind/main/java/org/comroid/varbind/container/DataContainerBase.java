@@ -79,7 +79,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getName)
+                .mapKey(VarBind::getFieldName)
                 .distinctKeys();
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
@@ -104,7 +104,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getName)
+                .mapKey(VarBind::getFieldName)
                 .distinctKeys();
     }
 
