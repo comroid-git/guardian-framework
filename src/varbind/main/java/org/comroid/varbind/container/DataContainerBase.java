@@ -154,9 +154,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         final HashSet<VarBind<? extends S, Object, ?, Object>> changed = new HashSet<>();
 
         rootBind.streamAllChildren()
-                .map(it -> (VarBind<? extends S, Object, ?, Object>) it)
-                .filter(bind -> data.has(bind.getFieldName()))
                 .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
+                .filter(bind -> data.has(bind.getFieldName()))
                 .forEach(bind -> {
                     Span<Object> extract = bind.extract(data);
 
