@@ -103,7 +103,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
         return accessors.computeIfAbsent(index, key -> adapter.advance(prefabRef(refs.getReference(index))));
     }
 
-    protected <R extends Reference<O>> R prefabRef(Reference<O> reference) {
+    private  <R extends Reference<O>> R prefabRef(Reference<O> reference) {
         if (this instanceof BiPipe && !(reference instanceof KeyedReference)) {
             BiStageAdapter.Support.BiSource<T, ?> biSource = (BiStageAdapter.Support.BiSource<T, ?>) adapter;
             Object myKey = biSource.convertKey(reference.into(Polyfill::uncheckedCast));
