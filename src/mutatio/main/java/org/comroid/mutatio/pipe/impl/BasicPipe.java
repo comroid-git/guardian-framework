@@ -63,7 +63,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public <X> BiPipe<X, T> bi(Function<T, X> source) {
-        return new KeyedPipe<>(this, BiStageAdapter.source(source, reverse), autoEmptyLimit);
+        return new KeyedPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
     }
 
     @Override
