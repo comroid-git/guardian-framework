@@ -13,6 +13,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -20,7 +21,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
     protected final ReferenceIndex<O> refs;
     private final Collection<Pipe<?>> subs = new ArrayList<>();
-    protected final StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter;
+    private final StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter;
     protected final int autoEmptyLimit;
     private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
     private final List<Closeable> children = new ArrayList<>();
