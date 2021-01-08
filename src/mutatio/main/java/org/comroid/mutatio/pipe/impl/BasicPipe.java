@@ -5,6 +5,7 @@ import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.StageAdapter;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 
@@ -99,7 +100,15 @@ public class BasicPipe<O, T> implements Pipe<T> {
 
     @Override
     public Reference<T> getReference(int index) {
-        return accessors.computeIfAbsent(index, key -> adapter.advance(Polyfill.uncheckedCast(refs.getReference(index))));
+        return accessors.computeIfAbsent(index, key -> adapter.advance(prefabRef(refs.getReference(index))));
+    }
+
+    protected <R extends Reference<O>> R prefabRef(Reference<O> reference) {
+        if (this instanceof BiPipe && !(reference instanceof KeyedReference)) {
+            BiStageAdapter.Support.BiSource<T, ?> biSource = (BiStageAdapter.Support.BiSource<T, ?>) adapter;
+            Object myKey = biSource.convertKey(reference.into(Polyfill::uncheckedCast));
+            return Polyfill.uncheckedCast(new KeyedReference.Support.Base<O, O>(Polyfill.uncheckedCast(myKey), reference));
+        } else return Polyfill.uncheckedCast(reference);
     }
 
     @Override
