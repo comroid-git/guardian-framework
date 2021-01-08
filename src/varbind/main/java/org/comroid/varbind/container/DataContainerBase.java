@@ -314,7 +314,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     }
 
     @Override
-    public <T, E> KeyedReference<String, T> getComputedReference(String fieldName) {
+    public <T> KeyedReference<String, T> getComputedReference(String fieldName) {
         return uncheckedCast(Objects.requireNonNull(
                 computedRefs.getReference(fieldName, true),
                 String.format("Missing computed reference %s @ %s", fieldName, toString())));

@@ -65,13 +65,13 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
         return getExtractionReference(bind.getFieldName());
     }
 
-    <E> Reference<Span<E>> getExtractionReference(String fieldName);
+    <E> Reference<Span<E>> getExtractionReference(String name);
 
-    default <T, E> Reference<T> getComputedReference(VarBind<?, E, ?, T> bind) {
+    default <T> Reference<T> getComputedReference(VarBind<?, ?, ?, T> bind) {
         return getComputedReference(bind.getFieldName());
     }
 
-    <T, E> Reference<T> getComputedReference(String name);
+    <T> Reference<T> getComputedReference(String name);
 
     interface Underlying<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
@@ -117,7 +117,7 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
         }
 
         @Override
-        default <T, E> Reference<T> getComputedReference(String name) {
+        default <T> Reference<T> getComputedReference(String name) {
             return getUnderlyingVarCarrier().getComputedReference(name);
         }
 
