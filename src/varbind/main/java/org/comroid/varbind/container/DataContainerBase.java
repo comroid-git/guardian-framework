@@ -79,7 +79,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.computedRefs = baseRefs
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
-                .mapBoth(PartialBind.Finisher::finish)
+                .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
                 .mapKey(PartialBind.Base::getName);
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
