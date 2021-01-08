@@ -10,6 +10,7 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -59,6 +60,19 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         this.extractionMethod = extractionMethod;
         this.remapper = remapper;
         this.finisher = finisher;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Binding<?, ?, ?, ?> binding = (Binding<?, ?, ?, ?>) o;
+        return group.equals(binding.group) && fieldName.equals(binding.fieldName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, fieldName);
     }
 
     @Override
