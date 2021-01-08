@@ -101,7 +101,7 @@ public final class BindingBuilder<SELF extends DataContainer<? super SELF>, EXTR
         return uncheckedCast(this);
     }
 
-    public <C extends Collection<REMAP>> VarBindBuilder<SELF, EXTR, REMAP, C> intoCollection(
+    public <C extends Collection<REMAP>> VarBindBuilder<SELF, EXTR, REMAP, C> reformatSpan(
             Function<? super Span<REMAP>, ? extends FINAL> spanResolver) {
         this.finisher = spanResolver;
         return uncheckedCast(this);
