@@ -330,24 +330,4 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                 .stream()
                 .collect(Collectors.toSet()));
     }
-
-    public class ComputedReference<T, E> extends Reference.Support.Base<T> {
-        private final VarBind<S, E, ?, T> bind;
-        private final Processor<T> accessor;
-
-        public ComputedReference(VarBind<? extends S, E, ?, T> bind) {
-            super(false); // todo Implement reverse binding
-
-            this.bind = uncheckedCast(bind);
-            this.accessor = getExtractionReference(bind)
-                    .map(extr -> this.bind.process(self().get(), extr));
-        }
-
-        @Override
-        public final @Nullable T doGet() {
-            if (!isOutdated())
-                return super.get();
-            return update(accessor.get());
-        }
-    }
 }
