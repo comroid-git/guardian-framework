@@ -1,5 +1,6 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -92,12 +93,12 @@ public interface BiPipe<K, V> extends Pipe<V> {
 
     @Override
     default BiPipe<K, V> sorted() {
-        return null; // todo
+        return sorted(Polyfill.uncheckedCast(Comparator.naturalOrder()));
     }
 
     @Override
     default BiPipe<K, V> sorted(Comparator<? super V> comparator) {
-        return null; // todo
+        return new SortedResultingBiPipe<>(this, comparator);
     }
 
     default void forEach(BiConsumer<? super K, ? super V> action) {
