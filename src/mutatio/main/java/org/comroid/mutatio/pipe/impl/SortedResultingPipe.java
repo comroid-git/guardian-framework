@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SortedResultingPipe<T> extends BasicPipe<T, T> implements Pipe<T> {
-    private final Comparator<? super T> comparator;
+    protected final Comparator<? super T> comparator;
 
     @Override
     public boolean isSorted() {
