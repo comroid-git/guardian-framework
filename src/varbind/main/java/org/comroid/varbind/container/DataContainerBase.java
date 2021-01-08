@@ -102,7 +102,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.computedRefs = baseRefs
                 .biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
-                .mapBoth(VarBind::finish)
+                .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
                 .mapKey(VarBind::getName);
     }
 
