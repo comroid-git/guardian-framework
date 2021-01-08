@@ -132,7 +132,12 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
                     return biAdapter.advance(preAdvance);
                 })
-                .forEach(ref -> accessors.put(ref.getKey(), ref));
+                .forEach(ref -> accessors.compute(ref.getKey(), (k, old) -> {
+                    if (old == null)
+                        return ref;
+                    old.rebind(ref);
+                    return old;
+                }));
 
         return accessors.values().stream();
     }
