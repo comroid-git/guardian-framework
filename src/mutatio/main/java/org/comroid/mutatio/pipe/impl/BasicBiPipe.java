@@ -100,14 +100,6 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
     }
 
     @Override
-    public Stream<? extends KeyedReference<K, V>> stream(Predicate<K> filter) {
-        return accessors.entrySet()
-                .stream()
-                .filter(entry -> filter.test(entry.getKey()))
-                .map(Map.Entry::getValue);
-    }
-
-    @Override
     public Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter) {
         return entryIndex.pipe();
     }

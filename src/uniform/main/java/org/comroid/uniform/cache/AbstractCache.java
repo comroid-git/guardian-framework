@@ -42,8 +42,8 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     }
 
     @Override
-    public final Stream<? extends KeyedReference<K, V>> stream(Predicate<K> filter) {
-        return cache.stream(filter);
+    public Stream<? extends KeyedReference<K, V>> streamRefs() {
+        return cache.streamRefs();
     }
 
     @Override

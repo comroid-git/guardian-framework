@@ -78,15 +78,15 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
     boolean containsValue(V value);
 
-    default Stream<? extends KeyedReference<K, V>> streamRefs() {
-        return stream(any -> true);
-    }
+    Stream<? extends KeyedReference<K, V>> streamRefs();
 
     default Stream<? extends V> stream() {
         return stream(any -> true).map(Reference::get);
     }
 
-    Stream<? extends KeyedReference<K, V>> stream(Predicate<K> filter);
+    default Stream<? extends KeyedReference<K, V>> stream(Predicate<K> filter) {
+        return streamRefs().filter(ref -> filter.test(ref.getKey()));
+    }
 
     @Override
     default Pipe<? extends V> pipe() {
@@ -176,10 +176,8 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             }
 
             @Override
-            public Stream<KeyedReference<K, V>> stream(Predicate<K> filter) {
-                return refMap.values()
-                        .stream()
-                        .filter(ref -> filter.test(ref.getKey()));
+            public Stream<? extends KeyedReference<K, V>> streamRefs() {
+                return refMap.values().stream();
             }
 
             @Override
