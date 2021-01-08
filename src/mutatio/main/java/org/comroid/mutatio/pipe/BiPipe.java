@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.function.*;
 import java.util.stream.Stream;
 
-public interface BiPipe<K, V> extends Pipe<V> {
+public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
     @Override
     Stream<KeyedReference<K, V>> streamRefs();
 
@@ -73,10 +73,6 @@ public interface BiPipe<K, V> extends Pipe<V> {
         return addBiStage(BiStageAdapter.peek(action));
     }
 
-    default ReferenceMap<K, V> distinctKeys() {
-        return null; // todo
-    }
-
     @Override
     default BiPipe<K, V> distinct() {
         return addBiStage(BiStageAdapter.distinctValue());
@@ -106,6 +102,7 @@ public interface BiPipe<K, V> extends Pipe<V> {
         return null; // todo
     }
 
+    @Override
     default void forEach(BiConsumer<? super K, ? super V> action) {
         addBiStage(BiStageAdapter.peek(action)).unwrap();
     }
