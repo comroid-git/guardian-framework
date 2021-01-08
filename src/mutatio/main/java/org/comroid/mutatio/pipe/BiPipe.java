@@ -78,7 +78,7 @@ public interface BiPipe<K, V> extends Pipe<V> {
     }
 
     default <R> Pipe<R> merge(BiFunction<? super K, ? super V, ? extends R> merger) {
-        return null; // todo
+        return addBiStage(BiStageAdapter.mapBoth(merger));
     }
 
     @Override
