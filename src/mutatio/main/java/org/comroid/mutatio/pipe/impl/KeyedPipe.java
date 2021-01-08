@@ -44,29 +44,39 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
     }
 
     @Override
-    public synchronized @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
+    public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
         if (!accessors.containsKey(key) && createIfAbsent) {
-            if (refs instanceof BiPipe) {
-                BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
-                InK reversed = biAdapter.reverseKey(key);
-                KeyedReference<InK, InV> pre = ((BiPipe<InK, InV>) refs)
-                        .getReference(reversed, true);
-                KeyedReference<K, V> advance = biAdapter.advance(pre);
+            final BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
+
+            if (refs instanceof ReferenceMap) {
+                ReferenceMap<InK, InV> cast = (ReferenceMap<InK, InV>) refs;
+                KeyedReference<K, V> advance = cast
+                        .stream(inK -> isSameKeyType
+                                ? inK.equals(key)
+                                : biAdapter.convertKey(inK).equals(key))
+                        .findFirst()
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in parent: %s in %s", key, refs)));
                 accessors.put(advance.getKey(), advance);
-            } else if (adapter instanceof BiStageAdapter.Support.BiSource) {
-                // assume V == InV
-                BiStageAdapter.Support.BiSource<V, K> biSource = (BiStageAdapter.Support.BiSource<V, K>) adapter;
-                V sourceValue = biSource.reverseKey(key);
-                Reference<V> baseRef = refs.streamRefs()
-                        .map(Polyfill::<Reference<V>>uncheckedCast)
-                        .filter(ref -> ref.contentEquals(sourceValue))
+                return advance;
+            } else {
+                if (!(biAdapter instanceof BiStageAdapter.Support.BiSource))
+                    throw new IllegalStateException("BiSource needed if refs is not ReferenceMap");
+
+                KeyedReference<K, V> advance = refs.streamRefs()
+                        .map(ref -> {
+                            K myKey = biAdapter.convertKey(ref.into(Polyfill::uncheckedCast));
+                            if (myKey.equals(key))
+                                return new KeyedReference.Support.Base<>(Polyfill.<InK>uncheckedCast(myKey), ref);
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
                         .findAny()
-                        .orElseThrow(() -> new IllegalStateException(String
-                                .format("Could not find source value of key in source: %s in %s", key.toString(), refs)));
-                KeyedReference<V,V> pre = new KeyedReference.Support.Base<>(null, baseRef);
-                KeyedReference<K, V> advance = biSource.advance(pre);
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in source: %s in %s", key, refs)));
                 accessors.put(advance.getKey(), advance);
-            } else throw new AssertionError("unreachable");
+                return advance;
+            }
         }
         if (createIfAbsent && !accessors.containsKey(key))
             throw new InternalError("Unable to generate accessor for key " + key);

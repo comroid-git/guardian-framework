@@ -62,14 +62,7 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     @Override
-    public <X> BiPipe<X, T> bi(Function<T, X> mapper) {
-        return null;
-    }
-
-    public <X> BiPipe<X, T> bi(
-            Function<? super T, ? extends X> source,
-            Function<? super X, ? extends T> reverse
-    ) {
+    public <X> BiPipe<X, T> bi(Function<T, X> source) {
         return new KeyedPipe<>(this, BiStageAdapter.source(source, reverse), autoEmptyLimit);
     }
 
