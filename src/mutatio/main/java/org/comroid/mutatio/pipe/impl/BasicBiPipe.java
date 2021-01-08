@@ -1,5 +1,6 @@
 package org.comroid.mutatio.pipe.impl;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
@@ -7,6 +8,7 @@ import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -43,29 +45,37 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
-        if (!accessors.containsKey(key) && createIfAbsent)
-            //noinspection RedundantSuppression -> also false positive lol
-            refs.streamRefs()
-                    .map(ref -> {
-                        KeyedReference<InK, InV> preAdvance;
-                        //noinspection unchecked -> false positive
-                        BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
+        if (!accessors.containsKey(key) && createIfAbsent) {
+            final BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
 
-                        if (ref instanceof KeyedReference) {
-                            KeyedReference<InK, InV> castRef = (KeyedReference<InK, InV>) ref;
-                            K myKey = biAdapter.convertKey(castRef.getKey());
-                            if (!myKey.equals(key))
-                                return null;
-                            preAdvance = castRef;
-                        } else if (this.adapter instanceof BiStageAdapter.Support.BiSource) {
-                            InK myKey = ref.into(((BiStageAdapter.Support.BiSource<InV, InK>) biAdapter)::convertKey);
-                            preAdvance = new KeyedReference.Support.Base<>(myKey, ref);
-                        } else throw new UnsupportedOperationException("Unexpected State");
+            if (refs instanceof ReferenceMap) {
+                ReferenceMap<InK, InV> cast = (ReferenceMap<InK, InV>) refs;
+                KeyedReference<K, V> advance = cast.stream(inK -> biAdapter.convertKey(inK).equals(key))
+                        .findFirst()
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in parent: %s in %s", key, refs)));
+                accessors.put(advance.getKey(), advance);
+                return advance;
+            } else {
+                if (!(biAdapter instanceof BiStageAdapter.Support.BiSource))
+                    throw new IllegalStateException("BiSource neede if refs is not ReferenceMap");
 
-                        return biAdapter.advance(preAdvance);
-                    })
-                    .filter(Objects::nonNull)
-                    .forEach(ref -> accessors.put(ref.getKey(), ref));
+                KeyedReference<K, V> advance = refs.streamRefs()
+                        .map(ref -> {
+                            K myKey = biAdapter.convertKey(ref.into(Polyfill::uncheckedCast));
+                            if (myKey.equals(key))
+                                return new KeyedReference.Support.Base<>(Polyfill.<InK>uncheckedCast(myKey), ref);
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .findAny()
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in source: %s in %s", key, refs)));
+                accessors.put(advance.getKey(), advance);
+                return advance;
+            }
+        }
+
         return accessors.get(key);
     }
 
