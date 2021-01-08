@@ -1,10 +1,11 @@
 package org.comroid.restless.server;
 
-import com.google.common.flogger.FluentLogger;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.common.io.FileHandle;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.CommonHeaderNames;
@@ -20,15 +21,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static com.google.common.flogger.LazyArgs.lazy;
 import static org.comroid.restless.HTTPStatusCodes.*;
 
 public class RestServer implements Closeable {
     private static final Response dummyResponse = new Response(0);
-    private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static final Logger logger = LogManager.getLogger();
     private final AutoContextHandler autoContextHandler = new AutoContextHandler();
     private final HttpServer server;
     private final Span<ServerEndpoint> endpoints;
@@ -69,7 +68,7 @@ public class RestServer implements Closeable {
             int port,
             ServerEndpoint... endpoints
     ) throws IOException {
-        logger.at(Level.INFO).log("Starting REST Server with %d endpoints", endpoints.length);
+        logger.info("Starting REST Server with {} endpoints", endpoints.length);
         this.seriLib = seriLib;
         this.mimeType = seriLib.getMimeType();
         this.baseUrl = baseUrl;
@@ -129,7 +128,7 @@ public class RestServer implements Closeable {
         ) {
             str = br.lines().collect(Collectors.joining());
         } catch (Throwable t) {
-            logger.at(Level.SEVERE).log("Could not read response");
+            logger.error("Could not read response");
         }
 
         return str;
@@ -159,21 +158,20 @@ public class RestServer implements Closeable {
                             && requestHeaders.containsKey("Cookie"))
                         responseHeaders.add("Cookie", requestHeaders.getFirst("Cookie"));
 
-                    logger.at(Level.INFO).log("Handling %s Request @ %s with Headers: %s", requestMethod, requestURI,
-                            lazy(() -> requestHeaders
+                    logger.info("Handling {} Request @ {} with Headers: {}", requestMethod, requestURI,
+                            requestHeaders
                                     .entrySet()
                                     .stream()
                                     .filter(entry -> !entry.getKey().equals(CommonHeaderNames.AUTHORIZATION))
                                     .map(entry -> String.format("%s: %s", entry.getKey(), Arrays.toString(entry.getValue().toArray())))
                                     .collect(Collectors.joining("\n- ", "\n- ", ""))
-                            )
                     );
 
                     final String mimeType = seriLib.getMimeType();
                     final List<String> targetMimes = requestHeaders.get("Accept");
                     if (!supportedMimeType(targetMimes == null ? new ArrayList<>() : targetMimes)) {
-                        logger.at(Level.INFO).log(
-                                "Content Type %s not supported, cancelling. Accept Header: %s",
+                        logger.info(
+                                "Content Type {} not supported, cancelling. Accept Header: %s",
                                 mimeType,
                                 targetMimes
                         );
@@ -187,7 +185,7 @@ public class RestServer implements Closeable {
 
                     String body = consumeBody(exchange);
 
-                    logger.at(Level.INFO).log("Looking for matching endpoint...");
+                    logger.info("Looking for matching endpoint...");
                     forwardToEndpoint(exchange, requestURI, requestMethod, responseHeaders, requestHeaders, body);
                 } catch (Throwable t) {
                     if (t instanceof RestEndpointException)
@@ -195,9 +193,7 @@ public class RestServer implements Closeable {
                     throw new RestEndpointException(INTERNAL_SERVER_ERROR, t);
                 }
             } catch (RestEndpointException reex) {
-                logger.at(Level.INFO)
-                        .withCause(reex)
-                        .log("An endpoint exception occurred: " + reex.getMessage());
+                logger.info("An endpoint exception occurred: " + reex.getMessage(), reex);
 
                 final String rsp = generateErrorNode(reex).toString();
                 try {
@@ -207,7 +203,7 @@ public class RestServer implements Closeable {
                 }
             } finally {
                 exchange.close();
-                logger.at(Level.INFO).log("Finished handling %s", requestString);
+                logger.info("Finished handling {}", requestString);
             }
         }
 
@@ -229,7 +225,7 @@ public class RestServer implements Closeable {
             Response response = dummyResponse;
 
             if (!iter.hasNext()) {
-                logger.at(Level.INFO).log("No endpoints found; returning 404");
+                logger.info("No endpoints found; returning 404");
 
                 throw new RestEndpointException(NOT_FOUND, "No endpoint found at URL: " + requestURI);
             }
@@ -237,17 +233,17 @@ public class RestServer implements Closeable {
             while (iter.hasNext()) {
                 final ServerEndpoint endpoint = iter.next();
 
-                logger.at(Level.INFO).log("Attempting to use endpoint %s", endpoint.getUrlExtension());
+                logger.info("Attempting to use endpoint {}", endpoint.getUrlExtension());
 
                 if (endpoint.supports(requestMethod)) {
                     final String[] args = endpoint.extractArgs(requestURI);
-                    logger.at(Level.INFO).log("Extracted parameters: %s", lazy(() -> Arrays.toString(args)));
+                    logger.info("Extracted parameters: {}", Arrays.toString(args));
 
                     if (args.length != endpoint.getParameterCount() && !endpoint.allowMemberAccess())
                         throw new RestEndpointException(BAD_REQUEST, "Invalid argument Count");
 
                     try {
-                        logger.at(Level.INFO).log("Executing Handler for method: %s", requestMethod);
+                        logger.info("Executing Handler for method: {}", requestMethod);
                         response = endpoint.executeMethod(RestServer.this, requestMethod, requestHeaders, args, requestBody);
                     } catch (Throwable reex) {
                         lastException = reex;
@@ -257,13 +253,11 @@ public class RestServer implements Closeable {
                         throw lastException;
 
                     if (response == dummyResponse) {
-                        logger.at(Level.WARNING)
-                                .withCause(lastException)
-                                .log("Handler could not complete normally, attempting next handler...", response);
+                        logger.warn("Handler could not complete normally, attempting next handler...", lastException);
                         continue;
                     }
 
-                    logger.at(Level.INFO).log("Handler Finished! Response: %s", response);
+                    logger.info("Handler Finished! Response: {}", response);
                     handleResponse(exchange, requestURI, endpoint, responseHeaders, response);
                     lastException = null;
                     break;
@@ -291,15 +285,14 @@ public class RestServer implements Closeable {
 
             writeResponse(exchange, response.getStatusCode(), data);
 
-            logger.at(Level.INFO).log("Sent Response code %d with length %d and Headers: %s",
+            logger.info("Sent Response code {} with length {} and Headers: {}",
                     response.getStatusCode(),
                     data.length(),
-                    lazy(() -> responseHeaders
+                    responseHeaders
                             .entrySet()
                             .stream()
                             .map(entry -> String.format("%s: %s", entry.getKey(), Arrays.toString(entry.getValue().toArray())))
                             .collect(Collectors.joining("\n- ", "\n- ", ""))
-                    )
             );
         }
 

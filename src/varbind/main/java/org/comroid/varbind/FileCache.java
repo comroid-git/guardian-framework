@@ -1,6 +1,7 @@
 package org.comroid.varbind;
 
-import com.google.common.flogger.FluentLogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.Junction;
 import org.comroid.api.Polyfill;
 import org.comroid.common.Disposable;
@@ -22,7 +23,7 @@ import java.util.logging.Level;
 public class FileCache<K, V extends DataContainer<V>, D>
         extends DataContainerCache<K, V, D>
         implements FileProcessor, Disposable {
-    public static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static final Logger logger = LogManager.getLogger();
     private final SerializationAdapter<?, ?, ?> seriLib;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
@@ -118,7 +119,7 @@ public class FileCache<K, V extends DataContainer<V>, D>
                         final Object generated = tryConstruct(node).orElse(null);
 
                         if (generated == null) {
-                            logger.at(Level.WARNING).log("Skipped generation; no suitable constructor could be found. Data: %s", node);
+                            logger.warn("Skipped generation; no suitable constructor could be found. Data: {}", node);
                             return;
                         }
 
