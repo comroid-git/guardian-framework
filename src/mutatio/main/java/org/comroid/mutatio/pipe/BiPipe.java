@@ -2,6 +2,7 @@ package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.pipe.impl.SortedResultingBiPipe;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.ReferenceMap;
 

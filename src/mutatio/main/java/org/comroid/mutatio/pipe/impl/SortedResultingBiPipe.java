@@ -1,7 +1,10 @@
-package org.comroid.mutatio.pipe;
+package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.pipe.BiPipe;
+import org.comroid.mutatio.pipe.BiStageAdapter;
+import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.impl.KeyedPipe;
 import org.comroid.mutatio.ref.BiProcessor;
 import org.comroid.mutatio.ref.KeyedReference;
