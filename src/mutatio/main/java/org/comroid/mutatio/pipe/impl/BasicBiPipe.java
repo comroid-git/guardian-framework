@@ -111,7 +111,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
-        // generate accessors
+        // generate accessors todo improve
         //noinspection RedundantSuppression -> also false positive lol
         refs.streamRefs()
                 .map(ref -> {
