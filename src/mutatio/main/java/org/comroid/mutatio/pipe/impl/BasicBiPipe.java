@@ -1,6 +1,5 @@
 package org.comroid.mutatio.pipe.impl;
 
-import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
@@ -10,10 +9,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -47,12 +43,28 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
     @Override
     public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
         if (!accessors.containsKey(key) && createIfAbsent)
+            //noinspection RedundantSuppression -> also false positive lol
             refs.streamRefs()
-            .forEach(ref -> {
-                Reference<V> advance = adapter.advance(Polyfill.uncheckedCast(ref));
+                    .map(ref -> {
+                        KeyedReference<InK, InV> preAdvance;
+                        //noinspection unchecked -> false positive
+                        BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
 
-                if (advance.) // todo createIfAbsent
-            });
+                        if (ref instanceof KeyedReference) {
+                            KeyedReference<InK, InV> castRef = (KeyedReference<InK, InV>) ref;
+                            K myKey = biAdapter.convertKey(castRef.getKey());
+                            if (!myKey.equals(key))
+                                return null;
+                            preAdvance = castRef;
+                        } else if (this.adapter instanceof BiStageAdapter.Support.BiSource) {
+                            InK myKey = ref.into(((BiStageAdapter.Support.BiSource<InV, InK>) biAdapter)::convertKey);
+                            preAdvance = new KeyedReference.Support.Base<>(myKey, ref);
+                        } else throw new UnsupportedOperationException("Unexpected State");
+
+                        return biAdapter.advance(preAdvance);
+                    })
+                    .filter(Objects::nonNull)
+                    .forEach(ref -> accessors.put(ref.getKey(), ref));
         return accessors.get(key);
     }
 
