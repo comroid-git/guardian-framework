@@ -44,34 +44,13 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
     }
 
     @Override
+    public KeyedReference<K, V> getReference(int index) {
+        return Polyfill.uncheckedCast(super.getReference(index));
+    }
+
+    @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
-        // generate accessors todo improve
-        //noinspection RedundantSuppression -> also false positive lol
-        refs.streamRefs()
-                .map(ref -> {
-                    KeyedReference<InK, InV> preAdvance;
-                    //noinspection unchecked -> false positive
-                    BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
-
-                    if (ref instanceof KeyedReference) {
-                        KeyedReference<InK, InV> castRef = (KeyedReference<InK, InV>) ref;
-                        K myKey = biAdapter.convertKey(castRef.getKey());
-                        preAdvance = castRef;
-                    } else if (this.adapter instanceof BiStageAdapter.Support.BiSource) {
-                        InK myKey = ref.into(((BiStageAdapter.Support.BiSource<InV, InK>) biAdapter)::convertKey);
-                        preAdvance = new KeyedReference.Support.Base<>(myKey, ref);
-                    } else throw new UnsupportedOperationException("Unexpected State");
-
-                    return biAdapter.advance(preAdvance);
-                })
-                .forEach(ref -> accessors.compute(ref.getKey(), (k, old) -> {
-                    if (old == null)
-                        return ref;
-                    old.rebind(ref);
-                    return old;
-                }));
-
-        return accessors.values().stream();
+        return super.streamRefs().map(Polyfill::uncheckedCast);
     }
 
     private final class EntryIndex implements ReferenceIndex<KeyedReference<K, V>> {
