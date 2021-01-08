@@ -44,6 +44,69 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
     }
 
     @Override
+    public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
+        if (!accessors.containsKey(key) && createIfAbsent) {
+            final BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
+
+            if (refs instanceof ReferenceMap) {
+                ReferenceMap<InK, InV> cast = (ReferenceMap<InK, InV>) refs;
+                KeyedReference<K, V> advance = cast
+                        .stream(inK -> isSameKeyType
+                                ? inK.equals(key)
+                                : biAdapter.convertKey(inK).equals(key))
+                        .findFirst()
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in parent: %s in %s", key, refs)));
+                accessors.put(advance.getKey(), advance);
+                return advance;
+            } else {
+                if (!(biAdapter instanceof BiStageAdapter.Support.BiSource))
+                    throw new IllegalStateException("BiSource needed if refs is not ReferenceMap");
+
+                KeyedReference<K, V> advance = refs.streamRefs()
+                        .map(ref -> {
+                            K myKey = biAdapter.convertKey(ref.into(Polyfill::uncheckedCast));
+                            if (myKey.equals(key))
+                                return new KeyedReference.Support.Base<>(Polyfill.<InK>uncheckedCast(myKey), ref);
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .findAny()
+                        .map(biAdapter::advance)
+                        .orElseThrow(() -> new NoSuchElementException(String.format("Could not find key in source: %s in %s", key, refs)));
+                accessors.put(advance.getKey(), advance);
+                return advance;
+            }
+        }
+        if (createIfAbsent && !accessors.containsKey(key))
+            throw new InternalError("Unable to generate accessor for key " + key);
+        return accessors.get(key);
+    }
+
+    @Override
+    public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
+        return entryIndex;
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return accessors.containsKey(key);
+    }
+
+    @Override
+    public boolean containsValue(V value) {
+        return accessors.values()
+                .stream()
+                .flatMap(Rewrapper::stream)
+                .anyMatch(value::equals);
+    }
+
+    @Override
+    public Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter) {
+        return entryIndex.pipe();
+    }
+
+    @Override
     public KeyedReference<K, V> getReference(int index) {
         return new ArrayList<>(accessors.entrySet()).get(0).getValue(); // todo LOL
     }
