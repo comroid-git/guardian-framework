@@ -4,6 +4,8 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,15 +27,12 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         return ref -> KeyedReference.conditional(() -> predicate.test(ref.getKey(), ref.getValue()), ref::getKey, ref);
     }
 
-    static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(
-            Function<? super K, ? extends R> mapper,
-            Function<? super R, ? extends K> keyReverser
-    ) {
-        return new Support.Map<>(mapper, keyReverser, Function.identity());
+    static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(Function<? super K, ? extends R> mapper) {
+        return new Support.Map<>(mapper, Function.identity());
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> mapValue(Function<? super V, ? extends R> mapper) {
-        return new Support.Map<>(Function.identity(), Function.identity(), mapper);
+        return new Support.Map<>(Function.identity(), mapper);
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
@@ -44,15 +43,12 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         );
     }
 
-    static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(
-            Function<? super K, ? extends Rewrapper<? extends R>> mapper,
-            Function<? super R, ? extends K> keyReverser
-    ) {
-        return new Support.Map<>(mapper.andThen(Rewrapper::get), keyReverser, Function.identity());
+    static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
+        return new Support.Map<>(mapper.andThen(Rewrapper::get), Function.identity());
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> flatMapValue(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
-        return new Support.Map<>(Function.identity(), Function.identity(), mapper.andThen(Rewrapper::get));
+        return new Support.Map<>(Function.identity(), mapper.andThen(Rewrapper::get));
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
@@ -91,27 +87,13 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
     @OverrideOnly
     default OutK convertKey(InK key) {
-        if (isIdentity())
-            return Polyfill.uncheckedCast(key);
-        throw new AbstractMethodError();
-    }
-
-    @OverrideOnly
-    default InK reverseKey(OutK key) {
-        if (isIdentity())
-            return Polyfill.uncheckedCast(key);
-        throw new AbstractMethodError();
+        return Polyfill.uncheckedCast(key);
     }
 
     final class Support {
         public final static class Filter<X, Y> implements BiStageAdapter<X, Y, X, Y> {
             private final Predicate<@NotNull ? super X> keyFilter;
             private final Predicate<@Nullable ? super Y> valueFilter;
-
-            @Override
-            public boolean isIdentity() {
-                return true;
-            }
 
             private Filter(Predicate<@NotNull ? super X> keyFilter, Predicate<@Nullable ? super Y> valueFilter) {
                 this.keyFilter = keyFilter;
@@ -128,16 +110,13 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
         public final static class Map<IX, IY, OX, OY> implements BiStageAdapter<IX, IY, OX, OY> {
             private final Function<@NotNull ? super IX, @NotNull ? extends OX> keyMapper;
-            private final Function<@NotNull ? super OX, @NotNull ? extends IX> keyReverser;
             private final Function<@Nullable ? super IY, @Nullable ? extends OY> valueMapper;
 
             private Map(
                     Function<@NotNull ? super IX, @NotNull ? extends OX> keyMapper,
-                    Function<@NotNull ? super OX, @NotNull ? extends IX> keyReverser,
                     Function<@Nullable ? super IY, @Nullable ? extends OY> valueMapper
             ) {
                 this.keyMapper = keyMapper;
-                this.keyReverser = keyReverser;
                 this.valueMapper = valueMapper;
             }
 
@@ -152,11 +131,6 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             @Override
             public OX convertKey(IX key) {
                 return keyMapper.apply(key);
-            }
-
-            @Override
-            public IX reverseKey(OX key) {
-                return keyReverser.apply(key);
             }
 
             @Override
@@ -189,13 +163,13 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         }
 
         private final static class ResultingKeyedReference<K, V> extends KeyedReference.Support.Base<K, V> {
+            public ResultingKeyedReference(K key, Reference<V> valueHolder) {
+                super(key, valueHolder);
+            }
+
             @Override
             public boolean isMutable() {
                 return false;
-            }
-
-            public ResultingKeyedReference(K key, Reference<V> valueHolder) {
-                super(key, valueHolder);
             }
         }
     }
