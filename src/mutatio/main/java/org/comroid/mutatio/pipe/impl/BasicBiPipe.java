@@ -58,7 +58,7 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
                 return advance;
             } else {
                 if (!(biAdapter instanceof BiStageAdapter.Support.BiSource))
-                    throw new IllegalStateException("BiSource neede if refs is not ReferenceMap");
+                    throw new IllegalStateException("BiSource needed if refs is not ReferenceMap");
 
                 KeyedReference<K, V> advance = refs.streamRefs()
                         .map(ref -> {
@@ -75,7 +75,9 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
                 return advance;
             }
         }
-
+        //noinspection DuplicateCondition todo Fix
+        if (!accessors.containsKey(key) && createIfAbsent)
+            throw new InternalError("Unable to generate accessor for key " + key);
         return accessors.get(key);
     }
 
