@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
     private final Map<Integer, KeyedReference<K, V>> accessors = new ConcurrentHashMap<>();
     private final BiStageAdapter<InK, InV, K, V> adapter;
-    private final boolean isSameKeyType;
 
     public KeyedPipe(
             Pipe<InV> old,
@@ -24,12 +23,6 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
         super(old, adapter, autoEmptyLimit);
 
         this.adapter = adapter;
-
-        KeyedReference<InK, InV> test;
-        this.isSameKeyType = adapter instanceof BiStageAdapter.Support.Filter;/*
-                || (refs instanceof BiPipe && (test = (KeyedReference<InK, InV>) refs
-                .getReference(0)).getKey().getClass()
-                .equals(adapter.advance(test).getKey().getClass()));*/
     }
 
     @Override
@@ -39,7 +32,7 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
 
     @Override
     public KeyedReference<K, V> getReference(int index) {
-        return Polyfill.uncheckedCast(super.getReference(index));
+        return accessors.computeIfAbsent(index, key -> adapter.advance(prefabRef(refs.getReference(index))));
     }
 
     @Override
