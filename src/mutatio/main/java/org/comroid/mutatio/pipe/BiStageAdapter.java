@@ -13,10 +13,6 @@ import java.util.function.*;
 
 public interface BiStageAdapter<InK, InV, OutK, OutV>
         extends StageAdapter<InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>> {
-    default boolean isIdentity() {
-        return false;
-    }
-
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Support.Filter<>(predicate, any -> true);
     }

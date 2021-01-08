@@ -12,6 +12,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Reference<Out>> {
+    default boolean isIdentity() {
+        return false;
+    }
+
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> filter(Predicate<? super T> predicate) {
         return new Support.Filter<>(predicate);
     }
@@ -44,7 +48,9 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
 
     @OverrideOnly
     default Out convertValue(In value) {
-        return Polyfill.uncheckedCast(value);
+        if (isIdentity())
+            return Polyfill.uncheckedCast(value);
+        throw new AbstractMethodError();
     }
 
     final class Structure {
@@ -103,6 +109,11 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
             @Override
             public Reference<T> advance(Reference<T> ref) {
                 return new Processor.Support.Filtered<>(ref, predicate);
+            }
+
+            @Override
+            public boolean isIdentity() {
+                return true;
             }
         }
 
