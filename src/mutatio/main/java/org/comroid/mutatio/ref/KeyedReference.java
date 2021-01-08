@@ -124,12 +124,23 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
         }
 
         public static final class Mapped<InK, InV, K, V> extends Support.Base<K, V> {
+            private final KeyedReference<InK, InV> parent;
+            private final Function<? super InK, ? extends K> keyMapper;
+
             public Mapped(
                     KeyedReference<InK, InV> parent,
                     Function<? super InK, ? extends K> keyMapper,
                     Function<? super InV, ? extends V> valueMapper
             ) {
-                super(keyMapper.apply(parent.getKey()), parent.map(valueMapper));
+                super(null, parent.map(valueMapper));
+
+                this.parent = parent;
+                this.keyMapper = keyMapper;
+            }
+
+            @Override
+            public K getKey() {
+                return keyMapper.apply(parent.getKey());
             }
         }
 
