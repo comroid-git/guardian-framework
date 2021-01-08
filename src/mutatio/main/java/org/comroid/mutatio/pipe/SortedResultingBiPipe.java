@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implements BiPipe<K, V>, ReferenceMap<K, V> {
@@ -82,6 +83,10 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
 
     @Override
     public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
+        IntStream.range(0, size())
+                .filter(x -> !accessors.containsKey(x))
+                .forEach(this::getReference);
+
         return accessors.values()
                 .stream()
                 .filter(ref -> ref.getRef() != null)
