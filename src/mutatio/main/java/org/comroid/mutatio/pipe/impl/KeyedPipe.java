@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // todo this class is still shit
@@ -58,7 +59,7 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
 
         @Override
         public List<KeyedReference<K, V>> unwrap() {
-            return Collections.unmodifiableList(new ArrayList<>(accessors.values()));
+            return Collections.unmodifiableList(stream().collect(Collectors.toList()));
         }
 
         @Override
