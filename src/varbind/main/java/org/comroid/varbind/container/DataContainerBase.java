@@ -308,12 +308,16 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     @Override
     public <E> KeyedReference<String, Span<E>> getExtractionReference(String fieldName) {
         baseRefs.computeIfAbsent(fieldName, Span::new);
-        return uncheckedCast(baseRefs.getReference(fieldName));
+        return uncheckedCast(Objects.requireNonNull(
+                baseRefs.getReference(fieldName),
+                "Missing base reference: " + fieldName));
     }
 
     @Override
-    public <T, E> KeyedReference<String, T> getComputedReference(String name) {
-        return uncheckedCast(computedRefs.getReference(name, true));
+    public <T, E> KeyedReference<String, T> getComputedReference(String fieldName) {
+        return uncheckedCast(Objects.requireNonNull(
+                computedRefs.getReference(fieldName, true),
+                "Missing computed reference: " + fieldName));
     }
 
     @NotNull
