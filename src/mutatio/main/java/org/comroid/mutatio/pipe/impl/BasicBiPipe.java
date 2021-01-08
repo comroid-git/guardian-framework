@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+// todo this class is still shit
 public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPipe<K, V> {
     private final Map<K, KeyedReference<K, V>> accessors = new ConcurrentHashMap<>();
     private final boolean isSameKeyType;
