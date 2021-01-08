@@ -6,6 +6,7 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.function.*;
 import java.util.stream.Stream;
 
@@ -68,7 +69,7 @@ public interface BiPipe<K, V> extends Pipe<V> {
     }
 
     default ReferenceMap<K, V> distinctKeys() {
-        return null; // todo
+        return new SortedResultingBiPipe<>(filterKey(new HashSet<>()::add), (o1, o2) -> 0);
     }
 
     @Override
