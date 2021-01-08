@@ -44,11 +44,6 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
     }
 
     @Override
-    public KeyedReference<K, V> getReference(int index) {
-        return new ArrayList<>(accessors.entrySet()).get(0).getValue(); // todo LOL
-    }
-
-    @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
         // generate accessors todo improve
         //noinspection RedundantSuppression -> also false positive lol
