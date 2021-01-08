@@ -1,8 +1,8 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.Comparator;
@@ -28,8 +28,11 @@ public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
         return addBiStage(BiStageAdapter.filterBoth(biPredicate));
     }
 
-    default <R> BiPipe<R, V> mapKey(Function<? super K, ? extends R> mapper) {
-        return addBiStage(BiStageAdapter.mapKey(mapper));
+    default <R> BiPipe<R, V> mapKey(
+            Function<? super K, ? extends R> mapper,
+            Function<? super R, ? extends K> keyReverser
+    ) {
+        return addBiStage(BiStageAdapter.mapKey(mapper, keyReverser));
     }
 
     @Override
@@ -42,7 +45,7 @@ public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
     }
 
     default <R> BiPipe<R, V> flatMapKey(final Class<R> target) {
-        return filterKey(target::isInstance).mapKey(target::cast);
+        return filterKey(target::isInstance).mapKey(target::cast, Polyfill::uncheckedCast);
     }
 
     @Override
@@ -50,8 +53,11 @@ public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
         return filter(target::isInstance).map(target::cast);
     }
 
-    default <R> BiPipe<R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
-        return addBiStage(BiStageAdapter.flatMapKey(mapper));
+    default <R> BiPipe<R, V> flatMapKey(
+            Function<? super K, ? extends Rewrapper<? extends R>> mapper,
+            Function<? super R, ? extends K> keyReverser
+    ) {
+        return addBiStage(BiStageAdapter.flatMapKey(mapper, keyReverser));
     }
 
     @Override
@@ -73,7 +79,7 @@ public interface BiPipe<K, V> extends Pipe<V>, ReferenceMap<K, V> {
     }
 
     default <R> Pipe<R> merge(BiFunction<? super K, ? super V, ? extends R> merger) {
-        return null; // todo
+        return mapBoth(merger);
     }
 
     @Override

@@ -77,9 +77,9 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.binds = findAllBinds(rootBind);
         this.computedRefs = baseRefs
                 .biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)), keyReverser)
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getName);
+                .mapKey(VarBind::getName, keyReverser);
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
@@ -101,9 +101,9 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         initialValues.forEach((bind, value) -> getExtractionReference(bind).set(Span.singleton(value)));
         this.computedRefs = baseRefs
                 .biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
+                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)), keyReverser)
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getName);
+                .mapKey(VarBind::getName, keyReverser);
     }
 
     @Internal
