@@ -117,6 +117,11 @@ public final class BindingBuilder<SELF extends DataContainer<? super SELF>, EXTR
             throw new IllegalArgumentException("No Remapping method defined");
         if (finisher == null)
             throw new IllegalArgumentException("No Finishing method defined");
-        return new Binding<>(group, fieldName, required, valueType, extractionMethod, remapper, finisher);
+        if (finisher.apply(new Span<>()) instanceof Collection && extractionMethod != VarBind.ExtractionMethod.ARRAY)
+            throw new IllegalArgumentException("Finisher returns Collection but extraction method is not ARRAY");
+        Binding<SELF, EXTR, REMAP, FINAL> binding
+                = new Binding<>(group, fieldName, required, valueType, extractionMethod, remapper, finisher);
+        group.addChild(binding);
+        return binding;
     }
 }
