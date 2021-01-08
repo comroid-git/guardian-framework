@@ -106,15 +106,27 @@ public class BasicBiPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements Bi
 
     @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
-        // generate references
-        for (int i = 0; i < size(); i++) {
-            //noinspection unchecked
-            InRef inRef = (InRef) getReference(i);
-            OutRef outRef = refAccumulator.apply(adapter, inRef);
-            accessors.put(i, outRef);
-        }
+        // generate accessors
+        //noinspection RedundantSuppression -> also false positive lol
+        refs.streamRefs()
+                .map(ref -> {
+                    KeyedReference<InK, InV> preAdvance;
+                    //noinspection unchecked -> false positive
+                    BiStageAdapter<InK, InV, K, V> biAdapter = (BiStageAdapter<InK, InV, K, V>) this.adapter;
 
-        generateAccessors(accessors, (BiStageAdapter<InK, InV, K, V>) adapter, BiStageAdapter::advance);
+                    if (ref instanceof KeyedReference) {
+                        KeyedReference<InK, InV> castRef = (KeyedReference<InK, InV>) ref;
+                        K myKey = biAdapter.convertKey(castRef.getKey());
+                        preAdvance = castRef;
+                    } else if (this.adapter instanceof BiStageAdapter.Support.BiSource) {
+                        InK myKey = ref.into(((BiStageAdapter.Support.BiSource<InV, InK>) biAdapter)::convertKey);
+                        preAdvance = new KeyedReference.Support.Base<>(myKey, ref);
+                    } else throw new UnsupportedOperationException("Unexpected State");
+
+                    return biAdapter.advance(preAdvance);
+                })
+                .forEach(ref -> accessors.put(ref.getKey(), ref));
+
         return accessors.values().stream();
     }
 
