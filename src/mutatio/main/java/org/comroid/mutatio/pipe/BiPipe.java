@@ -113,4 +113,7 @@ public interface BiPipe<K, V> extends Pipe<V> {
     default Stream<V> stream() {
         return unwrap().stream();
     }
+
+    @Override
+    KeyedReference<K, V> getReference(int index);
 }
