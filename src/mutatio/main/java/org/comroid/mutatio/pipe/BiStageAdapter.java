@@ -101,10 +101,8 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             }
 
             @Override
-            public KeyedReference<X, Y> advance(KeyedReference<X, Y> ref) {
-                if (keyFilter.test(ref.getKey()) && ref.test(valueFilter))
-                    return ref;
-                return null;
+            public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
+                return new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
             }
         }
 
@@ -122,10 +120,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
             @Override
             public KeyedReference<OX, OY> advance(KeyedReference<IX, IY> ref) {
-                return new ResultingKeyedReference<>(
-                        keyMapper.apply(ref.getKey()),
-                        ref.map(valueMapper)
-                );
+                return new KeyedReference.Support.Mapped<>(ref, keyMapper, valueMapper);
             }
 
             @Override
@@ -159,17 +154,6 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             @Override
             public X convertKey(T value) {
                 return source.apply(value);
-            }
-        }
-
-        private final static class ResultingKeyedReference<K, V> extends KeyedReference.Support.Base<K, V> {
-            public ResultingKeyedReference(K key, Reference<V> valueHolder) {
-                super(key, valueHolder);
-            }
-
-            @Override
-            public boolean isMutable() {
-                return false;
             }
         }
     }

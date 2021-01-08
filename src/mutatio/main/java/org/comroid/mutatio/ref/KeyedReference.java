@@ -4,6 +4,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
@@ -89,6 +91,45 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             @Override
             protected boolean doSet(V value) {
                 return valueHolder.set(value);
+            }
+        }
+
+        public static final class Filtered<K, V> extends Support.Base<K, V> {
+            private final KeyedReference<K, V> parent;
+            private final Predicate<? super K> keyFilter;
+            private final Predicate<? super V> valueFilter;
+
+            public Filtered(
+                    KeyedReference<K, V> parent,
+                    Predicate<? super K> keyFilter,
+                    Predicate<? super V> valueFilter
+            ) {
+                super(null, parent);
+                this.parent = parent;
+                this.keyFilter = keyFilter;
+                this.valueFilter = valueFilter;
+            }
+
+            @Override
+            protected V doGet() {
+                if (keyFilter.test(getKey()) && valueFilter.test(parent.getValue()))
+                    return parent.getValue();
+                return null;
+            }
+
+            @Override
+            public K getKey() {
+                return parent.getKey();
+            }
+        }
+
+        public static final class Mapped<InK, InV, K, V> extends Support.Base<K, V> {
+            public Mapped(
+                    KeyedReference<InK, InV> parent,
+                    Function<? super InK, ? extends K> keyMapper,
+                    Function<? super InV, ? extends V> valueMapper
+            ) {
+                super(keyMapper.apply(parent.getKey()), parent.map(valueMapper));
             }
         }
 
