@@ -19,6 +19,7 @@ import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.impl.UniNodeBase;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -41,7 +42,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.logging.Level;
 
 import static org.comroid.mutatio.ref.Processor.ofConstant;
 
@@ -452,7 +452,7 @@ public final class REST implements ContextualProvider.Underlying {
             return this;
         }
 
-        public <B extends UniNode> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
+        public <B extends UniNodeBase> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
             final B body = type.apply(requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
             return body(body.toString());

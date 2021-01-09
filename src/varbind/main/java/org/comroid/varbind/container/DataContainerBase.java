@@ -13,6 +13,7 @@ import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.impl.UniNodeBase;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.Location;
@@ -274,7 +275,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private UniNode applyValueToNode(UniObjectNode applyTo, String key, Object it) {
         if (it instanceof DataContainer)
             return ((DataContainer<? super S>) it).toObjectNode(applyTo.putObject(key));
-        else if (it instanceof UniNode)
+        else if (it instanceof UniNodeBase)
             return applyTo.putObject(key).copyFrom((UniNode) it);
         else return applyTo.put(key, ValueType.STRING, String.valueOf(it));
     }

@@ -18,7 +18,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 public class FileCache<K, V extends DataContainer<V>, D>
         extends DataContainerCache<K, V, D>

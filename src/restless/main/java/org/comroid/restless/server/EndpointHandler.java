@@ -6,6 +6,7 @@ import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.impl.UniNodeBase;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.util.stream.Stream;
@@ -13,7 +14,7 @@ import java.util.stream.Stream;
 public interface EndpointHandler {
     default boolean supports(REST.Method method) {
         try {
-            return !getClass().getMethod("execute" + method.name(), Headers.class, String[].class, UniNode.class)
+            return !getClass().getMethod("execute" + method.name(), Headers.class, String[].class, UniNodeBase.class)
                     .getDeclaringClass()
                     .equals(EndpointHandler.class);
         } catch (NoSuchMethodException e) {

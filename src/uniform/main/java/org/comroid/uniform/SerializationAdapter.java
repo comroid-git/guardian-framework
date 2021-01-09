@@ -2,7 +2,6 @@ package org.comroid.uniform;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.HeldType;
-import org.comroid.api.Rewrapper;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
