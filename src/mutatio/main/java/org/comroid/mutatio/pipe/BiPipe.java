@@ -106,6 +106,13 @@ public interface BiPipe<K, V> extends Pipe<V> {
         addBiStage(BiStageAdapter.peek(action)).unwrap();
     }
 
+    default void forEachIf(final Predicate<? super K> keyTester, final BiConsumer<? super K, ? super V> action) {
+        forEach((k, v) -> {
+            if (keyTester.test(k))
+                action.accept(k, v);
+        });
+    }
+
     @Override
     default Pipe<V> pipe() {
         return this;
