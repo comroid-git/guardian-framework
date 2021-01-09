@@ -76,6 +76,11 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Override
     public Span<EXTR> extract(UniNode from) {
         final UniNode target = fieldName.isEmpty() ? from : from.get(fieldName);
 
