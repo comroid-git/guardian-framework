@@ -98,10 +98,8 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
     Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter);
 
     default BiPipe<K, V> biPipe() {
-        return entryIndex()
-                .pipe()
+        return pipe(any -> true)
                 .bi(Map.Entry::getKey)
-                .filterKey(Objects::nonNull)
                 .map(Map.Entry::getValue);
     }
 
@@ -182,8 +180,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
             @Override
             public Pipe<KeyedReference<K, V>> pipe(Predicate<K> filter) {
-                return entryIndex.pipe()
-                        .filter(ref -> filter.test(ref.getKey()));
+                return entryIndex.pipe().filter(ref -> filter.test(ref.getKey()));
             }
 
             @Override
