@@ -320,7 +320,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
     @Override
     public String toString() {
-        return String.format("DataContainerBase{rootBind=%s, binds=%s}", rootBind, binds);
+        return String.format("DataContainer<%s @ %s>", rootBind, myType);
     }
 
     @NotNull
