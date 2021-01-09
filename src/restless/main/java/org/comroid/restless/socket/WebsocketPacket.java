@@ -50,7 +50,7 @@ public interface WebsocketPacket {
                 case OPEN:
                     return "socket opened";
                 case CLOSE:
-                    return getData().ifPresentMap(str -> str + "#") + getStatusCode().orElse(-1);
+                    return getData().ifPresentMap(str -> str + " #") + getStatusCode().orElse(-1);
             }
             return "unknown";
         }
