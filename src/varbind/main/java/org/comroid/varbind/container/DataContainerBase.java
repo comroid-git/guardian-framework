@@ -75,12 +75,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.baseRefs = ReferenceMap.create();
         this.rootBind = findRootBind(myType);
         this.binds = findAllBinds(rootBind);
-        this.computedRefs = baseRefs
-                .biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
-                .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getFieldName)
-                .distinctKeys();
+        this.computedRefs = buildComputedReferences();
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
@@ -100,8 +95,11 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.binds = findAllBinds(rootBind);
         this.initiallySet = unmodifiableSet(initialValues.keySet());
         initialValues.forEach((bind, value) -> getExtractionReference(bind).set(Span.singleton(value)));
-        this.computedRefs = baseRefs
-                .biPipe()
+        this.computedRefs = buildComputedReferences();
+    }
+
+    private ReferenceMap<String, Object> buildComputedReferences() {
+        return baseRefs.biPipe()
                 .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
                 .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
                 .mapKey(VarBind::getFieldName)
