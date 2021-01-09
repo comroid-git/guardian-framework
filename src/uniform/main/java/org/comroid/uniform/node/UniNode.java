@@ -3,7 +3,7 @@ package org.comroid.uniform.node;
 import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
-import org.comroid.uniform.DataStructureType;
+import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.SerializationAdapterHolder;
 import org.jetbrains.annotations.ApiStatus.Internal;

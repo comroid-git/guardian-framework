@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
 import org.comroid.annotations.Instance;
-import org.comroid.uniform.DataStructureType;
+import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -21,7 +21,7 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
     FastJSONLib fastJsonLib = new FastJSONLib();
 
     private FastJSONLib() {
-        super("application/json", JSONObject.class, JSONArray.class);
+        super("application/json", JSONObject.class, objFactory, JSONArray.class, arrFactory);
     }
 
     @Override

@@ -3,7 +3,6 @@ package org.comroid.restless.adapter.okhttp.v4;
 import okhttp3.*;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
-import org.comroid.restless.socket.Websocket;
 import org.comroid.uniform.SerializationAdapter;
 
 import java.io.IOException;
