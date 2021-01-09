@@ -1,10 +1,13 @@
 package org.comroid.mutatio.ref;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.CachedValue;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.util.ReflectionHelper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.Nullable;
@@ -174,6 +177,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
 
     @Internal
     final class Support {
+        private static final Logger logger = LogManager.getLogger();
         private static final Reference<?> EMPTY = new Default<>(false, null);
         private static final Map<Object, Reference<?>> IMMUTABLE_CACHE = new ConcurrentHashMap<>();
 
@@ -220,9 +224,12 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             @Nullable
             @Override
             public final T get() {
-                if (isUpToDate())
+                if (isUpToDate()) {
+                    //logger.trace("{} is up to date; does not need computing", toString());
                     return atom.get();
+                }
                 return atom.updateAndGet(old -> {
+                    //logger.trace("{} is not up to date; recomputing", toString());
                     final T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
                     update(value);
                     return value;
@@ -255,7 +262,8 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
 
             @Override
             public String toString() {
-                return String.format("Reference{atom=%s, mutable=%s, outdated=%s}", atom, mutable, isOutdated());
+                return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
+                        Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
             }
         }
 
