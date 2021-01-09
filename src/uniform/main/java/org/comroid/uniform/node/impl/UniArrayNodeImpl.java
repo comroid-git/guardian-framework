@@ -1,23 +1,35 @@
 package org.comroid.uniform.node.impl;
 
+import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniObjectNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Stream;
 
-public final class UniArrayNodeImpl extends AbstractUniNode<Integer, KeyedReference<Integer, UniNode>> implements UniArrayNode {
-    public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, ARR baseNode) {
+public final class UniArrayNodeImpl
+        extends AbstractUniNode<Integer, KeyedReference<Integer, UniNode>, List<Object>>
+        implements UniArrayNode {
+    public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, List<Object> baseNode) {
         super(seriLib, baseNode);
     }
 
     @Override
     public boolean contains(Object other) {
         return stream().anyMatch(other::equals);
+    }
+
+    @Override
+    public Stream<UniNode> stream() {
+        return streamNodes().map(UniNode.class::cast);
     }
 
     @NotNull
@@ -79,7 +91,8 @@ public final class UniArrayNodeImpl extends AbstractUniNode<Integer, KeyedRefere
     public UniNode set(int index, UniNode element) {
         KeyedReference<Integer, UniNode> ref = accessors.compute(index, r -> {
             if (r == null)
-                return generateAccessor(index);
+                //noinspection unchecked
+                return (KeyedReference<Integer, UniNode>) generateAccessor(index);
             return r;
         });
         return ref.setValue(element);
@@ -88,6 +101,23 @@ public final class UniArrayNodeImpl extends AbstractUniNode<Integer, KeyedRefere
     @Override
     public void add(int index, UniNode element) {
         set(index, element);
+    }
+
+    @Override
+    public @NotNull <T> UniNode put(int index, HeldType<T> type, T value) throws UnsupportedOperationException {
+        return accessors.compute(index, ref -> {
+            if (value instanceof UniObjectNode || value instanceof UniArrayNode) {
+                return KeyedReference.create(index, (UniNode) value);
+            } else {
+                final UniValueNodeImpl valueNode = new UniValueNodeImpl(seriLib,
+                        Reference.constant(value), (ValueType<Object>) type);
+                if (ref != null) {
+                    ref.set(valueNode);
+                    return ref;
+                }
+                return KeyedReference.create(index, valueNode);
+            }
+        }).getValue();
     }
 
     @Override
@@ -139,7 +169,35 @@ public final class UniArrayNodeImpl extends AbstractUniNode<Integer, KeyedRefere
     }
 
     @Override
-    protected KeyedReference<Integer, UniNode> generateAccessor(Integer ack) {
-        return null;
+    protected KeyedReference<Integer, ? extends UniNode> generateAccessor(Integer key) {
+        return new KeyedReference.Support.Base<Integer, UniNode>(false, key, null) {
+            @Override
+            public boolean isOutdated() {
+                return true;
+            }
+
+            @Override
+            protected UniNode doGet() {
+                final Object value = baseNode.get(key);
+                assert getNodeType() == Type.ARRAY;
+                assert value instanceof List;
+                //noinspection unchecked
+                return new UniArrayNodeImpl(seriLib, ((List<Object>) value));
+            }
+
+            @Override
+            protected boolean doSet(UniNode value) {
+                switch (value.getNodeType()) {
+                    case OBJECT:
+                        Map<String, Object> map = new HashMap<>(value.asObjectNode());
+                        return baseNode.set(key, map) != value;
+                    case ARRAY:
+                        ArrayList<UniNode> list = new ArrayList<>(value.asArrayNode());
+                        return baseNode.set(key, list) != value;
+                }
+
+                return baseNode.set(key, value.asRaw(null)) != value;
+            }
+        };
     }
 }

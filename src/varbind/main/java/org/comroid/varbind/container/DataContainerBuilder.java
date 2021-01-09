@@ -15,7 +15,7 @@ public final class DataContainerBuilder<T extends DataContainerBase<? super T>> 
             Class<? extends T> type,
             Object... otherArgs
     ) {
-        this(type, UniObjectNode.dummy(), otherArgs);
+        this(type, null, otherArgs);
     }
 
     public DataContainerBuilder(

@@ -91,21 +91,19 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
                 EXTR value = target.as(((ValueType<EXTR>) valueType));
                 return Span.immutable(value);
             case OBJECT:
-                assert group.getFromContext().objectValue.equals(valueType);
+                assert group.getFromContext().getObjectType().equals(valueType);
                 UniObjectNode obj = target.asObjectNode();
                 EXTR cast = Polyfill.uncheckedCast(obj);
                 return Span.immutable(cast);
             case ARRAY:
                 if (valueType instanceof StandardValueType) {
                     // extract values array
-                    return target.asNodeList()
-                            .stream()
+                    return target.streamNodes()
                             .map(each -> each.as(((ValueType<EXTR>) valueType)))
                             .collect(Span.collector());
-                } else if (group.getFromContext().arrayValue.equals(valueType)) {
+                } else if (group.getFromContext().getArrayType().equals(valueType)) {
                     // extract uninode array
-                    return target.asNodeList()
-                            .stream()
+                    return target.streamNodes()
                             .map(UniNode::asObjectNode)
                             // assume EXTR = UniObjectNode !!
                             .map(Polyfill::<EXTR>uncheckedCast)

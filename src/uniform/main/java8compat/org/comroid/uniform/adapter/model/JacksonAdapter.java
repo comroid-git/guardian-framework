@@ -1,14 +1,18 @@
 package org.comroid.uniform.adapter.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
+import org.comroid.api.Polyfill;
 import org.comroid.common.exception.AssertionException;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.uniform.ValueType;
+import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.impl.StandardValueType;
@@ -16,12 +20,16 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
+import org.comroid.uniform.node.impl.UniArrayNodeImpl;
+import org.comroid.uniform.node.impl.UniObjectNodeImpl;
+import org.comroid.uniform.node.impl.UniValueNodeImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
-public abstract class JacksonAdapter extends SerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
+public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
     private final ObjectMapper objectMapper;
 
     public JacksonAdapter(String mimeType, ObjectMapper objectMapper) {
@@ -31,18 +39,18 @@ public abstract class JacksonAdapter extends SerializationAdapter<JsonNode, Obje
     }
 
     @Override
-    public DataStructureType<SerializationAdapter<JsonNode, ObjectNode, ArrayNode>, JsonNode, ? extends JsonNode> typeOfData(String data) {
+    public DataStructureType<JsonNode, ? extends JsonNode, ? extends UniNode> typeOfData(String data) {
         try {
             final JsonNode node = objectMapper.readTree(data);
 
             if (node.isArray())
-                return arrayType;
+                return getArrayType();
             if (node.isObject())
-                return objectType;
+                return getObjectType();
             if (node.isValueNode())
                 return null;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(String.format("Invalid %s data: \n%s", mimeType, data), e);
+            throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
 
         throw new AssertionException();
@@ -60,77 +68,31 @@ public abstract class JacksonAdapter extends SerializationAdapter<JsonNode, Obje
             if (node.isValueNode())
                 return createValueNode((ValueNode) node);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(String.format("Invalid %s data: \n%s", mimeType, data), e);
+            throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
 
         throw new AssertionException();
     }
 
-    private UniValueNode<String> createValueNode(ValueNode dataString) {
-        return new UniValueNode<>(this, new Reference.Support.Base<String>(false) {
+    private UniValueNode createValueNode(ValueNode dataString) {
+        return new UniValueNodeImpl(this, new Reference.Support.Base<Object>(false) {
             private final ValueNode base = dataString;
 
             @Override
             protected String doGet() {
                 return base.asText();
             }
-        }, StandardValueType.STRING);
+        }, Polyfill.uncheckedCast(StandardValueType.STRING));
     }
 
     @Override
     public UniObjectNode createUniObjectNode(ObjectNode node) {
-        return new UniObjectNode(this, new UniObjectNode.Adapter<ObjectNode>(node) {
-            @Override
-            public Object put(String key, Object value) {
-                return baseNode.put(key, wrapAsNode(value));
-            }
-
-            @Override
-            public @NotNull Set<Entry<String, Object>> entrySet() {
-                final Iterator<String> keys = baseNode.fieldNames();
-                final Set<Entry<String, Object>> yield = new HashSet<>();
-
-                while (keys.hasNext()) {
-                    final String key = keys.next();
-
-                    yield.add(new SimpleImmutableEntry<>(key, baseNode.get(key)));
-                }
-
-                return yield;
-            }
-        });
+        return new UniObjectNodeImpl(this, objectMapper.convertValue(node, new TypeReference<Map<String, Object>>(){}));
     }
 
     @Override
     public UniArrayNode createUniArrayNode(ArrayNode node) {
-        return new UniArrayNode(this, new UniArrayNode.Adapter<ArrayNode>(node) {
-            @Override
-            public int size() {
-                return node.size();
-            }
-
-            @Override
-            public Object get(int index) {
-                return node.get(index);
-            }
-
-            @Override
-            public Object set(int index, Object element) {
-                return node.set(index, wrapAsNode(element));
-            }
-
-            @Override
-            public void add(int index, Object element) {
-                if (node.size() >= index || node.size() < index)
-                    node.add(wrapAsNode(element));
-                else node.set(index, wrapAsNode(element));
-            }
-
-            @Override
-            public Object remove(int index) {
-                return null;
-            }
-        });
+        return new UniArrayNodeImpl(this, objectMapper.convertValue(node, new TypeReference<List<Object>>() {}));
     }
 
     public final JsonNode wrapAsNode(Object element) {

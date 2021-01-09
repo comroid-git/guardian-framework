@@ -205,7 +205,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             Class<T> resultType
     ) {
         final Class<?>[] typesUnordered = {
-                UniObjectNode.class, SerializationAdapter.class, serializationAdapter.objectType.typeClass()
+                UniObjectNode.class, SerializationAdapter.class, serializationAdapter.getObjectType().getTargetClass()
         };
 
         return Invocable.ofConstructor(resultType, typesUnordered);

@@ -6,12 +6,19 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.impl.StandardValueType;
 
+import java.util.stream.Stream;
+
 public interface UniValueNode extends Reference, UniNode, ValuePointer {
     UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override
     default Type getNodeType() {
         return Type.VALUE;
+    }
+
+    @Override
+    default Stream<? extends UniNode> stream() {
+        return streamNodes();
     }
 
     @Override

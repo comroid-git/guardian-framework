@@ -1,6 +1,8 @@
 package org.comroid.uniform.adapter.json.orgjson;
 
 import org.comroid.annotations.Instance;
+import org.comroid.mutatio.ref.Reference;
+import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
@@ -10,16 +12,16 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public final class OrgJsonLib extends SerializationAdapter<Object, JSONObject, JSONArray> {
+public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONObject, JSONArray> {
     public static @Instance
     final OrgJsonLib orgJsonLib = new OrgJsonLib();
 
     protected OrgJsonLib() {
-        super("application/json", JSONObject.class, objFactory, JSONArray.class, arrFactory);
+        super("application/json", JSONObject.class, JSONArray.class);
     }
 
     @Override
-    public DataStructureType<SerializationAdapter<Object, JSONObject, JSONArray>, Object, ?> typeOfData(String data) {
+    public DataStructureType<Object, ? extends Reference, ? extends UniNode> typeOfData(String data) {
         throw new UnsupportedOperationException();
     }
 

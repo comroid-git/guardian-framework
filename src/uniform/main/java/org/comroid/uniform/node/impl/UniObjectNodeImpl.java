@@ -1,22 +1,25 @@
 package org.comroid.uniform.node.impl;
 
+import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public final class UniObjectNodeImpl extends AbstractUniNode<String, KeyedReference<String, UniNode>> implements UniObjectNode {
-    public <BAS, OBJ extends BAS> UniObjectNodeImpl(SerializationAdapter<BAS, OBJ, ?> seriLib, OBJ baseNode) {
+public final class UniObjectNodeImpl
+        extends AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>>
+        implements UniObjectNode {
+    public <BAS, OBJ extends BAS> UniObjectNodeImpl(SerializationAdapter<BAS, OBJ, ?> seriLib, Map<String, Object> baseNode) {
         super(seriLib, baseNode);
     }
 
@@ -40,7 +43,8 @@ public final class UniObjectNodeImpl extends AbstractUniNode<String, KeyedRefere
     public Object put(String key, Object value) {
         return accessors.compute(key, r -> {
             if (r == null)
-                return generateAccessor(key);
+                //noinspection unchecked
+                return (KeyedReference<String, UniNode>) generateAccessor(key);
             return r;
         }).setValue((UniNode) value);
     }
@@ -55,6 +59,24 @@ public final class UniObjectNodeImpl extends AbstractUniNode<String, KeyedRefere
             ref.unset();
         }
         return node;
+    }
+
+    @Override
+    public @NotNull <T> UniNode put(final String key, final HeldType<T> type, final T value)
+            throws UnsupportedOperationException {
+        return accessors.compute(key, ref -> {
+            if (value instanceof UniObjectNode || value instanceof UniArrayNode) {
+                return KeyedReference.create(key, (UniNode) value);
+            } else {
+                final UniValueNodeImpl valueNode = new UniValueNodeImpl(seriLib,
+                        Reference.constant(value), (ValueType<Object>) type);
+                if (ref != null) {
+                    ref.set(valueNode);
+                    return ref;
+                }
+                return KeyedReference.create(key, valueNode);
+            }
+        }).getValue();
     }
 
     @Override
@@ -87,7 +109,35 @@ public final class UniObjectNodeImpl extends AbstractUniNode<String, KeyedRefere
     }
 
     @Override
-    protected KeyedReference<String, UniNode> generateAccessor(String ack) {
-        return null;
+    protected KeyedReference<String, ? extends UniNode> generateAccessor(final String key) {
+        return new KeyedReference.Support.Base<String, UniNode>(false, key, null) {
+            @Override
+            public boolean isOutdated() {
+                return true;
+            }
+
+            @Override
+            protected UniNode doGet() {
+                final Object value = baseNode.get(key);
+                assert getNodeType() == Type.OBJECT;
+                assert value instanceof Map;
+                //noinspection unchecked
+                return new UniObjectNodeImpl(seriLib, ((Map<String, Object>) value));
+            }
+
+            @Override
+            protected boolean doSet(UniNode value) {
+                switch (value.getNodeType()) {
+                    case OBJECT:
+                        Map<String, Object> map = new HashMap<>(value.asObjectNode());
+                        return baseNode.put(key, map) != value;
+                    case ARRAY:
+                        ArrayList<UniNode> list = new ArrayList<>(value.asArrayNode());
+                        return baseNode.put(key, list) != value;
+                }
+
+                return baseNode.put(key, value.asRaw(null)) != value;
+            }
+        };
     }
 }

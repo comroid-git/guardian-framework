@@ -9,7 +9,6 @@ import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Supplier;
@@ -25,6 +24,10 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
     @Override
     public final String getName() {
         return typ.name();
+    }
+
+    public Primitive getTyp() {
+        return typ;
     }
 
     @Override
@@ -61,7 +64,7 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
 
         if (uni.size() == 1)
             //noinspection unchecked
-            return (T1) uni.asList().get(0);
+            return (T1) uni.stream();
         throw new UnsupportedOperationException("Node too large");
     }
 

@@ -2,12 +2,13 @@ package org.comroid.restless.body;
 
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.util.function.Function;
 
-public final class BodyBuilderType<B extends AbstractUniNode> implements Function<SerializationAdapter<?, ?, ?>, B> {
+public final class BodyBuilderType<B extends UniNode> implements Function<SerializationAdapter<?, ?, ?>, B> {
     public static final BodyBuilderType<UniObjectNode> OBJECT
             = new BodyBuilderType<>(SerializationAdapter::createUniObjectNode);
     public static final BodyBuilderType<UniArrayNode> ARRAY

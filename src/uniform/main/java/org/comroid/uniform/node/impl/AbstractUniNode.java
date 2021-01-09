@@ -11,10 +11,12 @@ import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
-public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>> implements UniNode {
-    private final Object baseNode;
+public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
+    protected final Bas baseNode;
     protected final SerializationAdapter seriLib;
     protected final ReferenceMap<? super AcK, Ref> accessors = new ReferenceMap.Support.Basic<>(
             new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
@@ -24,7 +26,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         return seriLib;
     }
 
-    protected AbstractUniNode(SerializationAdapter seriLib, Object baseNode) {
+    protected AbstractUniNode(SerializationAdapter seriLib, Bas baseNode) {
         this.seriLib = seriLib;
         this.baseNode = baseNode;
     }
@@ -36,7 +38,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         return Rewrapper.empty();
     }
 
-    protected abstract Ref generateAccessor(AcK ack);
+    protected abstract <RX extends Ref> RX generateAccessor(AcK ack);
 
     @Override
     public boolean isEmpty() {
@@ -74,6 +76,13 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         return null; // todo
     }
 
+    @Override
+    public Stream<? extends UniNode> streamNodes() {
+        return accessors.streamRefs()
+                .flatMap(Rewrapper::stream)
+                .flatMap(Rewrapper::stream);
+    }
+
     @NotNull
     @Override
     public Iterator<UniNode> iterator() {
@@ -82,5 +91,10 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
                 .flatMap(Reference::stream)
                 .map(UniNode.class::cast)
                 .iterator();
+    }
+
+    @Override
+    public String toString() {
+        return baseNode.toString();
     }
 }

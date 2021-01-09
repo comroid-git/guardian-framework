@@ -106,7 +106,7 @@ public class FileCache<K, V extends DataContainer<V>, D>
             throw new IllegalArgumentException("Data is not an array");
 
         data = uniNode.asArrayNode();
-        data.asNodeList().stream()
+        data.streamNodes()
                 .filter(UniNode::isObjectNode)
                 .map(UniNode::asObjectNode)
                 .forEach(node -> {

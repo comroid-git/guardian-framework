@@ -13,9 +13,11 @@ import org.jetbrains.annotations.Nullable;
 public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This {
     String getMimeType();
 
-    DataStructureType.Obj<? extends BAS, OBJ> getObjectType();
+    DataStructureType.Obj<BAS, OBJ> getObjectType();
 
-    DataStructureType.Arr<? extends BAS, ARR> getArrayType();
+    DataStructureType.Arr<BAS, ARR> getArrayType();
+
+    DataStructureType<Object, Object, UniValueNode> getValueType();
 
     @NonExtendable
     default UniNode readFile(FileHandle file) {

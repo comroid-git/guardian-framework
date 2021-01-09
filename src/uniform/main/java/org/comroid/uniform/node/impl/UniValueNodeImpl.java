@@ -11,85 +11,115 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
-public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>> implements UniValueNode {
+public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final ValueType<Object> type;
-    private final Reference<Object> value;
 
     @Override
     public boolean isOutdated() {
-        return false;
+        return baseNode.isOutdated();
     }
 
     @Override
     public Collection<? extends CachedValue<?>> getDependents() {
-        return null;
+        return baseNode.getDependents();
     }
 
     @Override
     public Rewrapper<? extends Reference<?>> getParent() {
-        return null;
+        return baseNode.getParent();
     }
 
     @Override
     public boolean isMutable() {
-        return false;
+        return baseNode.isMutable();
     }
 
     @Override
     public ValueType getHeldType() {
-        return null;
+        return type;
     }
 
-    protected UniValueNodeImpl(SerializationAdapter seriLib, Object baseNode) {
+    public UniValueNodeImpl(SerializationAdapter seriLib, Reference<Object> baseNode, ValueType<Object> type) {
         super(seriLib, baseNode);
+
+        this.type = type;
     }
 
     @Override
     public void rebind(Supplier behind) {
-
+        baseNode.rebind(behind);
     }
 
     @Override
     public void cleanupDependents() {
-
+        baseNode.cleanupDependents();
     }
 
     @Override
     public Object update(Object withValue) {
-        return null;
+        return baseNode.update(withValue);
     }
 
     @Override
     public boolean outdate() {
-        return false;
+        return baseNode.outdate();
     }
 
     @Override
     public boolean attach(ValueUpdateListener listener) {
-        return false;
+        return baseNode.attach(listener);
     }
 
     @Override
     public boolean detach(ValueUpdateListener listener) {
-        return false;
+        return baseNode.detach(listener);
     }
 
     @Override
     public boolean addDependent(CachedValue dependency) {
-        return false;
+        return baseNode.addDependent(dependency);
     }
 
     @Nullable
     @Override
     public Object get() {
-        return null;
+        return baseNode.get();
     }
 
     @Override
-    protected Reference<UniNode> generateAccessor(Void ack) {
-        return null;
+    protected KeyedReference<Void, ? extends UniNode> generateAccessor(Void nil) {
+        return new KeyedReference.Support.Base<Void, UniNode>(false, nil, null) {
+            @Override
+            public boolean isOutdated() {
+                return true;
+            }
+
+            @Override
+            protected UniNode doGet() {
+                final Object value = baseNode.get();
+                assert getNodeType() == Type.VALUE;
+                return new UniValueNodeImpl(seriLib, baseNode, type);
+            }
+
+            @Override
+            protected boolean doSet(UniNode value) {
+                switch (value.getNodeType()) {
+                    case OBJECT:
+                        Map<String, Object> map = new HashMap<>(value.asObjectNode());
+                        return baseNode.set(map);
+                    case ARRAY:
+                        ArrayList<UniNode> list = new ArrayList<>(value.asArrayNode());
+                        return baseNode.set(list);
+                }
+
+                return baseNode.set(value.asRaw(null));
+            }
+        };
     }
 }

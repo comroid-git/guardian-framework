@@ -5,27 +5,30 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
 import org.comroid.annotations.Instance;
+import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.impl.UniArrayNodeImpl;
+import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Set;
 
-public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JSONArray> {
+public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONObject, JSONArray> {
     public static final @Instance
     FastJSONLib fastJsonLib = new FastJSONLib();
 
     private FastJSONLib() {
-        super("application/json", JSONObject.class, objFactory, JSONArray.class, arrFactory);
+        super("application/json", JSONObject.class, JSONArray.class);
     }
 
     @Override
-    public DataStructureType<SerializationAdapter<JSON, JSONObject, JSONArray>, JSON, ? extends JSON> typeOfData(String data) {
+    public DataStructureType<JSON, ? extends JSON, ? extends UniNode> typeOfData(String data) {
         final JSONValidator validator = JSONValidator.from(data);
 
         if (validator.validate()) {
@@ -39,9 +42,9 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
 
             switch (type) {
                 case Object:
-                    return objectType;
+                    return getObjectType();
                 case Array:
-                    return arrayType;
+                    return getArrayType();
             }
         }
 
@@ -50,12 +53,12 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
 
     @Override
     public UniNode parse(@Nullable String data) {
-        final DataStructureType<SerializationAdapter<JSON, JSONObject, JSONArray>, JSON, ? extends JSON> type = typeOfData(data);
+        DataStructureType<JSON, ? extends JSON, ? extends UniNode> type = typeOfData(data);
 
         if (type == null)
             throw new IllegalArgumentException("String is not valid JSON: " + data);
 
-        switch (type.typ) {
+        switch (type.getTyp()) {
             case OBJECT:
                 return createUniObjectNode(JSONObject.parseObject(data));
             case ARRAY:
@@ -67,69 +70,11 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
 
     @Override
     public UniObjectNode createUniObjectNode(JSONObject node) {
-        return new UniObjectNode(this, objectAdapter(node));
+        return new UniObjectNodeImpl(this, node);
     }
 
     @Override
     public UniArrayNode createUniArrayNode(JSONArray node) {
-        return new UniArrayNode(this, arrayAdapter(node));
-    }
-
-    private UniObjectNode.Adapter objectAdapter(JSONObject node) {
-        class Local extends UniObjectNode.Adapter<JSONObject> {
-            protected Local(@NotNull JSONObject baseNode) {
-                super(baseNode);
-            }
-
-            @Override
-            public Object put(String key, Object value) {
-                return baseNode.put(key, value);
-            }
-
-            @Override
-            public @NotNull
-            Set<Entry<String, Object>> entrySet() {
-                return baseNode.entrySet();
-            }
-        }
-
-        return new Local(node == null ? new JSONObject() : node);
-    }
-
-    private UniArrayNode.Adapter arrayAdapter(JSONArray node) {
-        class Local extends UniArrayNode.Adapter<JSONArray> {
-            private Local(@NotNull JSONArray node) {
-                super(node);
-            }
-
-            @Override
-            public Object get(int index) {
-                if (index < baseNode.size())
-                    return baseNode.get(index);
-                return null;
-            }
-
-            @Override
-            public Object set(int index, Object element) {
-                return baseNode.set(index, element);
-            }
-
-            @Override
-            public void add(int index, Object element) {
-                baseNode.add(index, element);
-            }
-
-            @Override
-            public Object remove(int index) {
-                return baseNode.remove(index);
-            }
-
-            @Override
-            public int size() {
-                return baseNode.size();
-            }
-        }
-
-        return new Local(node == null ? new JSONArray() : node);
+        return new UniArrayNodeImpl(this, node);
     }
 }

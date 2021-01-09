@@ -63,14 +63,14 @@ public final class BindingBuilder<SELF extends DataContainer<? super SELF>, EXTR
 
     @Override
     public VarBindBuilder<SELF, UniObjectNode, REMAP, FINAL> extractAsObject() {
-        this.valueType = uncheckedCast(group.getFromContext().objectValue);
+        this.valueType = uncheckedCast(group.getFromContext().getObjectType());
         this.extractionMethod = VarBind.ExtractionMethod.OBJECT;
         return uncheckedCast(this);
     }
 
     @Override
     public <R> VarBindBuilder<SELF, R, REMAP, FINAL> extractAsArray(@Nullable ValueType<R> valueType) {
-        this.valueType = uncheckedCast(valueType == null ? group.getFromContext().arrayValue : valueType);
+        this.valueType = uncheckedCast(valueType == null ? group.getFromContext().getArrayType() : valueType);
         this.extractionMethod = VarBind.ExtractionMethod.ARRAY;
         return uncheckedCast(this);
     }

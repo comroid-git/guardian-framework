@@ -51,7 +51,7 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
     default UniObjectNode toObjectNode(ContextualProvider context) {
         //noinspection unchecked
         return toObjectNode(context.requireFromContext(SerializationAdapter.class)
-                .createUniObjectNode(context.requireFromContext(SerializationAdapter.class).objectType.get()));
+                .createUniObjectNode(context.requireFromContext(SerializationAdapter.class).getObjectType().get()));
     }
 
     UniObjectNode toObjectNode(UniObjectNode node);

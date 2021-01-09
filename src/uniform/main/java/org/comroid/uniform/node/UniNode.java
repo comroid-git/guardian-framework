@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode> {
     @Internal
@@ -23,6 +24,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
                 expected
         ));
     }
+
 
     default String getSerializedString() {
         return toString();
@@ -61,8 +63,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     void clear();
 
     default boolean isNull(String fieldName) {
-        return wrap(fieldName).map(UniNode::isNull)
-                .orElse(true);
+        return wrap(fieldName).map(UniNode::isNull).orElse(true);
     }
 
     @NotNull UniNode get(int index);
@@ -127,12 +128,12 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull
     default UniNode putNull(int index) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_NULL_INDEX", Type.ARRAY);
+        return put(index, getFromContext().getValueType(), UniValueNode.NULL);
     }
 
     @NotNull
     default UniNode putNull(String key) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_NULL_KEY", Type.OBJECT);
+        return put(key, getFromContext().getValueType(), UniValueNode.NULL);
     }
 
     @NotNull
@@ -142,12 +143,16 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull
     default UniObjectNode putObject(int index) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_OBJECT_INDEX", Type.ARRAY);
+        final UniObjectNode node = getSerializationAdapter().createUniObjectNode();
+        put(index, getFromContext().getObjectType(), node);
+        return node;
     }
 
     @NotNull
     default UniObjectNode putObject(String key) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_OBJECT_KEY", Type.OBJECT);
+        final UniObjectNode node = getSerializationAdapter().createUniObjectNode();
+        put(key, getFromContext().getObjectType(), node);
+        return node;
     }
 
     @NotNull
@@ -157,16 +162,24 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull
     default UniArrayNode putArray(int index) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_ARRAY_INDEX", Type.ARRAY);
+        final UniArrayNode node = getSerializationAdapter().createUniArrayNode();
+        put(index, getFromContext().getArrayType(), node);
+        return node;
     }
 
     @NotNull
     default UniArrayNode putArray(String key) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_ARRAY_KEY", Type.ARRAY);
+        final UniArrayNode node = getSerializationAdapter().createUniArrayNode();
+        put(key, getFromContext().getArrayType(), node);
+        return node;
     }
 
     @Contract(value = "_ -> this", mutates = "this")
     UniNode copyFrom(@NotNull UniNode it);
+
+    default Object asRaw() {
+        return asRaw(null);
+    }
 
     default Object asRaw(@Nullable Object fallback) {
         if (isNull() && fallback != null) {
@@ -276,13 +289,11 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
         return unsupported(this, "GET_AS_CHAR", Type.VALUE);
     }
 
-    default List<Object> asList() {
-        return unsupported(this, "GET_AS_LIST", Type.ARRAY);
+    default Stream<? extends UniNode> stream() {
+        return streamNodes();
     }
 
-    default List<? extends UniNode> asNodeList() {
-        return unsupported(this, "GET_AS_NODELIST", Type.ARRAY);
-    }
+    Stream<? extends UniNode> streamNodes();
 
     default UniObjectNode asObjectNode() {
         return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.OBJECT));
