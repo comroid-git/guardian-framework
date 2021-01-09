@@ -36,11 +36,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
-        return ref -> KeyedReference.conditional(
-                () -> true,
-                ref::getKey,
-                () -> mapper.apply(ref.getKey(), ref.getValue())
-        );
+        return ref -> new KeyedReference.Support.Base<>(ref.getKey(), ref.map(v -> mapper.apply(ref.getKey(), v)));
     }
 
     static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
@@ -52,11 +48,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
-        return ref -> KeyedReference.conditional(
-                () -> true,
-                ref::getKey,
-                () -> mapper.andThen(Rewrapper::get).apply(ref.getKey(), ref.getValue())
-        );
+        return mapBoth(mapper.andThen(Rewrapper::get));
     }
 
     static <K, V> BiStageAdapter<K, V, K, V> distinctValue() {
@@ -143,7 +135,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
             @Override
             public KeyedReference<X, T> advance(KeyedReference<T, T> ref) {
-                return KeyedReference.conditional(() -> true, () -> ref.into(source), ref);
+                return new KeyedReference.Support.Base<>(source.apply(ref.getKey()), ref);
             }
 
             @Override
