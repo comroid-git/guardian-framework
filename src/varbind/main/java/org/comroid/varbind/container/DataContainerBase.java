@@ -165,7 +165,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
                     getExtractionReference(bind).set(extract);
                     logger.trace("Changed {} to ( {} / {} )",
-                            bind.getName(),
+                            bind,
                             Arrays.toString(extract.toArray()),
                             getComputedReference(bind).get());
                     changed.add(bind);

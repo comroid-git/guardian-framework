@@ -41,6 +41,11 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return groupName;
     }
 
+    @Override
+    public String getAlternateFormattedName() {
+        return String.format("GroupBind<%s>", nameStringRecursive(getParents(), getName()));
+    }
+
     public Span<GroupBind<? super T>> getParents() {
         return parents;
     }
@@ -146,7 +151,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
 
     @Override
     public String toString() {
-        return String.format("GroupBind<%s>", nameStringRecursive(getParents(), getName()));
+        return getAlternateFormattedName();
     }
 
     @SuppressWarnings({"unchecked", "InfiniteRecursion", "ConstantConditions"})
