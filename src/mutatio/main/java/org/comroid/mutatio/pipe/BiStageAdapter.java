@@ -135,7 +135,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
             @Override
             public KeyedReference<X, T> advance(KeyedReference<T, T> ref) {
-                return new KeyedReference.Support.Base<>(source.apply(ref.getKey()), ref);
+                return new KeyedReference.Support.Base<>(source.apply(ref.getValue()), ref);
             }
 
             @Override
