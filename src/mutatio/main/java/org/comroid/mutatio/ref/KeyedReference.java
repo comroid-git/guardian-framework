@@ -53,11 +53,6 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             private final Reference<V> valueHolder;
 
             @Override
-            public boolean isOutdated() {
-                return true;
-            }
-
-            @Override
             public K getKey() {
                 return key;
             }

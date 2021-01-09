@@ -62,7 +62,8 @@ public final class ValueType<R> implements HeldType<R>, Predicate<Object> {
 
     @Override
     public <T> T convert(R value, HeldType<T> toType) {
-        return toType.getConverter().apply(value.toString());
+        if (value == null) return null;
+        return toType.parse(value.toString());
     }
 
     @Override

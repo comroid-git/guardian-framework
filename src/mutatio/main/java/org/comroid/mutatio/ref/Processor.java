@@ -208,11 +208,6 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
         public static final class Or<T> extends Base<T, T> {
             private final Supplier<T> other;
 
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
-
             public Or(Reference<T> base, Supplier<T> other) {
                 super(base, Function.identity());
 

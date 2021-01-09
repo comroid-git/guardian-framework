@@ -158,7 +158,8 @@ public final class UniObjectNode extends UniNode {
 
         @Override
         public boolean isOutdated() {
-            return true;
+            final String newer = doGet();
+            return atom.compareAndSet(newer, newer);
         }
 
         protected KeyAccessor(String fieldName) {

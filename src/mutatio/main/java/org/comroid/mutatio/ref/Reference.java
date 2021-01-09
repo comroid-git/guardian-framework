@@ -166,9 +166,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
     }
 
     default <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(mapper
-                .andThen(Optional::get)
-                .andThen(Reference::constant), backwardsConverter);
+        return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
     @Deprecated
@@ -187,7 +185,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             private Supplier<T> overriddenSupplier = null;
 
             @Override
-            public Rewrapper<? extends Reference<?>> getParent() {
+            public final Rewrapper<? extends Reference<?>> getParent() {
                 return () -> super.getParent().into(Reference.class);
             }
 
@@ -218,21 +216,23 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             @OverrideOnly
             protected boolean doSet(T value) {
                 atom.set(value);
+                update(value);
                 return true;
             }
 
             @Nullable
             @Override
-            public final T get() {
-                if (isUpToDate()) {
+            public synchronized final T get() {
+                if (isUpToDate() && atom.get() != null) {
                     //logger.trace("{} is up to date; does not need computing", toString());
                     return atom.get();
                 }
                 return atom.updateAndGet(old -> {
                     //logger.trace("{} is not up to date; recomputing", toString());
                     final T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
-                    update(value);
-                    return value;
+                    if (value == null)
+                        return null;
+                    return update(value);
                 });
             }
 
@@ -251,7 +251,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             }
 
             @Override
-            public void rebind(Supplier<T> behind) {
+            public final void rebind(Supplier<T> behind) {
                 if (behind == this || (behind instanceof Processor
                         && ((Processor<T>) behind).upstream().noneMatch(this::equals)))
                     throw new IllegalArgumentException("Cannot rebind behind itself");
@@ -261,7 +261,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             }
 
             @Override
-            public String toString() {
+            public final String toString() {
                 return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
                         Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
             }
