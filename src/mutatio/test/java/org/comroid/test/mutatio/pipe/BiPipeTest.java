@@ -34,6 +34,10 @@ public class BiPipeTest {
     public void testMap() {
         final ReferenceMap<Integer, String> map = Pipe.of(controlGroup)
                 .bi(String::hashCode)
+                .mapKey(String::valueOf)
+                .map(String::toUpperCase)
+                .mapKey(Integer::parseInt)
+                .map(String::toLowerCase)
                 .distinctKeys();
         controlGroup.forEach(uid -> Assert.assertEquals("map entry", uid, map.get(uid.hashCode())));
     }
