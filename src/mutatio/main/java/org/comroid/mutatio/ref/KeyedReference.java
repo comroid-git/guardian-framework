@@ -104,7 +104,7 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
                     Predicate<? super K> keyFilter,
                     Predicate<? super V> valueFilter
             ) {
-                super(null, parent);
+                super(parent.getKey(), parent);
                 this.parent = parent;
                 this.keyFilter = keyFilter;
                 this.valueFilter = valueFilter;
@@ -115,11 +115,6 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
                 if (keyFilter.test(getKey()) && valueFilter.test(parent.getValue()))
                     return parent.getValue();
                 return null;
-            }
-
-            @Override
-            public K getKey() {
-                return parent.getKey();
             }
         }
 
