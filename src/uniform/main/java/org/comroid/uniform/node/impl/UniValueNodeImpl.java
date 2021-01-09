@@ -18,9 +18,21 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
     }
 
     @Override
+    public Type getType() {
+        return null;
+    }
+
+    @Override
     public boolean isNull() {
         return baseReference.isNull();
     }
+
+    @Override
+    public SerializationAdapter<?, ?, ?> getSerializationAdapter() {
+        return null;
+    }
+
+    get
 
     public UniValueNodeImpl(SerializationAdapter<?, ?, ?> seriLib, Reference<T> baseReference, ValueType<T> targetType) {
         super(seriLib, Type.VALUE);
@@ -57,7 +69,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
     @Override
     protected void set(Object value) {
         baseReference.set(
-                ValueType.STRING.convert(
+                ValueTypeBase.STRING.convert(
                         String.valueOf(value), targetType)
         );
     }
@@ -111,7 +123,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
         return baseReference
                 .map(String::valueOf)
                 .map(UniValueNode::unwrapString)
-                .into(it -> ValueType.STRING.convert(it, type));
+                .into(it -> ValueTypeBase.STRING.convert(it, type));
     }
 
     @Override
@@ -120,7 +132,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.STRING);
+        return as(ValueTypeBase.STRING);
     }
 
     @Override
@@ -129,7 +141,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.BOOLEAN);
+        return as(ValueTypeBase.BOOLEAN);
     }
 
     @Override
@@ -138,7 +150,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.INTEGER);
+        return as(ValueTypeBase.INTEGER);
     }
 
     @Override
@@ -147,7 +159,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.LONG);
+        return as(ValueTypeBase.LONG);
     }
 
     @Override
@@ -156,7 +168,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.DOUBLE);
+        return as(ValueTypeBase.DOUBLE);
     }
 
     @Override
@@ -165,7 +177,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.FLOAT);
+        return as(ValueTypeBase.FLOAT);
     }
 
     @Override
@@ -174,7 +186,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.SHORT);
+        return as(ValueTypeBase.SHORT);
     }
 
     @Override
@@ -183,7 +195,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             return fallback;
         }
 
-        return as(ValueType.CHARACTER);
+        return as(ValueTypeBase.CHARACTER);
     }
 
     public interface Adapter<T> extends UniNodeBase.Adapter {

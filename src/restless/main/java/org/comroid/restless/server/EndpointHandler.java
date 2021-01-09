@@ -4,7 +4,7 @@ import com.sun.net.httpserver.Headers;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.ValueTypeBase;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.impl.UniNodeBase;
 import org.comroid.uniform.node.UniObjectNode;
@@ -40,7 +40,7 @@ public interface EndpointHandler {
                         UniObjectNode node = server.getSerializationAdapter().createUniObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
-                                .forEach(field -> node.put(field[0], ValueType.STRING, field[1]));
+                                .forEach(field -> node.put(field[0], ValueTypeBase.STRING, field[1]));
                         return node;
                     } catch (Throwable ignored) {
                         return null;

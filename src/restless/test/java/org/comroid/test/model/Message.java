@@ -1,7 +1,7 @@
 package org.comroid.test.model;
 
 import org.comroid.api.Polyfill;
-import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.ValueTypeBase;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;
@@ -38,7 +38,7 @@ public final class Message extends DataContainerBase<DiscordAPI> {
         GroupBind<Message, DiscordAPI> GROUP = new GroupBind<>(fastJsonLib, "message", Message.class);
         VarBind<Object, String, URL, ArrayList<URL>> ATTACHMENTS
                 = GROUP.createBind("attachments")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .andRemap(Polyfill::url)
                 .intoCollection(ArrayList::new)
                 .build();
@@ -50,7 +50,7 @@ public final class Message extends DataContainerBase<DiscordAPI> {
                 .build();
         VarBind<Object, String, String, String> EDITED_TIMESTAMP
                 = GROUP.createBind("edited_timestamp")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .onceEach()
                 .build();
@@ -62,19 +62,19 @@ public final class Message extends DataContainerBase<DiscordAPI> {
                 .build();
         VarBind<Object, String, String, String> CONTENT
                 = GROUP.createBind("content")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .onceEach()
                 .build();
         VarBind<Object, Long, Channel, Channel> CHANNEL
                 = GROUP.createBind("channel_id")
-                .extractAs(ValueType.LONG)
+                .extractAs(ValueTypeBase.LONG)
                 .andResolve((id, api) -> api.getChannelById(id))
                 .onceEach()
                 .build();
         VarBind<Object, Long, Long, Long> ID
                 = GROUP.createBind("id")
-                .extractAs(ValueType.LONG)
+                .extractAs(ValueTypeBase.LONG)
                 .asIdentities()
                 .onceEach()
                 .build();
@@ -92,13 +92,13 @@ public final class Message extends DataContainerBase<DiscordAPI> {
                 .build();
         VarBind<Object, Boolean, Boolean, Boolean> MENTIONS_EVERYONE
                 = GROUP.createBind("mention_everyone")
-                .extractAs(ValueType.BOOLEAN)
+                .extractAs(ValueTypeBase.BOOLEAN)
                 .asIdentities()
                 .onceEach()
                 .build();
         VarBind<Object, Boolean, Boolean, Boolean> PINNED
                 = GROUP.createBind("pinned")
-                .extractAs(ValueType.BOOLEAN)
+                .extractAs(ValueTypeBase.BOOLEAN)
                 .asIdentities()
                 .onceEach()
                 .build();
@@ -110,19 +110,19 @@ public final class Message extends DataContainerBase<DiscordAPI> {
                 .build();
         VarBind<Object, String, String, String> TIMESTAMP
                 = GROUP.createBind("timestamp")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .onceEach()
                 .build(); // todo Instant parsing
         VarBind<Object, Boolean, Boolean, Boolean> TTS
                 = GROUP.createBind("tts")
-                .extractAs(ValueType.BOOLEAN)
+                .extractAs(ValueTypeBase.BOOLEAN)
                 .asIdentities()
                 .onceEach()
                 .build();
         VarBind<Object, Integer, Type, Type> TYPE
                 = GROUP.createBind("type")
-                .extractAs(ValueType.INTEGER)
+                .extractAs(ValueTypeBase.INTEGER)
                 .andRemap(Type::new)
                 .onceEach()
                 .build();

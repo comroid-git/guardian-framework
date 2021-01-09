@@ -1,7 +1,7 @@
 package org.comroid.uniform.adapter.json.orgjson;
 
 import org.comroid.annotations.Instance;
-import org.comroid.uniform.DataStructureType;
+import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -15,7 +15,7 @@ public final class OrgJsonLib extends SerializationAdapter<Object, JSONObject, J
     final OrgJsonLib orgJsonLib = new OrgJsonLib();
 
     protected OrgJsonLib() {
-        super("application/json", JSONObject.class, JSONArray.class);
+        super("application/json", JSONObject.class, objFactory, JSONArray.class, arrFactory);
     }
 
     @Override

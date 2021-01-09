@@ -1,7 +1,7 @@
 package org.comroid.test.varbind;
 
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.ValueTypeBase;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -37,7 +37,7 @@ public class VarBindBuilderTest {
     public void testSingleIdentities() {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .onceEach()
                 .build();
@@ -63,7 +63,7 @@ public class VarBindBuilderTest {
     public void testSingleRemapped() {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .andRemap(VarBindBuilderTest::reverse)
                 .onceEach()
                 .build();
@@ -89,7 +89,7 @@ public class VarBindBuilderTest {
     public void testSingleResolved() {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .andResolve((str, dummy) -> dummy.modify(str))
                 .onceEach()
                 .build();
@@ -117,7 +117,7 @@ public class VarBindBuilderTest {
     public void testListedSimple() {
         final VarBind<Object, String, String, ArrayList<String>> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .intoCollection(ArrayList::new)
                 .build();
@@ -131,7 +131,7 @@ public class VarBindBuilderTest {
     public void testListedRemapped() {
         final VarBind<Object, String, String, ArrayList<String>> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .intoCollection(ArrayList::new)
                 .build();
@@ -145,7 +145,7 @@ public class VarBindBuilderTest {
     public void testListedResolved() {
         final VarBind<Object, String, String, ArrayList<String>> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .asIdentities()
                 .intoCollection(ArrayList::new)
                 .build();
@@ -159,7 +159,7 @@ public class VarBindBuilderTest {
     public void testNullAsDependency() {
         final VarBind<Object, String, String, String> bind
                 = group.createBind("name")
-                .extractAs(ValueType.STRING)
+                .extractAs(ValueTypeBase.STRING)
                 .andResolve((str, dummy) -> dummy.modify(str))
                 .onceEach()
                 .build();

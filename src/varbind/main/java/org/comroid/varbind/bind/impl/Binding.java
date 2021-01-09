@@ -4,6 +4,7 @@ import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.ValueTypeBase;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
@@ -86,7 +87,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
 
         switch (extractionMethod) {
             case VALUE:
-                assert valueType instanceof ValueType;
+                assert valueType instanceof ValueTypeBase;
                 EXTR value = target.as(((ValueType<EXTR>) valueType));
                 return Span.immutable(value);
             case OBJECT:
@@ -95,7 +96,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
                 EXTR cast = Polyfill.uncheckedCast(obj);
                 return Span.immutable(cast);
             case ARRAY:
-                if (valueType instanceof ValueType) {
+                if (valueType instanceof ValueTypeBase) {
                     // extract values array
                     return target.asNodeList()
                             .stream()

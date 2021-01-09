@@ -9,9 +9,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import org.comroid.common.exception.AssertionException;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.DataStructureType;
+import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.ValueTypeBase;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -74,7 +74,7 @@ public abstract class JacksonAdapter extends SerializationAdapter<JsonNode, Obje
             protected String doGet() {
                 return base.asText();
             }
-        }, ValueType.STRING);
+        }, ValueTypeBase.STRING);
     }
 
     @Override

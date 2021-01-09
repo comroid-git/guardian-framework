@@ -1,5 +1,6 @@
-package org.comroid.uniform;
+package org.comroid.uniform.exception;
 
+import org.comroid.uniform.model.DataStructureType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

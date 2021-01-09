@@ -4,7 +4,6 @@ import org.comroid.api.HeldType;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -88,11 +87,11 @@ public final class UniObjectNodeImpl extends UniNodeBase implements UniObjectNod
         if (node != null)
             return node;
 
-        if (type == ValueType.VOID) {
+        if (type == ValueTypeBase.VOID) {
             adapter.put(key, value);
             return get(key);
         } else {
-            final String put = type.convert(value, ValueType.STRING);
+            final String put = type.convert(value, ValueTypeBase.STRING);
 
             final UniNodeBase vn = makeValueNode(key).requireNonNull("Missing Node");
             vn.set(put);

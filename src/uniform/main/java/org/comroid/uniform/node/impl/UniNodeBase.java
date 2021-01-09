@@ -3,9 +3,8 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.*;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.DataStructureType;
+import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.Nullable;
@@ -68,7 +67,7 @@ public abstract class UniNodeBase implements UniNode {
                     } catch (IllegalArgumentException ignored) {
                     }
 
-                    return new UniValueNode<>(serializationAdapter, base, ValueType.STRING);
+                    return new UniValueNode<>(serializationAdapter, base, ValueTypeBase.STRING);
                 }));
     }
 
@@ -79,10 +78,10 @@ public abstract class UniNodeBase implements UniNode {
     @Nullable
     protected <T> UniNode unwrapNode(String key, HeldType<T> type, T value) {
         if (value instanceof UniNodeBase)
-            return put(key, ValueType.VOID, Polyfill.uncheckedCast(((UniNodeBase) value).getBaseNode()));
+            return put(key, ValueTypeBase.VOID, Polyfill.uncheckedCast(((UniNodeBase) value).getBaseNode()));
         if (Stream.of(serializationAdapter.objectType, serializationAdapter.arrayType)
-                .anyMatch(dst -> dst.typeClass().isInstance(value)) && type != ValueType.VOID)
-            return put(key, ValueType.VOID, Polyfill.uncheckedCast(value));
+                .anyMatch(dst -> dst.typeClass().isInstance(value)) && type != ValueTypeBase.VOID)
+            return put(key, ValueTypeBase.VOID, Polyfill.uncheckedCast(value));
         return null;
     }
 

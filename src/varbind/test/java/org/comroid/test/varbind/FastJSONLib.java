@@ -20,7 +20,7 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
     final FastJSONLib fastJsonLib = new FastJSONLib();
 
     private FastJSONLib() {
-        super("application/json", JSONObject.class, JSONArray.class);
+        super("application/json", JSONObject.class, objFactory, JSONArray.class, arrFactory);
     }
 
     @Override
