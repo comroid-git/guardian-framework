@@ -66,12 +66,12 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
         return createUniObjectNode(getObjectType().get());
     }
 
-    UniObjectNode createUniObjectNode(OBJ node);
-
     @NonExtendable
     default UniArrayNode createUniArrayNode() {
         return createUniArrayNode(getArrayType().get());
     }
+
+    UniObjectNode createUniObjectNode(OBJ node);
 
     UniArrayNode createUniArrayNode(ARR node);
 }
