@@ -157,21 +157,26 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         final HashSet<VarBind<? extends S, Object, ?, Object>> changed = new HashSet<>();
 
-        rootBind.streamAllChildren()
-                .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
-                .filter(bind -> data.has(bind.getFieldName()))
-                .forEach(bind -> {
-                    Span<Object> extract = bind.extract(data);
+        try {
+            rootBind.streamAllChildren()
+                    .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
+                    .filter(bind -> data.has(bind.getFieldName()))
+                    .forEach(bind -> {
+                        Span<Object> extract = bind.extract(data);
 
-                    getExtractionReference(bind).set(extract);
-                    logger.trace("Changed {} to ( {} / {} )",
-                            bind,
-                            Arrays.toString(extract.toArray()),
-                            getComputedReference(bind).get());
-                    changed.add(bind);
-                });
-
-        logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
+                        getExtractionReference(bind).set(extract);
+                        logger.trace("Changed {} to ( {} / {} )",
+                                bind,
+                                Arrays.toString(extract.toArray()),
+                                computedRefs.get(bind.getFieldName()));
+                        changed.add(bind);
+                    });
+        } catch (Throwable t) {
+            logger.error("Updating data failed for {}\nData: {}", toString(), data.toString());
+            return unmodifiableSet(changed);
+        } finally {
+            logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
+        }
 
         return unmodifiableSet(changed);
     }
