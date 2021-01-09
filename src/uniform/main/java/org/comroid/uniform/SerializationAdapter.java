@@ -2,31 +2,20 @@ package org.comroid.uniform;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
-import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
-import org.comroid.uniform.node.impl.NodeFactory;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.InputStream;
 
 public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This {
     String getMimeType();
 
-    NodeFactory getNodeFactory();
+    DataStructureType.Obj<? extends BAS, OBJ> getObjectType();
 
-    DataStructureType.Obj<BAS, OBJ> getObjectType();
-
-    ValueType<UniObjectNode> getObjectValueType();
-
-    DataStructureType.Arr<BAS, ARR> getArrayType();
-
-    ValueType<UniArrayNode> getArrayValueType();
+    DataStructureType.Arr<? extends BAS, ARR> getArrayType();
 
     @NonExtendable
     default UniNode readFile(FileHandle file) {
@@ -34,12 +23,12 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
     }
 
     @NonExtendable
-    default <TAR extends BAS> DataStructureType<BAS, ?, ?> typeOf(
+    default <TAR extends BAS> DataStructureType<? extends BAS, ? extends BAS, ? extends UniNode> typeOf(
             TAR node
     ) {
-        if (getObjectType().typeClass().isInstance(node))
+        if (getObjectType().getBaseClass().isInstance(node))
             return getObjectType();
-        if (getArrayType().typeClass().isInstance(node))
+        if (getArrayType().getBaseClass().isInstance(node))
             return getArrayType();
         throw new IllegalArgumentException("Unknown type: " + node.getClass().getName());
     }
@@ -56,9 +45,9 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
             return parse(string);
         }
 
-        if (getObjectValueType().test(it))
+        if (getObjectType().test(it))
             return createUniObjectNode(getObjectType().cast(it));
-        if (getArrayValueType().test(it))
+        if (getArrayType().test(it))
             return createUniArrayNode(getArrayType().cast(it));
         ValueType<Object> typeOf = ValueType.typeOf(it);
         if (typeOf != null)
