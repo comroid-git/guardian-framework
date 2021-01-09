@@ -56,12 +56,12 @@ public final class UniObjectNodeImpl extends UniNodeBase implements UniObjectNod
 
     @Override
     public @NotNull UniNode get(int index) {
-        return unsupported("GET_INDEX", Type.ARRAY);
+        return unsupported(this, "GET_INDEX", Type.ARRAY);
     }
 
     @Override
     public int size() {
-        return unsupported("SIZE", Type.ARRAY);
+        return unsupported(this, "SIZE", Type.ARRAY);
     }
 
     @Override
@@ -130,7 +130,7 @@ public final class UniObjectNodeImpl extends UniNodeBase implements UniObjectNod
             adapter.putAll(((UniObjectNode) it).adapter);
             return this;
         }
-        return unsupported("COPY_FROM", Type.OBJECT);
+        return unsupported(this, "COPY_FROM", Type.OBJECT);
     }
 
     public Map<String,Object> asMap() {

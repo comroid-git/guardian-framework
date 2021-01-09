@@ -71,7 +71,7 @@ public final class UniArrayNodeImpl extends UniNodeBase implements UniArrayNode 
             adapter.addAll(((UniArrayNode) it).adapter);
             return this;
         }
-        return unsupported("COPY_FROM", Type.ARRAY);
+        return unsupported(this, "COPY_FROM", Type.ARRAY);
     }
 
     @Override
@@ -81,12 +81,12 @@ public final class UniArrayNodeImpl extends UniNodeBase implements UniArrayNode 
 
     @Override
     public boolean has(String fieldName) {
-        return unsupported("HAS_FIELD", Type.OBJECT);
+        return unsupported(this, "HAS_FIELD", Type.OBJECT);
     }
 
     @Override
     public @NotNull UniNode get(String fieldName) {
-        return unsupported("GET_FIELD", Type.OBJECT);
+        return unsupported(this, "GET_FIELD", Type.OBJECT);
     }
 
     @Override

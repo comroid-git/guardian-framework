@@ -36,22 +36,22 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
 
     @Override
     public @NotNull UniNode get(int index) {
-        return unsupported("GET_INDEX", Type.ARRAY);
+        return unsupported(this, "GET_INDEX", Type.ARRAY);
     }
 
     @Override
     public int size() {
-        return unsupported("SIZE", Type.ARRAY);
+        return unsupported(this, "SIZE", Type.ARRAY);
     }
 
     @Override
     public boolean has(String fieldName) {
-        return unsupported("HAS_FIELD", Type.OBJECT);
+        return unsupported(this, "HAS_FIELD", Type.OBJECT);
     }
 
     @Override
     public @NotNull UniNode get(String fieldName) {
-        return unsupported("GET_FIELD", Type.OBJECT);
+        return unsupported(this, "GET_FIELD", Type.OBJECT);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class UniValueNodeImpl<T> extends UniNodeBase implements UniValueNode {
             baseReference.set(it.as(targetType));
             return this;
         }
-        return unsupported("COPY_FROM_" + it.getType().name(), Type.VALUE);
+        return unsupported(this, "COPY_FROM_" + it.getType().name(), Type.VALUE);
     }
 
     @Override

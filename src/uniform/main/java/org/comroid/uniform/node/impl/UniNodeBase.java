@@ -73,7 +73,7 @@ public abstract class UniNodeBase implements UniNode {
     }
 
     protected void set(Object value) {
-        unsupported("SET", Type.VALUE);
+        unsupported(this, "SET", Type.VALUE);
     }
 
     @Nullable
