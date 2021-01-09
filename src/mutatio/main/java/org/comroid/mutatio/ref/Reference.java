@@ -267,9 +267,8 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             }
         }
 
-
-        public static class Default<T> extends Base<T> {
-            protected Default(boolean mutable, T initialValue) {
+        private static class Default<T> extends Base<T> {
+            private Default(boolean mutable, T initialValue) {
                 super(mutable);
 
                 atom.set(initialValue);

@@ -125,7 +125,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                         RootBind.class
                 ).iterator();
         if (!groups.hasNext())
-            throw new NoSuchElementException(String.format("No @RootBind annotated field found in %s", location.value()));
+            throw new NoSuchElementException(String.format("No @RootBind annotated field found in %s", location != null ? location.value() : inClass));
         return groups.next();
     }
 

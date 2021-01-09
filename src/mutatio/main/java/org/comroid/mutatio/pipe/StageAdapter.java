@@ -25,7 +25,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
     }
 
     static <O, T> StageAdapter<O, T, Reference<O>, Reference<T>> flatMap(Function<? super O, ? extends Rewrapper<? extends T>> mapper) {
-        return new Support.Map<>(mapper.andThen(Rewrapper::get));
+        return map(mapper.andThen(Rewrapper::get));
     }
 
     @Deprecated // todo: fix
