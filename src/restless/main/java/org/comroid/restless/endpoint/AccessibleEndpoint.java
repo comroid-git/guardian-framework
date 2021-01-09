@@ -1,6 +1,7 @@
 package org.comroid.restless.endpoint;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.WrappedFormattable;
 import org.comroid.common.ref.StaticCache;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.ServerEndpoint;
@@ -16,7 +17,17 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public interface AccessibleEndpoint extends RatelimitedEndpoint, Predicate<String> {
+public interface AccessibleEndpoint extends RatelimitedEndpoint, WrappedFormattable, Predicate<String> {
+    @Override
+    default String getDefaultFormattedName() {
+        return getFullUrl();
+    }
+
+    @Override
+    default String getAlternateFormattedName() {
+        return getUrlExtension();
+    }
+
     String getUrlBase();
 
     String getUrlExtension();

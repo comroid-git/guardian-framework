@@ -1,11 +1,22 @@
 package org.comroid.restless.endpoint;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.WrappedFormattable;
 
 import java.net.URI;
 import java.net.URL;
 
-public interface CompleteEndpoint {
+public interface CompleteEndpoint extends WrappedFormattable {
+    @Override
+    default String getDefaultFormattedName() {
+        return getSpec();
+    }
+
+    @Override
+    default String getAlternateFormattedName() {
+        return getEndpoint().getDefaultFormattedName();
+    }
+
     AccessibleEndpoint getEndpoint();
 
     String getSpec();
