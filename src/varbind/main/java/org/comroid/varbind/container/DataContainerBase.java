@@ -1,5 +1,7 @@
 package org.comroid.varbind.container;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.SelfDeclared;
@@ -37,6 +39,7 @@ import static org.comroid.api.Polyfill.uncheckedCast;
 public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>>
         extends AbstractMap<String, Object>
         implements DataContainer<S> {
+    private static final Logger logger = LogManager.getLogger();
     private final GroupBind<S> rootBind;
     private final Map<String, VarBind<? extends S, Object, Object, Object>> binds;
     private final ReferenceMap<String, Span<Object>> baseRefs;
@@ -142,6 +145,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private Set<VarBind<? extends S, Object, ?, Object>> updateVars(
             @Nullable UniObjectNode data
     ) {
+        logger.trace("Updating DataContainer with data: {} with {}", toString(), data);
+
         if (data == null) {
             return emptySet();
         }
@@ -159,9 +164,14 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                     Span<Object> extract = bind.extract(data);
 
                     getExtractionReference(bind).set(extract);
-                    //getComputedReference(bind).outdate();
+                    logger.trace("Changed {} to ( {} / {} )",
+                            bind.getName(),
+                            Arrays.toString(extract.toArray()),
+                            getComputedReference(bind).get());
                     changed.add(bind);
                 });
+
+        logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
 
         return unmodifiableSet(changed);
     }
