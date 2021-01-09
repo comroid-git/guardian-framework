@@ -17,7 +17,8 @@ import java.io.IOException;
 import java.util.Set;
 
 public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JSONArray> {
-    public static final @Instance FastJSONLib fastJsonLib = new FastJSONLib();
+    public static final @Instance
+    FastJSONLib fastJsonLib = new FastJSONLib();
 
     private FastJSONLib() {
         super("application/json", JSONObject.class, JSONArray.class);
@@ -103,7 +104,9 @@ public final class FastJSONLib extends SerializationAdapter<JSON, JSONObject, JS
 
             @Override
             public Object get(int index) {
-                return baseNode.get(index);
+                if (index < baseNode.size())
+                    return baseNode.get(index);
+                return null;
             }
 
             @Override
