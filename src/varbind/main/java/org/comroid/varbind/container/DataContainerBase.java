@@ -149,7 +149,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private Set<VarBind<? extends S, Object, ?, Object>> updateVars(
             @Nullable UniObjectNode data
     ) {
-        logger.trace("Updating DataContainer with data: {} with {}", toString(), data);
+        //logger.trace("Updating DataContainer with data: {} with {}", toString(), data);
 
         if (data == null) {
             return emptySet();
@@ -169,16 +169,16 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                         Span<Object> extract = bind.extract(data);
 
                         getExtractionReference(bind).set(extract);
-                        logger.trace("Changed {} to ( {} / {} )",
+                        /*logger.trace("Changed {} to ( {} / {} )",
                                 bind,
                                 Arrays.toString(extract.toArray()),
-                                computedRefs.get(bind.getFieldName()));
+                                computedRefs.get(bind.getFieldName()));*/
                         changed.add(bind);
                     });
         } catch (Throwable t) {
             throw new RuntimeException(String.format("Updating data failed for %s\nData: %s", toString(), data.toString()), t);
         } finally {
-            logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
+            //logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
         }
 
         return unmodifiableSet(changed);
