@@ -1,4 +1,10 @@
 package org.comroid.uniform.node;
 
-public interface UniArrayNode extends UniNode {
+import java.util.List;
+
+public interface UniArrayNode extends List<UniNode>, UniNode {
+    @Override
+    default Type getNodeType() {
+        return Type.ARRAY;
+    }
 }

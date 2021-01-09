@@ -10,10 +10,10 @@ import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.node.impl.ValueTypeBase;
+import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.UniNodeBase;
+import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.Location;
@@ -275,9 +275,9 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private UniNode applyValueToNode(UniObjectNode applyTo, String key, Object it) {
         if (it instanceof DataContainer)
             return ((DataContainer<? super S>) it).toObjectNode(applyTo.putObject(key));
-        else if (it instanceof UniNodeBase)
+        else if (it instanceof AbstractUniNode)
             return applyTo.putObject(key).copyFrom((UniNode) it);
-        else return applyTo.put(key, ValueTypeBase.STRING, String.valueOf(it));
+        else return applyTo.put(key, StandardValueType.STRING, String.valueOf(it));
     }
 
     @Override

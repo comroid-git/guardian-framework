@@ -14,12 +14,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder {
+public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode> {
     @Internal
     static <T> T unsupported(UniNode it, String actionName, Type expected) throws UnsupportedOperationException {
         throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",
                 actionName,
-                it.getType(),
+                it.getNodeType(),
                 expected
         ));
     }
@@ -28,31 +28,37 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
         return toString();
     }
 
-    Type getType();
+    Type getNodeType();
 
     default boolean isObjectNode() {
-        return getType() == Type.OBJECT;
+        return getNodeType() == Type.OBJECT;
     }
 
     default boolean isArrayNode() {
-        return getType() == Type.ARRAY;
+        return getNodeType() == Type.ARRAY;
     }
 
     default boolean isValueNode() {
-        return getType() == Type.VALUE;
+        return getNodeType() == Type.VALUE;
     }
 
     default boolean isNull() {
         return unsupported(this, "IS_NULL", Type.VALUE);
     }
 
-    String getMimeType();
+    default String getMimeType() {
+        return getSerializationAdapter().getMimeType();
+    }
 
-    default boolean isNotNull() {
+    default boolean isNonNull() {
         return !isNull();
     }
 
+    boolean isEmpty();
+
     int size();
+
+    void clear();
 
     default boolean isNull(String fieldName) {
         return wrap(fieldName).map(UniNode::isNull)
@@ -279,15 +285,15 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     }
 
     default UniObjectNode asObjectNode() {
-        return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getType(), Type.OBJECT));
+        return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.OBJECT));
     }
 
     default UniArrayNode asArrayNode() {
-        return as(UniArrayNode.class, MessageSupplier.format("Node is of %s type; expected %s", getType(), Type.ARRAY));
+        return as(UniArrayNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.ARRAY));
     }
 
-    default <T> UniValueNode<T> asValueNode() {
-        return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getType(), Type.VALUE));
+    default UniValueNode asValueNode() {
+        return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.VALUE));
     }
 
     enum Type {

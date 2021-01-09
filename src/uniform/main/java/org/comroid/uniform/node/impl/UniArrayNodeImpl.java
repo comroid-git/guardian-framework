@@ -1,163 +1,145 @@
 package org.comroid.uniform.node.impl;
 
-import org.comroid.api.HeldType;
-import org.comroid.mutatio.ref.Processor;
-import org.comroid.mutatio.ref.Reference;
+import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
-public final class UniArrayNodeImpl extends UniNodeBase implements UniArrayNode {
-    private final Map<Integer, UniValueNode<String>> valueAdapters = new ConcurrentHashMap<>();
-    private final Adapter adapter;
-
-    @Override
-    public final Object getBaseNode() {
-        return adapter.getBaseNode();
-    }
-
-    public UniArrayNodeImpl(SerializationAdapter<?, ?, ?> serializationAdapter, Adapter adapter) {
-        super(serializationAdapter, Type.ARRAY);
-
-        this.adapter = adapter;
+public final class UniArrayNodeImpl extends AbstractUniNode<Integer, KeyedReference<Integer, UniNode>> implements UniArrayNode {
+    public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, ARR baseNode) {
+        super(seriLib, baseNode);
     }
 
     @Override
-    public @NotNull UniNode get(int index) {
-        return makeValueNode(index).orElseGet(UniValueNode::nullNode);
+    public boolean contains(Object other) {
+        return stream().anyMatch(other::equals);
     }
 
-    private Processor<UniNode> makeValueNode(int index) {
-        class Accessor extends Reference.Support.Base<String> {
-            private final int index;
+    @NotNull
+    @Override
+    public Object[] toArray() {
+        return toArray(new Object[0]);
+    }
 
-            private Accessor(int index) {
-                super(true);
+    @NotNull
+    @Override
+    public <T> T[] toArray(final @NotNull T[] a) {
+        return stream().map(Polyfill::uncheckedCast).toArray(x -> a);
+    }
 
-                this.index = index;
-            }
+    @Override
+    public boolean add(UniNode uniNode) {
+        return set(size(), uniNode) != uniNode;
+    }
 
-            @Nullable
-            @Override
-            public String doGet() {
-                return unwrapDST(adapter.get(index));
-            }
+    @Override
+    public boolean remove(Object other) {
+        return accessors.streamRefs()
+                .filter(ref -> ref.testIfPresent(other::equals))
+                .findAny()
+                .map(Map.Entry::getKey)
+                .map(index -> accessors.getReference((int) index, true).unset())
+                .orElse(false);
+    }
 
-            @Override
-            protected boolean doSet(String newValue) {
-                return adapter.set(index, newValue) != newValue;
-            }
+    @Override
+    public boolean containsAll(@NotNull Collection<?> other) {
+        return accessors.stream().allMatch(other::contains);
+    }
+
+    @Override
+    public boolean addAll(@NotNull Collection<? extends UniNode> other) {
+        //noinspection ReplaceInefficientStreamCount
+        return other.stream()
+                .filter(this::add)
+                .count() != 0;
+    }
+
+    @Override
+    public boolean addAll(int index, @NotNull Collection<? extends UniNode> c) {
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(@NotNull Collection<?> c) {
+        return removeIf(c::contains);
+    }
+
+    @Override
+    public boolean retainAll(@NotNull Collection<?> c) {
+        return removeIf(it -> !c.contains(it));
+    }
+
+    @Override
+    public UniNode set(int index, UniNode element) {
+        KeyedReference<Integer, UniNode> ref = accessors.compute(index, r -> {
+            if (r == null)
+                return generateAccessor(index);
+            return r;
+        });
+        return ref.setValue(element);
+    }
+
+    @Override
+    public void add(int index, UniNode element) {
+        set(index, element);
+    }
+
+    @Override
+    public UniNode remove(int index) {
+        KeyedReference<? super Integer, KeyedReference<Integer, UniNode>> ref
+                = accessors.getReference(index, false);
+        UniNode node = null;
+        if (ref != null) {
+            node = ref.into(Rewrapper::get);
+            ref.unset();
         }
-
-        String key = String.valueOf(index);
-        return computeNode(key, () -> new Accessor(index));
+        return node;
     }
 
     @Override
-    public UniArrayNode copyFrom(@NotNull UniNode it) {
-        if (it instanceof UniArrayNode) {
-            //noinspection unchecked
-            adapter.addAll(((UniArrayNode) it).adapter);
-            return this;
+    public int indexOf(Object other) {
+        for (int i = 0; i < accessors.size(); i++) {
+            if (other.equals(accessors.get(i).getValue()))
+                return i;
         }
-        return unsupported(this, "COPY_FROM", Type.ARRAY);
+        return -1;
     }
 
     @Override
-    public int size() {
-        return adapter.size();
-    }
-
-    @Override
-    public boolean has(String fieldName) {
-        return unsupported(this, "HAS_FIELD", Type.OBJECT);
-    }
-
-    @Override
-    public @NotNull UniNode get(String fieldName) {
-        return unsupported(this, "GET_FIELD", Type.OBJECT);
-    }
-
-    @Override
-    public @NotNull <T> UniNode put(int index, HeldType<T> type, T value) {
-        UniNode node = unwrapNode(String.valueOf(index), type, value);
-        if (node != null)
-            return node;
-
-        if (type == ValueTypeBase.VOID) {
-            adapter.set(index, value);
-            return get(index);
-        } else {
-            final String put = type.convert(value, ValueTypeBase.STRING);
-
-            final UniNodeBase vn = makeValueNode(index).requireNonNull("Missing Node");
-            vn.set(put);
-            return vn;
+    public int lastIndexOf(Object other) {
+        for (int i = size() - 1; i >= 0; i--) {
+            if (other.equals(accessors.get(i).getValue()))
+                return i;
         }
+        return -1;
+    }
+
+    @NotNull
+    @Override
+    public ListIterator<UniNode> listIterator() {
+        throw new UnsupportedOperationException(); // todo
+    }
+
+    @NotNull
+    @Override
+    public ListIterator<UniNode> listIterator(int index) {
+        throw new UnsupportedOperationException(); // todo
+    }
+
+    @NotNull
+    @Override
+    public List<UniNode> subList(int fromIndex, int toIndex) {
+        throw new UnsupportedOperationException(); // todo
     }
 
     @Override
-    public @NotNull UniObjectNode putObject(int index) {
-        final UniObjectNode objectNode = serializationAdapter.createUniObjectNode();
-        adapter.add(index, objectNode.getBaseNode());
-        return objectNode;
-    }
-
-    @Override
-    public @NotNull UniArrayNode putArray(int index) {
-        final UniArrayNode arrayNode = serializationAdapter.createUniArrayNode();
-        adapter.add(index, arrayNode.getBaseNode());
-        return arrayNode;
-    }
-
-    @Override
-    public synchronized List<Object> asList() {
-        return adapter;
-    }
-
-    @Override
-    public synchronized List<? extends UniNode> asNodeList() {
-        final List<UniNode> yields = new ArrayList<>();
-
-        for (int i = 0; i < size(); i++) {
-            yields.add(get(i));
-        }
-
-        return yields;
-    }
-
-    public static abstract class Adapter<B> extends AbstractList<Object> implements UniNodeBase.Adapter<B> {
-        protected final B baseNode;
-
-        @Override
-        public B getBaseNode() {
-            return baseNode;
-        }
-
-        protected Adapter(B baseNode) {
-            this.baseNode = baseNode;
-        }
-
-        @Override
-        public abstract Object get(int index);
-
-        @Override
-        public abstract Object set(int index, Object element);
-
-        @Override
-        public abstract void add(int index, Object element);
-
-        @Override
-        public abstract Object remove(int index);
+    protected KeyedReference<Integer, UniNode> generateAccessor(Integer ack) {
+        return null;
     }
 }

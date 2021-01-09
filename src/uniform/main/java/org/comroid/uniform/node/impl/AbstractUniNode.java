@@ -1,0 +1,86 @@
+package org.comroid.uniform.node.impl;
+
+import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceMap;
+import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniValueNode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+
+public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>> implements UniNode {
+    private final Object baseNode;
+    protected final SerializationAdapter seriLib;
+    protected final ReferenceMap<? super AcK, Ref> accessors = new ReferenceMap.Support.Basic<>(
+            new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
+
+    @Override
+    public SerializationAdapter<?, ?, ?> getSerializationAdapter() {
+        return seriLib;
+    }
+
+    protected AbstractUniNode(SerializationAdapter seriLib, Object baseNode) {
+        this.seriLib = seriLib;
+        this.baseNode = baseNode;
+    }
+
+    protected Rewrapper<AcK> wrapKey(Object key) {
+        if ((isObjectNode() && key instanceof String)
+                && (isArrayNode() && key instanceof Integer))
+            return () -> Polyfill.uncheckedCast(key);
+        return Rewrapper.empty();
+    }
+
+    protected abstract Ref generateAccessor(AcK ack);
+
+    @Override
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    @Override
+    public int size() {
+        return accessors.size();
+    }
+
+    @Override
+    public void clear() {
+        accessors.forEach((k, ref) -> ref.unset());
+        accessors.clear();
+    }
+
+    @Override
+    public @NotNull UniNode get(int index) {
+        return (UniNode) wrapKey(index).ifPresentMapOrElseGet(accessors::get, () -> UniValueNode.NULL);
+    }
+
+    @Override
+    public @NotNull UniNode get(String fieldName) {
+        return (UniNode) wrapKey(fieldName).ifPresentMapOrElseGet(accessors::get, () -> UniValueNode.NULL);
+    }
+
+    @Override
+    public boolean has(String fieldName) {
+        return wrapKey(fieldName).testIfPresent(accessors::containsKey);
+    }
+
+    @Override
+    public UniNode copyFrom(@NotNull UniNode it) {
+        return null; // todo
+    }
+
+    @NotNull
+    @Override
+    public Iterator<UniNode> iterator() {
+        return accessors.streamRefs()
+                .map(KeyedReference::getValue)
+                .flatMap(Reference::stream)
+                .map(UniNode.class::cast)
+                .iterator();
+    }
+}

@@ -36,7 +36,7 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
     @NonExtendable
     default UniNode createUniNode(Object it) {
         if (it == null)
-            UniValueNode.empty();
+            return UniValueNode.NULL;
 
         if (it instanceof CharSequence) {
             final String string = it.toString();
@@ -51,7 +51,7 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
             return createUniArrayNode(getArrayType().cast(it));
         ValueType<Object> typeOf = ValueType.typeOf(it);
         if (typeOf != null)
-            return
+            return UniValueNode.create(this, typeOf, it);
         throw new IllegalArgumentException(String.format("Unrecognized node type: %s", it.getClass().getName()));
     }
 

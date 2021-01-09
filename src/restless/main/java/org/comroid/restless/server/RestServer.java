@@ -13,7 +13,7 @@ import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.node.impl.ValueTypeBase;
+import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.io.*;
@@ -108,13 +108,13 @@ public class RestServer implements Closeable {
     private UniObjectNode generateErrorNode(RestEndpointException reex) {
         final UniObjectNode rsp = seriLib.createUniObjectNode();
 
-        rsp.put("code", ValueTypeBase.INTEGER, reex.getStatusCode());
-        rsp.put("description", ValueTypeBase.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
-        rsp.put("message", ValueTypeBase.STRING, reex.getSimpleMessage());
+        rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
+        rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
+        rsp.put("message", StandardValueType.STRING, reex.getSimpleMessage());
 
         final Throwable cause = reex.getCause();
         if (cause != null)
-            rsp.put("cause", ValueTypeBase.STRING, cause.toString());
+            rsp.put("cause", StandardValueType.STRING, cause.toString());
 
         return rsp;
     }

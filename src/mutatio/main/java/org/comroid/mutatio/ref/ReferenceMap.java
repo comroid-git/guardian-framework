@@ -3,14 +3,15 @@ package org.comroid.mutatio.ref;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
-import org.comroid.mutatio.pump.Pump;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -139,15 +140,22 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
         public static class Basic<K, V> implements ReferenceMap<K, V> {
             private final EntryIndex entryIndex = new EntryIndex();
             private final Map<K, KeyedReference<K, V>> refMap;
+            private final Function<K, KeyedReference<K, V>> referenceFunction;
 
             public Basic(Map<K, KeyedReference<K, V>> refMap) {
+                this(refMap, KeyedReference::create);
+            }
+
+            public Basic(Map<K, KeyedReference<K, V>> refMap, Function<K, KeyedReference<K, V>> referenceFunction) {
                 this.refMap = refMap;
+                this.referenceFunction = referenceFunction;
             }
 
             @Override
             public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
-                if (!containsKey(key) && createIfAbsent)
-                    return refMap.computeIfAbsent(key, KeyedReference::create);
+                if (!containsKey(key) && createIfAbsent) {
+                    return refMap.computeIfAbsent(key, referenceFunction);
+                }
                 return refMap.get(key);
             }
 

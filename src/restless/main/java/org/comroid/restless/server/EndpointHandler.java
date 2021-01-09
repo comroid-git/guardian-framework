@@ -4,9 +4,9 @@ import com.sun.net.httpserver.Headers;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.uniform.node.impl.ValueTypeBase;
+import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.UniNodeBase;
+import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.util.stream.Stream;
@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public interface EndpointHandler {
     default boolean supports(REST.Method method) {
         try {
-            return !getClass().getMethod("execute" + method.name(), Headers.class, String[].class, UniNodeBase.class)
+            return !getClass().getMethod("execute" + method.name(), Headers.class, String[].class, AbstractUniNode.class)
                     .getDeclaringClass()
                     .equals(EndpointHandler.class);
         } catch (NoSuchMethodException e) {
@@ -40,7 +40,7 @@ public interface EndpointHandler {
                         UniObjectNode node = server.getSerializationAdapter().createUniObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
-                                .forEach(field -> node.put(field[0], ValueTypeBase.STRING, field[1]));
+                                .forEach(field -> node.put(field[0], StandardValueType.STRING, field[1]));
                         return node;
                     } catch (Throwable ignored) {
                         return null;

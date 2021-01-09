@@ -19,7 +19,7 @@ import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.UniNodeBase;
+import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -452,7 +452,7 @@ public final class REST implements ContextualProvider.Underlying {
             return this;
         }
 
-        public <B extends UniNodeBase> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
+        public <B extends AbstractUniNode> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
             final B body = type.apply(requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
             return body(body.toString());
@@ -504,7 +504,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public CompletableFuture<Span<T>> execute$deserialize() {
             return execute$body().thenApply(node -> {
-                switch (node.getType()) {
+                switch (node.getNodeType()) {
                     case OBJECT:
                         return Span.singleton(tProducer.autoInvoke(context, node.asObjectNode()));
                     case ARRAY:

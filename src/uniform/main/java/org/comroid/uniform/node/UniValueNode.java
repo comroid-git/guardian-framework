@@ -1,18 +1,35 @@
 package org.comroid.uniform.node;
 
+import org.comroid.api.ValuePointer;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.node.impl.ValueTypeBase;
+import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.ValueType;
+import org.comroid.uniform.node.impl.StandardValueType;
 
-public interface UniValueNode extends UniNode {
-    UniValueNode<Void> NULL = new UniValueNode<>(null, Reference.empty(), ValueTypeBase.VOID);
+public interface UniValueNode extends Reference, UniNode, ValuePointer {
+    UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
-    static <T> UniValueNode<T> empty() {
-        //noinspection unchecked
-        return (UniValueNode<T>) NULL;
+    @Override
+    default Type getNodeType() {
+        return Type.VALUE;
     }
 
-    @Deprecated
-    static <T> UniValueNode<T> nullNode() {
-        return empty();
+    @Override
+    default boolean isNull() {
+        return getNodeType() == null;
+    }
+
+    @Override
+    default boolean isNonNull() {
+        return !isNull();
+    }
+
+    @Override
+    ValueType getHeldType();
+
+    static <T> UniValueNode create(SerializationAdapter seriLib, ValueType<T> type, T value) {
+        if (value == null)
+            return NULL;
+        return null;
     }
 }
