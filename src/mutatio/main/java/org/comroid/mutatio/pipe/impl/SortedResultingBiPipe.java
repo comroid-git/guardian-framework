@@ -5,19 +5,18 @@ import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.pipe.impl.KeyedPipe;
-import org.comroid.mutatio.ref.BiProcessor;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -55,39 +54,49 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
             this.accessedIndex = accessedIndex;
         }
 
-        private @Nullable KeyedReference<K, V> getRef() {
-            return (KeyedReference<K, V>) refs.getReference(accessedIndex);
-        }
-
         @Nullable
         @Override
         public V doGet() {
-            KeyedReference<K, V> ref = getRef();
-            if (ref == null)
-                return null;
-            return ref.getValue();
+            return refs.streamRefs()
+                    .sorted((a, b) -> a.accumulate(b, comparator::compare))
+                    .skip(accessedIndex)
+                    .findFirst()
+                    .flatMap(Rewrapper::wrap)
+                    .orElseGet(() -> {
+                        if (accessedIndex < refs.size())
+                            throw new NoSuchElementException("No element at index " + accessedIndex);
+                        return null; // empty
+                    });
         }
 
         @Override
         public K getKey() {
-            KeyedReference<K, V> ref = getRef();
-            if (ref == null)
-                throw new NoSuchElementException("No element present at index " + accessedIndex);
-            return ref.getKey();
+            return refs.streamRefs()
+                    .sorted((a, b) -> a.accumulate(b, comparator::compare))
+                    .skip(accessedIndex)
+                    .findFirst()
+                    .filter(KeyedReference.class::isInstance)
+                    .map(ref -> ((KeyedReference<K, V>) ref).getKey())
+                    .orElseThrow(() -> new NoSuchElementException("No key found"));
         }
     }
 
     @Override
     public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
-        IntStream.range(0, size())
-                .filter(x -> !accessors.containsKey(x))
-                .forEach(this::getReference);
         return accessors.values()
                 .stream()
-                .filter(ref -> ref.getRef() != null)
                 .filter(ref -> ref.getKey().equals(key))
                 .findAny()
-                .orElse(null);
+                .map(ref -> (KeyedReference<K, V>) ref)
+                .orElseGet(() -> tryFindReference(key)
+                        .orElseThrow(() -> new IllegalArgumentException("No base ref found for key: " + key)));
+    }
+
+    private Optional<KeyedReference<K, V>> tryFindReference(K key) {
+        return refs.streamRefs()
+                .map(ref -> (KeyedReference<K, V>) ref)
+                .filter(ref -> ref.getKey().equals(key))
+                .findAny();
     }
 
     @Override
