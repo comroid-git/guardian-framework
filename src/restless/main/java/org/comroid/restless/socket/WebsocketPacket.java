@@ -33,6 +33,27 @@ public interface WebsocketPacket {
         public Empty(Type type) {
             this.type = type;
         }
+
+        @Override
+        public String toString() {
+            return String.format("WebSocketPacket<%s - %s>", type, shortDescription());
+        }
+
+        private String shortDescription() {
+            switch (type) {
+                case DATA:
+                case PING:
+                case PONG:
+                    return getData().orElse("no data");
+                case ERROR:
+                    return getError().ifPresentMapOrElseGet(Throwable::toString, () -> "unknown error");
+                case OPEN:
+                    return "socket opened";
+                case CLOSE:
+                    return getData().ifPresentMap(str -> str + "#") + getStatusCode().orElse(-1);
+            }
+            return "unknown";
+        }
     }
 
     enum Type implements Named {

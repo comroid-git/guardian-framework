@@ -50,7 +50,7 @@ public final class OkHttp4WebSocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
-        this.pipeline = pump.peek(packet -> logger.info("WebSocket received packet: {}", packet));
+        this.pipeline = pump.peek(packet -> logger.trace("WebSocket received packet: {}", packet));
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }
 
