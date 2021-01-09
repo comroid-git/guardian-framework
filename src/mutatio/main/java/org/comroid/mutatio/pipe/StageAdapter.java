@@ -28,6 +28,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
         return new Support.Map<>(mapper.andThen(Rewrapper::get));
     }
 
+    @Deprecated // todo: fix
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> distinct() {
         return filter(new HashSet<>()::add);
     }
@@ -36,10 +37,12 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
         return filter(new Structure.ConsumingFilter<>(action));
     }
 
+    @Deprecated // todo: fix
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> limit(long limit) {
         return filter(new Structure.Limiter<>(limit));
     }
 
+    @Deprecated // todo: fix
     static <T> StageAdapter<T, T, Reference<T>, Reference<T>> skip(long skip) {
         return filter(new Structure.Skipper<>(skip));
     }
@@ -73,6 +76,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
             private final long limit;
             private long c = 0;
 
+            @Deprecated // todo: fix
             protected Limiter(long limit) {
                 this.limit = limit;
             }
@@ -87,6 +91,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
             private final long skip;
             private long c = 0;
 
+            @Deprecated // todo: fix
             protected Skipper(long skip) {
                 this.skip = skip;
             }

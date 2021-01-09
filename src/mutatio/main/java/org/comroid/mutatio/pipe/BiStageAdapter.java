@@ -51,6 +51,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         return mapBoth(mapper.andThen(Rewrapper::get));
     }
 
+    @Deprecated // todo: fix
     static <K, V> BiStageAdapter<K, V, K, V> distinctValue() {
         return filterValue(new HashSet<>()::add);
     }
@@ -62,10 +63,12 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         };
     }
 
+    @Deprecated // todo: fix
     static <K, V> BiStageAdapter<K, V, K, V> limit(long limit) {
         return filterValue(new Structure.Limiter<>(limit));
     }
 
+    @Deprecated // todo: fix
     static <K, V> BiStageAdapter<K, V, K, V> skip(long skip) {
         return filterValue(new Structure.Skipper<>(skip));
     }
@@ -94,8 +97,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
             @Override
             public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
-                final KeyedReference.Support.Filtered<X, Y> yield = new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
-                return yield;
+                return new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
             }
         }
 

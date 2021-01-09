@@ -70,7 +70,7 @@ public interface BiPipe<K, V> extends Pipe<V> {
     }
 
     default ReferenceMap<K, V> distinctKeys() {
-        return new SortedResultingBiPipe<>(filterKey(new HashSet<>()::add), (o1, o2) -> 0);
+        return new SortedResultingBiPipe<>(filterKey(any -> true/*new HashSet<>()::add todo fix */), (o1, o2) -> 0);
     }
 
     @Override

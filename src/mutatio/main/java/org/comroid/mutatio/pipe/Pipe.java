@@ -145,14 +145,17 @@ public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
         addStage(StageAdapter.peek(action)).unwrap();
     }
 
+    @Deprecated // todo: fix
     default Pipe<T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
+    @Deprecated // todo: fix
     default Pipe<T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
+    @Deprecated // todo: fix
     default Pipe<T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
