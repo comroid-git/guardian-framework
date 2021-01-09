@@ -1,47 +1,40 @@
 package org.comroid.test.mutatio.pipe;
 
-import org.comroid.mutatio.span.Span;
+import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class BiPipeTest {
-    private Span<String> refs;
+    private List<String> controlGroup;
 
     @Before
     public void setup() {
-        this.refs = IntStream.range(0, 30)
-                .mapToObj(x -> IntStream.range(0, x)
-                        .mapToObj(y -> 'a')
-                        .map(String::valueOf)
-                        .collect(Collectors.joining()))
-                .collect(Span.collector());
+        controlGroup = Collections.unmodifiableList(IntStream.range(0, 50)
+                .mapToObj(txt -> UUID.randomUUID())
+                .map(UUID::toString)
+                .collect(Collectors.toList()));
     }
 
     @Test
     public void testSimple() {
-        refs.pipe()
-                .bi(String::length)
-                .forEach((str, len) -> Assert.assertEquals(str.length(), (int) len));
+        Pipe.of(controlGroup)
+                .bi(String::hashCode)
+                .forEach((hash, str) -> Assert.assertEquals("hash code", (long) hash, str.hashCode()));
     }
 
     @Test
-    public void testRemapFirst() {
-        refs.pipe()
-                .bi(String::length)
-                .filterSecond(x -> x > 3)
-                .mapFirst(str -> str.substring(str.length() + 2))
-                .forEach((str, len) -> Assert.assertEquals((int) len, str.length() - 2));
-    }
-
-    @Test
-    public void testRemapSecond() {
-        refs.pipe()
-                .bi(String::length)
-                .mapSecond(x -> x * 2)
-                .forEach((str, len) -> Assert.assertEquals(str.length() * 2, (int) len));
+    public void testMap() {
+        final ReferenceMap<Integer, String> map = Pipe.of(controlGroup)
+                .bi(String::hashCode)
+                .distinctKeys();
+        controlGroup.forEach(uid -> Assert.assertEquals("map entry", uid, map.get(uid.hashCode())));
     }
 }

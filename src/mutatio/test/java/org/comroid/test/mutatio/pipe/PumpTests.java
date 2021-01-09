@@ -1,4 +1,4 @@
-package org.comroid.test.common.ref;
+package org.comroid.test.mutatio.pipe;
 
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pump.Pump;
