@@ -56,15 +56,7 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         }
 
         private @Nullable KeyedReference<K, V> getRef() {
-            //noinspection FuseStreamOperations -> doesnt work
-            List<KeyedReference<K, V>> collect = refs.streamRefs()
-                    .map(Polyfill::<KeyedReference<K, V>>uncheckedCast)
-                    .collect(Collectors.toList());
-            collect.sort((a, b) -> a.accumulate(b, comparator::compare));
-
-            if (accessedIndex >= collect.size())
-                return null;
-            return collect.get(accessedIndex);
+            return (KeyedReference<K, V>) refs.getReference(accessedIndex);
         }
 
         @Nullable
@@ -90,7 +82,6 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         IntStream.range(0, size())
                 .filter(x -> !accessors.containsKey(x))
                 .forEach(this::getReference);
-
         return accessors.values()
                 .stream()
                 .filter(ref -> ref.getRef() != null)
@@ -122,6 +113,14 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
     @Override
     public Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Stream<KeyedReference<K, V>> streamRefs() {
+        IntStream.range(0, size())
+                .filter(x -> !accessors.containsKey(x))
+                .forEach(this::getReference);
+        return accessors.values().stream().map(Polyfill::uncheckedCast);
     }
 
     @Override
