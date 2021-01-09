@@ -127,11 +127,6 @@ public interface Processor<T> extends Reference<T>, Cloneable, AutoCloseable {
                 assert setter != null : "isMutable check wrong";
                 return setter.test(value);
             }
-
-            @Override
-            public String toString() {
-                return String.format("ProcessorBase{atom=%s, outdated=%s}", atom, isOutdated());
-            }
         }
 
         public static class Identity<T> extends Base<T, T> {
