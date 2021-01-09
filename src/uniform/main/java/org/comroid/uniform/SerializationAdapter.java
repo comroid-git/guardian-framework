@@ -2,6 +2,7 @@ package org.comroid.uniform;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.HeldType;
+import org.comroid.api.Rewrapper;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -138,6 +139,19 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
             return dst.typ.name();
         }
 
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof ParsingValueType)
+                return ((ParsingValueType<?>) other).getTargetClass().equals(getTargetClass())
+                        && ((ParsingValueType<?>) other).dst.typ == dst.typ;
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("ParsingValueType<%s>", dst.toString());
+        }
+
         public ParsingValueType(DataStructureType<SerializationAdapter<BAS, OBJ, ARR>, ? super T, ?> dst) {
             this.dst = dst;
         }
@@ -162,5 +176,4 @@ public abstract class SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS
             return (Class<T>) dst.tarClass;
         }
     }
-
 }

@@ -79,6 +79,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.rootBind = findRootBind(myType);
         this.binds = findAllBinds(rootBind);
         this.computedRefs = buildComputedReferences();
+
+        binds.forEach((key, bind) -> getExtractionReference(key));
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
@@ -99,6 +101,8 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.initiallySet = unmodifiableSet(initialValues.keySet());
         initialValues.forEach((bind, value) -> getExtractionReference(bind).set(Span.singleton(value)));
         this.computedRefs = buildComputedReferences();
+
+        binds.forEach((key, bind) -> getExtractionReference(key));
     }
 
     private ReferenceMap<String, Object> buildComputedReferences() {
@@ -172,8 +176,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                         changed.add(bind);
                     });
         } catch (Throwable t) {
-            logger.error("Updating data failed for {}\nData: {}", toString(), data.toString());
-            return unmodifiableSet(changed);
+            throw new RuntimeException(String.format("Updating data failed for %s\nData: %s", toString(), data.toString()), t);
         } finally {
             logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
         }
@@ -341,8 +344,6 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     @NotNull
     @Override
     public Set<Entry<String, Object>> entrySet() {
-        return unmodifiableSet(computedRefs.entryIndex()
-                .stream()
-                .collect(Collectors.toSet()));
+        return unmodifiableSet(computedRefs.streamRefs().collect(Collectors.toSet()));
     }
 }

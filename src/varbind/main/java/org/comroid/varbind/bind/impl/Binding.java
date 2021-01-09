@@ -92,7 +92,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             case OBJECT:
                 assert group.getFromContext().objectValue.equals(valueType);
                 UniObjectNode obj = target.asObjectNode();
-                EXTR cast = valueType.cast(obj).assertion("Illegal ValueType");
+                EXTR cast = Polyfill.uncheckedCast(obj);
                 return Span.immutable(cast);
             case ARRAY:
                 if (valueType instanceof ValueType) {
