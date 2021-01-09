@@ -243,7 +243,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
 
                 @Override
                 public Stream<? extends Reference<KeyedReference<K, V>>> streamRefs() {
-                    throw new UnsupportedOperationException();
+                    return indexAccessors.values().stream();
                 }
 
                 @Override
