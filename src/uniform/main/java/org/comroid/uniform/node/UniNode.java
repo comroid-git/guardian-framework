@@ -4,8 +4,8 @@ import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.uniform.DataStructureType;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.SerializationAdapterHolder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member {
+public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder {
     @Internal
     static <T> T unsupported(UniNode it, String actionName, Type expected) throws UnsupportedOperationException {
         throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",
@@ -24,22 +24,14 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
         ));
     }
 
-    @NotNull
-    default SerializationAdapter<?, ?, ?> getFromContext() {
-        return getSerializationAdapter();
+    default String getSerializedString() {
+        return toString();
     }
 
-    String getSerializedString();
-
-    @Deprecated
-    SerializationAdapter<?, ?, ?> getSerializationAdapter();
+    Type getType();
 
     default boolean isObjectNode() {
         return getType() == Type.OBJECT;
-    }
-
-    default Type getType() {
-        return type;
     }
 
     default boolean isArrayNode() {
@@ -51,7 +43,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
     }
 
     default boolean isNull() {
-        return unsupported("IS_NULL", Type.VALUE);
+        return unsupported(this, "IS_NULL", Type.VALUE);
     }
 
     String getMimeType();
@@ -109,7 +101,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
 
     @NotNull
     default <T> UniNode put(int index, HeldType<T> type, T value) throws UnsupportedOperationException {
-        return unsupported("PUT_INDEX", Type.ARRAY);
+        return unsupported(this, "PUT_INDEX", Type.ARRAY);
     }
 
     @NotNull
@@ -119,7 +111,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
 
     @NotNull
     default <T> UniNode put(String key, HeldType<T> type, T value) throws UnsupportedOperationException {
-        return unsupported("PUT_KEY", Type.OBJECT);
+        return unsupported(this, "PUT_KEY", Type.OBJECT);
     }
 
     @NotNull
@@ -129,12 +121,12 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
 
     @NotNull
     default UniNode putNull(int index) throws UnsupportedOperationException {
-        return unsupported("PUT_NULL_INDEX", Type.ARRAY);
+        return unsupported(this, "PUT_NULL_INDEX", Type.ARRAY);
     }
 
     @NotNull
     default UniNode putNull(String key) throws UnsupportedOperationException {
-        return unsupported("PUT_NULL_KEY", Type.OBJECT);
+        return unsupported(this, "PUT_NULL_KEY", Type.OBJECT);
     }
 
     @NotNull
@@ -144,12 +136,12 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
 
     @NotNull
     default UniObjectNode putObject(int index) throws UnsupportedOperationException {
-        return unsupported("PUT_OBJECT_INDEX", Type.ARRAY);
+        return unsupported(this, "PUT_OBJECT_INDEX", Type.ARRAY);
     }
 
     @NotNull
     default UniObjectNode putObject(String key) throws UnsupportedOperationException {
-        return unsupported("PUT_OBJECT_KEY", Type.OBJECT);
+        return unsupported(this, "PUT_OBJECT_KEY", Type.OBJECT);
     }
 
     @NotNull
@@ -159,12 +151,12 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
 
     @NotNull
     default UniArrayNode putArray(int index) throws UnsupportedOperationException {
-        return unsupported("PUT_ARRAY_INDEX", Type.ARRAY);
+        return unsupported(this, "PUT_ARRAY_INDEX", Type.ARRAY);
     }
 
     @NotNull
     default UniArrayNode putArray(String key) throws UnsupportedOperationException {
-        return unsupported("PUT_ARRAY_KEY", Type.ARRAY);
+        return unsupported(this, "PUT_ARRAY_KEY", Type.ARRAY);
     }
 
     @Contract(value = "_ -> this", mutates = "this")
@@ -175,11 +167,11 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_RAW", Type.VALUE);
+        return unsupported(this, "GET_RAW", Type.VALUE);
     }
 
     default <R> R as(ValueType<R> type) {
-        return unsupported("GET_AS", Type.VALUE);
+        return unsupported(this, "GET_AS", Type.VALUE);
     }
 
     default String asString() {
@@ -191,7 +183,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_STRING", Type.VALUE);
+        return unsupported(this, "GET_AS_STRING", Type.VALUE);
     }
 
     default boolean asBoolean() {
@@ -203,7 +195,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_BOOLEAN", Type.VALUE);
+        return unsupported(this, "GET_AS_BOOLEAN", Type.VALUE);
     }
 
     default int asInt() {
@@ -215,7 +207,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_INT", Type.VALUE);
+        return unsupported(this, "GET_AS_INT", Type.VALUE);
     }
 
     default long asLong() {
@@ -227,7 +219,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_LONG", Type.VALUE);
+        return unsupported(this, "GET_AS_LONG", Type.VALUE);
     }
 
     default double asDouble() {
@@ -239,7 +231,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_DOUBLE", Type.VALUE);
+        return unsupported(this, "GET_AS_DOUBLE", Type.VALUE);
     }
 
     default float asFloat() {
@@ -251,7 +243,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_FLOAT", Type.VALUE);
+        return unsupported(this, "GET_AS_FLOAT", Type.VALUE);
     }
 
     default short asShort() {
@@ -263,7 +255,7 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_SHORT", Type.VALUE);
+        return unsupported(this, "GET_AS_SHORT", Type.VALUE);
     }
 
     default char asChar() {
@@ -275,15 +267,15 @@ public interface UniNode extends Specifiable<UniNode>, ContextualProvider.Member
             return fallback;
         }
 
-        return unsupported("GET_AS_CHAR", Type.VALUE);
+        return unsupported(this, "GET_AS_CHAR", Type.VALUE);
     }
 
     default List<Object> asList() {
-        return unsupported("GET_AS_LIST", Type.ARRAY);
+        return unsupported(this, "GET_AS_LIST", Type.ARRAY);
     }
 
     default List<? extends UniNode> asNodeList() {
-        return unsupported("GET_AS_NODELIST", Type.ARRAY);
+        return unsupported(this, "GET_AS_NODELIST", Type.ARRAY);
     }
 
     default UniObjectNode asObjectNode() {
