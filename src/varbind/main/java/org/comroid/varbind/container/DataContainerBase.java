@@ -103,10 +103,10 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
     private ReferenceMap<String, Object> buildComputedReferences() {
         return baseRefs.biPipe()
-                .mapKey(key -> ((VarBind<? extends S, Object, Object, Object>) binds.get(key)))
-                .mapBoth((bind, parts) -> bind.process(Polyfill.uncheckedCast(this), parts))
-                .mapKey(VarBind::getFieldName)
-                .distinctKeys();
+                .mapBoth((key, parts) -> {
+                    VarBind<? extends S, Object, Object, Object> bind = binds.get(key);
+                    return bind.process(uncheckedCast(this), parts);
+                }).distinctKeys();
     }
 
     @Internal
