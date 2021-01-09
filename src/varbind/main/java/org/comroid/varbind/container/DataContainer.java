@@ -38,7 +38,7 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
     }
 
     default @NotNull <T> T requireNonNull(VarBind<? extends S, ?, ?, T> bind) {
-        return getComputedReference(bind).requireNonNull("No value for property " + bind.getFieldName());
+        return getComputedReference(bind).requireNonNull("No value for " + bind);
     }
 
     default @NotNull <T> T requireNonNull(VarBind<? extends S, ?, ?, T> bind, String message) {
