@@ -1,7 +1,10 @@
 package org.comroid.varbind.bind;
 
 import jdk.internal.reflect.CallerSensitive;
-import org.comroid.api.*;
+import org.comroid.api.ContextualProvider;
+import org.comroid.api.Invocable;
+import org.comroid.api.Named;
+import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
@@ -143,7 +146,20 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
 
     @Override
     public String toString() {
-        return String.format("GroupBind{groupName='%s', parent=%s}", groupName, parents);
+        return String.format("GroupBind<%s>", nameStringRecursive(getParents(), getName()));
+    }
+
+    @SuppressWarnings({"unchecked", "InfiniteRecursion", "ConstantConditions"})
+    private static String nameStringRecursive(Span<? extends GroupBind<?>> parents, String ownName) {
+        return (!parents.isEmpty()
+                ? nameStringRecursive(
+                parents.stream().flatMap(groupBind -> groupBind.getParents().stream()).collect(Span.collector()),
+                parents.size() == 1
+                        ? parents.get(0).getName()
+                        : parents.stream()
+                        .map(GroupBind::getName)
+                        .collect(Collectors.joining(";", "[", "]"))) + '.'
+                : "") + ownName;
     }
 
     public Optional<GroupBind<? extends T>> findGroupForData(UniObjectNode data) {
