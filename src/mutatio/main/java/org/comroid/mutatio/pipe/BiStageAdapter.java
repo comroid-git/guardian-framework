@@ -94,7 +94,8 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
 
             @Override
             public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
-                return new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
+                final KeyedReference.Support.Filtered<X, Y> yield = new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
+                return yield;
             }
         }
 

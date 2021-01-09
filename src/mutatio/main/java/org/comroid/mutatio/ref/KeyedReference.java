@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
     @Override
     default V getValue() {
-        return get();
+        return assertion();
     }
 
     static <K, V> KeyedReference<K, V> create(K key) {
@@ -53,13 +53,13 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             private final Reference<V> valueHolder;
 
             @Override
-            public K getKey() {
-                return key;
+            public boolean isOutdated() {
+                return true;
             }
 
             @Override
-            public V getValue() {
-                return get();
+            public K getKey() {
+                return key;
             }
 
             public Base(K key, Reference<V> valueHolder) {
