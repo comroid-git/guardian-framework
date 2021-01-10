@@ -5,6 +5,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -37,6 +38,11 @@ public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONO
 
     @Override
     public UniArrayNode createUniArrayNode(JSONArray node) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
         throw new UnsupportedOperationException();
     }
 }

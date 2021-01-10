@@ -5,9 +5,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
 import org.comroid.annotations.Instance;
+import org.comroid.api.Polyfill;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -76,5 +78,15 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
     @Override
     public UniArrayNode createUniArrayNode(JSONArray node) {
         return new UniArrayNodeImpl(this, node);
+    }
+
+    @Override
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+        return new ValueAdapter<Object, Object>(nodeBase) {
+            @Override
+            public Object asActualType() {
+                return base;
+            }
+        };
     }
 }

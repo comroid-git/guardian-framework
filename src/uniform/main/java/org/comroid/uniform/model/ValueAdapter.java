@@ -1,17 +1,15 @@
 package org.comroid.uniform.model;
 
-import org.comroid.api.ContextualProvider;
 import org.comroid.api.HeldType;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.impl.StandardValueType;
+import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 import static org.comroid.uniform.node.impl.StandardValueType.*;
 
-public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
-    protected final SerializationAdapter<? super B, ?, ?> seriLib;
+public abstract class ValueAdapter<B, T> {
     protected final B base;
     private final Reference<T> actualValue = new Reference.Support.Base<T>(true) {
         @Override
@@ -27,7 +25,7 @@ public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
     private final Reference<ValueType<T>> actualType = new Reference.Support.Base<ValueType<T>>(false) {
         @Override
         public boolean isOutdated() {
-            return actualType.test(actualValue::test);
+            return atom.get() != null && actualValue.test(it -> atom.get().test(it));
         }
 
         @Override
@@ -35,11 +33,6 @@ public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
             return actualValue.into(StandardValueType::typeOf);
         }
     };
-
-    @Override
-    public SerializationAdapter<? super B, ?, ?> getFromContext() {
-        return seriLib;
-    }
 
     public ValueType<T> getValueType() {
         return actualType.get();
@@ -49,8 +42,7 @@ public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
         return base;
     }
 
-    protected ValueAdapter(SerializationAdapter<? super B, ?, ?> seriLib, B base) {
-        this.seriLib = seriLib;
+    protected ValueAdapter(B base) {
         this.base = base;
     }
 
@@ -79,7 +71,10 @@ public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
 
     public abstract T asActualType();
 
-    protected abstract boolean doSet(T newValue);
+    @OverrideOnly
+    protected boolean doSet(T newValue) {
+        return false;
+    }
 
     public boolean set(T newValue) {
         return !actualType.test(type -> type.test(newValue))

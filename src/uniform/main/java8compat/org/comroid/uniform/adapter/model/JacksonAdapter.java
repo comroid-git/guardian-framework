@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
+import org.comroid.api.Polyfill;
 import org.comroid.common.exception.AssertionException;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.model.ValueAdapter;
@@ -63,50 +63,8 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
                 return createUniArrayNode((ArrayNode) node);
             if (node.isObject())
                 return createUniObjectNode((ObjectNode) node);
-            if (node.isValueNode()) {
-                return new UniValueNodeImpl("unknown", this, new ValueAdapter<JsonNode, Object>(this, node) {
-                    @Override
-                    public Object asActualType() {
-                        switch (base.getNodeType()) {
-                            case BINARY:
-                            case STRING:
-                                return base.asText();
-                            case BOOLEAN:
-                                return base.asBoolean();
-                            case NUMBER:
-                                double v = base.asDouble(), abs = Math.abs(v);
-                                if (v > Integer.MAX_VALUE && v != abs)
-                                    return DOUBLE;
-                                else if (v == abs)
-                                    return LONG;
-                                else return INTEGER;
-                            case POJO:
-                            case OBJECT:
-                                try {
-                                    return objectMapper.treeToValue(base, Map.class);
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            case ARRAY:
-                                try {
-                                    return objectMapper.treeToValue(base, List.class);
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            case NULL:
-                            case MISSING:
-                                return null;
-                            default:
-                                throw new IllegalStateException("Unexpected value: " + node.getNodeType());
-                        }
-                    }
-
-                    @Override
-                    protected boolean doSet(Object newValue) {
-                        return false;
-                    }
-                });
-            }
+            if (node.isValueNode())
+                return new UniValueNodeImpl("unknown", this, createValueAdapter((ValueNode) node));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
@@ -124,6 +82,47 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
     public UniArrayNode createUniArrayNode(ArrayNode node) {
         return new UniArrayNodeImpl(this, objectMapper.convertValue(node, new TypeReference<List<Object>>() {
         }));
+    }
+
+    @Override
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+        return Polyfill.uncheckedCast(new ValueAdapter<ValueNode, Object>((ValueNode) nodeBase) {
+            @Override
+            public Object asActualType() {
+                switch (base.getNodeType()) {
+                    case BINARY:
+                    case STRING:
+                        return base.asText();
+                    case BOOLEAN:
+                        return base.asBoolean();
+                    case NUMBER:
+                        double v = base.asDouble(), abs = Math.abs(v);
+                        if (v > Integer.MAX_VALUE && v != abs)
+                            return DOUBLE;
+                        else if (v == abs)
+                            return LONG;
+                        else return INTEGER;
+                    case POJO:
+                    case OBJECT:
+                        try {
+                            return objectMapper.treeToValue(base, Map.class);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    case ARRAY:
+                        try {
+                            return objectMapper.treeToValue(base, List.class);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    case NULL:
+                    case MISSING:
+                        return null;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + base.getNodeType());
+                }
+            }
+        });
     }
 
     public final JsonNode wrapAsNode(Object element) {

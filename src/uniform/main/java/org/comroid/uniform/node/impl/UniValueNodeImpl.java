@@ -11,6 +11,7 @@ import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import static org.comroid.uniform.node.impl.StandardValueType.*;
 
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final String name;
@@ -130,5 +133,66 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
                 return baseNode.set(value.asRaw(null));
             }
         };
+    }
+
+    @Override
+    public Object asRaw(@Nullable Object fallback) {
+        return valueAdapter.asActualType();
+    }
+
+    @Override
+    public <R> R as(ValueType<R> type) {
+        return returnAs(type, null);
+    }
+
+    @Override
+    public String asString(@Nullable String fallback) {
+        return returnAs(STRING, fallback);
+    }
+
+    @Override
+    public boolean asBoolean(boolean fallback) {
+        return returnAs(BOOLEAN, fallback);
+    }
+
+    @Override
+    public int asInt(int fallback) {
+        return returnAs(INTEGER, fallback);
+    }
+
+    @Override
+    public long asLong(long fallback) {
+        return returnAs(LONG, fallback);
+    }
+
+    @Override
+    public double asDouble(double fallback) {
+        return returnAs(DOUBLE, fallback);
+    }
+
+    @Override
+    public float asFloat(float fallback) {
+        return returnAs(FLOAT, fallback);
+    }
+
+    @Override
+    public short asShort(short fallback) {
+        return returnAs(SHORT, fallback);
+    }
+
+    @Override
+    public char asChar(char fallback) {
+        return returnAs(CHARACTER, fallback);
+    }
+
+    @Contract("null, _ -> fail; _, null -> _")
+    private <R> R returnAs(ValueType<R> type, R fallback) {
+        if (type == null)
+            throw new IllegalArgumentException("Missing Type");
+        if (valueAdapter.getValueType().equals(type))
+            //noinspection unchecked
+            return (R) valueAdapter.asActualType();
+        R yield = valueAdapter.asType(type);
+        return yield == null ? fallback : yield;
     }
 }

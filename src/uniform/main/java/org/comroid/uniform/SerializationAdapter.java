@@ -3,6 +3,7 @@ package org.comroid.uniform;
 import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.model.DataStructureType;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -74,4 +75,6 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
     UniObjectNode createUniObjectNode(OBJ node);
 
     UniArrayNode createUniArrayNode(ARR node);
+
+    ValueAdapter<Object, Object> createValueAdapter(Object nodeBase);
 }

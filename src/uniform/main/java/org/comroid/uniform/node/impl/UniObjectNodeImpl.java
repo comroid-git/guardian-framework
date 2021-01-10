@@ -69,8 +69,8 @@ public final class UniObjectNodeImpl
             if (value instanceof UniObjectNode || value instanceof UniArrayNode) {
                 return KeyedReference.create(key, (UniNode) value);
             } else {
-                final UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib,
-                        Reference.constant(value), (ValueType<Object>) type);
+                //noinspection unchecked
+                final UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, seriLib.createValueAdapter(value));
                 if (ref != null) {
                     ref.set(valueNode);
                     return ref;
@@ -121,9 +121,8 @@ public final class UniObjectNodeImpl
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);
                 assert getNodeType() == NodeType.OBJECT;
-                assert value instanceof Map;
                 //noinspection unchecked
-                return new UniObjectNodeImpl(seriLib, ((Map<String, Object>) value));
+                return new UniValueNodeImpl(key, seriLib, seriLib.createValueAdapter(value));
             }
 
             @Override

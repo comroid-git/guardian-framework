@@ -5,6 +5,7 @@ import org.comroid.api.Polyfill;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -49,6 +50,16 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
     @Override
     public UniArrayNode createUniArrayNode(Properties node) {
         throw new UnsupportedOperationException("Cannot create ArrayNode for Properties");
+    }
+
+    @Override
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+        return new ValueAdapter<Object, Object>(nodeBase) {
+            @Override
+            public Object asActualType() {
+                return base;
+            }
+        };
     }
 
     private Properties ofString(String data) {

@@ -39,7 +39,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     protected Rewrapper<AcK> wrapKey(Object key) {
         if ((isObjectNode() && key instanceof String)
-                && (isArrayNode() && key instanceof Integer))
+                || (isArrayNode() && key instanceof Integer))
             return () -> Polyfill.uncheckedCast(key);
         return Rewrapper.empty();
     }
@@ -73,8 +73,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     private UniNode getAccessor(AcK key) {
-        return Objects.requireNonNull(accessors.get(key), MessageSupplier.format("Missing accessor for key %s", key))
-                .requireNonNull(MessageSupplier.format("Missing Node for key %s", key));
+        return Polyfill.uncheckedCast(Objects.requireNonNull(accessors.get(key), MessageSupplier.format("Missing accessor for key %s", key)));
     }
 
     @Override

@@ -51,8 +51,8 @@ public class UniNodeTest {
     public void testObject() {
         randomMap.forEach((key, value) -> {
             UniNode valueNode = object.get(key);
-            Assert.assertTrue(valueNode instanceof UniValueNode);
-            Assert.assertEquals((int) value, valueNode.asInt(0));
+            Assert.assertTrue("valueNode type: " + valueNode.getClass(), valueNode instanceof UniValueNode);
+            Assert.assertEquals("valueNode value", (int) value, valueNode.asInt(0));
         });
     }
 
