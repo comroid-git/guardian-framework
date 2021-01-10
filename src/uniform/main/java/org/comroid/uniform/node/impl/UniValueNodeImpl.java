@@ -19,6 +19,12 @@ import java.util.function.Supplier;
 
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final ValueType<Object> type;
+    private final String name;
+
+    @Override
+    public String getName() {
+        return name;
+    }
 
     @Override
     public boolean isOutdated() {
@@ -45,9 +51,10 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         return type;
     }
 
-    public UniValueNodeImpl(SerializationAdapter seriLib, Reference<Object> baseNode, ValueType<Object> type) {
+    public UniValueNodeImpl(String name, SerializationAdapter seriLib, Reference<Object> baseNode, ValueType<Object> type) {
         super(seriLib, baseNode);
 
+        this.name = name;
         this.type = type;
     }
 
@@ -104,7 +111,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
             protected UniNode doGet() {
                 final Object value = baseNode.get();
                 assert getNodeType() == Type.VALUE;
-                return new UniValueNodeImpl(seriLib, baseNode, type);
+                return new UniValueNodeImpl(name, seriLib, baseNode, type);
             }
 
             @Override

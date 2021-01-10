@@ -68,7 +68,7 @@ public final class UniObjectNodeImpl
             if (value instanceof UniObjectNode || value instanceof UniArrayNode) {
                 return KeyedReference.create(key, (UniNode) value);
             } else {
-                final UniValueNodeImpl valueNode = new UniValueNodeImpl(seriLib,
+                final UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib,
                         Reference.constant(value), (ValueType<Object>) type);
                 if (ref != null) {
                     ref.set(valueNode);

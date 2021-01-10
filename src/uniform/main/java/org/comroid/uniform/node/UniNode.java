@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode> {
+public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode>, Named {
     @Internal
     static <T> T unsupported(UniNode it, String actionName, Type expected) throws UnsupportedOperationException {
         throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",

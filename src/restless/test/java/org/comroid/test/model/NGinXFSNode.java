@@ -1,6 +1,5 @@
 package org.comroid.test.model;
 
-import org.comroid.test.FastJSONLib;
 import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.annotation.Location;

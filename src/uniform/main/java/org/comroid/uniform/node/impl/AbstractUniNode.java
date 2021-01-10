@@ -2,6 +2,7 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
@@ -11,7 +12,7 @@ import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -24,6 +25,11 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public SerializationAdapter<?, ?, ?> getSerializationAdapter() {
         return seriLib;
+    }
+
+    @Override
+    public String getName() {
+        return "<root node>";
     }
 
     protected AbstractUniNode(SerializationAdapter seriLib, Bas baseNode) {
@@ -58,12 +64,17 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public @NotNull UniNode get(int index) {
-        return (UniNode) wrapKey(index).ifPresentMapOrElseGet(accessors::get, () -> UniValueNode.NULL);
+        return wrapKey(index).ifPresentMapOrElseGet(this::getAccessor, () -> UniValueNode.NULL);
     }
 
     @Override
     public @NotNull UniNode get(String fieldName) {
-        return (UniNode) wrapKey(fieldName).ifPresentMapOrElseGet(accessors::get, () -> UniValueNode.NULL);
+        return wrapKey(fieldName).ifPresentMapOrElseGet(this::getAccessor, () -> UniValueNode.NULL);
+    }
+
+    private UniNode getAccessor(AcK key) {
+        return Objects.requireNonNull(accessors.get(key), MessageSupplier.format("Missing accessor for key %s", key))
+                .requireNonNull(MessageSupplier.format("Missing Node for key %s", key));
     }
 
     @Override

@@ -1,4 +1,4 @@
-package org.comroid.uniform.adapter.model;
+package org.comroid.uniform.adapter.model.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -8,25 +8,17 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
-import org.comroid.api.Polyfill;
 import org.comroid.common.exception.AssertionException;
-import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
-import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.uniform.node.UniValueNode;
 import org.comroid.uniform.node.impl.UniArrayNodeImpl;
 import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.comroid.uniform.node.impl.UniValueNodeImpl;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
@@ -65,24 +57,14 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
                 return createUniArrayNode((ArrayNode) node);
             if (node.isObject())
                 return createUniObjectNode((ObjectNode) node);
-            if (node.isValueNode())
-                return createValueNode((ValueNode) node);
+            if (node.isValueNode()) {
+                return new UniValueNodeImpl("unknown", this, new ValueNodeAdapter((ValueNode) node));
+            }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
 
         throw new AssertionException();
-    }
-
-    private UniValueNode createValueNode(ValueNode dataString) {
-        return new UniValueNodeImpl(this, new Reference.Support.Base<Object>(false) {
-            private final ValueNode base = dataString;
-
-            @Override
-            protected String doGet() {
-                return base.asText();
-            }
-        }, Polyfill.uncheckedCast(StandardValueType.STRING));
     }
 
     @Override

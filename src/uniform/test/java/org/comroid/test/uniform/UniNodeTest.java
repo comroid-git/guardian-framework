@@ -3,7 +3,9 @@ package org.comroid.test.uniform;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.comroid.uniform.node.UniArrayNode;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,15 +42,18 @@ public class UniNodeTest {
 
         this.object = fastJsonLib.createUniObjectNode(object);
         this.array = fastJsonLib.createUniArrayNode(array);
+
+        Assert.assertNotNull("object node", object);
+        Assert.assertNotNull("arry node", array);
     }
 
     @Test
     public void testObject() {
-        randomMap.forEach((key, value) -> Assert.assertEquals(
-                (int) value,
-                object.get(key)
-                        .asInt(0)
-        ));
+        randomMap.forEach((key, value) -> {
+            UniNode valueNode = object.get(key);
+            Assert.assertTrue(valueNode instanceof UniValueNode);
+            Assert.assertEquals((int) value, valueNode.asInt(0));
+        });
     }
 
     @Test

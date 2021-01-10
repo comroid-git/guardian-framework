@@ -2,7 +2,6 @@ package org.comroid.test.restless;
 
 import org.comroid.restless.REST;
 import org.comroid.restless.adapter.java.JavaHttpAdapter;
-import org.comroid.test.FastJSONLib;
 import org.comroid.test.model.NGinXFSNode;
 import org.junit.Before;
 
