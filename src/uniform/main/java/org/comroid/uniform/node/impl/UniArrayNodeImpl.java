@@ -26,8 +26,8 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    public boolean contains(Object other) {
-        return stream().anyMatch(other::equals);
+    public boolean contains(Object value) {
+        return streamNodes().anyMatch(node -> node.asRaw().equals(value));
     }
 
     @Override

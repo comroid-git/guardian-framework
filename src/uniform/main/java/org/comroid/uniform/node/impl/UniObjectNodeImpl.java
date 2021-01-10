@@ -9,6 +9,7 @@ import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,8 @@ public final class UniObjectNodeImpl
 
     @Override
     public boolean containsValue(Object value) {
-        return accessors.streamRefs().anyMatch(ref -> ref.contentEquals(value));
+        return streamNodes().filter(UniValueNode.class::isInstance)
+                .anyMatch(node -> node.asRaw().equals(value));
     }
 
     @Override

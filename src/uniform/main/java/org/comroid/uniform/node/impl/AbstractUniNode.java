@@ -3,6 +3,7 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.info.MessageSupplier;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
@@ -99,10 +100,11 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public Stream<? extends UniNode> streamNodes() {
-        // noinspection RedundantTypeArguments -> false positive
-        return streamKeys()
-                .map(this::<Ref>generateAccessor)
-                .flatMap(Rewrapper::stream);
+        return streamRefs().flatMap(Rewrapper::stream);
+    }
+
+    public Stream<Ref> streamRefs() {
+        return streamKeys().map(this::generateAccessor);
     }
 
     @NotNull
