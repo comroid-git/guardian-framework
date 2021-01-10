@@ -25,7 +25,7 @@ public final class UniObjectNodeImpl
 
     @Override
     public boolean containsKey(Object key) {
-        return accessors.stream().map(Entry::getKey).anyMatch(key::equals);
+        return accessors.streamRefs().anyMatch(ref -> ref.getKey().equals(key));
     }
 
     @Override
