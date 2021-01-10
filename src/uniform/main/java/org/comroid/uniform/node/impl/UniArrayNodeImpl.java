@@ -6,7 +6,6 @@ import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -14,6 +13,8 @@ import org.comroid.uniform.node.UniObjectNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class UniArrayNodeImpl
@@ -153,20 +154,23 @@ public final class UniArrayNodeImpl
 
     @NotNull
     @Override
-    public ListIterator<UniNode> listIterator() {
-        throw new UnsupportedOperationException(); // todo
+    public ListIterator listIterator() {
+        return listIterator(0);
     }
 
     @NotNull
     @Override
-    public ListIterator<UniNode> listIterator(int index) {
-        throw new UnsupportedOperationException(); // todo
+    public ListIterator listIterator(int index) {
+        return new ListIterator(index);
     }
 
     @NotNull
     @Override
     public List<UniNode> subList(int fromIndex, int toIndex) {
-        throw new UnsupportedOperationException(); // todo
+        return Collections.unmodifiableList(IntStream
+                .range(fromIndex, toIndex)
+                .mapToObj(this::get)
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -200,5 +204,65 @@ public final class UniArrayNodeImpl
                 return baseNode.set(key, value.asRaw(null)) != value;
             }
         };
+    }
+
+    @Override
+    protected Stream<Integer> streamKeys() {
+        return IntStream.range(0, size()).boxed();
+    }
+
+    private final class ListIterator implements java.util.ListIterator<UniNode> {
+        private final Reference<Integer> index;
+
+        private ListIterator(int initialIndex) {
+            this.index = Reference.create(initialIndex);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index.test(x -> size() < x);
+        }
+
+        @Override
+        public UniNode next() {
+            index.compute(x -> x +1);
+            return index.into(UniArrayNodeImpl.this::get);
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return index.test(x -> -1 > x);
+        }
+
+        @Override
+        public UniNode previous() {
+            index.compute(x -> x - 1);
+            return index.into(UniArrayNodeImpl.this::get);
+        }
+
+        @Override
+        public int nextIndex() {
+            return index.into(x -> x + 1);
+        }
+
+        @Override
+        public int previousIndex() {
+            return index.into(x -> x + 1);
+        }
+
+        @Override
+        public void remove() {
+            index.into(UniArrayNodeImpl.this::remove);
+        }
+
+        @Override
+        public void set(UniNode uniNode) {
+            index.consume(index -> UniArrayNodeImpl.this.set(index, uniNode));
+        }
+
+        @Override
+        public void add(UniNode uniNode) {
+            index.consume(index -> UniArrayNodeImpl.this.add(index, uniNode));
+        }
     }
 }

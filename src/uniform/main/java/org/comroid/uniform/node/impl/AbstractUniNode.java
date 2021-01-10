@@ -46,6 +46,8 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     protected abstract <RX extends Ref> RX generateAccessor(AcK ack);
 
+    protected abstract Stream<AcK> streamKeys();
+
     @Override
     public boolean isEmpty() {
         return size() == 0;
@@ -88,8 +90,9 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public Stream<? extends UniNode> streamNodes() {
-        return accessors.streamRefs()
-                .flatMap(Rewrapper::stream)
+        // noinspection RedundantTypeArguments -> false positive
+        return streamKeys()
+                .map(this::<Ref>generateAccessor)
                 .flatMap(Rewrapper::stream);
     }
 

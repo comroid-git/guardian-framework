@@ -4,9 +4,7 @@ import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
@@ -16,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class UniObjectNodeImpl
         extends AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>>
@@ -139,5 +138,13 @@ public final class UniObjectNodeImpl
                 return baseNode.put(key, value.asRaw(null)) != value;
             }
         };
+    }
+
+    @Override
+    protected Stream<String> streamKeys() {
+        return Stream.concat(
+                baseNode.keySet().stream(),
+                accessors.stream().map(Map.Entry::getKey
+                )).distinct();
     }
 }

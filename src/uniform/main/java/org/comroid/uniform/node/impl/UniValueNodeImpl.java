@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.comroid.uniform.node.impl.StandardValueType.*;
 
@@ -32,8 +33,18 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
+    protected Stream<Void> streamKeys() {
+        return Stream.empty();
+    }
+
+    @Override
     public boolean isOutdated() {
         return baseNode.isOutdated();
+    }
+
+    @Override
+    public Stream<? extends UniNode> streamNodes() {
+        return Stream.of(this);
     }
 
     @Override
