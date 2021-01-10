@@ -176,7 +176,7 @@ public final class UniArrayNodeImpl
 
             @Override
             protected UniNode doGet() {
-                if (key > 0 && key < baseNode.size())
+                if (key < 0 || key >= baseNode.size())
                     return UniValueNode.NULL;
                 final Object value = baseNode.get(key);
 
@@ -217,7 +217,7 @@ public final class UniArrayNodeImpl
 
     @Override
     protected Stream<Integer> streamKeys() {
-        return IntStream.range(0, size()).boxed();
+        return IntStream.range(0, baseNode.size()).boxed();
     }
 
     private final class ListIterator implements java.util.ListIterator<UniNode> {
