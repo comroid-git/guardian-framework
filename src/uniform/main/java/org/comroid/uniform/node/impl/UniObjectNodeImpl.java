@@ -34,6 +34,11 @@ public final class UniObjectNodeImpl
     }
 
     @Override
+    public int size() {
+        return baseNode.size();
+    }
+
+    @Override
     public Object get(Object key) {
         return wrapKey(key).ifPresentMap(accessors::get).getValue();
     }
@@ -119,9 +124,16 @@ public final class UniObjectNodeImpl
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);
+
                 assert getNodeType() == NodeType.OBJECT;
-                //noinspection unchecked
-                return new UniValueNodeImpl(key, seriLib, seriLib.createValueAdapter(value));
+
+                if (seriLib.getObjectType().test(value)) {
+                    // value is object
+                    return seriLib.createUniObjectNode(value);
+                } else if (seriLib.getArrayType().test(value)) {
+                    // value is array
+                    return seriLib.createUniArrayNode(value);
+                } else return new UniValueNodeImpl(key, seriLib, seriLib.createValueAdapter(value));
             }
 
             @Override

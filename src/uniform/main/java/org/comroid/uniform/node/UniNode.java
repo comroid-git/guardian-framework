@@ -24,7 +24,6 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
         ));
     }
 
-
     default String getSerializedString() {
         return toString();
     }

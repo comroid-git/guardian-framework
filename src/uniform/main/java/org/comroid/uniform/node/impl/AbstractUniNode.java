@@ -3,7 +3,6 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.info.MessageSupplier;
-import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
@@ -18,7 +17,7 @@ import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
     protected final Bas baseNode;
-    protected final SerializationAdapter seriLib;
+    protected final SerializationAdapter<Object, Object, Object> seriLib;
     protected final ReferenceMap<? super AcK, Ref> accessors = new ReferenceMap.Support.Basic<>(
             new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
 
@@ -55,7 +54,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public int size() {
-        return accessors.size();
+        return (int) streamKeys().count();
     }
 
     @Override
@@ -63,6 +62,8 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         accessors.forEach((k, ref) -> ref.unset());
         accessors.clear();
     }
+
+
 
     @Override
     public @NotNull UniNode get(int index) {
@@ -99,11 +100,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @NotNull
     @Override
     public Iterator<UniNode> iterator() {
-        return accessors.streamRefs()
-                .map(KeyedReference::getValue)
-                .flatMap(Reference::stream)
-                .map(UniNode.class::cast)
-                .iterator();
+        return streamNodes().map(UniNode.class::cast).iterator();
     }
 
     @Override

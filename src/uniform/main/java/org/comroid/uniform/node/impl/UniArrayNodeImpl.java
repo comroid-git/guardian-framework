@@ -174,7 +174,8 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    protected KeyedReference<Integer, ? extends UniNode> generateAccessor(Integer key) {
+    @SuppressWarnings("unchecked")
+    protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
         return new KeyedReference.Support.Base<Integer, UniNode>(false, key, null) {
             @Override
             public boolean isOutdated() {
@@ -184,10 +185,16 @@ public final class UniArrayNodeImpl
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);
+
                 assert getNodeType() == NodeType.ARRAY;
-                assert value instanceof List;
-                //noinspection unchecked
-                return new UniArrayNodeImpl(seriLib, ((List<Object>) value));
+
+                if (seriLib.getObjectType().test(value)) {
+                    // value is object
+                    return seriLib.createUniObjectNode(value);
+                } else if (seriLib.getArrayType().test(value)) {
+                    // value is array
+                    return seriLib.createUniArrayNode(value);
+                } else return new UniValueNodeImpl(key.toString(), seriLib, seriLib.createValueAdapter(value));
             }
 
             @Override
@@ -204,6 +211,11 @@ public final class UniArrayNodeImpl
                 return baseNode.set(key, value.asRaw(null)) != value;
             }
         };
+    }
+
+    @Override
+    public int size() {
+        return baseNode.size();
     }
 
     @Override
