@@ -1,4 +1,4 @@
-package org.comroid.uniform.adapter.model.jackson;
+package org.comroid.uniform.adapter.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,7 +40,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
             if (node.isObject())
                 return getObjectType();
             if (node.isValueNode())
-                return null;
+                return new UniValueNodeImpl()
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }

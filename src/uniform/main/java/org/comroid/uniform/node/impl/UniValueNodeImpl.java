@@ -8,6 +8,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +22,7 @@ import java.util.function.Supplier;
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final ValueType<Object> type;
     private final String name;
+    private final ValueAdapter<Object, Object> valueAdapter;
 
     @Override
     public String getName() {
@@ -52,10 +54,11 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         return type;
     }
 
-    public UniValueNodeImpl(String name, SerializationAdapter seriLib, Reference<Object> baseNode, ValueType<Object> type) {
-        super(seriLib, baseNode);
+    public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<Object, Object> valueAdapter) {
+        super(seriLib, Reference.provided(valueAdapter::as);
 
         this.name = name;
+        this.valueAdapter = valueAdapter;
         this.type = type;
     }
 
