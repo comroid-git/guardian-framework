@@ -3,6 +3,7 @@ package org.comroid.varbind.bind;
 import org.comroid.api.Builder;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
@@ -51,6 +52,13 @@ public interface VarBindBuilder<SELF extends DataContainer<? super SELF>, EXTR, 
     <R> VarBindBuilder<SELF, R, REMAP, FINAL> extractAsArray(@Nullable ValueType<R> valueType);
 
     VarBindBuilder<SELF, EXTR, EXTR, FINAL> asIdentities();
+
+    @Contract(value = "_ -> this", mutates = "this")
+    default <R> VarBindBuilder<SELF, EXTR, R, FINAL> andRemapRef(
+            Function<? super EXTR, ? extends Rewrapper<? extends R>> remapper
+    ) {
+        return andRemap(remapper.andThen(Rewrapper::get));
+    }
 
     @Contract(value = "_ -> this", mutates = "this")
     <R> VarBindBuilder<SELF, EXTR, R, FINAL> andRemap(Function<? super EXTR, ? extends R> remapper);
