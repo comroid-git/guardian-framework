@@ -28,6 +28,10 @@ public final class StandardValueType<R> implements ValueType<R> {
 
     public static final ValueType<Void> VOID
             = new StandardValueType<>(Void.class, "Void", it -> null);
+    public static final ValueType<Object> OBJECT
+            = new StandardValueType<>(Object.class, "Object", it -> it);
+    public static final ValueType<Object[]> ARRAY
+            = new StandardValueType<>(Object[].class, "Array", it -> new Object[]{it});
 
     private final Class<R> type;
     private final String name;

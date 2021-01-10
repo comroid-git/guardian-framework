@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final String name;
-    private final ValueAdapter<Object, Object> valueAdapter;
+    private final ValueAdapter<?, Object> valueAdapter;
 
     @Override
     public String getName() {
@@ -53,7 +53,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         return valueAdapter.getValueType();
     }
 
-    public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<Object, Object> valueAdapter) {
+    public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<? extends Object, Object> valueAdapter) {
         super(seriLib, Reference.provided(valueAdapter::asActualType));
 
         this.name = name;

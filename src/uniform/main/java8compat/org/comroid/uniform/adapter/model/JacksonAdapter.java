@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import org.comroid.common.exception.AssertionException;
+import org.comroid.uniform.ValueType;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
+import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -19,7 +21,11 @@ import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.comroid.uniform.node.impl.UniValueNodeImpl;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import static org.comroid.uniform.node.impl.StandardValueType.*;
 
 public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
     private final ObjectMapper objectMapper;
@@ -40,7 +46,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
             if (node.isObject())
                 return getObjectType();
             if (node.isValueNode())
-                return new UniValueNodeImpl()
+                return null;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
@@ -58,7 +64,48 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
             if (node.isObject())
                 return createUniObjectNode((ObjectNode) node);
             if (node.isValueNode()) {
-                return new UniValueNodeImpl("unknown", this, new ValueNodeAdapter((ValueNode) node));
+                return new UniValueNodeImpl("unknown", this, new ValueAdapter<JsonNode, Object>(this, node) {
+                    @Override
+                    public Object asActualType() {
+                        switch (base.getNodeType()) {
+                            case BINARY:
+                            case STRING:
+                                return base.asText();
+                            case BOOLEAN:
+                                return base.asBoolean();
+                            case NUMBER:
+                                double v = base.asDouble(), abs = Math.abs(v);
+                                if (v > Integer.MAX_VALUE && v != abs)
+                                    return DOUBLE;
+                                else if (v == abs)
+                                    return LONG;
+                                else return INTEGER;
+                            case POJO:
+                            case OBJECT:
+                                try {
+                                    return objectMapper.treeToValue(base, Map.class);
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            case ARRAY:
+                                try {
+                                    return objectMapper.treeToValue(base, List.class);
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            case NULL:
+                            case MISSING:
+                                return null;
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + node.getNodeType());
+                        }
+                    }
+
+                    @Override
+                    protected boolean doSet(Object newValue) {
+                        return false;
+                    }
+                });
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
@@ -69,12 +116,14 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
 
     @Override
     public UniObjectNode createUniObjectNode(ObjectNode node) {
-        return new UniObjectNodeImpl(this, objectMapper.convertValue(node, new TypeReference<Map<String, Object>>(){}));
+        return new UniObjectNodeImpl(this, objectMapper.convertValue(node, new TypeReference<Map<String, Object>>() {
+        }));
     }
 
     @Override
     public UniArrayNode createUniArrayNode(ArrayNode node) {
-        return new UniArrayNodeImpl(this, objectMapper.convertValue(node, new TypeReference<List<Object>>() {}));
+        return new UniArrayNodeImpl(this, objectMapper.convertValue(node, new TypeReference<List<Object>>() {
+        }));
     }
 
     public final JsonNode wrapAsNode(Object element) {
