@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -116,7 +117,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    protected KeyedReference<Void, ? extends UniNode> generateAccessor(Void nil) {
+    protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
         return new KeyedReference.Support.Base<Void, UniNode>(false, nil, null) {
             @Override
             public boolean isOutdated() {

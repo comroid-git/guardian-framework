@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static org.comroid.uniform.node.impl.StandardValueType.*;
 
@@ -64,7 +65,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
             if (node.isObject())
                 return createUniObjectNode((ObjectNode) node);
             if (node.isValueNode())
-                return new UniValueNodeImpl("unknown", this, createValueAdapter((ValueNode) node));
+                return new UniValueNodeImpl("unknown", this, createValueAdapter(node, any -> false));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
@@ -85,7 +86,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
     }
 
     @Override
-    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter) {
         return Polyfill.uncheckedCast(new ValueAdapter<ValueNode, Object>((ValueNode) nodeBase) {
             @Override
             public Object asActualType() {
@@ -121,6 +122,11 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
                     default:
                         throw new IllegalStateException("Unexpected value: " + base.getNodeType());
                 }
+            }
+
+            @Override
+            protected boolean doSet(Object newValue) {
+                return setter.test(newValue);
             }
         });
     }

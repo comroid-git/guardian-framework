@@ -70,10 +70,7 @@ public abstract class ValueAdapter<B, T> {
 
     public abstract T asActualType();
 
-    @OverrideOnly
-    protected boolean doSet(T newValue) {
-        return false;
-    }
+    protected abstract boolean doSet(T newValue);
 
     public boolean set(T newValue) {
         return !actualType.test(type -> type.test(newValue))

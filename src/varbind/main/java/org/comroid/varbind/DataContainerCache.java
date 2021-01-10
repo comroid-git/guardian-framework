@@ -96,7 +96,8 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>, 
 
     protected Optional<? extends V> tryConstruct(UniObjectNode node) {
         //noinspection unchecked
-        return (Optional<? extends V>) idBind.getGroup().findGroupForData(node)
+        return (Optional<? extends V>) idBind.getGroup()
+                .findGroupForData(node)
                 .flatMap(GroupBind::getConstructor)
                 .map(constr -> constr.autoInvoke(dependencyObject, node));
     }

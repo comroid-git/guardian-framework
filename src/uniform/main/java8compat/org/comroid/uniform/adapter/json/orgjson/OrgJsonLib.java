@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.function.Predicate;
+
 public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONObject, JSONArray> {
     public static @Instance
     final OrgJsonLib orgJsonLib = new OrgJsonLib();
@@ -42,7 +44,7 @@ public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONO
     }
 
     @Override
-    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter) {
         throw new UnsupportedOperationException();
     }
 }

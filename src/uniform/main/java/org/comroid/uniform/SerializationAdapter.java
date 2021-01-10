@@ -11,6 +11,8 @@ import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Predicate;
+
 public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This {
     String getMimeType();
 
@@ -76,5 +78,5 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
 
     UniArrayNode createUniArrayNode(ARR node);
 
-    ValueAdapter<Object, Object> createValueAdapter(Object nodeBase);
+    ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter);
 }

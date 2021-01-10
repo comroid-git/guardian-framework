@@ -106,20 +106,19 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    public @NotNull <T> UniNode put(int index, HeldType<T> type, T value) throws UnsupportedOperationException {
-        return accessors.compute(index, ref -> {
-            if (value instanceof UniObjectNode || value instanceof UniArrayNode) {
-                return KeyedReference.create(index, (UniNode) value);
-            } else {
-                //noinspection unchecked
-                final UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, seriLib.createValueAdapter(value));
-                if (ref != null) {
-                    ref.set(valueNode);
-                    return ref;
-                }
-                return KeyedReference.create(index, valueNode);
+    public @NotNull <T> UniNode put(final int index, HeldType<T> type, T value) throws UnsupportedOperationException {
+        return Objects.requireNonNull(accessors.compute(index, ref -> {
+            if (ref == null)
+                ref = generateAccessor(index);
+            if (value instanceof UniObjectNode || value instanceof UniArrayNode)
+                ref.set((UniNode) value);
+            else {
+                UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, seriLib
+                        .createValueAdapter(value, nv -> baseNode.set(index, nv) != nv));
+                ref.set(valueNode);
             }
-        }).getValue();
+            return ref;
+        })).getValue();
     }
 
     @Override
@@ -174,7 +173,6 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
         return new KeyedReference.Support.Base<Integer, UniNode>(false, key, null) {
             @Override
@@ -194,7 +192,8 @@ public final class UniArrayNodeImpl
                 } else if (seriLib.getArrayType().test(value)) {
                     // value is array
                     return seriLib.createUniArrayNode(value);
-                } else return new UniValueNodeImpl(key.toString(), seriLib, seriLib.createValueAdapter(value));
+                } else return new UniValueNodeImpl(key.toString(), seriLib, seriLib
+                        .createValueAdapter(value, nv -> baseNode.set(key, nv) != nv));
             }
 
             @Override

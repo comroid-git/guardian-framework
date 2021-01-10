@@ -43,7 +43,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         return Rewrapper.empty();
     }
 
-    protected abstract <RX extends Ref> RX generateAccessor(AcK ack);
+    protected abstract Ref generateAccessor(AcK ack);
 
     protected abstract Stream<AcK> streamKeys();
 

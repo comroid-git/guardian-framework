@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 public final class JavaPropertiesSerializationAdapter extends AbstractSerializationAdapter<Properties, Properties, Properties> {
     public static final @Instance
@@ -53,11 +54,16 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
     }
 
     @Override
-    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter) {
         return new ValueAdapter<Object, Object>(nodeBase) {
             @Override
             public Object asActualType() {
                 return base;
+            }
+
+            @Override
+            protected boolean doSet(Object newValue) {
+                return false;
             }
         };
     }

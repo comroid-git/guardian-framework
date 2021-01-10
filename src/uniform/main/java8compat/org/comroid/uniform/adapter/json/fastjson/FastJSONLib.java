@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONObject, JSONArray> {
     public static final @Instance
@@ -81,11 +82,16 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
     }
 
     @Override
-    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase) {
+    public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter) {
         return new ValueAdapter<Object, Object>(nodeBase) {
             @Override
             public Object asActualType() {
                 return base;
+            }
+
+            @Override
+            protected boolean doSet(Object newValue) {
+                return setter.test(newValue);
             }
         };
     }
