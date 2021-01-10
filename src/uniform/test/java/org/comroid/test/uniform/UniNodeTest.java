@@ -54,6 +54,7 @@ public class UniNodeTest {
             Assert.assertTrue("valueNode type: " + valueNode.getClass(), valueNode instanceof UniValueNode);
             Assert.assertEquals("valueNode value", (int) value, valueNode.asInt(0));
         });
+        System.out.println("object.toString() = " + object.toString());
     }
 
     @Test
@@ -64,5 +65,6 @@ public class UniNodeTest {
 
             Assert.assertEquals(randomInts.get(i), value);
         }
+        System.out.println("array.toString() = " + array.toString());
     }
 }
