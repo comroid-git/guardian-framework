@@ -1,15 +1,12 @@
 package org.comroid.varbind.bind;
 
 import jdk.internal.reflect.CallerSensitive;
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.Invocable;
-import org.comroid.api.Named;
-import org.comroid.api.Polyfill;
+import org.comroid.api.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StackTraceUtils;
-import org.comroid.varbind.bind.impl.BindingBuilder;
+import org.comroid.varbind.bind.builder.BuilderStep1;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
@@ -250,8 +247,8 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return groupBind;
     }
 
-    public VarBindBuilder<T, ?, ?, ?> createBind(String fieldName) {
-        return new BindingBuilder<>(this, fieldName);
+    public BuilderStep1<T> createBind(String fieldName) {
+        return new BuilderStep1<>(this, fieldName);
     }
 
     @Internal

@@ -1,4 +1,4 @@
-package org.comroid.varbind.bind.impl;
+package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
