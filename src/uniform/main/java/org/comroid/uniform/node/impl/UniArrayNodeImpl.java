@@ -55,7 +55,7 @@ public final class UniArrayNodeImpl
     @Override
     public boolean remove(Object other) {
         return accessors.streamRefs()
-                .filter(ref -> ref.testIfPresent(other::equals))
+                .filter(ref -> ref.contentEquals(other))
                 .findAny()
                 .map(Map.Entry::getKey)
                 .map(index -> accessors.getReference((int) index, true).unset())
@@ -91,19 +91,17 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    public UniNode set(int index, UniNode element) {
-        KeyedReference<Integer, UniNode> ref = accessors.compute(index, r -> {
-            if (r == null)
-                //noinspection unchecked
-                return (KeyedReference<Integer, UniNode>) generateAccessor(index);
-            return r;
-        });
-        return ref.setValue(element);
+    public UniNode set(int index, UniNode value) {
+        HeldType<UniNode> nodetype = Polyfill.uncheckedCast(
+                value.getNodeType() == NodeType.OBJECT
+                        ? seriLib.getObjectType()
+                        : seriLib.getArrayType());
+        return put(index, nodetype, value);
     }
 
     @Override
     public void add(int index, UniNode element) {
-        set(index, element);
+        throw new UnsupportedOperationException("Please use method #set()"); // todo
     }
 
     @Override
@@ -237,7 +235,7 @@ public final class UniArrayNodeImpl
 
         @Override
         public UniNode next() {
-            index.compute(x -> x +1);
+            index.compute(x -> x + 1);
             return index.into(UniArrayNodeImpl.this::get);
         }
 

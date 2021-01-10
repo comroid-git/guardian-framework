@@ -46,12 +46,13 @@ public final class UniObjectNodeImpl
     @Nullable
     @Override
     public Object put(String key, Object value) {
-        return accessors.compute(key, r -> {
-            if (r == null)
-                //noinspection unchecked
-                return (KeyedReference<String, UniNode>) generateAccessor(key);
-            return r;
-        }).setValue((UniNode) value);
+        if (value instanceof UniNode) {
+            HeldType<UniNode> nodetype = Polyfill.uncheckedCast(
+                    ((UniNode) value).getNodeType() == NodeType.OBJECT
+                            ? seriLib.getObjectType()
+                            : seriLib.getArrayType());
+            return put(key, nodetype, (UniNode) value);
+        } else return put(key, StandardValueType.typeOf(value), value);
     }
 
     @Override
