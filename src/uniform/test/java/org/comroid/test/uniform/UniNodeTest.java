@@ -57,7 +57,7 @@ public class UniNodeTest {
 
         System.out.println("object.toString() = " + object.toString());
         UniObjectNode reparsed = fastJsonLib.parse(object.toString()).asObjectNode();
-        reparsed.forEach((k, v) -> Assert.assertEquals("object reparsed value, key: " + k, object.get(k), v));
+        reparsed.forEach((k, v) -> Assert.assertEquals("object reparsed value, key: " + k, object.get(k).asRaw(), v));
     }
 
     @Test
@@ -72,6 +72,6 @@ public class UniNodeTest {
         System.out.println("array.toString() = " + array.toString());
         UniArrayNode reparsed = fastJsonLib.parse(array.toString()).asArrayNode();
         for (int k = 0; k < reparsed.size(); k++)
-            Assert.assertEquals("array reparsed value, key: " + k, object.get(k), reparsed.get(k).asRaw());
+            Assert.assertEquals("array reparsed value, key: " + k, array.get(k).asRaw(), reparsed.get(k).asRaw());
     }
 }

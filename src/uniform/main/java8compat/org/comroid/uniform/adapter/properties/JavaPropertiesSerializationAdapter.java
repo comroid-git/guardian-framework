@@ -2,7 +2,6 @@ package org.comroid.uniform.adapter.properties;
 
 import org.comroid.annotations.Instance;
 import org.comroid.api.Polyfill;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.model.ValueAdapter;
@@ -45,7 +44,7 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
 
     @Override
     public UniObjectNode createUniObjectNode(Properties node) {
-        return new UniObjectNodeImpl(this, MapUtil.hashtable(Polyfill.uncheckedCast(node)));
+        return new UniObjectNodeImpl(this, null, MapUtil.hashtable(Polyfill.uncheckedCast(node)));
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,8 +21,8 @@ import java.util.stream.Stream;
 public final class UniArrayNodeImpl
         extends AbstractUniNode<Integer, KeyedReference<Integer, UniNode>, List<Object>>
         implements UniArrayNode {
-    public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, List<Object> baseNode) {
-        super(seriLib, baseNode);
+    public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, @Nullable UniNode parent, List<Object> baseNode) {
+        super(seriLib, parent, baseNode);
     }
 
     @Override
@@ -113,7 +114,7 @@ public final class UniArrayNodeImpl
             if (value instanceof UniObjectNode || value instanceof UniArrayNode)
                 ref.set((UniNode) value);
             else {
-                UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, seriLib
+                UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, this, seriLib
                         .createValueAdapter(value, nv -> baseNode.set(index, nv) != nv));
                 ref.set(valueNode);
             }
@@ -192,7 +193,7 @@ public final class UniArrayNodeImpl
                 } else if (seriLib.getArrayType().test(value)) {
                     // value is array
                     return seriLib.createUniArrayNode(value);
-                } else return new UniValueNodeImpl(key.toString(), seriLib, seriLib
+                } else return new UniValueNodeImpl(key.toString(), seriLib, UniArrayNodeImpl.this, seriLib
                         .createValueAdapter(value, nv -> baseNode.set(key, nv) != nv));
             }
 

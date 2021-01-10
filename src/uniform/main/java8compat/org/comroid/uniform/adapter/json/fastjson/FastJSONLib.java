@@ -5,21 +5,17 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
 import org.comroid.annotations.Instance;
-import org.comroid.api.Polyfill;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.impl.UniArrayNodeImpl;
 import org.comroid.uniform.node.impl.UniObjectNodeImpl;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.function.Predicate;
 
 public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONObject, JSONArray> {
@@ -73,12 +69,12 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
 
     @Override
     public UniObjectNode createUniObjectNode(JSONObject node) {
-        return new UniObjectNodeImpl(this, node);
+        return new UniObjectNodeImpl(this, null, node);
     }
 
     @Override
     public UniArrayNode createUniArrayNode(JSONArray node) {
-        return new UniArrayNodeImpl(this, node);
+        return new UniArrayNodeImpl(this, null, node);
     }
 
     @Override

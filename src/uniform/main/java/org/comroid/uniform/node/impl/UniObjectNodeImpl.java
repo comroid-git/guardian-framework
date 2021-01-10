@@ -19,8 +19,8 @@ import java.util.stream.Stream;
 public final class UniObjectNodeImpl
         extends AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>>
         implements UniObjectNode {
-    public <BAS, OBJ extends BAS> UniObjectNodeImpl(SerializationAdapter<BAS, OBJ, ?> seriLib, Map<String, Object> baseNode) {
-        super(seriLib, baseNode);
+    public <BAS, OBJ extends BAS> UniObjectNodeImpl(SerializationAdapter<BAS, OBJ, ?> seriLib, @Nullable UniNode parent, Map<String, Object> baseNode) {
+        super(seriLib, parent, baseNode);
     }
 
     @Override
@@ -76,7 +76,7 @@ public final class UniObjectNodeImpl
             if (value instanceof UniObjectNode || value instanceof UniArrayNode)
                 ref.set((UniNode) value);
             else {
-                UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, seriLib
+                UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, this, seriLib
                         .createValueAdapter(value, nv -> baseNode.put(key, nv) != nv));
                 ref.set(valueNode);
             }
@@ -133,7 +133,7 @@ public final class UniObjectNodeImpl
                 } else if (seriLib.getArrayType().test(value)) {
                     // value is array
                     return seriLib.createUniArrayNode(value);
-                } else return new UniValueNodeImpl(key, seriLib, seriLib
+                } else return new UniValueNodeImpl(key, seriLib, UniObjectNodeImpl.this, seriLib
                         .createValueAdapter(value, nv -> baseNode.put(key, nv) != nv));
             }
 

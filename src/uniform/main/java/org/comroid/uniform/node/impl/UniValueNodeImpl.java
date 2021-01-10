@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -68,8 +67,8 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         return valueAdapter.getValueType();
     }
 
-    public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<? extends Object, Object> valueAdapter) {
-        super(seriLib, Reference.provided(valueAdapter::asActualType));
+    public UniValueNodeImpl(String name, SerializationAdapter seriLib, @Nullable UniNode parent, ValueAdapter<? extends Object, Object> valueAdapter) {
+        super(seriLib, parent, Reference.provided(valueAdapter::asActualType));
 
         this.name = name;
         this.valueAdapter = valueAdapter;
@@ -128,7 +127,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
             protected UniNode doGet() {
                 final Object value = valueAdapter.asActualType();
                 assert getNodeType() == NodeType.VALUE;
-                return new UniValueNodeImpl(name, seriLib, valueAdapter);
+                return new UniValueNodeImpl(name, seriLib, null, valueAdapter);
             }
 
             @Override

@@ -9,6 +9,7 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
+    private final UniNode parent;
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
     protected final ReferenceMap<? super AcK, Ref> accessors = new ReferenceMap.Support.Basic<>(
@@ -31,8 +33,9 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         return "<root node>";
     }
 
-    protected AbstractUniNode(SerializationAdapter seriLib, Bas baseNode) {
+    protected AbstractUniNode(SerializationAdapter seriLib, @Nullable UniNode parent, Bas baseNode) {
         this.seriLib = seriLib;
+        this.parent = parent;
         this.baseNode = baseNode;
     }
 
@@ -46,6 +49,11 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     protected abstract Ref generateAccessor(AcK ack);
 
     protected abstract Stream<AcK> streamKeys();
+
+    @Override
+    public Rewrapper<? extends UniNode> getParentNode() {
+        return parent == null ? Rewrapper.empty() : () -> parent;
+    }
 
     @Override
     public boolean isEmpty() {
@@ -106,5 +114,10 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public String toString() {
         return baseNode.toString();
+    }
+
+    @Override
+    public String getAlternateFormattedName() {
+        return String.format("UniNode<%s=%s>", getNodeType(), toString());
     }
 }

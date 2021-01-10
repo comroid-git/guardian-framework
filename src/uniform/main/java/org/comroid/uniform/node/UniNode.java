@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode>, Named {
+    Rewrapper<? extends UniNode> getParentNode();
+
     @Internal
     static <T> T unsupported(UniNode it, String actionName, NodeType expected) throws UnsupportedOperationException {
         throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",

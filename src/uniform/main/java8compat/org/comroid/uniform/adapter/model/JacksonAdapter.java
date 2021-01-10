@@ -65,7 +65,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
             if (node.isObject())
                 return createUniObjectNode((ObjectNode) node);
             if (node.isValueNode())
-                return new UniValueNodeImpl("unknown", this, createValueAdapter(node, any -> false));
+                return new UniValueNodeImpl("unknown", this, null, createValueAdapter(node, any -> false));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(String.format("Invalid %s data: \n%s", getMimeType(), data), e);
         }
@@ -75,13 +75,13 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
 
     @Override
     public UniObjectNode createUniObjectNode(ObjectNode node) {
-        return new UniObjectNodeImpl(this, objectMapper.convertValue(node, new TypeReference<Map<String, Object>>() {
+        return new UniObjectNodeImpl(this, null, objectMapper.convertValue(node, new TypeReference<Map<String, Object>>() {
         }));
     }
 
     @Override
     public UniArrayNode createUniArrayNode(ArrayNode node) {
-        return new UniArrayNodeImpl(this, objectMapper.convertValue(node, new TypeReference<List<Object>>() {
+        return new UniArrayNodeImpl(this, null, objectMapper.convertValue(node, new TypeReference<List<Object>>() {
         }));
     }
 
