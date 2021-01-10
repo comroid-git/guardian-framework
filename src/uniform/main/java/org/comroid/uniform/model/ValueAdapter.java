@@ -12,6 +12,18 @@ public abstract class ValueAdapter<B, T> {
     protected final ValueType<T> actualType;
     protected final B base;
 
+    public SerializationAdapter<? super B, ?, ?> getSeriLib() {
+        return seriLib;
+    }
+
+    public ValueType<T> getActualType() {
+        return actualType;
+    }
+
+    public B getBase() {
+        return base;
+    }
+
     protected ValueAdapter(SerializationAdapter<? super B, ?, ?> seriLib, ValueType<T> actualType, B base) {
         this.seriLib = seriLib;
         this.actualType = actualType;
