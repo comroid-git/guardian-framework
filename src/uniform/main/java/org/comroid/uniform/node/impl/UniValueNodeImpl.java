@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
-    private final ValueType<Object> type;
     private final String name;
     private final ValueAdapter<Object, Object> valueAdapter;
 
@@ -51,15 +50,14 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
 
     @Override
     public ValueType getHeldType() {
-        return type;
+        return valueAdapter.getValueType();
     }
 
     public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<Object, Object> valueAdapter) {
-        super(seriLib, Reference.provided(valueAdapter::asActualType);
+        super(seriLib, Reference.provided(valueAdapter::asActualType));
 
         this.name = name;
         this.valueAdapter = valueAdapter;
-        this.type = type;
     }
 
     @Override
@@ -100,7 +98,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     @Nullable
     @Override
     public Object get() {
-        return baseNode.get();
+        return valueAdapter.asActualType();
     }
 
     @Override
@@ -113,9 +111,9 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
 
             @Override
             protected UniNode doGet() {
-                final Object value = baseNode.get();
+                final Object value = valueAdapter.asActualType();
                 assert getNodeType() == NodeType.VALUE;
-                return new UniValueNodeImpl(name, seriLib, baseNode, type);
+                return new UniValueNodeImpl(name, seriLib, valueAdapter);
             }
 
             @Override

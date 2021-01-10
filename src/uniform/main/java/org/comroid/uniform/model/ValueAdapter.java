@@ -1,5 +1,6 @@
 package org.comroid.uniform.model;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.HeldType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
@@ -7,16 +8,17 @@ import org.comroid.uniform.ValueType;
 import static org.comroid.api.Polyfill.uncheckedCast;
 import static org.comroid.uniform.node.impl.StandardValueType.*;
 
-public abstract class ValueAdapter<B, T> {
+public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
     protected final SerializationAdapter<? super B, ?, ?> seriLib;
     protected final ValueType<T> actualType;
     protected final B base;
 
-    public SerializationAdapter<? super B, ?, ?> getSeriLib() {
+    @Override
+    public SerializationAdapter<? super B, ?, ?> getFromContext() {
         return seriLib;
     }
 
-    public ValueType<T> getActualType() {
+    public ValueType<T> getValueType() {
         return actualType;
     }
 
