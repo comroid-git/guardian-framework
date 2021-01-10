@@ -112,7 +112,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
 
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
-        return new KeyedReference.Support.Base<Void, UniNode>(false, nil, null) {
+        return new KeyedReference.Support.Base<Void, UniNode>(true, nil, null) {
             @Override
             public boolean isOutdated() {
                 return true;

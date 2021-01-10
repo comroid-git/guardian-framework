@@ -168,7 +168,7 @@ public final class UniArrayNodeImpl
 
     @Override
     protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
-        return new KeyedReference.Support.Base<Integer, UniNode>(false, key, null) {
+        return new KeyedReference.Support.Base<Integer, UniNode>(true, key, null) {
             @Override
             public boolean isOutdated() {
                 return true;
@@ -176,6 +176,8 @@ public final class UniArrayNodeImpl
 
             @Override
             protected UniNode doGet() {
+                if (key > 0 && key < baseNode.size())
+                    return UniValueNode.NULL;
                 final Object value = baseNode.get(key);
 
                 assert getNodeType() == NodeType.ARRAY;

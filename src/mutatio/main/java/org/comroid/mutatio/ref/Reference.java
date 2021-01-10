@@ -106,6 +106,8 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
      * @return The new value if it could be set, else the previous value.
      */
     default T compute(Function<T, T> computor) {
+        if (isImmutable())
+            throw new UnsupportedOperationException("Reference is immutable");
         if (!set(into(computor)))
             throw new UnsupportedOperationException("Could not set value");
         return get();
@@ -115,6 +117,8 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
      * @return The new value if it could be set, else the previous value.
      */
     default T computeIfPresent(Function<T, T> computor) {
+        if (isImmutable())
+            throw new UnsupportedOperationException("Reference is immutable");
         if (!isNull() && !set(into(computor)))
             throw new UnsupportedOperationException("Could not set value");
         return get();
@@ -124,6 +128,8 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
      * @return The new value if it could be set, else the previous value.
      */
     default T computeIfAbsent(Supplier<T> supplier) {
+        if (isImmutable())
+            throw new UnsupportedOperationException("Reference is immutable");
         if (isNull() && !set(supplier.get()))
             throw new UnsupportedOperationException("Could not set value");
         return get();
