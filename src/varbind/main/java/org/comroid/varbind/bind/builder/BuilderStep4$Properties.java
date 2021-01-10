@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class BuilderStep4<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
+public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         extends VarBindBuilderComponent<SELF,EXTR,REMAP,FINAL> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
@@ -18,7 +18,7 @@ public class BuilderStep4<SELF extends DataContainer<? super SELF>, EXTR, REMAP,
     private final Function<Span<REMAP>, FINAL> finisher;
     private boolean required = false;
 
-    protected BuilderStep4(
+    protected BuilderStep4$Properties(
             GroupBind<SELF> group,
             String fieldName,
             ValueType<EXTR> valueType,
@@ -47,16 +47,16 @@ public class BuilderStep4<SELF extends DataContainer<? super SELF>, EXTR, REMAP,
         return required;
     }
 
-    public BuilderStep4<SELF, EXTR, REMAP, FINAL> setRequired(boolean required) {
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> setRequired(boolean required) {
         this.required = required;
         return this;
     }
 
-    public BuilderStep4<SELF, EXTR, REMAP, FINAL> setRequired() {
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> setRequired() {
         return setRequired(true);
     }
 
-    public BuilderStep4<SELF, EXTR, REMAP, FINAL> setOptional() {
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> setOptional() {
         return setRequired(false);
     }
 

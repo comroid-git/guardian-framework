@@ -6,7 +6,7 @@ import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StackTraceUtils;
-import org.comroid.varbind.bind.builder.BuilderStep1;
+import org.comroid.varbind.bind.builder.BuilderStep1$Extraction;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
@@ -247,8 +247,8 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return groupBind;
     }
 
-    public BuilderStep1<T> createBind(String fieldName) {
-        return new BuilderStep1<>(this, fieldName);
+    public BuilderStep1$Extraction<T> createBind(String fieldName) {
+        return new BuilderStep1$Extraction<>(this, fieldName);
     }
 
     @Internal

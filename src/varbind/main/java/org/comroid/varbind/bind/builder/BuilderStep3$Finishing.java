@@ -12,15 +12,13 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.comroid.api.Polyfill.uncheckedCast;
-
-public final class BuilderStep3<SELF extends DataContainer<? super SELF>, EXTR, REMAP>
+public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SELF>, EXTR, REMAP>
         extends VarBindBuilderComponent<SELF, EXTR, REMAP, Void> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> resolver;
 
-    BuilderStep3(
+    BuilderStep3$Finishing(
             GroupBind<SELF> group,
             String fieldName,
             ValueType<EXTR> valueType,
@@ -34,9 +32,9 @@ public final class BuilderStep3<SELF extends DataContainer<? super SELF>, EXTR, 
         this.resolver = resolver;
     }
 
-    public <C extends Collection<REMAP>> BuilderStep4<SELF, EXTR, REMAP, C> reformatSpan(
+    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> reformatSpan(
             Function<Span<REMAP>, C> spanResolver) {
-        return new BuilderStep4<>(
+        return new BuilderStep4$Properties<>(
                 group,
                 fieldName,
                 valueType,
@@ -46,8 +44,8 @@ public final class BuilderStep3<SELF extends DataContainer<? super SELF>, EXTR, 
         );
     }
 
-    public BuilderStep4<SELF, EXTR, REMAP, REMAP> onceEach() {
-        return new BuilderStep4<>(
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, REMAP> onceEach() {
+        return new BuilderStep4$Properties<>(
                 group,
                 fieldName,
                 valueType,
@@ -57,11 +55,11 @@ public final class BuilderStep3<SELF extends DataContainer<? super SELF>, EXTR, 
         );
     }
 
-    public BuilderStep4<SELF, EXTR, REMAP, Span<REMAP>> intoSpan() {
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, Span<REMAP>> intoSpan() {
         return reformatSpan(Function.identity());
     }
 
-    public <C extends Collection<REMAP>> BuilderStep4<SELF, EXTR, REMAP, C> intoCollection(
+    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> intoCollection(
             Supplier<C> collectionSupplier) {
         return reformatSpan(span -> {
             C col = collectionSupplier.get();

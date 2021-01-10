@@ -10,23 +10,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
-public final class BuilderStep1<SELF extends DataContainer<? super SELF>>
+public final class BuilderStep1$Extraction<SELF extends DataContainer<? super SELF>>
         extends VarBindBuilderComponent<SELF, Void, Void, Void> {
-    public BuilderStep1(GroupBind<SELF> group, String fieldName) {
+    public BuilderStep1$Extraction(GroupBind<SELF> group, String fieldName) {
         super(group, fieldName);
     }
 
-    public BuilderStep2<SELF, UniObjectNode>
+    public BuilderStep2$Remapping<SELF, UniObjectNode>
     extractAsArray() {
         return extractAsArray(null);
     }
 
-    public <E extends Serializable> BuilderStep2<SELF, E> extractAs(ValueType<E> valueType) {
-        return new BuilderStep2<>(group, fieldName, valueType, VarBind.ExtractionMethod.VALUE);
+    public <E extends Serializable> BuilderStep2$Remapping<SELF, E> extractAs(ValueType<E> valueType) {
+        return new BuilderStep2$Remapping<>(group, fieldName, valueType, VarBind.ExtractionMethod.VALUE);
     }
 
-    public BuilderStep2<SELF, UniObjectNode> extractAsObject() {
-        return new BuilderStep2<>(
+    public BuilderStep2$Remapping<SELF, UniObjectNode> extractAsObject() {
+        return new BuilderStep2$Remapping<>(
                 group,
                 fieldName,
                 group.getFromContext().getObjectType(),
@@ -34,8 +34,8 @@ public final class BuilderStep1<SELF extends DataContainer<? super SELF>>
         );
     }
 
-    public <R> BuilderStep2<SELF, R> extractAsArray(@Nullable ValueType<R> valueType) {
-        return new BuilderStep2<>(
+    public <R> BuilderStep2$Remapping<SELF, R> extractAsArray(@Nullable ValueType<R> valueType) {
+        return new BuilderStep2$Remapping<>(
                 group,
                 fieldName,
                 Polyfill.uncheckedCast(valueType == null ? group.getFromContext().getArrayType() : valueType),

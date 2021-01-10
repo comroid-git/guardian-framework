@@ -11,12 +11,12 @@ import org.comroid.varbind.container.DataContainer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public final class BuilderStep2<SELF extends DataContainer<? super SELF>, EXTR>
+public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SELF>, EXTR>
         extends VarBindBuilderComponent<SELF, EXTR, Void, Void> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
 
-    BuilderStep2(
+    BuilderStep2$Remapping(
             GroupBind<SELF> group,
             String fieldName,
             ValueType<EXTR> valueType,
@@ -28,32 +28,32 @@ public final class BuilderStep2<SELF extends DataContainer<? super SELF>, EXTR>
         this.extractionMethod = extractionMethod;
     }
 
-    public BuilderStep3<SELF, EXTR, EXTR> asIdentities() {
+    public BuilderStep3$Finishing<SELF, EXTR, EXTR> asIdentities() {
         return andRemap(Function.identity());
     }
 
-    public <R> BuilderStep3<SELF, EXTR, R> andRemap(
+    public <R> BuilderStep3$Finishing<SELF, EXTR, R> andRemap(
             final Function<? super EXTR, ? extends R> remapper) {
         return andResolve((self, extr) -> remapper.apply(extr));
     }
 
-    public <R> BuilderStep3<SELF, EXTR, R> andResolve(
+    public <R> BuilderStep3$Finishing<SELF, EXTR, R> andResolve(
             final BiFunction<? super SELF, ? super EXTR, ? extends R> resolver) {
-        return new BuilderStep3<>(group, fieldName, valueType, extractionMethod, resolver);
+        return new BuilderStep3$Finishing<>(group, fieldName, valueType, extractionMethod, resolver);
     }
 
-    public <R> BuilderStep3<SELF, EXTR, R> andRemapRef(
+    public <R> BuilderStep3$Finishing<SELF, EXTR, R> andRemapRef(
             Function<? super EXTR, ? extends Rewrapper<? extends R>> remapper
     ) {
         return andRemap(remapper.andThen(Rewrapper::get));
     }
 
-    public <R> BuilderStep3<SELF, EXTR, R> andResolveRef(
+    public <R> BuilderStep3$Finishing<SELF, EXTR, R> andResolveRef(
             BiFunction<? super SELF, ? super EXTR, ? extends Rewrapper<? extends R>> resolver) {
         return andResolve(resolver.andThen(Rewrapper::get));
     }
 
-    public <ID, R extends DataContainer<? super R>> BuilderStep3<SELF, UniObjectNode, R> andProvide(
+    public <ID, R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andProvide(
             VarBind<?, ?, ?, ID> identification,
             BiFunction<? super SELF, ? super ID, ? extends R> resolver,
             GroupBind<R> targetType
@@ -70,7 +70,7 @@ public final class BuilderStep2<SELF extends DataContainer<? super SELF>, EXTR>
         })));
     }
 
-    public <ID, R extends DataContainer<? super R>> BuilderStep3<SELF, UniObjectNode, R> andProvideRef(
+    public <ID, R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andProvideRef(
             VarBind<?, ?, ?, ID> identification,
             BiFunction<? super SELF, ? super ID, ? extends Rewrapper<? extends R>> resolver,
             GroupBind<R> targetType
@@ -78,7 +78,7 @@ public final class BuilderStep2<SELF extends DataContainer<? super SELF>, EXTR>
         return andProvide(identification, resolver.andThen(Rewrapper::get), targetType);
     }
 
-    public <R extends DataContainer<? super R>> BuilderStep3<SELF, UniObjectNode, R> andConstruct(
+    public <R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andConstruct(
             GroupBind<R> targetBind) {
         return Polyfill.uncheckedCast(targetBind.getConstructor()
                 .map(invoc -> andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
