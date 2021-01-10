@@ -25,8 +25,13 @@ public final class UniObjectNodeImpl
     }
 
     @Override
+    public boolean has(String fieldName) {
+        return containsKey(fieldName);
+    }
+
+    @Override
     public boolean containsKey(Object key) {
-        return accessors.streamRefs().anyMatch(ref -> ref.getKey().equals(key));
+        return streamRefs().anyMatch(ref -> ref.getKey().equals(key));
     }
 
     @Override
@@ -76,7 +81,9 @@ public final class UniObjectNodeImpl
         return accessors.compute(key, ref -> {
             if (ref == null)
                 ref = generateAccessor(key);
-            if (value instanceof UniObjectNode || value instanceof UniArrayNode)
+            if (value == null)
+                ref.unset();
+            else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
                 ref.set((UniNode) value);
             else {
                 UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, this, seriLib
@@ -95,7 +102,7 @@ public final class UniObjectNodeImpl
     @NotNull
     @Override
     public Set<String> keySet() {
-        return Collections.unmodifiableSet(accessors.stream()
+        return Collections.unmodifiableSet(streamRefs()
                 .map(Entry::getKey)
                 .collect(Collectors.toSet()));
     }
@@ -103,7 +110,7 @@ public final class UniObjectNodeImpl
     @NotNull
     @Override
     public Collection<Object> values() {
-        return Collections.unmodifiableList(accessors.stream()
+        return Collections.unmodifiableList(streamRefs()
                 .map(Entry::getValue)
                 .collect(Collectors.toList()));
     }
@@ -111,7 +118,7 @@ public final class UniObjectNodeImpl
     @NotNull
     @Override
     public Set<Entry<String, Object>> entrySet() {
-        return Collections.unmodifiableSet(accessors.stream()
+        return Collections.unmodifiableSet(streamRefs()
                 .map(Polyfill::<Map.Entry<String, Object>>uncheckedCast)
                 .collect(Collectors.toSet()));
     }
@@ -130,6 +137,8 @@ public final class UniObjectNodeImpl
 
                 assert getNodeType() == NodeType.OBJECT;
 
+                if (value == null)
+                    return UniValueNode.NULL;
                 if (seriLib.getObjectType().test(value)) {
                     // value is object
                     return seriLib.createUniObjectNode(value);
