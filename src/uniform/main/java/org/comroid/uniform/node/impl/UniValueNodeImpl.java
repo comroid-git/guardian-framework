@@ -55,7 +55,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     public UniValueNodeImpl(String name, SerializationAdapter seriLib, ValueAdapter<Object, Object> valueAdapter) {
-        super(seriLib, Reference.provided(valueAdapter::as);
+        super(seriLib, Reference.provided(valueAdapter::asActualType);
 
         this.name = name;
         this.valueAdapter = valueAdapter;
