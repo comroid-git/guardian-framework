@@ -30,7 +30,7 @@ public final class UniObjectNodeImpl
 
     @Override
     public boolean containsValue(Object value) {
-        return accessors.stream().map(KeyedReference::getValue).anyMatch(value::equals);
+        return accessors.streamRefs().anyMatch(ref -> ref.contentEquals(value));
     }
 
     @Override
