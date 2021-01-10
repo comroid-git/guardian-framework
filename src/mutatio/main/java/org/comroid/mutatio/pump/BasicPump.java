@@ -1,5 +1,7 @@
 package org.comroid.mutatio.pump;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
@@ -53,9 +55,17 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
             add(out.get());
 
         // and then all substages
-        executor.execute(() -> subStages.forEach(sub -> sub.accept(out)));
+        executor.execute(() -> subStages.forEach(sub -> {
+            try {
+                sub.accept(out);
+            } catch (Throwable t) {
+                logger.error("Unhandled exception in Pump", t);
+            }
+        }));
         // compute this once if hasnt already
         if (out.isOutdated())
             out.get();
     }
+
+    private static final Logger logger = LogManager.getLogger();
 }
