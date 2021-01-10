@@ -116,7 +116,7 @@ public final class UniObjectNodeImpl
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs()
-                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(UniNode::asRaw)))
+                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(uniNode -> uniNode.asRaw())))
                 .collect(Collectors.toSet()));
     }
 

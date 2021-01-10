@@ -32,8 +32,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.*;
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 @SuppressWarnings("unchecked")
@@ -60,14 +59,14 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     }
 
     public DataContainerBase(
-            @Nullable UniObjectNode initialData
+            @Nullable UniNode initialData
     ) {
         this(initialData, null, null);
     }
 
     @Contract("_, null, !null -> fail; _, !null, null -> fail")
     public DataContainerBase(
-            @Nullable UniObjectNode initialData,
+            @Nullable UniNode initialData,
             Class<? extends DataContainer<? super S>> containingClass,
             Supplier<S> selfSupplier
     ) {
@@ -148,13 +147,23 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     }
 
     private Set<VarBind<? extends S, Object, ?, Object>> updateVars(
-            @Nullable UniObjectNode data
+            @Nullable UniNode node
     ) {
         //logger.trace("Updating DataContainer with data: {} with {}", toString(), data);
 
-        if (data == null) {
+        if (node == null)
             return emptySet();
+        if (!(node instanceof UniObjectNode)) {
+            List<? extends VarBind<? super S, ?, ?, ?>> binds = rootBind.streamAllChildren().collect(Collectors.toList());
+            VarBind<? extends S, Object, ?, Object> bind = (VarBind<? extends S, Object, ?, Object>) binds.get(0);
+            if (binds.size() == 1 && bind.getFieldName().isEmpty()) {
+                Span<Object> extract = bind.extract(node);
+                getExtractionReference(bind).set(extract);
+                return singleton(bind);
+            }
+            throw new IllegalStateException("Too many binds for root-node based update");
         }
+        UniObjectNode data = node.asObjectNode();
 
         final GroupBind<S> rootBind = getRootBind();
         if (!rootBind.isValidData(data))
