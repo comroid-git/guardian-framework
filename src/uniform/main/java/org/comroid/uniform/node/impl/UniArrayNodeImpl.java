@@ -30,11 +30,6 @@ public final class UniArrayNodeImpl
         return streamNodes().anyMatch(node -> node.asRaw().equals(value));
     }
 
-    @Override
-    public Stream<UniNode> stream() {
-        return streamNodes().map(UniNode.class::cast);
-    }
-
     @NotNull
     @Override
     public Object[] toArray() {

@@ -23,6 +23,11 @@ public interface UniValueNode extends Reference, UniNode, ValuePointer {
     }
 
     @Override
+    default Stream<? extends UniNode> streamNodes() {
+        return Stream.of(this);
+    }
+
+    @Override
     default boolean isNull() {
         return getNodeType() == null;
     }

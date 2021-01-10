@@ -99,10 +99,6 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     @Override
-    public Stream<? extends UniNode> streamNodes() {
-        return streamRefs().flatMap(Rewrapper::stream);
-    }
-
     public Stream<Ref> streamRefs() {
         return streamKeys().map(this::generateAccessor);
     }

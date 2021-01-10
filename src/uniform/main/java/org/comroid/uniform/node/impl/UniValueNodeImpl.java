@@ -43,11 +43,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Stream<? extends UniNode> streamNodes() {
-        return Stream.of(this);
-    }
-
-    @Override
     public Collection<? extends CachedValue<?>> getDependents() {
         return baseNode.getDependents();
     }

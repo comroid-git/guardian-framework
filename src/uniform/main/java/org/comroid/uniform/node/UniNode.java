@@ -3,6 +3,7 @@ package org.comroid.uniform.node;
 import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.SerializationAdapterHolder;
@@ -293,7 +294,11 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
         return streamNodes();
     }
 
-    Stream<? extends UniNode> streamNodes();
+    default Stream<? extends UniNode> streamNodes() {
+        return streamRefs().flatMap(Reference::stream);
+    }
+
+    Stream<? extends Reference<? extends UniNode>> streamRefs();
 
     default UniObjectNode asObjectNode() {
         return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.OBJECT));

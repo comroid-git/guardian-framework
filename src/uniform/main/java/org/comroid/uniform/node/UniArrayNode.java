@@ -1,5 +1,6 @@
 package org.comroid.uniform.node;
 
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.model.NodeType;
 
 import java.util.List;
@@ -13,6 +14,6 @@ public interface UniArrayNode extends List<UniNode>, UniNode {
 
     @Override
     default Stream<UniNode> stream() {
-        return streamNodes().map(UniNode.class::cast);
+        return streamRefs().flatMap(Reference::stream);
     }
 }
