@@ -2,7 +2,6 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.HeldType;
 import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
@@ -196,16 +195,9 @@ public final class UniArrayNodeImpl
 
             @Override
             protected boolean doSet(UniNode value) {
-                switch (value.getNodeType()) {
-                    case OBJECT:
-                        Map<String, Object> map = new HashMap<>(value.asObjectNode());
-                        return baseNode.set(key, map) != value;
-                    case ARRAY:
-                        ArrayList<UniNode> list = new ArrayList<>(value.asArrayNode());
-                        return baseNode.set(key, list) != value;
-                }
-
-                return baseNode.set(key, value.asRaw(null)) != value;
+                if (value instanceof UniValueNode)
+                    return baseNode.set(key, value.asRaw()) != value;
+                return baseNode.set(key, value.getBaseNode()) != value;
             }
         };
     }

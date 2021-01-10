@@ -148,16 +148,9 @@ public final class UniObjectNodeImpl
 
             @Override
             protected boolean doSet(UniNode value) {
-                switch (value.getNodeType()) {
-                    case OBJECT:
-                        Map<String, Object> map = new HashMap<>(value.asObjectNode());
-                        return baseNode.put(key, map) != value;
-                    case ARRAY:
-                        ArrayList<UniNode> list = new ArrayList<>(value.asArrayNode());
-                        return baseNode.put(key, list) != value;
-                }
-
-                return baseNode.put(key, value.asRaw(null)) != value;
+                if (value instanceof UniValueNode)
+                    return baseNode.put(key, value.asRaw()) != value;
+                return baseNode.put(key, value.getBaseNode()) != value;
             }
         };
     }

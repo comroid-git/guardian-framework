@@ -59,6 +59,11 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     @Override
+    public Object getBaseNode() {
+        return baseNode;
+    }
+
+    @Override
     public Rewrapper<? extends UniNode> getParentNode() {
         return parent == null ? Rewrapper.empty() : () -> parent;
     }

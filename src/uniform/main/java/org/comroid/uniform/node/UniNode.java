@@ -46,7 +46,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     }
 
     default boolean isNull() {
-        return unsupported(this, "IS_NULL", NodeType.VALUE);
+        return this == UniValueNode.NULL || size() == 0;
     }
 
     default String getMimeType() {
@@ -311,4 +311,6 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     default UniValueNode asValueNode() {
         return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.VALUE));
     }
+
+    Object getBaseNode();
 }
