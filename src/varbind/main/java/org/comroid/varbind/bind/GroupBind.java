@@ -179,23 +179,22 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             if (fitting.length == 1)
                 //noinspection unchecked
                 return (Optional<GroupBind<? extends T>>) fitting[0].findGroupForData(data);
-
-            throw new UnsupportedOperationException(String.format(
-                    "%s fitting subgroups found: %s",
-                    (fitting.length == 0 ? "No" : "Too many"),
-                    Arrays.toString(fitting)
-            ));
+            throw new UnsupportedOperationException(String
+                    .format("No fitting subgroups found for parent: %s with data %s", toString(), data.toString()));
         } else return Optional.empty();
     }
 
     public boolean isValidData(UniObjectNode data) {
-        return streamAllChildren().allMatch(bind -> data.has(bind.getFieldName()) || !bind.isRequired());
+        return streamAllChildren().allMatch(bind -> {
+            final boolean has = data.has(bind.getFieldName());
+            final boolean required = bind.isRequired();
+            return has || !required;
+        });
     }
 
     public Stream<? extends VarBind<? super T, ?, ?, ?>> streamAllChildren() {
         return Stream.concat(
-                getParents().stream()
-                        .flatMap(GroupBind::streamAllChildren),
+                getParents().stream().flatMap(GroupBind::streamAllChildren),
                 children.stream())
                 .map(Polyfill::<VarBind<? super T, ?, ?, ?>>uncheckedCast)
                 .distinct();

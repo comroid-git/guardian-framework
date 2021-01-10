@@ -121,6 +121,8 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
             @Override
             protected UniNode doGet() {
                 final Object value = valueAdapter.asActualType();
+                if (value == null)
+                    return UniValueNode.NULL;
                 assert getNodeType() == NodeType.VALUE;
                 return new UniValueNodeImpl(name, seriLib, null, valueAdapter);
             }

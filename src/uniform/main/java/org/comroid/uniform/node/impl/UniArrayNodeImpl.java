@@ -10,6 +10,7 @@ import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +60,7 @@ public final class UniArrayNodeImpl
 
     @Override
     public boolean containsAll(@NotNull Collection<?> other) {
-        return accessors.stream().allMatch(other::contains);
+        return streamRefs().allMatch(other::contains);
     }
 
     @Override
@@ -104,7 +105,9 @@ public final class UniArrayNodeImpl
         return Objects.requireNonNull(accessors.compute(index, ref -> {
             if (ref == null)
                 ref = generateAccessor(index);
-            if (value instanceof UniObjectNode || value instanceof UniArrayNode)
+            if (value == null)
+                ref.unset();
+            else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
                 ref.set((UniNode) value);
             else {
                 UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, this, seriLib
@@ -180,6 +183,8 @@ public final class UniArrayNodeImpl
 
                 assert getNodeType() == NodeType.ARRAY;
 
+                if (value == null)
+                    return UniValueNode.NULL;
                 if (seriLib.getObjectType().test(value)) {
                     // value is object
                     return seriLib.createUniObjectNode(value);

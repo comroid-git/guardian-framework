@@ -73,8 +73,6 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         accessors.clear();
     }
 
-
-
     @Override
     public @NotNull UniNode get(int index) {
         return wrapKey(index).ifPresentMapOrElseGet(this::getAccessor, () -> UniValueNode.NULL);
