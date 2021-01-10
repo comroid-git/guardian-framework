@@ -79,7 +79,7 @@ public abstract class ValueAdapter<B, T> implements ContextualProvider.Member {
 
     public abstract T asActualType();
 
-    public abstract boolean doSet(T newValue);
+    protected abstract boolean doSet(T newValue);
 
     public boolean set(T newValue) {
         return !actualType.test(type -> type.test(newValue))
