@@ -65,8 +65,7 @@ public abstract class ValueAdapter<B, T> {
             return uncheckedCast(asShort());
         if (VOID.equals(type))
             return null;
-        return actualType.assertion("Actual Type could not be computed")
-                .convert(asActualType(), type);
+        throw new UnsupportedOperationException("Unsupported Type: " + type);
     }
 
     public abstract T asActualType();
@@ -117,9 +116,10 @@ public abstract class ValueAdapter<B, T> {
     private <R> R returnAsType(ValueType<R> type) {
         if (type.equals(VOID))
             return null;
-        if (type.equals(actualType))
+        if (actualType.contentEquals(type))
             return uncheckedCast(asActualType());
-        final R result = asType(type);
+        // need conversion
+        final R result = actualType.assertion("Actual Type could not be computed").convert(asActualType(), type);
         if (result == null)
             throw new IllegalArgumentException(String.format("Cannot convert data to type: %s to %s", asActualType(), type));
         return result;
