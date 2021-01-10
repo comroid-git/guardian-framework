@@ -108,6 +108,7 @@ public final class UniObjectNodeImpl
     public Collection<Object> values() {
         return Collections.unmodifiableList(streamRefs()
                 .map(Entry::getValue)
+                .map(UniNode::asRaw)
                 .collect(Collectors.toList()));
     }
 
@@ -115,7 +116,7 @@ public final class UniObjectNodeImpl
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs()
-                .map(Polyfill::<Map.Entry<String, Object>>uncheckedCast)
+                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.getValue().asRaw()))
                 .collect(Collectors.toSet()));
     }
 
