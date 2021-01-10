@@ -12,6 +12,7 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import sun.jvm.hotspot.gc.shared.CardGeneration;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -22,7 +23,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     private final UniNode parent;
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
-    protected final ReferenceMap<? super AcK, Ref> accessors = new ReferenceMap.Support.Basic<>(
+    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap.Support.Basic<>(
             new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
 
     @Override
@@ -53,6 +54,11 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     protected abstract Stream<AcK> streamKeys();
 
     @Override
+    public Stream<Ref> streamRefs() {
+        return streamKeys().map(this::generateAccessor);
+    }
+
+    @Override
     public Rewrapper<? extends UniNode> getParentNode() {
         return parent == null ? Rewrapper.empty() : () -> parent;
     }
@@ -69,7 +75,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public void clear() {
-        accessors.forEach((k, ref) -> ref.unset());
+        accessors.streamRefs().forEach(Reference::unset);
         accessors.clear();
     }
 
@@ -95,11 +101,6 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public UniNode copyFrom(@NotNull UniNode it) {
         return null; // todo
-    }
-
-    @Override
-    public Stream<Ref> streamRefs() {
-        return streamKeys().map(this::generateAccessor);
     }
 
     @NotNull

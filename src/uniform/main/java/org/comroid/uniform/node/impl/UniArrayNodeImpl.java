@@ -103,28 +103,25 @@ public final class UniArrayNodeImpl
     @Override
     public @NotNull <T> UniNode put(final int index, HeldType<T> type, T value) throws UnsupportedOperationException {
         return Objects.requireNonNull(accessors.compute(index, ref -> {
-            if (ref == null)
-                ref = generateAccessor(index);
             if (value == null)
-                ref.unset();
+                return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
-                ref.set((UniNode) value);
+                return (UniNode) value;
             else {
                 UniValueNodeImpl valueNode = new UniValueNodeImpl(String.valueOf(index), seriLib, this, seriLib
                         .createValueAdapter(value, nv -> baseNode.set(index, nv) != nv));
-                ref.set(valueNode);
+                return valueNode;
             }
-            return ref;
-        })).getValue();
+        }));
     }
 
     @Override
     public UniNode remove(int index) {
-        KeyedReference<? super Integer, KeyedReference<Integer, UniNode>> ref
+        KeyedReference<Integer, UniNode> ref
                 = accessors.getReference(index, false);
         UniNode node = null;
         if (ref != null) {
-            node = ref.into(Rewrapper::get);
+            node = ref.get();
             ref.unset();
         }
         return node;
@@ -133,7 +130,7 @@ public final class UniArrayNodeImpl
     @Override
     public int indexOf(Object other) {
         for (int i = 0; i < accessors.size(); i++) {
-            if (other.equals(accessors.get(i).getValue()))
+            if (other.equals(accessors.get(i)))
                 return i;
         }
         return -1;
@@ -142,7 +139,7 @@ public final class UniArrayNodeImpl
     @Override
     public int lastIndexOf(Object other) {
         for (int i = size() - 1; i >= 0; i--) {
-            if (other.equals(accessors.get(i).getValue()))
+            if (other.equals(accessors.get(i)))
                 return i;
         }
         return -1;

@@ -47,7 +47,7 @@ public final class UniObjectNodeImpl
 
     @Override
     public Object get(Object key) {
-        return wrapKey(key).ifPresentMap(accessors::get).getValue();
+        return wrapKey(key).ifPresentMap(accessors::get);
     }
 
     @Nullable
@@ -64,11 +64,10 @@ public final class UniObjectNodeImpl
 
     @Override
     public Object remove(Object key) {
-        KeyedReference<? super String, KeyedReference<String, UniNode>> ref
-                = wrapKey(key).ifPresentMap(accessors::getReference);
+        KeyedReference<String, UniNode> ref = wrapKey(key).ifPresentMap(accessors::getReference);
         UniNode node = null;
         if (ref != null) {
-            node = ref.into(Rewrapper::get);
+            node = ref.get();
             ref.unset();
         }
         return node;
@@ -79,19 +78,16 @@ public final class UniObjectNodeImpl
             throws UnsupportedOperationException {
         //noinspection ConstantConditions
         return accessors.compute(key, ref -> {
-            if (ref == null)
-                ref = generateAccessor(key);
             if (value == null)
-                ref.unset();
+                return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
-                ref.set((UniNode) value);
+                return (UniNode) value;
             else {
                 UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, this, seriLib
                         .createValueAdapter(value, nv -> baseNode.put(key, nv) != nv));
-                ref.set(valueNode);
+                return valueNode;
             }
-            return ref;
-        }).getValue();
+        });
     }
 
     @Override
@@ -169,7 +165,7 @@ public final class UniObjectNodeImpl
     protected Stream<String> streamKeys() {
         return Stream.concat(
                 baseNode.keySet().stream(),
-                accessors.stream().map(Map.Entry::getKey
-                )).distinct();
+                accessors.stream(any -> true).map(Map.Entry::getKey)
+        ).distinct();
     }
 }
