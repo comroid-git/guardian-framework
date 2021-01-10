@@ -7,6 +7,7 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
@@ -90,7 +91,7 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
 
     @Override
     public boolean has(String fieldName) {
-        return wrapKey(fieldName).testIfPresent(accessors::containsKey);
+        return UniNode.unsupported(this, "HAS_KEY", NodeType.OBJECT);
     }
 
     @Override
