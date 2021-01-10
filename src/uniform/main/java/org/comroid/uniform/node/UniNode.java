@@ -3,21 +3,20 @@ package org.comroid.uniform.node;
 import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
-import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.SerializationAdapterHolder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode>, Named {
     @Internal
-    static <T> T unsupported(UniNode it, String actionName, Type expected) throws UnsupportedOperationException {
+    static <T> T unsupported(UniNode it, String actionName, NodeType expected) throws UnsupportedOperationException {
         throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",
                 actionName,
                 it.getNodeType(),
@@ -30,22 +29,22 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
         return toString();
     }
 
-    Type getNodeType();
+    NodeType getNodeType();
 
     default boolean isObjectNode() {
-        return getNodeType() == Type.OBJECT;
+        return getNodeType() == NodeType.OBJECT;
     }
 
     default boolean isArrayNode() {
-        return getNodeType() == Type.ARRAY;
+        return getNodeType() == NodeType.ARRAY;
     }
 
     default boolean isValueNode() {
-        return getNodeType() == Type.VALUE;
+        return getNodeType() == NodeType.VALUE;
     }
 
     default boolean isNull() {
-        return unsupported(this, "IS_NULL", Type.VALUE);
+        return unsupported(this, "IS_NULL", NodeType.VALUE);
     }
 
     default String getMimeType() {
@@ -108,7 +107,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull
     default <T> UniNode put(int index, HeldType<T> type, T value) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_INDEX", Type.ARRAY);
+        return unsupported(this, "PUT_INDEX", NodeType.ARRAY);
     }
 
     @NotNull
@@ -118,7 +117,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull
     default <T> UniNode put(String key, HeldType<T> type, T value) throws UnsupportedOperationException {
-        return unsupported(this, "PUT_KEY", Type.OBJECT);
+        return unsupported(this, "PUT_KEY", NodeType.OBJECT);
     }
 
     @NotNull
@@ -186,11 +185,11 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_RAW", Type.VALUE);
+        return unsupported(this, "GET_RAW", NodeType.VALUE);
     }
 
     default <R> R as(ValueType<R> type) {
-        return unsupported(this, "GET_AS", Type.VALUE);
+        return unsupported(this, "GET_AS", NodeType.VALUE);
     }
 
     default String asString() {
@@ -202,7 +201,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_STRING", Type.VALUE);
+        return unsupported(this, "GET_AS_STRING", NodeType.VALUE);
     }
 
     default boolean asBoolean() {
@@ -214,7 +213,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_BOOLEAN", Type.VALUE);
+        return unsupported(this, "GET_AS_BOOLEAN", NodeType.VALUE);
     }
 
     default int asInt() {
@@ -226,7 +225,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_INT", Type.VALUE);
+        return unsupported(this, "GET_AS_INT", NodeType.VALUE);
     }
 
     default long asLong() {
@@ -238,7 +237,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_LONG", Type.VALUE);
+        return unsupported(this, "GET_AS_LONG", NodeType.VALUE);
     }
 
     default double asDouble() {
@@ -250,7 +249,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_DOUBLE", Type.VALUE);
+        return unsupported(this, "GET_AS_DOUBLE", NodeType.VALUE);
     }
 
     default float asFloat() {
@@ -262,7 +261,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_FLOAT", Type.VALUE);
+        return unsupported(this, "GET_AS_FLOAT", NodeType.VALUE);
     }
 
     default short asShort() {
@@ -274,7 +273,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_SHORT", Type.VALUE);
+        return unsupported(this, "GET_AS_SHORT", NodeType.VALUE);
     }
 
     default char asChar() {
@@ -286,7 +285,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
             return fallback;
         }
 
-        return unsupported(this, "GET_AS_CHAR", Type.VALUE);
+        return unsupported(this, "GET_AS_CHAR", NodeType.VALUE);
     }
 
     default Stream<? extends UniNode> stream() {
@@ -296,26 +295,14 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     Stream<? extends UniNode> streamNodes();
 
     default UniObjectNode asObjectNode() {
-        return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.OBJECT));
+        return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.OBJECT));
     }
 
     default UniArrayNode asArrayNode() {
-        return as(UniArrayNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.ARRAY));
+        return as(UniArrayNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.ARRAY));
     }
 
     default UniValueNode asValueNode() {
-        return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), Type.VALUE));
-    }
-
-    enum Type {
-        OBJECT(DataStructureType.Primitive.OBJECT),
-        ARRAY(DataStructureType.Primitive.ARRAY),
-        VALUE(null);
-
-        public final @Nullable DataStructureType.Primitive dst;
-
-        Type(@Nullable DataStructureType.Primitive primitive) {
-            this.dst = primitive;
-        }
+        return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.VALUE));
     }
 }

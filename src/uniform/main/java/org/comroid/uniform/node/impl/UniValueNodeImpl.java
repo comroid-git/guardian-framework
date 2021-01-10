@@ -7,6 +7,7 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.Nullable;
@@ -110,7 +111,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get();
-                assert getNodeType() == Type.VALUE;
+                assert getNodeType() == NodeType.VALUE;
                 return new UniValueNodeImpl(name, seriLib, baseNode, type);
             }
 

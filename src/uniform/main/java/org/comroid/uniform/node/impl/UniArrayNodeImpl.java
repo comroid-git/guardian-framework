@@ -7,6 +7,7 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -179,7 +180,7 @@ public final class UniArrayNodeImpl
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);
-                assert getNodeType() == Type.ARRAY;
+                assert getNodeType() == NodeType.ARRAY;
                 assert value instanceof List;
                 //noinspection unchecked
                 return new UniArrayNodeImpl(seriLib, ((List<Object>) value));

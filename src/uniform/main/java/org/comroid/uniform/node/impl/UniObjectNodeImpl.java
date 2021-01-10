@@ -7,6 +7,7 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -119,7 +120,7 @@ public final class UniObjectNodeImpl
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);
-                assert getNodeType() == Type.OBJECT;
+                assert getNodeType() == NodeType.OBJECT;
                 assert value instanceof Map;
                 //noinspection unchecked
                 return new UniObjectNodeImpl(seriLib, ((Map<String, Object>) value));

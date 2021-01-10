@@ -4,6 +4,7 @@ import org.comroid.api.ValuePointer;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.ValueType;
+import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.impl.StandardValueType;
 
 import java.util.stream.Stream;
@@ -12,8 +13,8 @@ public interface UniValueNode extends Reference, UniNode, ValuePointer {
     UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override
-    default Type getNodeType() {
-        return Type.VALUE;
+    default NodeType getNodeType() {
+        return NodeType.VALUE;
     }
 
     @Override
