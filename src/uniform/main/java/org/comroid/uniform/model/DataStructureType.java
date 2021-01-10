@@ -109,20 +109,12 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
     }
 
     public static class Obj<BAS, OBJ extends BAS> extends DstBase<BAS, OBJ, UniObjectNode> {
-        public Obj(SerializationAdapter seriLib, final Class<? extends OBJ> tarClass) {
-            this(seriLib, tarClass, () -> Invocable.newInstance(tarClass));
-        }
-
         public Obj(SerializationAdapter seriLib, Class<? extends OBJ> tarClass, Supplier<? extends OBJ> instanceFactory) {
             super(seriLib, tarClass, instanceFactory, Primitive.OBJECT);
         }
     }
 
     public static class Arr<BAS, ARR extends BAS> extends DstBase<BAS, ARR, UniArrayNode> {
-        public Arr(SerializationAdapter seriLib, Class<? extends ARR> tarClass) {
-            this(seriLib, tarClass, () -> Invocable.newInstance(tarClass));
-        }
-
         public Arr(SerializationAdapter seriLib, Class<? extends ARR> tarClass, Supplier<? extends ARR> instanceFactory) {
             super(seriLib, tarClass, instanceFactory, Primitive.ARRAY);
         }

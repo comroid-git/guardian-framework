@@ -23,7 +23,7 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
             = new JavaPropertiesSerializationAdapter();
 
     private JavaPropertiesSerializationAdapter() {
-        super("text/x-java-propertie", Properties.class, null);
+        super("text/x-java-propertie", Properties.class, Properties::new, null, () -> null);
     }
 
     @Override

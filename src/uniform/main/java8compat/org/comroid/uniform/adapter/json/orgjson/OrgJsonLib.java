@@ -20,7 +20,7 @@ public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONO
     final OrgJsonLib orgJsonLib = new OrgJsonLib();
 
     protected OrgJsonLib() {
-        super("application/json", JSONObject.class, JSONArray.class);
+        super("application/json", JSONObject.class, JSONObject::new, JSONArray.class, JSONArray::new);
     }
 
     @Override

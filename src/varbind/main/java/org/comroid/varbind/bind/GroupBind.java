@@ -185,11 +185,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public boolean isValidData(UniObjectNode data) {
-        return streamAllChildren().allMatch(bind -> {
-            final boolean has = data.has(bind.getFieldName());
-            final boolean required = bind.isRequired();
-            return has || !required;
-        });
+        return streamAllChildren().allMatch(bind -> data.has(bind.getFieldName()) || !bind.isRequired());
     }
 
     public Stream<? extends VarBind<? super T, ?, ?, ?>> streamAllChildren() {

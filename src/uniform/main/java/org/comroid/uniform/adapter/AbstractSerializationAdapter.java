@@ -36,25 +36,13 @@ public abstract class AbstractSerializationAdapter<BAS, OBJ extends BAS, ARR ext
     protected AbstractSerializationAdapter(
             String mimeType,
             Class<? extends OBJ> objType,
-            Class<? extends ARR> arrType
-    ) {
-        this(mimeType, objType, null, arrType, null);
-    }
-
-    protected AbstractSerializationAdapter(
-            String mimeType,
-            Class<? extends OBJ> objType,
-            @Nullable Supplier<? extends OBJ> objFactory,
+            Supplier<? extends OBJ> objFactory,
             Class<? extends ARR> arrType,
-            @Nullable Supplier<? extends ARR> arrFactory
+            Supplier<? extends ARR> arrFactory
     ) {
         this.mimeType = mimeType;
-        this.objectType = (objFactory == null
-                ? new DataStructureType.Obj<>(this, objType)
-                : new DataStructureType.Obj<>(this, objType, objFactory));
-        this.arrayType = (arrFactory == null
-                ? new DataStructureType.Arr<>(this, arrType)
-                : new DataStructureType.Arr<>(this, arrType, arrFactory));
+        this.objectType = new DataStructureType.Obj<>(this, objType, objFactory);
+        this.arrayType = new DataStructureType.Arr<>(this, arrType, arrFactory);
         this.valueType = new DataStructureType<Object, Object, UniValueNode>(this, Object.class, null) {
             @Override
             public Object get() {
