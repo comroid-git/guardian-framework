@@ -1,6 +1,7 @@
 package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.Builder;
+import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.uniform.ValueType;
@@ -9,6 +10,8 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -81,11 +84,24 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
     }
 
     public <R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andConstruct(
-            GroupBind<R> targetBind) {
-        return Polyfill.uncheckedCast(targetBind.getConstructor()
-                .map(invoc -> andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
-                        uncheckedCast((BiFunction<SELF, UniObjectNode, R>) invoc::autoInvoke)))
-                .orElseThrow(() -> new IllegalArgumentException(targetBind + " has no available Constructor")));
+            GroupBind<R> targetBind
+    ) {
+        // todo Jesus christ for the sake of the good lord, what the fuck is this (it works tho)
+
+        Optional<Invocable<? extends R>> constructor = targetBind.getConstructor();
+        if (constructor.isPresent())
+            return Polyfill.uncheckedCast(targetBind.getConstructor()
+                    .map(invoc -> andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
+                            uncheckedCast((BiFunction<SELF, UniObjectNode, R>) invoc::autoInvoke)))
+                    .orElseThrow(() -> new IllegalArgumentException(targetBind + " has no available Constructor")));
+        //noinspection unchecked
+        return (BuilderStep3$Finishing<SELF, UniObjectNode, R>) andResolve
+                (Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>uncheckedCast(
+                        (BiFunction<SELF, UniObjectNode, R>) (SELF it, UniObjectNode data) -> targetBind.findGroupForData(data)
+                                .flatMap(GroupBind::getConstructor)
+                                .orElseThrow(() -> new NoSuchElementException(String
+                                        .format("Could not find matching constructor in group for data: %s in %s", targetBind, data)))
+                                .autoInvoke(it, data)));
     }
 
     @Override
