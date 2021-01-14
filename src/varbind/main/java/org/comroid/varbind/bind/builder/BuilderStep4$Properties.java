@@ -60,7 +60,6 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
         return setRequired(false);
     }
 
-    @Override
     public VarBind<SELF, EXTR, REMAP, FINAL> build() {
         if (valueType == null)
             throw new IllegalArgumentException("ValueType is Missing!");

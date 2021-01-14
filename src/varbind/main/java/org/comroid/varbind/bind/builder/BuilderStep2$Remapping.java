@@ -1,5 +1,6 @@
 package org.comroid.varbind.bind.builder;
 
+import org.comroid.api.Builder;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.uniform.ValueType;
@@ -12,7 +13,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SELF>, EXTR>
-        extends VarBindBuilderComponent<SELF, EXTR, Void, Void> {
+        extends VarBindBuilderComponent<SELF, EXTR, Void, Void>
+        implements Builder<VarBind<SELF, EXTR, EXTR, EXTR>> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
 
@@ -84,5 +86,10 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
                 .map(invoc -> andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
                         uncheckedCast((BiFunction<SELF, UniObjectNode, R>) invoc::autoInvoke)))
                 .orElseThrow(() -> new IllegalArgumentException(targetBind + " has no available Constructor")));
+    }
+
+    @Override
+    public VarBind<SELF, EXTR, EXTR, EXTR> build() {
+        return asIdentities().build();
     }
 }

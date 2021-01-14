@@ -1,5 +1,6 @@
 package org.comroid.varbind.bind.builder;
 
+import org.comroid.api.Builder;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.ValueType;
@@ -13,7 +14,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SELF>, EXTR, REMAP>
-        extends VarBindBuilderComponent<SELF, EXTR, REMAP, Void> {
+        extends VarBindBuilderComponent<SELF, EXTR, REMAP, Void>
+        implements Builder<VarBind<SELF, EXTR, REMAP, REMAP>> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> resolver;
@@ -66,5 +68,10 @@ public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SEL
             col.addAll(span);
             return Polyfill.uncheckedCast(col);
         });
+    }
+
+    @Override
+    public VarBind<SELF, EXTR, REMAP, REMAP> build() {
+        return onceEach().build();
     }
 }
