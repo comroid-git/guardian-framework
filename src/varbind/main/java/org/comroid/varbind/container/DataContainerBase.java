@@ -167,7 +167,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
 
         final GroupBind<S> rootBind = getRootBind();
         if (!rootBind.isValidData(data))
-            throw new IllegalArgumentException(String.format("Data is invalid for type '%s': %s", rootBind, data));
+            throw new IllegalArgumentException(String.format("Data is invalid for type '%s': %s", rootBind, data.toString()));
 
         final HashSet<VarBind<? extends S, Object, ?, Object>> changed = new HashSet<>();
 
