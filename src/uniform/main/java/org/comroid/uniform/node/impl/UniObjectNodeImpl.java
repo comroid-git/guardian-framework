@@ -1,8 +1,6 @@
 package org.comroid.uniform.node.impl;
 
-import org.comroid.api.HeldType;
-import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
+import org.comroid.api.*;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;

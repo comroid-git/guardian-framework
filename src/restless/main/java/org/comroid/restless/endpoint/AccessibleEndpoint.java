@@ -17,7 +17,20 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public interface AccessibleEndpoint extends RatelimitedEndpoint, WrappedFormattable, Predicate<String> {
+public interface AccessibleEndpoint extends RatelimitedEndpoint, CompleteEndpoint, WrappedFormattable, Predicate<String> {
+    @Override
+    default AccessibleEndpoint getEndpoint() {
+        return this;
+    }
+
+    @Override
+    default String getSpec() {
+        int count = getParameterCount();
+        if (count == 0)
+            return getFullUrl();
+        throw new IllegalStateException(String.format("Endpoint requires %d arguments!", count));
+    }
+
     @Override
     default String getDefaultFormattedName() {
         return getFullUrl();
