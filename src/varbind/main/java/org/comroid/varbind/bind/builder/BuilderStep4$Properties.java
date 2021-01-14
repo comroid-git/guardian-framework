@@ -70,8 +70,6 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
             throw new IllegalArgumentException("No Remapping method defined");
         if (finisher == null)
             throw new IllegalArgumentException("No Finishing method defined");
-        if (finisher.apply(new Span<>()) instanceof Collection && extractionMethod != VarBind.ExtractionMethod.ARRAY)
-            throw new IllegalArgumentException("Finisher returns Collection but extraction method is not ARRAY");
         Binding<SELF, EXTR, REMAP, FINAL> binding
                 = new Binding<>(group, fieldName, required, valueType, extractionMethod, resolver, finisher);
         group.addChild(binding);

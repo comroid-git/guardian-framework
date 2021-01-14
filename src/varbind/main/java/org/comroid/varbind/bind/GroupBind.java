@@ -123,14 +123,16 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static <T extends DataContainer<? super T>> GroupBind<T> combine(
             String groupName,
             GroupBind<? super T>... parents
     ) {
-        return combine(groupName, null, parents);
+        return combine(groupName, Invocable.ofClass(Polyfill.uncheckedCast(StackTraceUtils.callerClass(1))), parents);
     }
 
     @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static <T extends DataContainer<? super T>> GroupBind<T> combine(
             String groupName,
             Invocable<? extends T> invocable,
