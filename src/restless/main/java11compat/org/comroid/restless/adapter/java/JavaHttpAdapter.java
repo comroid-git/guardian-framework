@@ -38,6 +38,7 @@ public final class JavaHttpAdapter implements HttpAdapter {
         final HttpRequest.BodyPublisher publisher = request.getMethod() == REST.Method.GET
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(request.getBody(), StandardCharsets.UTF_8);
+        builder.method(request.getMethod().name(), publisher);
 
         return httpClient.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
                 .thenApply(response -> {
