@@ -22,7 +22,7 @@ public final class BasicJavaHttpAdapter implements HttpAdapter {
     }
 
     @Override
-    public CompletableFuture<REST.Response> call(REST.Request req, String mimeType) {
+    public CompletableFuture<REST.Response> call(REST.Request req) {
         final URL url = req.getEndpoint().getURL();
 
         try {
@@ -30,7 +30,6 @@ public final class BasicJavaHttpAdapter implements HttpAdapter {
             final HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(req.getMethod().getName());
             req.getHeaders().forEach(con::setRequestProperty);
-            con.setRequestProperty(CommonHeaderNames.REQUEST_CONTENT_TYPE, mimeType);
             con.setUseCaches(false);
             con.setDoOutput(true);
 

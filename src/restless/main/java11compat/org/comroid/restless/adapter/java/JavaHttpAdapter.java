@@ -1,5 +1,7 @@
 package org.comroid.restless.adapter.java;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
@@ -16,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public final class JavaHttpAdapter implements HttpAdapter {
+    private static final Logger logger = LogManager.getLogger();
     private final HttpClient httpClient;
 
     public JavaHttpAdapter() {
@@ -28,9 +31,8 @@ public final class JavaHttpAdapter implements HttpAdapter {
     }
 
     @Override
-    public CompletableFuture<REST.Response> call(REST.Request request, String mimeType) {
-        final HttpRequest.Builder builder = HttpRequest.newBuilder(request.getEndpoint().getURI())
-                .header(CommonHeaderNames.REQUEST_CONTENT_TYPE, mimeType);
+    public CompletableFuture<REST.Response> call(REST.Request request) {
+        final HttpRequest.Builder builder = HttpRequest.newBuilder(request.getEndpoint().getURI());
 
         request.getHeaders().forEach(builder::header);
         final HttpRequest.BodyPublisher publisher = request.getMethod() == REST.Method.GET

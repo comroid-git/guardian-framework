@@ -81,7 +81,7 @@ public interface AccessibleEndpoint extends RatelimitedEndpoint, CompleteEndpoin
             throw new IllegalArgumentException("Invalid argument count");
         }
 
-        final String format = String.format(getFullUrl(), args);
+        String format = String.format(getFullUrl(), args);
 
         if (test(format))
             return format;

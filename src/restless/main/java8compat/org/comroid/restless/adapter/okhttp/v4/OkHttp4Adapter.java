@@ -1,6 +1,7 @@
 package org.comroid.restless.adapter.okhttp.v4;
 
 import okhttp3.*;
+import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
 import org.comroid.uniform.SerializationAdapter;
@@ -20,7 +21,7 @@ public final class OkHttp4Adapter implements HttpAdapter {
     }
 
     @Override
-    public CompletableFuture<REST.Response> call(REST.Request request, String mimeType) {
+    public CompletableFuture<REST.Response> call(REST.Request request) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 final REST.Method requestMethod = request.getMethod();
@@ -30,7 +31,7 @@ public final class OkHttp4Adapter implements HttpAdapter {
                         // only support null body for GET method, else throw
                         .method(requestMethod.toString(), (
                                 requestBody == null && requestMethod == REST.Method.GET ? null : RequestBody.create(
-                                        MediaType.parse(mimeType),
+                                        MediaType.parse(request.getHeaders().get(CommonHeaderNames.REQUEST_CONTENT_TYPE)),
                                         Objects.requireNonNull(requestBody, "Null body not supported with " + requestMethod)
                                 )
                         ));

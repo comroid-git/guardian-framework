@@ -156,7 +156,7 @@ public final class UniObjectNodeImpl
     @Override
     protected Stream<String> streamKeys() {
         return Stream.concat(
-                baseNode.keySet().stream(),
+                baseNode.keySet().stream().filter(key -> baseNode.get(key) != null),
                 accessors.stream(any -> true).map(Map.Entry::getKey)
         ).distinct();
     }

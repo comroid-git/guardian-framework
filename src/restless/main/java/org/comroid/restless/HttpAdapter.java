@@ -15,5 +15,5 @@ public interface HttpAdapter extends ContextualProvider.This {
 
     CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers);
 
-    CompletableFuture<REST.Response> call(REST.Request request, String mimeType);
+    CompletableFuture<REST.Response> call(REST.Request request);
 }

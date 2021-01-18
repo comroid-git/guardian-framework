@@ -115,7 +115,7 @@ public final class REST implements ContextualProvider.Underlying {
     public <T extends DataContainer<? super T>> Request<T> request(GroupBind<T> group) {
         //noinspection unchecked
         return request((Invocable<T>) Polyfill.uncheckedCast(group.getConstructor()
-                .orElseThrow(() -> new NoSuchElementException("No constructor applied to GroupBind"))));
+                .orElseThrow(() -> new NoSuchElementException("No constructor applied to GroupBind " + group))));
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(TypeBoundEndpoint<T> endpoint) {
@@ -167,6 +167,11 @@ public final class REST implements ContextualProvider.Underlying {
             this.value = value;
         }
 
+        @Override
+        public String toString() {
+            return String.format("{%s=%s}", name, value);
+        }
+
         public static final class List extends ArrayList<Header> {
             public static List of(Headers headers) {
                 final List list = new List();
@@ -197,6 +202,11 @@ public final class REST implements ContextualProvider.Underlying {
 
             public void forEach(BiConsumer<String, String> action) {
                 forEach(header -> action.accept(header.getName(), header.getValue()));
+            }
+
+            @Override
+            public String toString() {
+                return Arrays.toString(toArray());
             }
         }
     }
@@ -416,6 +426,9 @@ public final class REST implements ContextualProvider.Underlying {
         public Request(Invocable<T> tProducer) {
             this.tProducer = tProducer;
             this.headers = new Header.List();
+
+            addHeader(CommonHeaderNames.REQUEST_CONTENT_TYPE, requireFromContext(SerializationAdapter.class).getMimeType());
+            addHeader(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, requireFromContext(SerializationAdapter.class).getMimeType());
         }
 
         @Override
@@ -475,14 +488,18 @@ public final class REST implements ContextualProvider.Underlying {
 
         public synchronized CompletableFuture<REST.Response> execute() {
             if (!isExecuted()) {
-                logger.trace("Executing request {} @ {}", method, endpoint.getSpec());
+                //addHeader("Content-Length", String.valueOf(body == null ? 0 : body.length()));
+                logger.debug("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
+                logger.trace("Request has Headers: {}", headers.toString());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
-                                .call(request, requireFromContext(SerializationAdapter.class).getMimeType()), executor)
+                                .call(request), executor)
                         .thenAcceptAsync(response -> {
                             if (response.statusCode != expectedCode) {
                                 logger.warn("Unexpected Response status code {}; expected {}", response.statusCode, expectedCode);
                             }
+                            logger.trace("{} @ {} responded with {} body {}", method,
+                                    endpoint.getSpec(), response.statusCode, response.getBody().into(Objects::toString));
 
                             execution.complete(response);
                         }, executor);
