@@ -22,6 +22,9 @@ import java.util.function.*;
 
 public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
     @Override
+    @Nullable T get();
+
+    @Override
     Rewrapper<? extends Reference<?>> getParent();
 
     boolean isMutable();
