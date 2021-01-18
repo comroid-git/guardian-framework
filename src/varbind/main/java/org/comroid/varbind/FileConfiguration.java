@@ -13,7 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 
-public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor, ContextualProvider.Member {
+public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor {
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
@@ -28,7 +28,6 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         return uuid;
     }
 
-    @Override
     public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
         return serializationAdapter;
     }
@@ -37,7 +36,7 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
             SerializationAdapter<?, ?, ?> serializationAdapter,
             FileHandle file
     ) {
-        super(context, null);
+        super(serializationAdapter, null);
 
         this.serializationAdapter = serializationAdapter;
         this.file = file;
