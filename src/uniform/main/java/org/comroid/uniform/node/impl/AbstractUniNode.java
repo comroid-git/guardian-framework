@@ -95,7 +95,8 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     private UniNode getAccessor(AcK key) {
-        return Polyfill.uncheckedCast(Objects.requireNonNull(accessors.get(key), MessageSupplier.format("Missing accessor for key %s", key)));
+        return Polyfill.uncheckedCast(Objects.requireNonNull(accessors.get(key),
+                MessageSupplier.format("Missing accessor for key %s", key)));
     }
 
     @Override

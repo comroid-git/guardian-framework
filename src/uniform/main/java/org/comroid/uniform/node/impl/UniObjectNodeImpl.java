@@ -75,7 +75,7 @@ public final class UniObjectNodeImpl
     public @NotNull <T> UniNode put(final String key, final HeldType<T> type, final T value)
             throws UnsupportedOperationException {
         //noinspection ConstantConditions
-        return accessors.compute(key, ref -> {
+        return accessors.compute(key, node -> {
             if (value == null)
                 return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
