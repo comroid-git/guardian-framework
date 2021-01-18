@@ -23,7 +23,7 @@ public final class NGinXFSNode extends DataContainerBase<Void> {
     }
 
     protected NGinXFSNode(UniObjectNode initialData) {
-        super(initialData);
+        super(context, initialData);
     }
 
     interface Bind {

@@ -2,6 +2,7 @@ package org.comroid.varbind.container;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.SelfDeclared;
@@ -47,6 +48,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
+    private final ContextualProvider context;
 
     @Override
     public final GroupBind<S> getRootBind() {
@@ -58,18 +60,25 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         return myType;
     }
 
-    public DataContainerBase(
-            @Nullable UniNode initialData
-    ) {
-        this(initialData, null, null);
+    @Override
+    public final ContextualProvider getUnderlyingContextualProvider() {
+        return context;
     }
 
-    @Contract("_, null, !null -> fail; _, !null, null -> fail")
     public DataContainerBase(
+            ContextualProvider context,
+            @Nullable UniNode initialData
+    ) {
+        this(context, initialData, null, null);
+    }
+
+    public DataContainerBase(
+            ContextualProvider context,
             @Nullable UniNode initialData,
             Class<? extends DataContainer<? super S>> containingClass,
             Supplier<S> selfSupplier
     ) {
+        this.context = context;
         if ((containingClass == null) != (selfSupplier == null))
             throw new IllegalArgumentException("Not both containingClass and selfSupplier have been provided!");
 
@@ -84,12 +93,13 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
 
-    @Contract("_, null, !null -> fail; _, !null, null -> fail")
     public DataContainerBase(
+            ContextualProvider context,
             @NotNull Map<VarBind<? extends S, Object, ?, Object>, Object> initialValues,
             Class<? extends DataContainer<? super S>> containingClass,
             Supplier<S> selfSupplier
     ) {
+        this.context = context;
         if ((containingClass == null) != (selfSupplier == null))
             throw new IllegalArgumentException("Not both containingClass and selfSupplier have been provided!");
 
@@ -179,6 +189,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                         Span<Object> extract = bind.extract(data);
 
                         getExtractionReference(bind).set(extract);
+                        getComputedReference(bind).get(); // compute once
                         /*logger.trace("Changed {} to ( {} / {} )",
                                 bind,
                                 Arrays.toString(extract.toArray()),

@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends Map<String, Object>, SelfDeclared<S> {
+public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends Map<String, Object>, SelfDeclared<S>, ContextualProvider.Underlying {
     GroupBind<S> getRootBind();
 
     Class<? extends S> getRepresentedType();

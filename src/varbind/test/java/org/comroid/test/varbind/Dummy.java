@@ -11,7 +11,7 @@ public final class Dummy extends DataContainerBase<Dummy> {
     public static final GroupBind group = new GroupBind(FastJSONLib.fastJsonLib, "dummy");
 
     public Dummy() {
-        super(null);
+        super(context, null);
     }
 
     public String modify(String str) {
