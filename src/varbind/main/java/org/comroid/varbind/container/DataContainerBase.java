@@ -186,23 +186,38 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                     .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
                     .filter(bind -> data.has(bind.getFieldName()))
                     .forEach(bind -> {
-                        Span<Object> extract = bind.extract(data);
+                        try {
+                            Span<Object> extract = bind.extract(data);
 
-                        getExtractionReference(bind).set(extract);
-                        getComputedReference(bind).get(); // compute once
-                        /*logger.trace("Changed {} to ( {} / {} )",
-                                bind,
-                                Arrays.toString(extract.toArray()),
-                                computedRefs.get(bind.getFieldName()));*/
-                        changed.add(bind);
+                            getExtractionReference(bind).set(extract);
+                            /*getComputedReference(bind).get(); // compute once*/
+                            logger.trace("{}@{} - Changed {} to ( {} / {} )",
+                                    getClass().getSimpleName(),
+                                    Integer.toHexString(hashCode()),
+                                    bind,
+                                    Arrays.toString(extract.toArray()),
+                                    computedRefs.get(bind.getFieldName()));
+                            changed.add(bind);
+                        } catch (Throwable t) {
+                            throw new ThrownVarBind(bind, t);
+                        }
                     });
-        } catch (Throwable t) {
-            throw new RuntimeException(String.format("Updating data failed for %s\nData: %s", toString(), data.toString()), t);
+        } catch (ThrownVarBind t) {
+            throw new RuntimeException(String.format("Updating data failed for %s at bind %s\nData: %s", toString(), t.bind, data.toString()), t.getCause());
         } finally {
             //logger.trace("Done updating {}; changed {}", toString(), Arrays.toString(changed.toArray()));
         }
 
         return unmodifiableSet(changed);
+    }
+
+    private static class ThrownVarBind extends Error {
+        private final VarBind bind;
+
+        public ThrownVarBind(VarBind bind, Throwable cause) {
+            super(cause);
+            this.bind = bind;
+        }
     }
 
     public boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {

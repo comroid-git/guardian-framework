@@ -1,8 +1,8 @@
 package org.comroid.varbind;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
-import org.comroid.common.info.Dependent;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
@@ -12,41 +12,25 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.comroid.varbind.container.DataContainerBase;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-public abstract class DataContainerCache<K, V extends DataContainer<? super V>, D>
+public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
-        implements Cache<K, V>, Dependent<D> {
+        implements Cache<K, V> {
     protected final VarBind<? super V, ?, ?, K> idBind;
-    private final @Nullable D dependencyObject;
-
-    @Override
-    public final @Nullable D getDependent() {
-        return dependencyObject;
-    }
 
     public DataContainerCache(
+            ContextualProvider context,
             int largeThreshold,
             Map<K, CacheReference<K, V>> map,
             VarBind<? super V, ?, ?, K> idBind
     ) {
-        this(largeThreshold, map, idBind, null);
-    }
-
-    public DataContainerCache(
-            int largeThreshold,
-            Map<K, CacheReference<K, V>> map,
-            VarBind<? super V, ?, ?, K> idBind,
-            @Nullable D dependencyObject
-    ) {
-        super(largeThreshold, map);
+        super(context, largeThreshold, map);
 
         this.idBind = Polyfill.uncheckedCast(idBind);
-        this.dependencyObject = dependencyObject;
     }
 
     public boolean add(V value) {
@@ -87,7 +71,7 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>, 
             return Processor.ofConstant(tryConstruct(data))
                     .map(opt -> {
                         if (!opt.isPresent())
-                            return creator.autoInvoke(data, dependencyObject);
+                            return creator.autoInvoke(this, data);
                         return opt.get();
                     })
                     .map(it -> (T) it)
@@ -99,6 +83,6 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>, 
         return (Optional<? extends V>) idBind.getGroup()
                 .findGroupForData(node)
                 .flatMap(GroupBind::getConstructor)
-                .map(constr -> constr.autoInvoke(dependencyObject, node));
+                .map(constr -> constr.autoInvoke(this, node));
     }
 }

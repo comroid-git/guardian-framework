@@ -1,5 +1,6 @@
 package org.comroid.uniform.cache;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Provider;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
@@ -16,26 +17,26 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
     private final Map<K, CacheReference<K, V>> cache;
     private final int largeThreshold;
 
-    public BasicCache() {
-        this(DEFAULT_LARGE_THRESHOLD);
+    public BasicCache(ContextualProvider context) {
+        this(context, DEFAULT_LARGE_THRESHOLD);
     }
 
-    public BasicCache(int largeThreshold) {
-        this(largeThreshold, new ConcurrentHashMap<>());
+    public BasicCache(ContextualProvider context, int largeThreshold) {
+        this(context, largeThreshold, new ConcurrentHashMap<>());
     }
 
-    protected BasicCache(Map<K, CacheReference<K, V>> map) {
-        this(DEFAULT_LARGE_THRESHOLD, map);
+    protected BasicCache(ContextualProvider context, Map<K, CacheReference<K, V>> map) {
+        this(context, DEFAULT_LARGE_THRESHOLD, map);
     }
 
-    protected BasicCache(int largeThreshold, Map<K, CacheReference<K, V>> map) {
-        this(largeThreshold, map, null);
+    protected BasicCache(ContextualProvider context, int largeThreshold, Map<K, CacheReference<K, V>> map) {
+        this(context, largeThreshold, map, null);
     }
 
-    protected BasicCache(int largeThreshold,
+    protected BasicCache(ContextualProvider context, int largeThreshold,
                          Map<K, CacheReference<K, V>> map,
                          @Nullable Provider.Now<V> emptyValueProvider) {
-        super();
+        super(context);
 
         this.largeThreshold = largeThreshold;
         this.cache = map;

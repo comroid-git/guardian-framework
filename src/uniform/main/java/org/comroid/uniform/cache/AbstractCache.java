@@ -1,5 +1,6 @@
 package org.comroid.uniform.cache;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -7,7 +8,6 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -15,12 +15,19 @@ import java.util.stream.Stream;
 
 public abstract class AbstractCache<K, V> implements Cache<K, V> {
     private final ReferenceMap<K, V> cache;
+    private final ContextualProvider context;
 
-    protected AbstractCache() {
-        this(ReferenceMap.create(new ConcurrentHashMap<>()));
+    @Override
+    public final ContextualProvider getUnderlyingContextualProvider() {
+        return context;
     }
 
-    protected AbstractCache(ReferenceMap<K, V> cache) {
+    protected AbstractCache(ContextualProvider context) {
+        this(context, ReferenceMap.create(new ConcurrentHashMap<>()));
+    }
+
+    protected AbstractCache(ContextualProvider context, ReferenceMap<K, V> cache) {
+        this.context = context;
         this.cache = cache;
     }
 

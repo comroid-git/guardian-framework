@@ -2,6 +2,7 @@ package org.comroid.varbind;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Junction;
 import org.comroid.api.Polyfill;
 import org.comroid.common.Disposable;
@@ -19,8 +20,8 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class FileCache<K, V extends DataContainer<V>, D>
-        extends DataContainerCache<K, V, D>
+public class FileCache<K, V extends DataContainer<V>>
+        extends DataContainerCache<K, V>
         implements FileProcessor, Disposable {
     private static final Logger logger = LogManager.getLogger();
     private final SerializationAdapter<?, ?, ?> seriLib;
@@ -38,25 +39,24 @@ public class FileCache<K, V extends DataContainer<V>, D>
     }
 
     public FileCache(
+            ContextualProvider context,
             SerializationAdapter<?, ?, ?> seriLib,
             VarBind<? super V, ?, ?, K> idBind,
             FileHandle file,
-            int largeThreshold,
-            D dependencyObject
+            int largeThreshold
     ) {
-        this(seriLib, idBind, null, file, largeThreshold, false, dependencyObject);
+        this(context, seriLib, idBind, null, file, largeThreshold, false);
     }
 
     public FileCache(
-            SerializationAdapter<?, ?, ?> seriLib,
+            ContextualProvider context, SerializationAdapter<?, ?, ?> seriLib,
             VarBind<? super V, ?, ?, K> idBind,
             Junction<K, String> converter,
             FileHandle file,
             int largeThreshold,
-            boolean keyCaching,
-            D dependencyObject
+            boolean keyCaching
     ) {
-        super(largeThreshold, new ConcurrentHashMap<>(), idBind);
+        super(context, largeThreshold, new ConcurrentHashMap<>(), idBind);
 
         this.seriLib = seriLib;
         this.file = file;

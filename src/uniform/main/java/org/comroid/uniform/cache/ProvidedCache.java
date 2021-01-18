@@ -1,5 +1,7 @@
 package org.comroid.uniform.cache;
 
+import org.comroid.api.ContextualProvider;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -11,9 +13,12 @@ public class ProvidedCache<K, V> extends BasicCache<K, V> {
     private final Function<K, CompletableFuture<V>> valueProvider;
 
     public ProvidedCache(
-            int largeThreshold, Executor providerWriteExecutor, Function<K, CompletableFuture<V>> valueProvider
+            ContextualProvider context,
+            int largeThreshold,
+            Executor providerWriteExecutor,
+            Function<K, CompletableFuture<V>> valueProvider
     ) {
-        super(largeThreshold);
+        super(context, largeThreshold);
 
         this.providerWriteExecutor = providerWriteExecutor;
         this.valueProvider = valueProvider;

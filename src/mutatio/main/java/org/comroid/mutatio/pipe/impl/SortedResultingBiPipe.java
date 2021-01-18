@@ -11,10 +11,7 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Comparator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -64,8 +61,8 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
                     .findFirst()
                     .flatMap(Rewrapper::wrap)
                     .orElseGet(() -> {
-                        if (accessedIndex < refs.size())
-                            throw new NoSuchElementException("No element at index " + accessedIndex);
+                        if (accessedIndex >= refs.size())
+                            throw new NoSuchElementException(String.format("No element at index %d; refs: %s", accessedIndex, Arrays.toString(refs.stream().toArray())));
                         return null; // empty
                     });
         }
