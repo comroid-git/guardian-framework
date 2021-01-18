@@ -23,14 +23,9 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     private final String groupName;
     private final Span<GroupBind<? super T>> parents;
     private final List<GroupBind<? extends T>> subgroups = new ArrayList<>();
-    private final @Nullable Invocable<? extends T> constructor;
 
     public List<? extends VarBind<T, ?, ?, ?>> getDirectChildren() {
         return Collections.unmodifiableList(children);
-    }
-
-    public Optional<Invocable<? extends T>> getConstructor() {
-        return Optional.ofNullable(constructor);
     }
 
     @Override
@@ -60,49 +55,29 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             ContextualProvider context,
             String groupName
     ) {
-        this(context, groupName, (Invocable<T>) null);
-    }
-
-    public GroupBind(
-            ContextualProvider context,
-            String groupName,
-            Class<? extends T> constructorClass
-    ) {
-        this(context, groupName, Invocable.ofConstructor(constructorClass, UniObjectNode.class));
-    }
-
-    public GroupBind(
-            ContextualProvider context,
-            String groupName,
-            Invocable<? extends T> invocable
-    ) {
-        this(Span.empty(), context, groupName, invocable);
+        this(Span.empty(), context, groupName);
     }
 
     private GroupBind(
             GroupBind<? super T> parent,
             ContextualProvider context,
-            String groupName,
-            @Nullable Invocable<? extends T> invocable
+            String groupName
     ) {
         this(
                 Span.singleton(Objects.requireNonNull(parent, "parents")),
                 context,
-                groupName,
-                invocable
+                groupName
         );
     }
 
     private GroupBind(
             Span<GroupBind<? super T>> parents,
             ContextualProvider context,
-            String groupName,
-            @Nullable Invocable<? extends T> invocable
+            String groupName
     ) {
         this.parents = parents;
         this.serializationAdapter = context.requireFromContext(SerializationAdapter.class);
         this.groupName = groupName;
-        this.constructor = invocable;
     }
 
     private static <T extends DataContainer<? extends D>, D> GroupBind<? super T> findRootParent(
@@ -143,8 +118,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return new GroupBind<>(
                 Span.immutable(parents),
                 rootParent.serializationAdapter,
-                groupName,
-                invocable
+                groupName
         );
     }
 
@@ -205,46 +179,12 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return Invocable.ofConstructor(resultType, typesUnordered);
     }
 
-    @CallerSensitive
-    public <R extends T> GroupBind<R> rootGroup(String subGroupName) {
-        return subGroup(this, subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
-    }
-
-    @CallerSensitive
-    public <R extends T> GroupBind<R> rootGroup(GroupBind parent, String subGroupName) {
-        return subGroup(parent, subGroupName, Polyfill.<Class<R>>uncheckedCast(StackTraceUtils.callerClass(1)));
-    }
-
     public <R extends T> GroupBind<R> subGroup(String subGroupName) {
         return subGroup(this, subGroupName);
     }
 
     public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName) {
-        return subGroup(parent, subGroupName, (Invocable<R>) null);
-    }
-
-    public <R extends T> GroupBind<R> subGroup(String subGroupName, Class<? extends T> type) {
-        return subGroup(this, subGroupName, type);
-    }
-
-    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Class<? extends T> type) {
-        return subGroup(parent, subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofClass(type)));
-    }
-
-    public <R extends T> GroupBind<R> subGroup(String subGroupName, Constructor<? extends T> type) {
-        return subGroup(this, subGroupName, type);
-    }
-
-    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Constructor<? extends T> type) {
-        return subGroup(parent, subGroupName, Polyfill.<Invocable<R>>uncheckedCast(Invocable.ofConstructor(type)));
-    }
-
-    public <R extends T> GroupBind<R> subGroup(String subGroupName, Invocable<? extends R> constructor) {
-        return subGroup(this, subGroupName, constructor);
-    }
-
-    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName, Invocable<? extends R> constructor) {
-        final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName, constructor);
+        final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName);
         parent.subgroups.add(groupBind);
         return groupBind;
     }
