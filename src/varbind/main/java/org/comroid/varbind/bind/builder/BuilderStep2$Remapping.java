@@ -83,6 +83,7 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
         return andProvide(identification, resolver.andThen(Rewrapper::get), targetType);
     }
 
+    @Deprecated
     public <R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andConstruct(
             GroupBind<R> targetBind
     ) {
