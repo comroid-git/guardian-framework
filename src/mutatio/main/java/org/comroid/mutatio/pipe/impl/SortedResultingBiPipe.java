@@ -6,6 +6,7 @@ import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.jetbrains.annotations.Nullable;
@@ -72,6 +73,7 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         @Override
         public K getKey() {
             return refs.streamRefs()
+                    .filter(Reference::isNonNull)
                     .sorted((a, b) -> a.accumulate(b, comparator::compare))
                     .skip(accessedIndex)
                     .findFirst()

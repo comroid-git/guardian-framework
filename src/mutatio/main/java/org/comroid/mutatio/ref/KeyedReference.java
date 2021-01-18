@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
     @Override
     default V getValue() {
-        return assertion();
+        return get();
     }
 
     static <K, V> KeyedReference<K, V> create(K key) {
