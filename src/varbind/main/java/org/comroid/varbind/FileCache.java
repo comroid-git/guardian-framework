@@ -12,6 +12,8 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
@@ -19,6 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 public class FileCache<K, V extends DataContainer<V>>
         extends DataContainerCache<K, V>
@@ -27,6 +30,7 @@ public class FileCache<K, V extends DataContainer<V>>
     private final SerializationAdapter<?, ?, ?> seriLib;
     private final FileHandle file;
     private final UUID uuid = UUID.randomUUID();
+    private final BiFunction<ContextualProvider, UniObjectNode, V> resolver;
 
     @Override
     public FileHandle getFile() {
@@ -41,15 +45,18 @@ public class FileCache<K, V extends DataContainer<V>>
     public FileCache(
             ContextualProvider context,
             SerializationAdapter<?, ?, ?> seriLib,
+            BiFunction<ContextualProvider, UniObjectNode, V> resolver,
             VarBind<? super V, ?, ?, K> idBind,
             FileHandle file,
             int largeThreshold
     ) {
-        this(context, seriLib, idBind, null, file, largeThreshold, false);
+        this(context, seriLib, resolver, idBind, null, file, largeThreshold, false);
     }
 
     public FileCache(
-            ContextualProvider context, SerializationAdapter<?, ?, ?> seriLib,
+            ContextualProvider context,
+            SerializationAdapter<?, ?, ?> seriLib,
+            BiFunction<ContextualProvider, UniObjectNode, V> resolver,
             VarBind<? super V, ?, ?, K> idBind,
             Junction<K, String> converter,
             FileHandle file,
@@ -59,6 +66,7 @@ public class FileCache<K, V extends DataContainer<V>>
         super(context, largeThreshold, new ConcurrentHashMap<>(), idBind);
 
         this.seriLib = seriLib;
+        this.resolver = resolver;
         this.file = file;
 
         reloadData();
@@ -115,7 +123,7 @@ public class FileCache<K, V extends DataContainer<V>>
                     if (containsKey(id)) {
                         getReference(id, false).requireNonNull().updateFrom(node);
                     } else {
-                        final Object generated = tryConstruct(node).orElse(null);
+                        final Object generated = resolver.apply(this, node);
 
                         if (generated == null) {
                             logger.warn("Skipped generation; no suitable constructor could be found. Data: {}", node);

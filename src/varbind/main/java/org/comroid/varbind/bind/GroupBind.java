@@ -1,28 +1,28 @@
 package org.comroid.varbind.bind;
 
-import jdk.internal.reflect.CallerSensitive;
 import org.comroid.api.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.util.StackTraceUtils;
 import org.comroid.varbind.bind.builder.BuilderStep1$Extraction;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named, ContextualProvider.Member {
     final List<? extends VarBind<T, ?, ?, ?>> children = new ArrayList<>();
+    private final List<GroupBind<? extends T>> subgroups = new ArrayList<>();
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final String groupName;
     private final Span<GroupBind<? super T>> parents;
-    private final List<GroupBind<? extends T>> subgroups = new ArrayList<>();
+    private final @Nullable BiFunction<ContextualProvider, UniNode, T> resolver;
 
     public List<? extends VarBind<T, ?, ?, ?>> getDirectChildren() {
         return Collections.unmodifiableList(children);
@@ -46,6 +46,10 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return subgroups;
     }
 
+    public Rewrapper<BiFunction<ContextualProvider, UniNode, T>> getResolver() {
+        return () -> resolver;
+    }
+
     @Override
     public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
         return serializationAdapter;
@@ -55,7 +59,15 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             ContextualProvider context,
             String groupName
     ) {
-        this(Span.empty(), context, groupName);
+        this(context, groupName, null);
+    }
+
+    public GroupBind(
+            ContextualProvider context,
+            String groupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
+    ) {
+        this(Span.empty(), context, groupName, resolver);
     }
 
     private GroupBind(
@@ -63,10 +75,20 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             ContextualProvider context,
             String groupName
     ) {
+        this(parent, context, groupName, null);
+    }
+
+    private GroupBind(
+            GroupBind<? super T> parent,
+            ContextualProvider context,
+            String groupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
+    ) {
         this(
                 Span.singleton(Objects.requireNonNull(parent, "parents")),
                 context,
-                groupName
+                groupName,
+                resolver
         );
     }
 
@@ -75,9 +97,19 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             ContextualProvider context,
             String groupName
     ) {
+        this(parents, context, groupName, null);
+    }
+
+    private GroupBind(
+            Span<GroupBind<? super T>> parents,
+            ContextualProvider context,
+            String groupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
+    ) {
         this.parents = parents;
         this.serializationAdapter = context.requireFromContext(SerializationAdapter.class);
         this.groupName = groupName;
+        this.resolver = resolver;
     }
 
     private static <T extends DataContainer<? extends D>, D> GroupBind<? super T> findRootParent(
@@ -103,14 +135,14 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             String groupName,
             GroupBind<? super T>... parents
     ) {
-        return combine(groupName, Invocable.ofClass(Polyfill.uncheckedCast(StackTraceUtils.callerClass(1))), parents);
+        return combine(groupName, null, parents);
     }
 
     @SuppressWarnings("unchecked")
     @SafeVarargs
     public static <T extends DataContainer<? super T>> GroupBind<T> combine(
             String groupName,
-            Invocable<? extends T> invocable,
+            @Nullable BiFunction<ContextualProvider, UniNode, T> resolver,
             GroupBind<? super T>... parents
     ) {
         final GroupBind<? super T> rootParent = (GroupBind<? super T>) findRootParent(Polyfill.uncheckedCast(Arrays.asList(parents)));
@@ -118,7 +150,8 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return new GroupBind<>(
                 Span.immutable(parents),
                 rootParent.serializationAdapter,
-                groupName
+                groupName,
+                resolver
         );
     }
 
@@ -179,12 +212,32 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return Invocable.ofConstructor(resultType, typesUnordered);
     }
 
-    public <R extends T> GroupBind<R> subGroup(String subGroupName) {
-        return subGroup(this, subGroupName);
+    public <R extends T> GroupBind<R> subGroup(
+            String subGroupName
+    ) {
+        return subGroup(subGroupName, null);
     }
 
-    public <R extends T> GroupBind<R> subGroup(GroupBind parent, String subGroupName) {
-        final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName);
+    public <R extends T> GroupBind<R> subGroup(
+            String subGroupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, R> resolver
+    ) {
+        return subGroup(this, subGroupName, resolver);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(
+            GroupBind parent,
+            String subGroupName
+    ) {
+        return subGroup(parent, subGroupName, null);
+    }
+
+    public <R extends T> GroupBind<R> subGroup(
+            GroupBind parent,
+            String subGroupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, R> resolver
+    ) {
+        final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName, resolver);
         parent.subgroups.add(groupBind);
         return groupBind;
     }

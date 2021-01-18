@@ -29,7 +29,7 @@ public class VarBindBuilderTest {
 
     @Before
     public void setup() {
-        this.group = new GroupBind<>(fastJsonLib, "dummy");
+        this.group = new GroupBind<>(fastJsonLib, "dummy", resolver);
         this.objData = UniObjectNode.ofMap(fastJsonLib, Map.of("name", "lucas"));
     }
 

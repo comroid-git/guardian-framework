@@ -82,26 +82,12 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
         return andProvide(identification, resolver.andThen(Rewrapper::get), creator);
     }
 
-    @Deprecated
     public <R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andConstruct(
-            GroupBind<R> targetBind
+            GroupBind<R> type
     ) {
-        // todo Jesus christ for the sake of the good lord, what the fuck is this
-
-        Optional<Invocable<? extends R>> constructor = targetBind.getConstructor();
-        if (constructor.isPresent())
-            return Polyfill.uncheckedCast(targetBind.getConstructor()
-                    .map(invoc -> andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
-                            uncheckedCast((BiFunction<SELF, UniObjectNode, R>) invoc::autoInvoke)))
-                    .orElseThrow(() -> new IllegalArgumentException(targetBind + " has no available Constructor")));
-        //noinspection unchecked
-        return (BuilderStep3$Finishing<SELF, UniObjectNode, R>) andResolve
-                (Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>uncheckedCast(
-                        (BiFunction<SELF, UniObjectNode, R>) (SELF it, UniObjectNode data) -> targetBind.findGroupForData(data)
-                                .flatMap(GroupBind::getConstructor)
-                                .orElseThrow(() -> new NoSuchElementException(String
-                                        .format("Could not find matching constructor in group for data: %s in %s", targetBind, data)))
-                                .autoInvoke(it, data)));
+        return Polyfill.uncheckedCast(andResolve(
+                Polyfill.uncheckedCast(type.getResolver()
+                        .assertion("No resolver present"))));
     }
 
     @Override

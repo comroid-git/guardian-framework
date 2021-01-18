@@ -3,7 +3,9 @@ package org.comroid.varbind;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Processor;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.cache.CacheReference;
@@ -16,6 +18,7 @@ import org.comroid.varbind.container.DataContainerBase;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
@@ -45,20 +48,7 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
         return containsKey(key) && set(key, null);
     }
 
-    public final Processor<V> autoUpdate(UniObjectNode data) {
-        return autoUpdate(Polyfill.<GroupBind<V>>uncheckedCast(idBind.getGroup()), data);
-    }
-
-    public final <T extends V> Processor<T> autoUpdate(Class<T> type, UniObjectNode data) {
-        return autoUpdate(DataContainerBase.findRootBind(type), data);
-    }
-
-    public final <T extends V> Processor<T> autoUpdate(GroupBind<? extends T> group, UniObjectNode data) {
-        return autoUpdate(group.getConstructor()
-                .orElseThrow(() -> new NoSuchElementException("No constructor defined in group " + group)), data);
-    }
-
-    public final <T extends V> Processor<T> autoUpdate(Invocable<? extends T> creator, UniObjectNode data) {
+    public final <T extends V> Reference<T> autoUpdate(BiFunction<ContextualProvider, UniObjectNode, T> resolver, UniObjectNode data) {
         final K key = idBind.getFrom(data);
 
         if (containsKey(key))
@@ -67,22 +57,12 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
                     .process()
                     .peek(it -> it.updateFrom(data))
                     .map(it -> (T) it);
-        else //noinspection unchecked
-            return Processor.ofConstant(tryConstruct(data))
-                    .map(opt -> {
-                        if (!opt.isPresent())
-                            return creator.autoInvoke(this, data);
-                        return opt.get();
-                    })
-                    .map(it -> (T) it)
-                    .peek(it -> getReference(key, true).set(it));
-    }
-
-    protected Optional<? extends V> tryConstruct(UniObjectNode node) {
-        //noinspection unchecked
-        return (Optional<? extends V>) idBind.getGroup()
-                .findGroupForData(node)
-                .flatMap(GroupBind::getConstructor)
-                .map(constr -> constr.autoInvoke(this, node));
+        else {
+            T result = resolver.apply(this, data);
+            KeyedReference<K, V> ref = getReference(key, true);
+            ref.set(result);
+            //noinspection unchecked
+            return (Reference<T>) ref;
+        }
     }
 }

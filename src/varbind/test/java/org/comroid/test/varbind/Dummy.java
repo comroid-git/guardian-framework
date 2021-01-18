@@ -8,7 +8,7 @@ import org.comroid.varbind.container.DataContainerBase;
 @Location(Dummy.class)
 public final class Dummy extends DataContainerBase<Dummy> {
     @RootBind
-    public static final GroupBind group = new GroupBind(FastJSONLib.fastJsonLib, "dummy");
+    public static final GroupBind group = new GroupBind(FastJSONLib.fastJsonLib, "dummy", resolver);
 
     public Dummy() {
         super(context, null);

@@ -37,10 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 import static org.comroid.mutatio.ref.Processor.ofConstant;
 
@@ -105,7 +102,7 @@ public final class REST implements ContextualProvider.Underlying {
     }
 
     public Request<UniObjectNode> request() {
-        return new Request<>(Invocable.paramReturning(UniObjectNode.class));
+        return new Request<>((context, data) -> data.asObjectNode());
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(Class<T> type) {
@@ -113,16 +110,15 @@ public final class REST implements ContextualProvider.Underlying {
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(GroupBind<T> group) {
-        //noinspection unchecked
-        return request((Invocable<T>) Polyfill.uncheckedCast(group.getConstructor()
-                .orElseThrow(() -> new NoSuchElementException("No constructor applied to GroupBind " + group))));
+        return request(Polyfill.<BiFunction<ContextualProvider, UniNode, T>>uncheckedCast(group.getResolver()
+                .orElseThrow(() -> new NoSuchElementException("No resolver applied to GroupBind " + group))));
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(TypeBoundEndpoint<T> endpoint) {
         return request(endpoint.getBoundType()).endpoint(endpoint);
     }
 
-    public <T> Request<T> request(Invocable<T> creator) {
+    public <T> Request<T> request(BiFunction<ContextualProvider, UniNode, T> creator) {
         return new Request<>(creator);
     }
 
@@ -392,7 +388,7 @@ public final class REST implements ContextualProvider.Underlying {
 
     public final class Request<T> {
         private final Header.List headers;
-        private final Invocable<T> tProducer;
+        private final BiFunction<ContextualProvider, UniNode, T> tProducer;
         private final CompletableFuture<REST.Response> execution = new CompletableFuture<>();
         private CompleteEndpoint endpoint;
         private Method method;
@@ -423,7 +419,7 @@ public final class REST implements ContextualProvider.Underlying {
             return execution.isDone();
         }
 
-        public Request(Invocable<T> tProducer) {
+        public Request(BiFunction<ContextualProvider, UniNode, T> tProducer) {
             this.tProducer = tProducer;
             this.headers = new Header.List();
 
@@ -522,12 +518,11 @@ public final class REST implements ContextualProvider.Underlying {
             return execute$body().thenApply(node -> {
                 switch (node.getNodeType()) {
                     case OBJECT:
-                        return Span.singleton(tProducer.autoInvoke(context, node.asObjectNode()));
+                        return Span.singleton(tProducer.apply(context, node.asObjectNode()));
                     case ARRAY:
                         return node.asArrayNode()
                                 .streamNodes()
-                                .map(UniNode::asObjectNode)
-                                .map(tProducer::autoInvoke)
+                                .map(data -> tProducer.apply(REST.this, data))
                                 .collect(Span.collector());
                     case VALUE:
                         throw new AssertionError("Cannot deserialize from UniValueNode");
@@ -588,7 +583,7 @@ public final class REST implements ContextualProvider.Underlying {
                             return old;
                         }
 
-                        return tProducer.autoInvoke(context, obj);
+                        return tProducer.apply(context, obj);
                     });
         }
     }
