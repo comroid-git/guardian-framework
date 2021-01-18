@@ -71,6 +71,10 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     @NotNull UniNode get(String fieldName);
 
+    default @NotNull UniNode get(Named key) {
+        return get(key.getName());
+    }
+
     @NotNull
     default Optional<UniNode> wrap(int index) {
         return has(index) ? Optional.of(get(index)) : Optional.empty();

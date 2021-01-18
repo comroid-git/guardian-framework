@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SELF>, EXTR>
         extends VarBindBuilderComponent<SELF, EXTR, Void, Void>
@@ -61,7 +62,7 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
     public <ID, R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andProvide(
             VarBind<?, ?, ?, ID> identification,
             BiFunction<? super SELF, ? super ID, ? extends R> resolver,
-            GroupBind<R> targetType
+            BiFunction<? super SELF, UniObjectNode, ? extends R> creator
     ) {
         return Polyfill.uncheckedCast(andResolve(Polyfill.<BiFunction<? super SELF, ? super EXTR, ? extends R>>
                 uncheckedCast((BiFunction<SELF, UniObjectNode, R>) (ctx, obj) -> {
@@ -69,18 +70,16 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
             R result = resolver.apply(ctx, id);
             if (result != null)
                 return result;
-            return targetType.getConstructor()
-                    .map(invoc -> invoc.autoInvoke(ctx, obj))
-                    .orElseThrow(() -> new IllegalArgumentException(targetType + " has no available Constructor"));
+            return creator.apply(ctx, obj);
         })));
     }
 
     public <ID, R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andProvideRef(
             VarBind<?, ?, ?, ID> identification,
             BiFunction<? super SELF, ? super ID, ? extends Rewrapper<? extends R>> resolver,
-            GroupBind<R> targetType
+            BiFunction<? super SELF, UniObjectNode, ? extends R> creator
     ) {
-        return andProvide(identification, resolver.andThen(Rewrapper::get), targetType);
+        return andProvide(identification, resolver.andThen(Rewrapper::get), creator);
     }
 
     @Deprecated
