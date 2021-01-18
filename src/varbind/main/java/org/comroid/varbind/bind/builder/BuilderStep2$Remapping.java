@@ -86,7 +86,7 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
     public <R extends DataContainer<? super R>> BuilderStep3$Finishing<SELF, UniObjectNode, R> andConstruct(
             GroupBind<R> targetBind
     ) {
-        // todo Jesus christ for the sake of the good lord, what the fuck is this (it works tho)
+        // todo Jesus christ for the sake of the good lord, what the fuck is this
 
         Optional<Invocable<? extends R>> constructor = targetBind.getConstructor();
         if (constructor.isPresent())
