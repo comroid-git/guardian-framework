@@ -37,7 +37,7 @@ import static java.util.Collections.*;
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 @SuppressWarnings("unchecked")
-public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared<? super S>>
+public class DataContainerBase<S extends DataContainer<? super S>>
         extends AbstractMap<String, Object>
         implements DataContainer<S> {
     private static final Logger logger = LogManager.getLogger();
@@ -196,7 +196,7 @@ public class DataContainerBase<S extends DataContainer<? super S> & SelfDeclared
                                     Integer.toHexString(hashCode()),
                                     bind,
                                     Arrays.toString(extract.toArray()),
-                                    computedRefs.get(bind.getFieldName()));
+                                    getComputedReference(bind).get());
                             changed.add(bind);
                         } catch (Throwable t) {
                             throw new ThrownVarBind(bind, t);

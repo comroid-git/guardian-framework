@@ -9,6 +9,7 @@ import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.Websocket;
 import org.comroid.restless.socket.WebsocketPacket;
@@ -43,8 +44,9 @@ public final class OkHttp4WebSocket implements Websocket {
         return executor;
     }
 
-    OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, URI uri, REST.Header.List headers) {
+    OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
         final Request.Builder initBuilder = new Request.Builder().url(uri.toString());
+        headers.add(CommonHeaderNames.WEBSOCKET_SUBPROTOCOL, preferredProtocol);
         headers.forEach(initBuilder::addHeader);
 
         this.executor = executor;

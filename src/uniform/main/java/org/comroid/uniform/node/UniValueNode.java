@@ -1,15 +1,15 @@
 package org.comroid.uniform.node;
 
 import org.comroid.api.ValuePointer;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.impl.StandardValueType;
 
 import java.util.stream.Stream;
 
-public interface UniValueNode extends Reference, UniNode, ValuePointer {
+public interface UniValueNode extends Reference<Object>, UniNode, ValuePointer<Object> {
     UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override
@@ -18,12 +18,12 @@ public interface UniValueNode extends Reference, UniNode, ValuePointer {
     }
 
     @Override
-    default Stream<? extends UniNode> stream() {
+    default Stream<UniValueNode> stream() {
         return streamNodes();
     }
 
     @Override
-    default Stream<? extends UniNode> streamNodes() {
+    default Stream<UniValueNode> streamNodes() {
         return Stream.of(this);
     }
 
@@ -38,7 +38,8 @@ public interface UniValueNode extends Reference, UniNode, ValuePointer {
     }
 
     @Override
-    ValueType getHeldType();
+    @SuppressWarnings("TypeParameterExplicitlyExtendsObject")
+    ValueType<? extends Object> getHeldType();
 
     static <T> UniValueNode create(SerializationAdapter seriLib, ValueType<T> type, T value) {
         if (value == null)

@@ -1,7 +1,7 @@
 package org.comroid.varbind.bind.builder;
 
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.ValueType;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;

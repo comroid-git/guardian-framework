@@ -202,20 +202,10 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
                 .distinct();
     }
 
-    public Invocable<? super T> autoConstructor(
-            Class<T> resultType
-    ) {
-        final Class<?>[] typesUnordered = {
-                UniObjectNode.class, SerializationAdapter.class, serializationAdapter.getObjectType().getTargetClass()
-        };
-
-        return Invocable.ofConstructor(resultType, typesUnordered);
-    }
-
     public <R extends T> GroupBind<R> subGroup(
             String subGroupName
     ) {
-        return subGroup(subGroupName, null);
+        return subGroup(subGroupName, getResolver().into(Polyfill::uncheckedCast));
     }
 
     public <R extends T> GroupBind<R> subGroup(
@@ -226,19 +216,19 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public <R extends T> GroupBind<R> subGroup(
-            GroupBind parent,
+            GroupBind<?> parent,
             String subGroupName
     ) {
-        return subGroup(parent, subGroupName, null);
+        return subGroup(parent, subGroupName, parent.getResolver().into(Polyfill::uncheckedCast));
     }
 
     public <R extends T> GroupBind<R> subGroup(
-            GroupBind parent,
+            GroupBind<?> parent,
             String subGroupName,
             @Nullable BiFunction<ContextualProvider, UniNode, R> resolver
     ) {
         final GroupBind<R> groupBind = new GroupBind<>(this, serializationAdapter, subGroupName, resolver);
-        parent.subgroups.add(groupBind);
+        parent.subgroups.add(Polyfill.uncheckedCast(groupBind));
         return groupBind;
     }
 

@@ -52,7 +52,7 @@ public final class UniObjectNodeImpl
     @Override
     public Object put(String key, Object value) {
         if (value instanceof UniNode) {
-            HeldType<UniNode> nodetype = Polyfill.uncheckedCast(
+            ValueType<UniNode> nodetype = Polyfill.uncheckedCast(
                     ((UniNode) value).getNodeType() == NodeType.OBJECT
                             ? seriLib.getObjectType()
                             : seriLib.getArrayType());
@@ -72,7 +72,7 @@ public final class UniObjectNodeImpl
     }
 
     @Override
-    public @NotNull <T> UniNode put(final String key, final HeldType<T> type, final T value)
+    public @NotNull <T> UniNode put(final String key, final ValueType<? extends T> type, final T value)
             throws UnsupportedOperationException {
         //noinspection ConstantConditions
         return accessors.compute(key, node -> {

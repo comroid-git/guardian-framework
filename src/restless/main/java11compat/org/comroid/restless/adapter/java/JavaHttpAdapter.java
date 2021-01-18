@@ -2,7 +2,6 @@ package org.comroid.restless.adapter.java;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.Websocket;
@@ -26,8 +25,8 @@ public final class JavaHttpAdapter implements HttpAdapter {
     }
 
     @Override
-    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers) {
-        return CompletableFuture.completedFuture(new JavaWebsocket(httpClient, executor, uri, headers));
+    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
+        return CompletableFuture.completedFuture(new JavaWebsocket(httpClient, executor, uri, headers, preferredProtocol));
     }
 
     @Override

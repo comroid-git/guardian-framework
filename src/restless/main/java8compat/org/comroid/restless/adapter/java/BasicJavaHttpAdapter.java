@@ -1,7 +1,6 @@
 package org.comroid.restless.adapter.java;
 
 import org.comroid.api.Polyfill;
-import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.Websocket;
@@ -17,7 +16,7 @@ import java.util.concurrent.Executor;
 @Experimental
 public final class BasicJavaHttpAdapter implements HttpAdapter {
     @Override
-    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers) {
+    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
         throw new UnsupportedOperationException("Primitive Adapter Implementation; not capable of WebSockets");
     }
 

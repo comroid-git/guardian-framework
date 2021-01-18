@@ -1,10 +1,8 @@
 package org.comroid.uniform.model;
 
-import org.comroid.api.HeldType;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.impl.StandardValueType;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 import static org.comroid.uniform.node.impl.StandardValueType.*;
@@ -46,7 +44,7 @@ public abstract class ValueAdapter<B, T> {
         this.base = base;
     }
 
-    public final <R> R asType(HeldType<R> type) {
+    public final <R> R asType(ValueType<R> type) {
         if (STRING.equals(type))
             return uncheckedCast(asString());
         if (CHARACTER.equals(type))

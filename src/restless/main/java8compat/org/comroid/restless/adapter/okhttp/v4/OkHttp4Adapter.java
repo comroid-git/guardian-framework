@@ -16,8 +16,8 @@ public final class OkHttp4Adapter implements HttpAdapter {
     private final OkHttpClient httpClient = new OkHttpClient.Builder().build();
 
     @Override
-    public CompletableFuture<OkHttp4WebSocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers) {
-        return CompletableFuture.completedFuture(new OkHttp4WebSocket(httpClient, executor, uri, headers));
+    public CompletableFuture<OkHttp4WebSocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
+        return CompletableFuture.completedFuture(new OkHttp4WebSocket(httpClient, executor, uri, headers, preferredProtocol));
     }
 
     @Override

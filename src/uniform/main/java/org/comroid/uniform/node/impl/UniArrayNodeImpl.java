@@ -1,6 +1,6 @@
 package org.comroid.uniform.node.impl;
 
-import org.comroid.api.HeldType;
+import org.comroid.api.ValueType;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -87,7 +87,7 @@ public final class UniArrayNodeImpl
 
     @Override
     public UniNode set(int index, UniNode value) {
-        HeldType<UniNode> nodetype = Polyfill.uncheckedCast(
+        ValueType<UniNode> nodetype = Polyfill.uncheckedCast(
                 value.getNodeType() == NodeType.OBJECT
                         ? seriLib.getObjectType()
                         : seriLib.getArrayType());
@@ -100,7 +100,7 @@ public final class UniArrayNodeImpl
     }
 
     @Override
-    public @NotNull <T> UniNode put(final int index, HeldType<T> type, T value) throws UnsupportedOperationException {
+    public @NotNull <T> UniNode put(final int index, ValueType<T> type, T value) throws UnsupportedOperationException {
         return Objects.requireNonNull(accessors.compute(index, ref -> {
             if (value == null)
                 return null;

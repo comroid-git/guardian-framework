@@ -1,11 +1,9 @@
 package org.comroid.uniform.model;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.HeldType;
-import org.comroid.api.Invocable;
+import org.comroid.api.ValueType;
 import org.comroid.api.Named;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -54,9 +52,11 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
         return (UNI) (typ == Primitive.OBJECT ? parse.asObjectNode() : parse.asArrayNode());
     }
 
-    @Override
     @Experimental
-    public <T1> T1 convert(UNI value, HeldType<T1> toType) {
+    public <T1> T1 convert(UNI value, ValueType<T1> toType) {
+        if (value.isValueNode())
+            return value.as(toType);
+
         //noinspection unchecked
         final UniNode uni = typ == DataStructureType.Primitive.OBJECT
                 ? seriLib.createUniObjectNode(value)

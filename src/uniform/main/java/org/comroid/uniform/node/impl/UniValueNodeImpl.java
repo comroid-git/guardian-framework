@@ -1,12 +1,12 @@
 package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.cache.CachedValue;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniNode;
@@ -58,7 +58,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public ValueType getHeldType() {
+    public ValueType<Object> getHeldType() {
         return valueAdapter.getValueType();
     }
 

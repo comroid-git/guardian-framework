@@ -51,7 +51,7 @@ public interface CachedValue<T> {
 
         final Collection<? extends CachedValue<?>> dependent = getDependents();
         for (CachedValue<?> cachedValue : dependent)
-            if (cachedValue.outdate()) c++;
+            if (cachedValue != null && cachedValue.outdate()) c++;
         return c == dependent.size();
     }
 

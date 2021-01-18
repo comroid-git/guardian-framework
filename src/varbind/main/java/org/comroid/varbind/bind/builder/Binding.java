@@ -1,9 +1,8 @@
 package org.comroid.varbind.bind.builder;
 
-import org.comroid.api.HeldType;
+import org.comroid.api.ValueType;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -20,13 +19,13 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final GroupBind<SELF> group;
     private final String fieldName;
     private final boolean required;
-    private final HeldType<EXTR> valueType;
+    private final ValueType<EXTR> valueType;
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
     private final Function<? super Span<REMAP>, ? extends FINAL> finisher;
 
     @Override
-    public HeldType<EXTR> getHeldType() {
+    public ValueType<EXTR> getHeldType() {
         return valueType;
     }
 
@@ -49,7 +48,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             GroupBind<SELF> group,
             String fieldName,
             boolean required,
-            HeldType<EXTR> valueType,
+            ValueType<EXTR> valueType,
             ExtractionMethod extractionMethod,
             BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
             Function<? super Span<REMAP>, ? extends FINAL> finisher
@@ -88,7 +87,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         switch (extractionMethod) {
             case VALUE:
                 assert valueType instanceof StandardValueType;
-                EXTR value = target.as(((ValueType<EXTR>) valueType));
+                EXTR value = target.as(valueType);
                 return Span.immutable(value);
             case OBJECT:
                 assert group.getFromContext().getObjectType().equals(valueType);
@@ -99,7 +98,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
                 if (valueType instanceof StandardValueType) {
                     // extract values array
                     return target.streamNodes()
-                            .map(each -> each.as(((ValueType<EXTR>) valueType)))
+                            .map(each -> each.as(valueType))
                             .collect(Span.collector());
                 } else if (group.getFromContext().getArrayType().equals(valueType)) {
                     // extract uninode array

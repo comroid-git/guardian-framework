@@ -4,7 +4,6 @@ import org.comroid.api.*;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.ValueType;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.SerializationAdapterHolder;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -15,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolder, Iterable<UniNode>, Named {
+public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, Named {
     Rewrapper<? extends UniNode> getParentNode();
 
     @Internal
@@ -107,12 +106,12 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
 
     // todo: add helper methods
     @NotNull
-    default <T> UniNode add(HeldType<T> type, T value) throws UnsupportedOperationException {
+    default <T> UniNode add(ValueType<T> type, T value) throws UnsupportedOperationException {
         return put(size(), type, value);
     }
 
     @NotNull
-    default <T> UniNode put(int index, HeldType<T> type, T value) throws UnsupportedOperationException {
+    default <T> UniNode put(int index, ValueType<T> type, T value) throws UnsupportedOperationException {
         return unsupported(this, "PUT_INDEX", NodeType.ARRAY);
     }
 
@@ -122,7 +121,7 @@ public interface UniNode extends Specifiable<UniNode>, SerializationAdapterHolde
     }
 
     @NotNull
-    default <T> UniNode put(String key, HeldType<T> type, T value) throws UnsupportedOperationException {
+    default <T> UniNode put(String key, ValueType<? extends T> type, T value) throws UnsupportedOperationException {
         return unsupported(this, "PUT_KEY", NodeType.OBJECT);
     }
 

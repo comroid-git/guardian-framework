@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends Map<String, Object>, SelfDeclared<S>, ContextualProvider.Underlying {
+public interface DataContainer<S extends DataContainer<? super S>> extends Map<String, Object>, ContextualProvider.Underlying {
     GroupBind<S> getRootBind();
 
     Class<? extends S> getRepresentedType();
@@ -72,7 +72,7 @@ public interface DataContainer<S extends DataContainer<? super S> & SelfDeclared
 
     <T> Reference<T> getComputedReference(String name);
 
-    interface Underlying<S extends DataContainer<? super S> & SelfDeclared<? super S>> extends DataContainer<S> {
+    interface Underlying<S extends DataContainer<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
 
         @Override

@@ -8,6 +8,7 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
+import org.comroid.uniform.node.impl.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +55,7 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
             return createUniObjectNode(getObjectType().cast(it));
         if (getArrayType().test(it))
             return createUniArrayNode(getArrayType().cast(it));
-        ValueType<Object> typeOf = ValueType.typeOf(it);
+        ValueType<Object> typeOf = StandardValueType.typeOf(it);
         if (typeOf != null)
             return UniValueNode.create(this, typeOf, it);
         throw new IllegalArgumentException(String.format("Unrecognized node type: %s", it.getClass().getName()));

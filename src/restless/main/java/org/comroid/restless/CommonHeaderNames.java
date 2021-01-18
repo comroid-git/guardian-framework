@@ -12,4 +12,6 @@ public final class CommonHeaderNames {
     public static final String REQUEST_CONTENT_TYPE = "Content-Type";
     public static final String USER_AGENT = "User-Agent";
     public static final String WARNING = "Warning";
+    // websocket
+    public static final String WEBSOCKET_SUBPROTOCOL = "Sec-WebSocket-Protocol";
 }

@@ -54,7 +54,7 @@ public final class JavaWebsocket implements Websocket {
         return CompletableFuture.completedFuture(this);
     }
 
-    JavaWebsocket(HttpClient httpClient, Executor executor, URI uri, REST.Header.List headers) {
+    JavaWebsocket(HttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
@@ -62,6 +62,8 @@ public final class JavaWebsocket implements Websocket {
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
+        if (preferredProtocol != null)
+            socketBuilder.subprotocols(preferredProtocol);
 
         socketBuilder.buildAsync(uri, new Listener())
                 .thenAccept(jSocket.future::complete)
