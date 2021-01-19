@@ -57,7 +57,7 @@ public final class JavaWebsocket implements Websocket {
     JavaWebsocket(HttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
-        this.pump = Pump.create(executor);
+        this.pump = Pump.create();//todo executor);
         this.pipeline = pump.peek(packet -> logger.trace("WebSocket received packet: {}", packet));
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
@@ -74,7 +74,11 @@ public final class JavaWebsocket implements Websocket {
     }
 
     private void feed(WebsocketPacket packet) {
-        pump.accept(Reference.constant(packet));
+        try {
+            pump.accept(Reference.constant(packet));
+        } catch (Throwable t) {
+            logger.error("A problem occurred when feeding packet " + packet, t);
+        }
     }
 
     @Override
@@ -89,6 +93,7 @@ public final class JavaWebsocket implements Websocket {
         @Override
         public void onOpen(WebSocket webSocket) {
             feed(new WebsocketPacket.Empty(WebsocketPacket.Type.OPEN));
+            webSocket.request(1);
         }
 
         @Override
