@@ -2,7 +2,7 @@ package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.Processor;
@@ -19,11 +19,11 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
-public class Span<T> extends SingleValueCache.Abstract<T> implements Collection<T>, ReferenceIndex<T>, Rewrapper<T> {
+public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T>, ReferenceIndex<T>, Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
     private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
-    private final Object dataLock = Polyfill.selfawareLock();
+    private final Object dataLock = Polyfill.selfawareObject();
     private final ReferenceIndex<T> storage;
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
@@ -69,7 +69,7 @@ public class Span<T> extends SingleValueCache.Abstract<T> implements Collection<
     }
 
     protected Span(ReferenceIndex<? extends T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
-        super(null);
+        super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
         this.storage = (ReferenceIndex<T>) data;

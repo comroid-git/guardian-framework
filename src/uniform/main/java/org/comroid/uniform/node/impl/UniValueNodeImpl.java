@@ -95,11 +95,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean outdateDependents() {
-        return baseNode.outdateDependents();
-    }
-
-    @Override
     public boolean attach(ValueUpdateListener listener) {
         return baseNode.attach(listener);
     }

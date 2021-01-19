@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CacheReference<K, V> extends Reference.Support.Base<V> implements KeyedReference<K, V> {
     public final AtomicReference<V> reference = new AtomicReference<>(null);
     private final org.comroid.mutatio.ref.Reference<CompletableFuture<V>> firstValueFuture = Reference.create();
-    private final Object lock = Polyfill.selfawareLock();
+    private final Object lock = Polyfill.selfawareObject();
     private final K key;
 
     public @NotNull K getKey() {

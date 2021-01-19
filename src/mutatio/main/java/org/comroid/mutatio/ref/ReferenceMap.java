@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
@@ -18,7 +19,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public interface ReferenceMap<K, V> extends Pipeable<V> {
+public interface ReferenceMap<K, V> extends Pipeable<V>, ValueCache<Void> {
     static <K, V> ReferenceMap<K, V> create() {
         return create(new ConcurrentHashMap<>());
     }
@@ -137,8 +138,8 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
     void clear();
 
     final class Support {
-        public static class Basic<K, V> implements ReferenceMap<K, V> {
-            private final EntryIndex entryIndex = new EntryIndex();
+        public static class Basic<K, V> extends ValueCache.Abstract<Void> implements ReferenceMap<K, V> {
+            private final EntryIndex entryIndex = new EntryIndex(this);
             private final Map<K, KeyedReference<K, V>> refMap;
             private final Function<K, KeyedReference<K, V>> referenceFunction;
 
@@ -147,6 +148,8 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             }
 
             public Basic(Map<K, KeyedReference<K, V>> refMap, Function<K, KeyedReference<K, V>> referenceFunction) {
+                super(null);
+
                 this.refMap = refMap;
                 this.referenceFunction = referenceFunction;
             }
@@ -154,7 +157,10 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
             @Override
             public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
                 if (!containsKey(key) && createIfAbsent) {
-                    return refMap.computeIfAbsent(key, referenceFunction);
+                    return refMap.computeIfAbsent(key, k -> {
+                        updateCache();
+                        return referenceFunction.apply(k);
+                    });
                 }
                 return refMap.get(key);
             }
@@ -201,8 +207,12 @@ public interface ReferenceMap<K, V> extends Pipeable<V> {
                 refMap.clear();
             }
 
-            private final class EntryIndex implements ReferenceIndex<KeyedReference<K, V>> {
+            private final class EntryIndex extends ValueCache.Underlying<Void> implements ReferenceIndex<KeyedReference<K, V>> {
                 private final Map<Integer, Reference<KeyedReference<K, V>>> indexAccessors = new ConcurrentHashMap<>();
+
+                private EntryIndex(ValueCache<Void> underlying) {
+                    super(underlying);
+                }
 
                 @Override
                 public List<KeyedReference<K, V>> unwrap() {

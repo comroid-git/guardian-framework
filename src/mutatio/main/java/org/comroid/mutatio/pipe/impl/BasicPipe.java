@@ -1,6 +1,7 @@
 package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.api.Polyfill;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
@@ -17,7 +18,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class BasicPipe<O, T> implements Pipe<T> {
+public class BasicPipe<O, T> extends ValueCache.Underlying<Void> implements Pipe<T> {
     public static final int AUTOEMPTY_DISABLED = -1;
     protected final ReferenceIndex<O> refs;
     private final Collection<Pipe<?>> subs = new ArrayList<>();
@@ -49,6 +50,8 @@ public class BasicPipe<O, T> implements Pipe<T> {
     }
 
     protected BasicPipe(ReferenceIndex<O> old, StageAdapter<O, T, ? extends Reference<O>, ? extends Reference<T>> adapter, int autoEmptyLimit) {
+        super(old);
+
         this.refs = old;
         this.adapter = adapter;
         this.autoEmptyLimit = autoEmptyLimit;

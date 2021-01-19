@@ -4,6 +4,7 @@ import org.comroid.api.UncheckedCloseable;
 
 import java.util.function.Consumer;
 
+@Deprecated
 public interface ValueUpdateListener<T> extends UncheckedCloseable {
     static <T> ValueUpdateListener<T> ofConsumer(ValueCache<T> parent, Consumer<T> consumer) {
         return new Support.OfConsumer<>(parent, consumer);

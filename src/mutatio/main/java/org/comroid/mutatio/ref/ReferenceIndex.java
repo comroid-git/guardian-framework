@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.pipe.StageAdapter;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public interface ReferenceIndex<T> extends Pipeable<T> {
+public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void> {
     static <T> ReferenceIndex<T> create() {
         return of(new ArrayList<>());
     }
@@ -118,7 +119,7 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
     final class Support {
         public static final ReferenceIndex<?> EMPTY = ReferenceIndex.of(Collections.emptyList());
 
-        public static final class OfList<T> implements ReferenceIndex<T> {
+        public static final class OfList<T> extends ValueCache.Abstract<Void> implements ReferenceIndex<T> {
             private final List<Reference<T>> list;
 
             private OfList() {
@@ -126,27 +127,30 @@ public interface ReferenceIndex<T> extends Pipeable<T> {
             }
 
             private OfList(List<Reference<T>> list) {
+                super(null);
+
                 this.list = list;
             }
 
             @Override
             public boolean add(T item) {
-                return list.add(Reference.constant(item));
+                return list.add(Reference.constant(item)) && updateCache();
             }
 
             @Override
             public boolean addReference(Reference<T> in) {
-                return list.add(in);
+                return list.add(in) && updateCache();
             }
 
             @Override
             public boolean remove(T item) {
-                return list.removeIf(ref -> ref.contentEquals(item));
+                return list.removeIf(ref -> ref.contentEquals(item)) && updateCache();
             }
 
             @Override
             public void clear() {
                 list.clear();
+                updateCache();
             }
 
             @Override

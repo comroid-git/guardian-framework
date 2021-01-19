@@ -1,7 +1,10 @@
 package org.comroid.mutatio.cache;
 
+import org.comroid.annotations.inheritance.MustExtend;
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.ApiStatus.NonExtendable;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -11,6 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.lang.System.nanoTime;
+
+@MustExtend(ValueCache.Abstract.class)
 public interface ValueCache<T> {
     Rewrapper<? extends ValueCache<?>> getParent();
 
@@ -18,23 +24,46 @@ public interface ValueCache<T> {
 
     boolean isUpToDate();
 
+    @NonExtendable
     default ValueUpdateListener<T> onChange(Consumer<T> consumer) {
         return ValueUpdateListener.ofConsumer(this, consumer);
     }
 
     /**
+     * Marks this cache as updated now, but does not cause a ValueUpdate Event.
+     * Implicitly calls {@link #outdateDependents()}.
+     * Bulk operations may choose to not mark each change individually.
+     *
+     * @return Whether the reference became updated with this call.
+     */
+    @Internal
+    boolean updateCache();
+
+    /**
+     * Marks this cache as outdated, but does not cause a ValueUpdate Event.
+     * Implicitly calls {@link #outdateDependents()}.
+     * Bulk operations may choose to not mark each change individually.
+     *
      * @return Whether the reference became outdated with this call.
      */
+    @Internal
     boolean outdateCache();
 
+    /**
+     * Marks all dependents as outdated, must be called when this cache is changed.
+     *
+     * @return Count of dependents that could be updated.
+     */
     @Internal
-    boolean outdateDependents();
+    @NonExtendable
+    default int outdateDependents() {
+        return (int) getDependents().stream()
+                .filter(ValueCache::outdateCache)
+                .count();
+    }
 
     @Internal
     boolean addDependent(ValueCache<?> dependency);
-
-    @Internal
-    void cleanupDependents();
 
     @Internal
     Collection<? extends ValueCache<?>> getDependents();
@@ -44,11 +73,10 @@ public interface ValueCache<T> {
 
     @Internal
     boolean detach(ValueUpdateListener<T> listener);
-
     abstract class Abstract<T> implements ValueCache<T> {
         private final Set<WeakReference<? extends ValueCache<?>>> dependents = new HashSet<>();
+        private final AtomicLong lastUpdate = new AtomicLong(0);
         protected final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
-        protected final AtomicLong lastUpdate = new AtomicLong(0);
         protected final ValueCache.Abstract<?> parent;
 
         @Override
@@ -84,25 +112,10 @@ public interface ValueCache<T> {
 
         @Override
         public final Collection<? extends ValueCache<?>> getDependents() {
-            cleanupDependents();
-
+            dependents.removeIf(ref -> ref.get() == null);
             return dependents.stream()
                     .map(WeakReference::get)
                     .collect(Collectors.toSet());
-        }
-
-        @Override
-        public final boolean outdateDependents() {
-            int c = 0;
-            final Collection<? extends ValueCache<?>> dependent = getDependents();
-            for (ValueCache<?> valueCache : dependent)
-                if (valueCache != null && valueCache.outdateCache()) c++;
-            return c == dependent.size();
-        }
-
-        @Override
-        public final void cleanupDependents() {
-            dependents.removeIf(ref -> ref.get() == null);
         }
 
         @Override
@@ -115,13 +128,80 @@ public interface ValueCache<T> {
             return listeners.remove(listener);
         }
 
+        @Override
+        public final boolean updateCache() {
+            if (isUpToDate())
+                return false;
+            lastUpdate.set(nanoTime());
+            outdateDependents();
+            return true;
+        }
+
+        @Override
         public final boolean outdateCache() {
             if (isOutdated())
                 return false;
-
             lastUpdate.set(0);
             outdateDependents();
-            return true; // todo inspect
+            return true;
+        }
+    }
+
+    class Underlying<T> implements ValueCache<T> {
+        private final ValueCache<T> underlying;
+
+        @Override
+        public final Rewrapper<? extends ValueCache<?>> getParent() {
+            return underlying.getParent();
+        }
+
+        @Override
+        public final boolean isOutdated() {
+            return underlying.isOutdated();
+        }
+
+        @Override
+        public final boolean isUpToDate() {
+            return underlying.isUpToDate();
+        }
+
+        @Override
+        public Object getMonitor() {
+            return null;
+        }
+
+        protected Underlying(ValueCache<T> underlying) {
+            this.underlying = underlying;
+        }
+
+        @Override
+        public final boolean updateCache() {
+            return underlying.updateCache();
+        }
+
+        @Override
+        public final boolean outdateCache() {
+            return underlying.outdateCache();
+        }
+
+        @Override
+        public final boolean addDependent(ValueCache<?> dependency) {
+            return underlying.addDependent(dependency);
+        }
+
+        @Override
+        public final Collection<? extends ValueCache<?>> getDependents() {
+            return underlying.getDependents();
+        }
+
+        @Override
+        public final boolean attach(ValueUpdateListener<T> listener) {
+            return underlying.attach(listener);
+        }
+
+        @Override
+        public final boolean detach(ValueUpdateListener<T> listener) {
+            return underlying.detach(listener);
         }
     }
 }

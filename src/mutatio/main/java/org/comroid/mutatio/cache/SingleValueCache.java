@@ -22,9 +22,8 @@ public interface SingleValueCache<T> extends ValueCache<T> {
         @Override
         public final synchronized T putIntoCache(T withValue) {
             final long time = nanoTime();
-            lastUpdate.set(time);
             cache.set(withValue);
-            outdateDependents();
+            updateCache();
             listeners.forEach(listener -> listener.acceptNewValue(withValue));
             return withValue;
         }
@@ -32,11 +31,6 @@ public interface SingleValueCache<T> extends ValueCache<T> {
         @Override
         public final T getFromCache() {
             return cache.get();
-        }
-
-        @Override
-        public String toString() {
-            return String.format("AbstractCachedValue{lastUpdate=%s}", lastUpdate.get());
         }
     }
 }
