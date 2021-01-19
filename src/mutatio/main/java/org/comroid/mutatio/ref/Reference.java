@@ -214,8 +214,6 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
                 super(parent);
 
                 this.mutable = mutable;
-
-                outdateCache();
             }
 
             protected abstract T doGet();
