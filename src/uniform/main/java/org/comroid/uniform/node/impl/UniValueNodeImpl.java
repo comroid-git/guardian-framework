@@ -50,11 +50,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Object getMonitor() {
-        return baseNode.getMonitor();
-    }
-
-    @Override
     public boolean updateCache() {
         return baseNode.updateCache();
     }
