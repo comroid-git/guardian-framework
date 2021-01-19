@@ -2,7 +2,7 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.cache.CachedValue;
+import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -43,7 +43,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Collection<? extends CachedValue<?>> getDependents() {
+    public Collection<? extends SingleValueCache<?>> getDependents() {
         return baseNode.getDependents();
     }
 
@@ -80,13 +80,23 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Object update(Object withValue) {
-        return baseNode.update(withValue);
+    public Object putIntoCache(Object withValue) {
+        return baseNode.putIntoCache(withValue);
     }
 
     @Override
-    public boolean outdate() {
-        return baseNode.outdate();
+    public Object getFromCache() {
+        return baseNode.getFromCache();
+    }
+
+    @Override
+    public boolean outdateCache() {
+        return baseNode.outdateCache();
+    }
+
+    @Override
+    public boolean outdateChildren() {
+        return baseNode.outdateChildren();
     }
 
     @Override
@@ -100,7 +110,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean addDependent(CachedValue dependency) {
+    public boolean addDependent(SingleValueCache dependency) {
         return baseNode.addDependent(dependency);
     }
 
@@ -113,11 +123,12 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
         return new KeyedReference.Support.Base<Void, UniNode>(true, nil, null) {
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+*/
             @Override
             protected UniNode doGet() {
                 final Object value = valueAdapter.asActualType();

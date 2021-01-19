@@ -4,7 +4,7 @@ import java.io.Closeable;
 import java.util.function.Consumer;
 
 public interface ValueUpdateListener<T> extends Closeable {
-    static <T> ValueUpdateListener<T> ofConsumer(CachedValue<T> parent, Consumer<T> consumer) {
+    static <T> ValueUpdateListener<T> ofConsumer(SingleValueCache<T> parent, Consumer<T> consumer) {
         return new Support.OfConsumer<>(parent, consumer);
     }
 
@@ -15,9 +15,9 @@ public interface ValueUpdateListener<T> extends Closeable {
 
     final class Support {
         public static abstract class Base<T> implements ValueUpdateListener<T> {
-            private final CachedValue<T> parent;
+            private final SingleValueCache<T> parent;
 
-            public Base(CachedValue<T> parent) {
+            public Base(SingleValueCache<T> parent) {
                 this.parent = parent;
 
                 parent.attach(this);
@@ -32,7 +32,7 @@ public interface ValueUpdateListener<T> extends Closeable {
         private static final class OfConsumer<T> extends Base<T> {
             private final Consumer<T> consumer;
 
-            private OfConsumer(CachedValue<T> parent, Consumer<T> consumer) {
+            private OfConsumer(SingleValueCache<T> parent, Consumer<T> consumer) {
                 super(parent);
 
                 this.consumer = consumer;

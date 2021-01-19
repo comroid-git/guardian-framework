@@ -25,14 +25,14 @@ public class CacheReference<K, V> extends Reference.Support.Base<V> implements K
         super(true);
 
         this.key = key;
-        this.firstValueFuture.update(new CompletableFuture<>());
+        this.firstValueFuture.putIntoCache(new CompletableFuture<>());
     }
 
     public CacheReference(K key, V initValue) {
         super(true);
 
         this.key = key;
-        this.firstValueFuture.outdate();
+        this.firstValueFuture.outdateCache();
     }
 
     public static <K, V> CacheReference<K, V> create() {
@@ -73,7 +73,7 @@ public class CacheReference<K, V> extends Reference.Support.Base<V> implements K
     @Override
     public Provider<V> provider() {
         if (firstValueFuture.isOutdated()) {
-            firstValueFuture.outdate();
+            firstValueFuture.outdateCache();
             return Provider.of(firstValueFuture.get());
         }
 

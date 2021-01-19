@@ -41,12 +41,12 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
 
     private final class SubRef extends KeyedReference.Support.Base<K, V> {
         private final int accessedIndex;
-
+/*
         @Override
         public boolean isOutdated() {
             return true;
         }
-
+*/
         public SubRef(int accessedIndex) {
             super(false, null, null);
 

@@ -21,11 +21,12 @@ public abstract class ValueAdapter<B, T> {
         }
     };
     private final Reference<ValueType<T>> actualType = new Reference.Support.Base<ValueType<T>>(false) {
+/*
         @Override
         public boolean isOutdated() {
             return atom.get() != null && actualValue.test(it -> atom.get().test(it));
         }
-
+*/
         @Override
         protected ValueType<T> doGet() {
             return actualValue.into(StandardValueType::typeOf);

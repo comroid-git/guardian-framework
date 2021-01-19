@@ -168,11 +168,12 @@ public final class UniArrayNodeImpl
     @Override
     protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
         return new KeyedReference.Support.Base<Integer, UniNode>(true, key, null) {
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+*/
             @Override
             protected UniNode doGet() {
                 if (key < 0 || key >= baseNode.size())

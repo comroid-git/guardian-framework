@@ -26,12 +26,12 @@ public class SortedResultingPipe<T> extends BasicPipe<T, T> implements Pipe<T> {
     public Reference<T> getReference(int index) {
         class SubRef extends Reference.Support.Base<T> {
             private final int accessedIndex;
-
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+*/
             public SubRef(int accessedIndex) {
                 super(null, false);
 

@@ -195,7 +195,10 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                                 Integer.toHexString(hashCode()),
                                 bind,
                                 Arrays.toString(extract.toArray()),
-                                getComputedReference(bind).get()), new Throwable("stacktrace:"));
+                                getComputedReference(bind).get())
+                                /*, new Throwable("stacktrace:")*/
+                        );
+
                         changed.add(bind);
                     } catch (Throwable t) {
                         throw new ThrownVarBind(bind, t);
@@ -336,7 +339,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             return span;
         });
 
-        getComputedReference(bind).outdate();
+        getComputedReference(bind).outdateCache();
 
         return prev;
     }
@@ -354,10 +357,10 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
             if (prev != null)
                 ((Collection<R>) prev).addAll((Collection<R>) value);
-            else getComputedReference(bind).update((R) Span.singleton(value));
+            else getComputedReference(bind).putIntoCache((R) Span.singleton(value));
         } else {
             getExtractionReference(bind).set(Span.singleton(apply));
-            getComputedReference(bind.getFieldName()).update(value);
+            getComputedReference(bind.getFieldName()).putIntoCache(value);
         }
 
         return prev;

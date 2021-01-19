@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.cache.CachedValue;
+import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.util.ReflectionHelper;
@@ -17,10 +17,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 
-public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
+public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
     @Override
     @Nullable T get();
 
@@ -188,8 +187,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
         private static final Reference<?> EMPTY = new Default<>(false, null);
         private static final Map<Object, Reference<?>> IMMUTABLE_CACHE = new ConcurrentHashMap<>();
 
-        public static abstract class Base<T> extends CachedValue.Abstract<T> implements Reference<T> {
-            protected final AtomicReference<T> atom = new AtomicReference<>();
+        public static abstract class Base<T> extends SingleValueCache.Abstract<T> implements Reference<T> {
             private final boolean mutable;
             private Supplier<T> overriddenSupplier = null;
 
@@ -212,37 +210,35 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
                 this(null, mutable);
             }
 
-            protected Base(@Nullable CachedValue<?> parent, boolean mutable) {
+            protected Base(@Nullable SingleValueCache<?> parent, boolean mutable) {
                 super(parent);
 
                 this.mutable = mutable;
 
-                outdate();
+                outdateCache();
             }
 
             protected abstract T doGet();
 
             @OverrideOnly
             protected boolean doSet(T value) {
-                atom.set(value);
-                update(value);
+                putIntoCache(value);
                 return true;
             }
 
             @Nullable
             @Override
             public synchronized final T get() {
-                if (isUpToDate() && atom.get() != null) {
+                T fromCache = getFromCache();
+                if (isUpToDate() && fromCache != null) {
                     //logger.trace("{} is up to date; does not need computing", toString());
-                    return atom.get();
+                    return fromCache;
                 }
-                return atom.updateAndGet(old -> {
-                    //logger.trace("{} is not up to date; recomputing", toString());
-                    final T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
-                    if (value == null)
-                        return null;
-                    return update(value);
-                });
+                //logger.trace("{} is not up to date; recomputing", toString());
+                T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
+                if (value == null)
+                    return null;
+                return putIntoCache(value);
             }
 
             @Override
@@ -251,12 +247,10 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
                     return false;
 
                 boolean doSet = doSet(value);
-                if (doSet) {
-                    atom.set(value);
-                    return update(value) == value;
-                }
-
-                return false;
+                if (!doSet)
+                    return false;
+                putIntoCache(value);
+                return true;
             }
 
             @Override
@@ -266,7 +260,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
                     throw new IllegalArgumentException("Cannot rebind behind itself");
 
                 this.overriddenSupplier = behind;
-                outdate();
+                outdateCache();
             }
 
             @Override
@@ -280,18 +274,17 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             private Default(boolean mutable, T initialValue) {
                 super(mutable);
 
-                atom.set(initialValue);
+                putIntoCache(initialValue);
             }
 
             @Override
             protected T doGet() {
-                return atom.get();
+                return getFromCache();
             }
 
             @Override
             protected boolean doSet(T value) {
-                atom.set(value);
-                outdate();
+                putIntoCache(value);
                 return true;
             }
         }
@@ -299,12 +292,12 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
         private static final class Rebound<T> extends Base<T> {
             private final Consumer<T> setter;
             private final Supplier<T> getter;
-
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+ */
             public Rebound(Consumer<T> setter, Supplier<T> getter) {
                 super(true);
 
@@ -320,7 +313,7 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
             @Override
             protected boolean doSet(T value) {
                 setter.accept(value);
-                outdate();
+                outdateCache();
                 return true;
             }
         }
@@ -328,12 +321,12 @@ public interface Reference<T> extends CachedValue<T>, Rewrapper<T> {
         private static final class Conditional<T> extends Base<T> {
             private final BooleanSupplier condition;
             private final Supplier<T> supplier;
-
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+*/
             public Conditional(BooleanSupplier condition, Supplier<T> supplier) {
                 super(false);
 

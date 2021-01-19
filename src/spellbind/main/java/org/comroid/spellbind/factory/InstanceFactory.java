@@ -46,7 +46,7 @@ public final class InstanceFactory<T extends TypeFragment<? super T>, D>
 
     public void addSubimplementation(TypeFragmentProvider<? super T> fragmentProvider) {
         typeFragmentProviders.add(fragmentProvider);
-        requiredTypes.outdate();
+        requiredTypes.outdateCache();
     }
 
     @Override

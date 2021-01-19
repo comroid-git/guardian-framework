@@ -138,12 +138,12 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             private final BooleanSupplier condition;
             private final Supplier<K> keySupplier;
             private final Supplier<V> valueSupplier;
-
+/*
             @Override
             public boolean isOutdated() {
                 return true;
             }
-
+*/
             public Conditional(
                     BooleanSupplier condition,
                     Supplier<K> keySupplier,
