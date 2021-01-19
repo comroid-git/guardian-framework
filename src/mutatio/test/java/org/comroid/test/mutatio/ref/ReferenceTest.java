@@ -32,8 +32,13 @@ public class ReferenceTest {
     }
 
     @Test
-    public void test() {
+    public void testTraits() {
         Assert.assertEquals("emptyRef != nullRef", emptyRef, nullRef);
+
+        Assert.assertTrue("empty upToDate", emptyRef.isUpToDate());
+        Assert.assertTrue("null upToDate", nullRef.isUpToDate());
+        Assert.assertTrue("value upToDate", valueRef.isUpToDate());
+        Assert.assertTrue("hashRef outdated", hashRef.isOutdated());
     }
 
     @Test
