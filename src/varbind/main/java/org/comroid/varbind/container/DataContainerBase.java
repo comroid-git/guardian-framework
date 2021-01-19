@@ -42,7 +42,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     private final GroupBind<S> rootBind;
     private final Map<String, VarBind<? extends S, Object, Object, Object>> binds;
     private final ReferenceMap<String, Span<Object>> baseRefs;
-    private final ReferenceMap<String, Object> computedRefs;
+    private final Map<String, KeyedReference<String, Object>> computedRefs
+            = new ConcurrentHashMap<>();
     private final Set<VarBind<? extends S, Object, ?, Object>> initiallySet;
     private final Class<? extends S> myType;
     private final Supplier<S> selfSupplier;
@@ -85,12 +86,11 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         this.baseRefs = ReferenceMap.create();
         this.rootBind = findRootBind(myType);
         this.binds = findAllBinds(rootBind);
-        this.computedRefs = buildComputedReferences();
 
         binds.forEach((key, bind) -> getExtractionReference(key));
         this.initiallySet = unmodifiableSet(updateVars(initialData));
     }
-
+/*
     public DataContainerBase(
             ContextualProvider context,
             @NotNull Map<VarBind<? extends S, Object, ?, Object>, Object> initialValues,
@@ -112,7 +112,6 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
         binds.forEach((key, bind) -> getExtractionReference(key));
     }
-
     private ReferenceMap<String, Object> buildComputedReferences() {
         return baseRefs.biPipe()
                 .mapBoth((key, parts) -> {
@@ -120,6 +119,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                     return bind.process(uncheckedCast(this), parts);
                 }).distinctKeys();
     }
+*/
 
     @Internal
     public static <T extends DataContainer<? super T>> GroupBind<T> findRootBind(Class<? extends T> inClass) {
@@ -229,8 +229,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         }
     }
 
-    public boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {
-        return computedRefs.containsKey(bind.getFieldName());
+    public final boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {
+        return baseRefs.containsKey(bind.getFieldName());
     }
 
     @Override
@@ -277,12 +277,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public UniObjectNode toObjectNode(UniObjectNode applyTo) {
+    public final UniObjectNode toObjectNode(UniObjectNode applyTo) {
         binds.keySet().forEach(key -> {
             final @NotNull Span<Object> them = getExtractionReference(key).requireNonNull("Span is null");
 
             if (them.isEmpty()) {
-                final Reference<Object> ref = computedRefs.getReference(key);
+                final Reference<Object> ref = getComputedReference(key);
                 final Object it = ref.get();
 
                 // support array binds
@@ -316,7 +316,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return applyTo;
     }
 
-    private UniNode applyValueToNode(UniObjectNode applyTo, String key, Object it) {
+    private final UniNode applyValueToNode(UniObjectNode applyTo, String key, Object it) {
         if (it instanceof DataContainer)
             return ((DataContainer<? super S>) it).toObjectNode(applyTo.putObject(key));
         else if (it instanceof AbstractUniNode)
@@ -325,7 +325,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, final T value) {
+    public final <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, final T value) {
         final Reference<Span<T>> extRef = getExtractionReference(bind.getFieldName());
         T prev = extRef.into(Span::get);
 
@@ -345,7 +345,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public <R, T> @Nullable R put(VarBind<? extends S, T, ?, R> bind, Function<R, T> parser, R value) {
+    public final <R, T> @Nullable R put(VarBind<? extends S, T, ?, R> bind, Function<R, T> parser, R value) {
         final T apply = parser.apply(value);
         final R prev = getComputedReference(bind).get();
 
@@ -367,7 +367,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public <E> KeyedReference<String, Span<E>> getExtractionReference(String fieldName) {
+    public final <E> KeyedReference<String, Span<E>> getExtractionReference(String fieldName) {
         baseRefs.computeIfAbsent(fieldName, Span::new);
         return uncheckedCast(Objects.requireNonNull(
                 baseRefs.getReference(fieldName),
@@ -375,10 +375,17 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public <T> KeyedReference<String, T> getComputedReference(String fieldName) {
-        return uncheckedCast(Objects.requireNonNull(
-                computedRefs.getReference(fieldName, true),
-                String.format("Missing computed reference %s @ %s", fieldName, toString())));
+    public final <T> KeyedReference<String, T> getComputedReference(String fieldName) {
+        return Polyfill.uncheckedCast(
+                computedRefs.computeIfAbsent(fieldName, k -> {
+                    KeyedReference<String, Span<Object>> ref = getExtractionReference(k);
+                    VarBind<? extends S, Object, Object, Object> bind = binds.get(k);
+                    return uncheckedCast(
+                            new KeyedReference.Support.Mapped<String, Span<Object>, String, T>(ref,
+                                    Function.identity(),
+                                    extr -> uncheckedCast(bind.process(self().into(Polyfill::uncheckedCast), extr))
+                            ));
+                }));
     }
 
     @Override
@@ -388,7 +395,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
     @NotNull
     @Override
-    public Set<Entry<String, Object>> entrySet() {
-        return unmodifiableSet(computedRefs.streamRefs().collect(Collectors.toSet()));
+    public final Set<Entry<String, Object>> entrySet() {
+        return unmodifiableSet(new HashSet<>(computedRefs.values()));
     }
 }
