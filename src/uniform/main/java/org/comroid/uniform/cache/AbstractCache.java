@@ -1,6 +1,7 @@
 package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public abstract class AbstractCache<K, V> implements Cache<K, V> {
+public abstract class AbstractCache<K, V> extends ValueCache.Underlying<Void> implements Cache<K, V> {
     private final ReferenceMap<K, V> cache;
     private final ContextualProvider context;
 
@@ -27,6 +28,8 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     }
 
     protected AbstractCache(ContextualProvider context, ReferenceMap<K, V> cache) {
+        super(cache);
+
         this.context = context;
         this.cache = cache;
     }

@@ -3,6 +3,7 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -43,8 +45,28 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Collection<? extends SingleValueCache<?>> getDependents() {
+    public boolean isUpToDate() {
+        return baseNode.isUpToDate();
+    }
+
+    @Override
+    public Object getMonitor() {
+        return baseNode.getMonitor();
+    }
+
+    @Override
+    public boolean updateCache() {
+        return baseNode.updateCache();
+    }
+
+    @Override
+    public Collection<? extends ValueCache<?>> getDependents() {
         return baseNode.getDependents();
+    }
+
+    @Override
+    public int deployListeners(Object forValue, Executor executor) {
+        return baseNode.deployListeners(forValue, executor);
     }
 
     @Override
@@ -75,11 +97,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public void cleanupDependents() {
-        baseNode.cleanupDependents();
-    }
-
-    @Override
     public Object putIntoCache(Object withValue) {
         return baseNode.putIntoCache(withValue);
     }
@@ -105,7 +122,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean addDependent(SingleValueCache dependency) {
+    public boolean addDependent(ValueCache dependency) {
         return baseNode.addDependent(dependency);
     }
 

@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public interface ValueCache<T> {
     }
 
     /**
-     * Marks this cache as updated now, but does not cause a ValueUpdate Event.
+     * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
      *
@@ -40,7 +41,7 @@ public interface ValueCache<T> {
     boolean updateCache();
 
     /**
-     * Marks this cache as outdated, but does not cause a ValueUpdate Event.
+     * Marks this cache as outdated, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
      *
@@ -73,10 +74,32 @@ public interface ValueCache<T> {
 
     @Internal
     boolean detach(ValueUpdateListener<T> listener);
+
+    /**
+     * Fires all attached {@link ValueUpdateListener}s with the given new value.
+     *
+     * @param forValue The new value.
+     * @return How many listeners were fired.
+     */
+    @Internal
+    default int deployListeners(T forValue) {
+        return deployListeners(forValue, Runnable::run);
+    }
+
+    /**
+     * Fires all attached {@link ValueUpdateListener}s with the given new value.
+     *
+     * @param forValue The new value.
+     * @param executor The executor to deploy on.
+     * @return How many listeners were fired.
+     */
+    @Internal
+    int deployListeners(T forValue, Executor executor);
+
     abstract class Abstract<T> implements ValueCache<T> {
         private final Set<WeakReference<? extends ValueCache<?>>> dependents = new HashSet<>();
         private final AtomicLong lastUpdate = new AtomicLong(0);
-        protected final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
+        private final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
         protected final ValueCache.Abstract<?> parent;
 
         @Override
@@ -129,6 +152,12 @@ public interface ValueCache<T> {
         }
 
         @Override
+        public final int deployListeners(final T forValue, Executor executor) {
+            executor.execute(() -> listeners.forEach(listener -> listener.acceptNewValue(forValue)));
+            return listeners.size();
+        }
+
+        @Override
         public final boolean updateCache() {
             if (isUpToDate())
                 return false;
@@ -165,11 +194,6 @@ public interface ValueCache<T> {
             return underlying.isUpToDate();
         }
 
-        @Override
-        public Object getMonitor() {
-            return null;
-        }
-
         protected Underlying(ValueCache<T> underlying) {
             this.underlying = underlying;
         }
@@ -202,6 +226,11 @@ public interface ValueCache<T> {
         @Override
         public final boolean detach(ValueUpdateListener<T> listener) {
             return underlying.detach(listener);
+        }
+
+        @Override
+        public int deployListeners(T forValue, Executor executor) {
+            return underlying.deployListeners(forValue, executor);
         }
     }
 }
