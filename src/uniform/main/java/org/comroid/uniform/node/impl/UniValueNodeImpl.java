@@ -95,8 +95,8 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean outdateChildren() {
-        return baseNode.outdateChildren();
+    public boolean outdateDependents() {
+        return baseNode.outdateDependents();
     }
 
     @Override
