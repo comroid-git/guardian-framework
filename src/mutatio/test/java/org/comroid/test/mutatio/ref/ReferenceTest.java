@@ -36,7 +36,8 @@ public class ReferenceTest {
         Assert.assertEquals("emptyRef != nullRef", emptyRef, nullRef);
 
         Assert.assertTrue("empty upToDate", emptyRef.isUpToDate());
-        Assert.assertTrue("null upToDate", nullRef.isUpToDate());
+        Assert.assertTrue("empty immutable", emptyRef.isImmutable());
+
         Assert.assertTrue("value upToDate", valueRef.isUpToDate());
         Assert.assertTrue("hashRef outdated", hashRef.isOutdated());
     }
