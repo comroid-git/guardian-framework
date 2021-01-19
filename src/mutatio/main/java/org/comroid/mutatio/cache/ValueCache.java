@@ -114,7 +114,9 @@ public interface ValueCache<T> {
 
         @Override
         public final synchronized boolean isOutdated() {
-            return parent != null && parent.isOutdated() | lastUpdate.get() <= parent.lastUpdate.get();
+            if (parent != null)
+                return parent.lastUpdate.get() >= lastUpdate.get();
+            return lastUpdate.get() == 0;
         }
 
         protected Abstract(ValueCache<?> parent) {
