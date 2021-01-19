@@ -56,8 +56,6 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         @Nullable
         @Override
         public V doGet() {
-            refs.streamRefs().collect(Collectors.toList())
-
             return refs.streamRefs()
                     .sorted((a, b) -> a.accumulate(b, comparator::compare))
                     .skip(accessedIndex)
