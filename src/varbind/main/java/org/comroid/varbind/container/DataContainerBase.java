@@ -5,24 +5,22 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.api.SelfDeclared;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.impl.AbstractUniNode;
+import org.comroid.uniform.node.impl.StandardValueType;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -182,25 +180,33 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         final HashSet<VarBind<? extends S, Object, ?, Object>> changed = new HashSet<>();
 
         try {
+            final List<? extends VarBind<? extends S, Object, Object, Object>> binds = rootBind.streamAllChildren()
+                    .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
+                    .collect(Collectors.toList());
+            for (VarBind<? extends S, Object, Object, Object> bind : binds) {
+                if (data.has(bind))
+                    try {
+                        Span<Object> extract = bind.extract(data);
+
+                        getExtractionReference(bind).set(extract);
+                        /*getComputedReference(bind).get(); // compute once*/
+                        logger.error(String.format("%s@%s - Changed %s to ( %s / %s )",
+                                getClass().getSimpleName(),
+                                Integer.toHexString(hashCode()),
+                                bind,
+                                Arrays.toString(extract.toArray()),
+                                getComputedReference(bind).get()), new Throwable("stacktrace:"));
+                        changed.add(bind);
+                    } catch (Throwable t) {
+                        throw new ThrownVarBind(bind, t);
+                    }
+            }
+
+
             rootBind.streamAllChildren()
                     .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
                     .filter(bind -> data.has(bind.getFieldName()))
                     .forEach(bind -> {
-                        try {
-                            Span<Object> extract = bind.extract(data);
-
-                            getExtractionReference(bind).set(extract);
-                            /*getComputedReference(bind).get(); // compute once*/
-                            logger.trace("{}@{} - Changed {} to ( {} / {} )",
-                                    getClass().getSimpleName(),
-                                    Integer.toHexString(hashCode()),
-                                    bind,
-                                    Arrays.toString(extract.toArray()),
-                                    getComputedReference(bind).get());
-                            changed.add(bind);
-                        } catch (Throwable t) {
-                            throw new ThrownVarBind(bind, t);
-                        }
                     });
         } catch (ThrownVarBind t) {
             throw new RuntimeException(String.format("Updating data failed for %s at bind %s\nData: %s", toString(), t.bind, data.toString()), t.getCause());
