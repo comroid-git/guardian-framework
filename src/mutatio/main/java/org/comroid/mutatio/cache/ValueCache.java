@@ -1,7 +1,6 @@
 package org.comroid.mutatio.cache;
 
 import org.comroid.annotations.inheritance.MustExtend;
-import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
@@ -35,32 +34,26 @@ public interface ValueCache<T> {
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
      *
-     * @return Whether the reference became updated with this call.
      */
     @Internal
-    boolean updateCache();
+    void updateCache();
 
     /**
      * Marks this cache as outdated, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
      *
-     * @return Whether the reference became outdated with this call.
      */
     @Internal
-    boolean outdateCache();
+    void outdateCache();
 
     /**
      * Marks all dependents as outdated, must be called when this cache is changed.
-     *
-     * @return Count of dependents that could be updated.
      */
     @Internal
     @NonExtendable
-    default int outdateDependents() {
-        return (int) getDependents().stream()
-                .filter(ValueCache::outdateCache)
-                .count();
+    default void outdateDependents() {
+        getDependents().forEach(ValueCache::outdateCache);
     }
 
     @Internal
@@ -160,21 +153,15 @@ public interface ValueCache<T> {
         }
 
         @Override
-        public final boolean updateCache() {
-            if (isUpToDate())
-                return false;
+        public final void updateCache() {
             lastUpdate.set(nanoTime());
             outdateDependents();
-            return true;
         }
 
         @Override
-        public final boolean outdateCache() {
-            if (isOutdated())
-                return false;
+        public final void outdateCache() {
             lastUpdate.set(0);
             outdateDependents();
-            return true;
         }
     }
 
@@ -201,13 +188,13 @@ public interface ValueCache<T> {
         }
 
         @Override
-        public final boolean updateCache() {
-            return underlying.updateCache();
+        public final void updateCache() {
+            underlying.updateCache();
         }
 
         @Override
-        public final boolean outdateCache() {
-            return underlying.outdateCache();
+        public final void outdateCache() {
+            underlying.outdateCache();
         }
 
         @Override

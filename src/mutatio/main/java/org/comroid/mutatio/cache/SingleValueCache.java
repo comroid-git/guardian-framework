@@ -29,7 +29,6 @@ public interface SingleValueCache<T> extends ValueCache<T> {
 
         @Override
         public final synchronized T putIntoCache(T withValue) {
-            final long time = nanoTime();
             cache.set(withValue);
             updateCache();
             deployListeners(withValue);

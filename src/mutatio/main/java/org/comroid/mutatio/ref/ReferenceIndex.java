@@ -134,17 +134,25 @@ public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void> {
 
             @Override
             public boolean add(T item) {
-                return list.add(Reference.constant(item)) && updateCache();
+                list.add(Reference.constant(item));
+                updateCache();
+                return true;
             }
 
             @Override
             public boolean addReference(Reference<T> in) {
-                return list.add(in) && updateCache();
+                list.add(in);
+                updateCache();
+                return true;
             }
 
             @Override
             public boolean remove(T item) {
-                return list.removeIf(ref -> ref.contentEquals(item)) && updateCache();
+                if (list.removeIf(ref -> ref.contentEquals(item))) {
+                    updateCache();
+                    return true;
+                }
+                return false;
             }
 
             @Override

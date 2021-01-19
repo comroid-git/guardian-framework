@@ -2,7 +2,6 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
@@ -50,8 +49,8 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean updateCache() {
-        return baseNode.updateCache();
+    public void updateCache() {
+        baseNode.updateCache();
     }
 
     @Override
@@ -102,8 +101,8 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean outdateCache() {
-        return baseNode.outdateCache();
+    public void outdateCache() {
+        baseNode.outdateCache();
     }
 
     @Override

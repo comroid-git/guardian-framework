@@ -40,6 +40,8 @@ public class ReferenceTest {
 
         Assert.assertTrue("value upToDate", valueRef.isUpToDate());
         Assert.assertTrue("hashRef outdated", hashRef.isOutdated());
+        hashRef.get();
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
     }
 
     @Test
@@ -51,6 +53,7 @@ public class ReferenceTest {
 
         hashRef.get();
         Assert.assertEquals("too many computations", 1, computationCounter.get());
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
     }
 
     @Test
@@ -62,6 +65,7 @@ public class ReferenceTest {
 
         hashRef.get();
         Assert.assertEquals("too many computations", 1, computationCounter.get());
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
     }
 
     @Test(expected = NullPointerException.class)
@@ -76,6 +80,7 @@ public class ReferenceTest {
 
         hashRef.get();
         Assert.assertEquals("too many computations", 1, computationCounter.get());
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
     }
 
     @Test
@@ -90,7 +95,9 @@ public class ReferenceTest {
 
         final String newValue = UUID.randomUUID().toString();
 
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
         Assert.assertTrue("Setting valueRef", valueRef.set(newValue));
+        Assert.assertTrue("hashRef outdated", hashRef.isOutdated());
 
         hashRef.get();
         hashRef.get();
@@ -99,5 +106,6 @@ public class ReferenceTest {
         Assert.assertEquals("new hash", newValue.hashCode(), (int) hashRef.requireNonNull("hash"));
 
         Assert.assertEquals("too many computations", 2, computationCounter.get());
+        Assert.assertTrue("hashRef upToDate", hashRef.isUpToDate());
     }
 }
