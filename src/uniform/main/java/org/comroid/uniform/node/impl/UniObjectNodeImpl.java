@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class UniObjectNodeImpl
+public class UniObjectNodeImpl
         extends AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>>
         implements UniObjectNode {
     public <BAS, OBJ extends BAS> UniObjectNodeImpl(SerializationAdapter<BAS, OBJ, ?> seriLib, @Nullable UniNode parent, Map<String, Object> baseNode) {

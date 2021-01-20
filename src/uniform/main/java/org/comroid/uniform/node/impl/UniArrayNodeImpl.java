@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public final class UniArrayNodeImpl
+public class UniArrayNodeImpl
         extends AbstractUniNode<Integer, KeyedReference<Integer, UniNode>, List<Object>>
         implements UniArrayNode {
     public <BAS, ARR extends BAS> UniArrayNodeImpl(SerializationAdapter<BAS, ?, ARR> seriLib, @Nullable UniNode parent, List<Object> baseNode) {

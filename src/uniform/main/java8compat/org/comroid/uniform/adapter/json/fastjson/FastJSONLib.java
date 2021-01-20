@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.comroid.annotations.Instance;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
@@ -69,12 +70,22 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
 
     @Override
     public UniObjectNode createUniObjectNode(JSONObject node) {
-        return new UniObjectNodeImpl(this, null, node);
+        return new UniObjectNodeImpl(this, null, node) {
+            @Override
+            public String toString() {
+                return JSONObject.toJSONString(baseNode, SerializerFeature.WriteMapNullValue);
+            }
+        };
     }
 
     @Override
     public UniArrayNode createUniArrayNode(JSONArray node) {
-        return new UniArrayNodeImpl(this, null, node);
+        return new UniArrayNodeImpl(this, null, node) {
+            @Override
+            public String toString() {
+                return JSONArray.toJSONString(baseNode, SerializerFeature.WriteMapNullValue);
+            }
+        };
     }
 
     @Override
