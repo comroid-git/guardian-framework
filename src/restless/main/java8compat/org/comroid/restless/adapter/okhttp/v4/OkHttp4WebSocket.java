@@ -46,8 +46,15 @@ public final class OkHttp4WebSocket implements Websocket {
 
     OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
         final Request.Builder initBuilder = new Request.Builder().url(uri.toString());
-        headers.add(CommonHeaderNames.WEBSOCKET_SUBPROTOCOL, preferredProtocol);
-        headers.forEach(initBuilder::addHeader);
+        if (preferredProtocol != null)
+            headers.add(CommonHeaderNames.WEBSOCKET_SUBPROTOCOL, preferredProtocol);
+        headers.forEach((name, value) -> {
+            try {
+                initBuilder.addHeader(name, value);
+            } catch (Throwable t) {
+                throw new RuntimeException(String.format("Problem with header: %s = %s", name, value), t);
+            }
+        });
 
         this.executor = executor;
         this.uri = uri;
