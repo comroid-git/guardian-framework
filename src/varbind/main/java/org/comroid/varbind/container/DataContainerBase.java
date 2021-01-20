@@ -184,20 +184,20 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                     .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
                     .collect(Collectors.toList());
             for (VarBind<? extends S, Object, Object, Object> bind : binds) {
-                if (data.has(bind))
+                final String fieldName = bind.getFieldName();
+                if (fieldName.isEmpty() || data.has(fieldName))
                     try {
                         Span<Object> extract = bind.extract(data);
 
                         getExtractionReference(bind).set(extract);
-                        getComputedReference(bind).get(); // compute once*/
-                        /*logger.error(String.format("%s@%s - Changed %s to ( %s / %s )",
+                        //getComputedReference(bind).get(); // compute once*/
+                        logger.trace(String.format("%s@%s - Changed %s to ( %s / %s )",
                                 getClass().getSimpleName(),
                                 Integer.toHexString(hashCode()),
                                 bind,
                                 Arrays.toString(extract.toArray()),
                                 getComputedReference(bind).get())
-                                /*, new Throwable("stacktrace:")
-                        );*/
+                        );
 
                         changed.add(bind);
                     } catch (Throwable t) {
