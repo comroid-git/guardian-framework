@@ -75,7 +75,7 @@ public final class OkHttp4WebSocket implements Websocket {
 
     @Override
     public CompletableFuture<Websocket> send(String data) {
-        logger.trace("Sending Socket message {}", data);
+        logger.trace("{} - Sending Socket message {}", getName(), data);
         if (!internalSocket.send(data)) {
             RuntimeException exception = new RuntimeException(String.format("WebSocket %s shutting down due to an error", getName()));
             logger.fatal("Could not send data! Websocket will shut down", exception);
