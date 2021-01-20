@@ -8,6 +8,7 @@ import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
@@ -132,7 +133,9 @@ public interface ValueCache<T> {
         public final Collection<? extends ValueCache<?>> getDependents() {
             dependents.removeIf(ref -> ref.get() == null);
             return dependents.stream()
+                    .filter(Objects::nonNull)
                     .map(WeakReference::get)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
         }
 
