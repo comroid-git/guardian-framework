@@ -15,9 +15,14 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
-    private final Collection<Pump<?>> subStages = new ArrayList<>();
+    final Collection<Pump<?>> subStages = new ArrayList<>();
     private final Consumer<Throwable> exceptionHandler;
     private final Executor executor;
+
+    @Override
+    public Consumer<Throwable> getExceptionHandler() {
+        return exceptionHandler;
+    }
 
     @Override
     public Executor getExecutor() {
