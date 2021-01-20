@@ -148,6 +148,10 @@ public final class UniObjectNodeImpl
 
             @Override
             protected boolean doSet(UniNode value) {
+                if (value == null) {
+                    baseNode.put(key, null);
+                    return true;
+                }
                 if (value instanceof UniValueNode)
                     return baseNode.put(key, value.asRaw()) != value;
                 return baseNode.put(key, value.getBaseNode()) != value;
