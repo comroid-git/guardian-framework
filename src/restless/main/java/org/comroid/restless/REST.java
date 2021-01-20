@@ -4,7 +4,6 @@ import com.sun.net.httpserver.Headers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.Invocable;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
@@ -101,8 +100,8 @@ public final class REST implements ContextualProvider.Underlying {
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
     }
 
-    public Request<UniObjectNode> request() {
-        return new Request<>((context, data) -> data.asObjectNode());
+    public Request<UniNode> request() {
+        return new Request<>((context, data) -> data);
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(Class<T> type) {
