@@ -1,6 +1,7 @@
 package org.comroid.uniform;
 
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.ValueType;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.model.ValueAdapter;

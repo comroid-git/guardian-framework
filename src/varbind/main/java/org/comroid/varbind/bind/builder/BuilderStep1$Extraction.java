@@ -1,6 +1,7 @@
 package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.Polyfill;
+import org.comroid.api.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;

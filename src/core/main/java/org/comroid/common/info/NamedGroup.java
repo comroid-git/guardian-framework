@@ -3,13 +3,15 @@ package org.comroid.common.info;
 import org.comroid.api.IntEnum;
 import org.comroid.api.Named;
 import org.comroid.util.Bitmask;
+import org.jetbrains.annotations.NotNull;
 
 public interface NamedGroup extends Named, IntEnum {
     @Override
     String getName();
 
     @Override
-    int getValue();
+    @NotNull
+    Integer getValue();
 
     static NamedGroup of(String name) {
         return of(name, Bitmask.nextFlag(1));
@@ -24,7 +26,7 @@ public interface NamedGroup extends Named, IntEnum {
             private final int value;
 
             @Override
-            public int getValue() {
+            public @NotNull Integer getValue() {
                 return value;
             }
 

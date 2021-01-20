@@ -1,7 +1,6 @@
 package org.comroid.varbind.container;
 
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.SelfDeclared;
+import org.comroid.api.*;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
@@ -55,6 +54,12 @@ public interface DataContainer<S extends DataContainer<? super S>> extends Map<S
     }
 
     UniObjectNode toObjectNode(UniObjectNode node);
+
+    default <T, Value extends ValueBox<T>> @Nullable T put(VarBind<? extends S, T, ?, Value> bind, Value value) {
+        if (!bind.getHeldType().equals(value.getHeldType()))
+            throw new IllegalArgumentException("Unmatching ValueTypes");
+        return put(bind, value.getValue());
+    }
 
     <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value);
 
