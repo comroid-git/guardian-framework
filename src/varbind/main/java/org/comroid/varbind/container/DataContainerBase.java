@@ -319,9 +319,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     private final UniNode applyValueToNode(UniObjectNode applyTo, String key, Object it) {
         if (it instanceof DataContainer)
             return ((DataContainer<? super S>) it).toObjectNode(applyTo.putObject(key));
-        else if (it instanceof AbstractUniNode)
-            return applyTo.putObject(key).copyFrom((UniNode) it);
-        else return applyTo.put(key, StandardValueType.STRING, String.valueOf(it));
+        else return applyTo.put(key, StandardValueType.typeOf(it), it);
     }
 
     @Override
