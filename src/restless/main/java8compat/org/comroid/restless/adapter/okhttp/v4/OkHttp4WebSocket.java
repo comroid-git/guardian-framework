@@ -59,7 +59,7 @@ public final class OkHttp4WebSocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
-        this.pipeline = pump.peek(packet -> logger.trace("WebSocket received packet: {}", packet));
+        this.pipeline = pump.peek(packet -> logger.trace("WebSocket {} received packet: {}", getName(), packet));
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }
 
@@ -77,7 +77,7 @@ public final class OkHttp4WebSocket implements Websocket {
     public CompletableFuture<Websocket> send(String data) {
         logger.trace("Sending Socket message {}", data);
         if (!internalSocket.send(data)) {
-            RuntimeException exception = new RuntimeException("WebSocket shutting down due to an error");
+            RuntimeException exception = new RuntimeException(String.format("WebSocket %s shutting down due to an error", getName()));
             logger.fatal("Could not send data! Websocket will shut down", exception);
             return Polyfill.failedFuture(exception);
         }
@@ -86,7 +86,7 @@ public final class OkHttp4WebSocket implements Websocket {
 
     @Override
     public void close() throws IOException {
-        internalSocket.close(1000, "WebSocket shutting down");
+        internalSocket.close(1000, String.format("WebSocket %s shutting down", getName()));
         pump.close();
     }
 
