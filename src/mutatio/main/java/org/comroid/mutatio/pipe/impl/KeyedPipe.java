@@ -5,6 +5,7 @@ import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +33,13 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
 
     @Override
     public KeyedReference<K, V> getReference(int index) {
-        return accessors.computeIfAbsent(index, key -> adapter.advance(prefabRef(refs.getReference(index))));
+        return accessors.computeIfAbsent(index, key -> {
+            Reference<InV> in = refs.getReference(index);
+            if (in == null || in.isNull())
+                return null;
+            KeyedReference<InK, InV> prefab = prefabRef(in);
+            return adapter.advance(prefab);
+        });
     }
 
     @Override

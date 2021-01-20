@@ -80,7 +80,10 @@ public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void> {
 
     @Nullable
     default T get(int index) {
-        return Objects.requireNonNull(getReference(index), "AssertionFailure: Reference is null").get();
+        Reference<T> ref = getReference(index);
+        if (ref == null)
+            return null;
+        return ref.get();
     }
 
     default Optional<T> wrap(int index) {

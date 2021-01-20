@@ -76,6 +76,8 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
 
         if (!(refs instanceof Pump))
             add(out.get());
+        if (out.isNull())
+            return;
 
         // and then all substages
         executor.execute(() -> subStages.forEach(sub -> {
