@@ -1,7 +1,10 @@
 package org.comroid.restless.socket;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Named;
 import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.node.UniNode;
 
 import java.io.Closeable;
 import java.net.URI;
@@ -10,6 +13,14 @@ import java.util.concurrent.Executor;
 
 public interface Websocket extends Named, Closeable {
     Pipe<? extends WebsocketPacket> getPacketPipeline();
+
+    default Pipe<UniNode> createDataPipeline(ContextualProvider context) {
+        SerializationAdapter<?,?,?> seriLib = context.requireFromContext(SerializationAdapter.class);
+        return getPacketPipeline()
+                .filter(packet -> packet.getType() == WebsocketPacket.Type.DATA)
+                .flatMap(WebsocketPacket::getData)
+                .map(seriLib::parse);
+    }
 
     URI getURI();
 
