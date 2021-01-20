@@ -15,6 +15,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public final class JavaHttpAdapter implements HttpAdapter {
     private static final Logger logger = LogManager.getLogger();
@@ -25,8 +26,14 @@ public final class JavaHttpAdapter implements HttpAdapter {
     }
 
     @Override
-    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
-        return CompletableFuture.completedFuture(new JavaWebsocket(httpClient, executor, uri, headers, preferredProtocol));
+    public CompletableFuture<? extends Websocket> createWebSocket(
+            Executor executor,
+            Consumer<Throwable> exceptionHandler,
+            URI uri,
+            REST.Header.List headers,
+            String preferredProtocol
+    ) {
+        return CompletableFuture.completedFuture(new JavaWebsocket(httpClient, executor, exceptionHandler, uri, headers, preferredProtocol));
     }
 
     @Override

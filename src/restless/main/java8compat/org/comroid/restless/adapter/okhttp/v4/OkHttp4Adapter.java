@@ -11,13 +11,14 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public final class OkHttp4Adapter implements HttpAdapter {
     private final OkHttpClient httpClient = new OkHttpClient.Builder().build();
 
     @Override
-    public CompletableFuture<OkHttp4WebSocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
-        return CompletableFuture.completedFuture(new OkHttp4WebSocket(httpClient, executor, uri, headers, preferredProtocol));
+    public CompletableFuture<OkHttp4WebSocket> createWebSocket(Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
+        return CompletableFuture.completedFuture(new OkHttp4WebSocket(httpClient, executor, exceptionHandler, uri, headers, preferredProtocol));
     }
 
     @Override

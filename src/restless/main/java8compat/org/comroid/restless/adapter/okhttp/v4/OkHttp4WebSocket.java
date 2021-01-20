@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public final class OkHttp4WebSocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
@@ -44,7 +45,7 @@ public final class OkHttp4WebSocket implements Websocket {
         return executor;
     }
 
-    OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
+    OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         final Request.Builder initBuilder = new Request.Builder().url(uri.toString());
         if (preferredProtocol != null)
             headers.add(CommonHeaderNames.WEBSOCKET_SUBPROTOCOL, preferredProtocol);
@@ -58,7 +59,7 @@ public final class OkHttp4WebSocket implements Websocket {
 
         this.executor = executor;
         this.uri = uri;
-        this.pump = Pump.create(executor);
+        this.pump = Pump.create(executor, exceptionHandler);
         this.pipeline = pump.peek(packet -> logger.trace("{} - Received packet: {}", getName(), packet));
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }

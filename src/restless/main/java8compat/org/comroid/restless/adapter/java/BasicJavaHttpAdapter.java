@@ -12,11 +12,12 @@ import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 @Experimental
 public final class BasicJavaHttpAdapter implements HttpAdapter {
     @Override
-    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
+    public CompletableFuture<? extends Websocket> createWebSocket(Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         throw new UnsupportedOperationException("Primitive Adapter Implementation; not capable of WebSockets");
     }
 

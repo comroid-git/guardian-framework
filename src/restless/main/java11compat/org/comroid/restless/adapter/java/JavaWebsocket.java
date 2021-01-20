@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public final class JavaWebsocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
@@ -56,10 +57,10 @@ public final class JavaWebsocket implements Websocket {
         return CompletableFuture.completedFuture(this);
     }
 
-    JavaWebsocket(HttpClient httpClient, Executor executor, URI uri, REST.Header.List headers, String preferredProtocol) {
+    JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
-        this.pump = Pump.create(executor);
+        this.pump = Pump.create(executor, exceptionHandler);
         this.pipeline = pump.peek(packet -> logger.trace("{} - Received packet: {}", getName(), packet));
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();

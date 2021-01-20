@@ -12,11 +12,20 @@ import java.util.function.Consumer;
 
 public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound {
     static <T> Pump<T> create() {
-        return create(Runnable::run);
+        return create(Runnable::run, Throwable::printStackTrace);
+    }
+
+    static <T> Pump<T> create(Consumer<Throwable> exceptionHandler) {
+        return create(Runnable::run, exceptionHandler);
     }
 
     static <T> Pump<T> create(Executor executor) {
-        return new BasicPump<>(executor, ReferenceIndex.create());
+        return create(executor, throwable -> {
+        });
+    }
+
+    static <T> Pump<T> create(Executor executor, Consumer<Throwable> exceptionHandler) {
+        return new BasicPump<>(executor, ReferenceIndex.create(), exceptionHandler);
     }
 
     static <T> Pump<T> of(Collection<T> collection) {

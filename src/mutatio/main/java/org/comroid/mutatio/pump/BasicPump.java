@@ -9,10 +9,14 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     private final Collection<Pump<?>> subStages = new ArrayList<>();
+    private final Consumer<Throwable> exceptionHandler;
     private final Executor executor;
 
     @Override
@@ -20,19 +24,33 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         return executor;
     }
 
-    public BasicPump(ReferenceIndex<O> old) {
-        this(Runnable::run, old);
+    public BasicPump(ReferenceIndex<O> old, Consumer<Throwable> exceptionHandler) {
+        this(Runnable::run, old, exceptionHandler);
     }
 
-    public BasicPump(Executor executor, ReferenceIndex<O> old) {
+    public BasicPump(Executor executor, ReferenceIndex<O> old, Consumer<Throwable> exceptionHandler) {
         //noinspection unchecked
-        this(executor, old, StageAdapter.map(it -> (T) it));
+        this(executor, old, StageAdapter.map(it -> (T) it), exceptionHandler);
     }
 
-    public BasicPump(Executor executor, ReferenceIndex<O> old, StageAdapter<O, T, Reference<O>, Reference<T>> adapter) {
+    public BasicPump(
+            Executor executor,
+            ReferenceIndex<O> old,
+            StageAdapter<O, T, Reference<O>, Reference<T>> adapter,
+            Consumer<Throwable> exceptionHandler
+    ) {
         super(old, adapter, 50);
 
         this.executor = executor;
+        this.exceptionHandler = new Consumer<Throwable>() {
+            private final Set<Throwable> distinct = new HashSet<>();
+
+            @Override
+            public void accept(Throwable throwable) {
+                if (distinct.add(throwable))
+                    exceptionHandler.accept(throwable);
+            }
+        };
     }
 
     @Override
@@ -42,7 +60,7 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
 
     @Override
     public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
-        BasicPump<T, R> sub = new BasicPump<>(executor, this, stage);
+        BasicPump<T, R> sub = new BasicPump<>(executor, this, stage, exceptionHandler);
         subStages.add(sub);
         return sub;
     }
@@ -59,7 +77,7 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
             try {
                 sub.accept(out);
             } catch (Throwable t) {
-                logger.error("Unhandled exception in Pump", t);
+                exceptionHandler.accept(t);
             }
         }));
         // compute this once if hasnt already
