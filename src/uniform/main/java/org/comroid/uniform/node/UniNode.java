@@ -116,6 +116,13 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     @NotNull
+    default <B extends Named & ValuePointer<T>, T> UniNode put(B idBox, ValueBox<T> value) {
+        if (!idBox.getHeldType().equals(value.getHeldType()))
+            throw new IllegalArgumentException("Unmatching ValueTypes");
+        return put(idBox, value.getValue());
+    }
+
+    @NotNull
     default <B extends Named & ValuePointer<T>, T> UniNode put(B idBox, T value) {
         return put(idBox.getName(), idBox.getHeldType(), value);
     }

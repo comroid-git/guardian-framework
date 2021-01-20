@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static org.comroid.uniform.node.impl.StandardValueType.*;
+import static org.comroid.util.StandardValueType.*;
 
 public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
     private final String name;

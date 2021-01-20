@@ -1,7 +1,7 @@
 package org.comroid.test.varbind;
 
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;

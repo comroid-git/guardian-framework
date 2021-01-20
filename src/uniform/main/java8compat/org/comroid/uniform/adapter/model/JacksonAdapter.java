@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static org.comroid.uniform.node.impl.StandardValueType.*;
+import static org.comroid.util.StandardValueType.*;
 
 public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
     private final ObjectMapper objectMapper;

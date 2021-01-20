@@ -4,7 +4,7 @@ import com.sun.net.httpserver.Headers;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;

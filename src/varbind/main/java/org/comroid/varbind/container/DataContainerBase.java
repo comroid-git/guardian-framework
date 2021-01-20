@@ -14,7 +14,7 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.impl.AbstractUniNode;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;

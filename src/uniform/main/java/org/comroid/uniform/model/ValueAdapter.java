@@ -2,10 +2,10 @@ package org.comroid.uniform.model;
 
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
-import static org.comroid.uniform.node.impl.StandardValueType.*;
+import static org.comroid.util.StandardValueType.*;
 
 public abstract class ValueAdapter<B, T> {
     protected final B base;

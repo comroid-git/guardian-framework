@@ -5,7 +5,7 @@ import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 
 import java.util.stream.Stream;
 

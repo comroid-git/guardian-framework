@@ -3,7 +3,7 @@ package org.comroid.varbind.bind.builder;
 import org.comroid.api.ValueType;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.node.impl.StandardValueType;
+import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
