@@ -82,7 +82,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
 
     @Override
     public Span<EXTR> extract(UniNode from) {
-        final UniNode target = fieldName.isEmpty() ? from : from.get(fieldName);
+        final UniNode target = getTargetNode(from);
 
         switch (extractionMethod) {
             case VALUE:
@@ -110,6 +110,23 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
                 }
         }
         throw new AssertionError("unreachable");
+    }
+
+    private UniNode getTargetNode(UniNode from) {
+        if (fieldName.isEmpty())
+            return from;
+        final String[] split = fieldName.split("\\.");
+        if (split.length == 0)
+            throw new AssertionError();
+        if (split.length == 1)
+            return from.get(split[0]);
+        return unwrapNames(from, split, 0);
+    }
+
+    private UniNode unwrapNames(UniNode from, String[] names, int index) {
+        if (index >= names.length)
+            return from;
+        return unwrapNames(from.get(names[index]), names, index + 1);
     }
 
     @Override
