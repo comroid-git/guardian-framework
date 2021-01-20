@@ -137,6 +137,11 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
         return get();
     }
 
+    @Override
+    default <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
+        return new Processor.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
+    }
+
     void rebind(Supplier<T> behind);
 
     /**
