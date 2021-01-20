@@ -189,15 +189,15 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                         Span<Object> extract = bind.extract(data);
 
                         getExtractionReference(bind).set(extract);
-                        /*getComputedReference(bind).get(); // compute once*/
-                        logger.error(String.format("%s@%s - Changed %s to ( %s / %s )",
+                        getComputedReference(bind).get(); // compute once*/
+                        /*logger.error(String.format("%s@%s - Changed %s to ( %s / %s )",
                                 getClass().getSimpleName(),
                                 Integer.toHexString(hashCode()),
                                 bind,
                                 Arrays.toString(extract.toArray()),
                                 getComputedReference(bind).get())
-                                /*, new Throwable("stacktrace:")*/
-                        );
+                                /*, new Throwable("stacktrace:")
+                        );*/
 
                         changed.add(bind);
                     } catch (Throwable t) {

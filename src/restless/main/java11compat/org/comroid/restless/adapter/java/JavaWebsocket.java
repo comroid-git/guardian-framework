@@ -58,7 +58,7 @@ public final class JavaWebsocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
-        this.pipeline = pump.peek(packet -> logger.trace("WebSocket received packet: {}", packet));
+        this.pipeline = pump.peek(packet -> logger.trace("WebSocket {} received packet: {}", getName(), packet));
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
@@ -77,13 +77,13 @@ public final class JavaWebsocket implements Websocket {
         try {
             pump.accept(Reference.constant(packet));
         } catch (Throwable t) {
-            logger.error("A problem occurred when feeding packet " + packet, t);
+            logger.error(String.format("WebSocket %s - A problem occurred when feeding packet %s", getName(), packet), t);
         }
     }
 
     @Override
     public void close() throws IOException {
-        jSocket.future.join().sendClose(1000, "Websocket Closed");
+        jSocket.future.join().sendClose(1000, String.format("Websocket %s Closed", getName()));
         pump.close();
     }
 
