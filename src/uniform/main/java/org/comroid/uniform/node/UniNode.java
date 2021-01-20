@@ -90,6 +90,11 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     @NotNull
+    default Processor<UniNode> process(Named key) {
+        return process(key.getName());
+    }
+
+    @NotNull
     default Processor<UniNode> process(String fieldName) {
         return Processor.ofConstant(get(fieldName));
     }
