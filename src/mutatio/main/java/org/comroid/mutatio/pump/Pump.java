@@ -45,10 +45,8 @@ public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound 
         final Pump<T>[] pumps = Polyfill.uncheckedCast(pipes.filter(Pump.class::isInstance).toArray(Pump[]::new));
         if (pumps.length == 0)
             throw new IllegalArgumentException("No valid Pumps found");
-        /*
         if (pumps.length == 1)
             return pumps[0];
-         */
         final Pump<T> yield = create(pumps[0].getExceptionHandler());
         for (Pump<T> pump : pumps) {
             pump.forEach(it -> yield.accept(Reference.constant(it)));
