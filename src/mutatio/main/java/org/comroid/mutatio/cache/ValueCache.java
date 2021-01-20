@@ -148,7 +148,7 @@ public interface ValueCache<T> {
 
         @Override
         public final int deployListeners(final T forValue, Executor executor) {
-            executor.execute(() -> listeners.forEach(listener -> listener.acceptNewValue(forValue)));
+            listeners.forEach(listener -> executor.execute(() -> listener.acceptNewValue(forValue)));
             return listeners.size();
         }
 
