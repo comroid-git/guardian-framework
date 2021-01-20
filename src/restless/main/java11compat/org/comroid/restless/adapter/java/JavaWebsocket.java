@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -48,6 +49,7 @@ public final class JavaWebsocket implements Websocket {
     public CompletableFuture<Websocket> send(String[] splitMessage) {
         final WebSocket jSocket = this.jSocket.requireNonNull("Socket not available");
 
+        logger.trace("{} - Sending Socket message: {}", getName(), Arrays.toString(splitMessage));
         for (int i = 0; i < splitMessage.length; i++)
             jSocket.sendText(splitMessage[i], i == splitMessage.length - 1);
 
@@ -58,7 +60,7 @@ public final class JavaWebsocket implements Websocket {
         this.executor = executor;
         this.uri = uri;
         this.pump = Pump.create(executor);
-        this.pipeline = pump.peek(packet -> logger.trace("WebSocket {} received packet: {}", getName(), packet));
+        this.pipeline = pump.peek(packet -> logger.trace("{} - Received packet: {}", getName(), packet));
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
@@ -77,13 +79,13 @@ public final class JavaWebsocket implements Websocket {
         try {
             pump.accept(Reference.constant(packet));
         } catch (Throwable t) {
-            logger.error(String.format("WebSocket %s - A problem occurred when feeding packet %s", getName(), packet), t);
+            logger.error(String.format("%s - A problem occurred when feeding packet %s", getName(), packet), t);
         }
     }
 
     @Override
     public void close() throws IOException {
-        jSocket.future.join().sendClose(1000, String.format("Websocket %s Closed", getName()));
+        jSocket.future.join().sendClose(1000, String.format("%s - Socket Closed", getName()));
         pump.close();
     }
 
