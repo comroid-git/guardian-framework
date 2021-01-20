@@ -1,6 +1,7 @@
 package org.comroid.mutatio.pump;
 
 import org.comroid.api.ExecutorBound;
+import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.ref.Reference;
@@ -9,6 +10,8 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound {
     static <T> Pump<T> create() {
@@ -37,6 +40,22 @@ public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound 
 
         return pump;
     }
+
+    static <T> Pump<T> combine(Stream<? extends Pipe<? extends T>> pipes) {
+        final Pump<T>[] pumps = Polyfill.uncheckedCast(pipes.filter(Pump.class::isInstance).toArray(Pump[]::new));
+        if (pumps.length == 0)
+            throw new IllegalArgumentException("No valid Pumps found");
+        if (pumps.length == 1)
+            return pumps[0];
+        final Pump<T> yield = new BasicPump<>(null, pumps[0].getExceptionHandler());
+        for (Pump<T> pump : pumps) {
+            ((BasicPump<?, T>) pump).subStages.add(yield);
+            pump.addDependent(yield);
+        }
+        throw new UnsupportedOperationException("");// todo This is broken
+    }
+
+    Consumer<Throwable> getExceptionHandler();
 
     @Override
     <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage);
