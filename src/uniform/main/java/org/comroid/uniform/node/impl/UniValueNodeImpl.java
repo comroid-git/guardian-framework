@@ -161,13 +161,23 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public Object asRaw(@Nullable Object fallback) {
+    public <R> R as(ValueType<R> type) {
+        return returnAs(type, null);
+    }
+
+    @Override
+    public Object asRaw() {
         return valueAdapter.asActualType();
     }
 
     @Override
-    public <R> R as(ValueType<R> type) {
-        return returnAs(type, null);
+    public Object asRaw(@Nullable Object fallback) {
+        return asRaw();
+    }
+
+    @Override
+    public String asString() {
+        return asString(null);
     }
 
     @Override
@@ -176,8 +186,18 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
+    public boolean asBoolean() {
+        return returnAs(BOOLEAN, null);
+    }
+
+    @Override
     public boolean asBoolean(boolean fallback) {
         return returnAs(BOOLEAN, fallback);
+    }
+
+    @Override
+    public int asInt() {
+        return returnAs(INTEGER, null);
     }
 
     @Override
@@ -186,8 +206,18 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
+    public long asLong() {
+        return returnAs(LONG, null);
+    }
+
+    @Override
     public long asLong(long fallback) {
         return returnAs(LONG, fallback);
+    }
+
+    @Override
+    public double asDouble() {
+        return returnAs(DOUBLE, null);
     }
 
     @Override
@@ -196,13 +226,28 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
+    public float asFloat() {
+        return returnAs(FLOAT, null);
+    }
+
+    @Override
     public float asFloat(float fallback) {
         return returnAs(FLOAT, fallback);
     }
 
     @Override
+    public short asShort() {
+        return returnAs(SHORT, null);
+    }
+
+    @Override
     public short asShort(short fallback) {
         return returnAs(SHORT, fallback);
+    }
+
+    @Override
+    public char asChar() {
+        return returnAs(CHARACTER, null);
     }
 
     @Override

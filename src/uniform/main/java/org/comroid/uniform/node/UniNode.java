@@ -205,15 +205,11 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     UniNode copyFrom(@NotNull UniNode it);
 
     default Object asRaw() {
-        return asRaw(null);
+        return unsupported(this, "GET_RAW", NodeType.VALUE);
     }
 
     default Object asRaw(@Nullable Object fallback) {
-        if (isNull() && fallback != null) {
-            return fallback;
-        }
-
-        return unsupported(this, "GET_RAW", NodeType.VALUE);
+        return fallback;
     }
 
     default <R> R as(ValueType<R> type) {
@@ -221,99 +217,67 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     default String asString() {
-        return asString(null);
-    }
-
-    default String asString(@Nullable String fallback) {
-        if (isNull() && fallback != null) {
-            return fallback;
-        }
-
         return unsupported(this, "GET_AS_STRING", NodeType.VALUE);
     }
 
-    default boolean asBoolean() {
-        return asBoolean(false);
+    default String asString(@Nullable String fallback) {
+        return fallback;
     }
 
-    default boolean asBoolean(boolean fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default boolean asBoolean() {
         return unsupported(this, "GET_AS_BOOLEAN", NodeType.VALUE);
     }
 
-    default int asInt() {
-        return asInt(0);
+    default boolean asBoolean(boolean fallback) {
+        return fallback;
     }
 
-    default int asInt(int fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default int asInt() {
         return unsupported(this, "GET_AS_INT", NodeType.VALUE);
     }
 
-    default long asLong() {
-        return asLong(0);
+    default int asInt(int fallback) {
+        return fallback;
     }
 
-    default long asLong(long fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default long asLong() {
         return unsupported(this, "GET_AS_LONG", NodeType.VALUE);
     }
 
-    default double asDouble() {
-        return asDouble(0);
+    default long asLong(long fallback) {
+        return fallback;
     }
 
-    default double asDouble(double fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default double asDouble() {
         return unsupported(this, "GET_AS_DOUBLE", NodeType.VALUE);
     }
 
-    default float asFloat() {
-        return asFloat(0);
+    default double asDouble(double fallback) {
+        return fallback;
     }
 
-    default float asFloat(float fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default float asFloat() {
         return unsupported(this, "GET_AS_FLOAT", NodeType.VALUE);
     }
 
-    default short asShort() {
-        return asShort((short) 0);
+    default float asFloat(float fallback) {
+        return fallback;
     }
 
-    default short asShort(short fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
+    default short asShort() {
         return unsupported(this, "GET_AS_SHORT", NodeType.VALUE);
     }
 
+    default short asShort(short fallback) {
+        return fallback;
+    }
+
     default char asChar() {
-        return asChar((char) 0);
+        return unsupported(this, "GET_AS_CHAR", NodeType.VALUE);
     }
 
     default char asChar(char fallback) {
-        if (isNull()) {
-            return fallback;
-        }
-
-        return unsupported(this, "GET_AS_CHAR", NodeType.VALUE);
+        return fallback;
     }
 
     default Stream<? extends UniNode> stream() {
