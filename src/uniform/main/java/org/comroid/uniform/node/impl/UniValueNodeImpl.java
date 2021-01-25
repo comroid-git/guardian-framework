@@ -129,12 +129,12 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
         return new KeyedReference.Support.Base<Void, UniNode>(true, nil, null) {
-/*
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
-*/
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+            */
             @Override
             protected UniNode doGet() {
                 final Object value = valueAdapter.asActualType();
@@ -220,7 +220,9 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         try {
             R yield = valueAdapter.asType(type);
             return yield == null ? fallback : yield;
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException iaex) {
+            if (fallback == null)
+                throw iaex;
             return fallback;
         }
     }
