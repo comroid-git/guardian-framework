@@ -361,7 +361,7 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
 
     @Override
     public @NotNull T requireNonNull() throws NullPointerException {
-        return requireNonNull("No iterable value present");
+        return requireNonNull(() -> "No iterable value present");
     }
 
     public Span<T> range(int startIncl, int endExcl) {

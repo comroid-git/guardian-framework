@@ -496,7 +496,11 @@ public final class REST implements ContextualProvider.Underlying {
                             logger.trace("{} @ {} responded with {} body {}", method,
                                     endpoint.getSpec(), response.statusCode, response.getBody().into(Objects::toString));
 
-                            execution.complete(response);
+                            try {
+                                execution.complete(response);
+                            } catch (Throwable t) {
+                                throw new RuntimeException("A problem occurred while handling response " + response, t);
+                            }
                         }, executor);
             }
 
