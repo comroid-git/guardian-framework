@@ -309,7 +309,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 } else applyValueToNode(applyTo, key, them.requireNonNull("AssertionFailure"));
             } else {
                 final UniArrayNode array = applyTo.putArray(key);
-                them.forEach(it -> applyValueToNode(array.addObject(), key, it));
+                them.forEach(it -> {
+                    if (it instanceof DataContainer) {
+                        UniObjectNode each = array.addObject();
+                        ((DataContainer<?>) it).toObjectNode(each);
+                    } else array.add(StandardValueType.typeOf(it), it);
+                });
             }
         });
 
