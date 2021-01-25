@@ -271,6 +271,11 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
                 return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
                         Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
             }
+
+            @Override
+            public boolean equals(Object other) {
+                return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
+            }
         }
 
         private static class Default<T> extends Base<T> {
