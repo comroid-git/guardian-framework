@@ -58,7 +58,11 @@ public class UniObjectNodeImpl
                             ? seriLib.getObjectType()
                             : seriLib.getArrayType());
             return put(key, nodetype, (UniNode) value);
-        } else return put(key, StandardValueType.typeOf(value), value);
+        } else {
+            if (value instanceof ValueBox)
+                value = ((ValueBox<?>) value).getValue();
+            return put(key, StandardValueType.typeOf(value), value);
+        }
     }
 
     @Override

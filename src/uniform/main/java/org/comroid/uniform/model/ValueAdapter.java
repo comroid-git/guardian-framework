@@ -62,9 +62,11 @@ public abstract class ValueAdapter<B, T> {
             return uncheckedCast(asFloat());
         if (SHORT.equals(type))
             return uncheckedCast(asShort());
+        if (OBJECT.equals(type))
+            return uncheckedCast(asActualType());
         if (VOID.equals(type))
             return null;
-        throw new UnsupportedOperationException("Unsupported Type: " + type);
+        throw new UnsupportedOperationException("Unsupported Type: " + type.getName());
     }
 
     public abstract T asActualType();

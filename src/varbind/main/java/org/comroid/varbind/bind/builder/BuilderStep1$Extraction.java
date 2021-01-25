@@ -23,7 +23,7 @@ public final class BuilderStep1$Extraction<SELF extends DataContainer<? super SE
         return extractAsArray(null);
     }
 
-    public <E extends Serializable> BuilderStep2$Remapping<SELF, E> extractAs(
+    public <E> BuilderStep2$Remapping<SELF, E> extractAs(
             @MagicConstant(valuesFromClass = StandardValueType.class) ValueType<E> valueType) {
         return new BuilderStep2$Remapping<>(group, fieldName, valueType, VarBind.ExtractionMethod.VALUE);
     }
