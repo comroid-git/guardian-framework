@@ -5,6 +5,8 @@ import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.model.Serializable;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -16,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S>> extends Map<String, Object>, ContextualProvider.Underlying {
+public interface DataContainer<S extends DataContainer<? super S>> extends Map<String, Object>, Serializable, ContextualProvider.Underlying {
     GroupBind<S> getRootBind();
 
     Class<? extends S> getRepresentedType();
@@ -45,6 +47,11 @@ public interface DataContainer<S extends DataContainer<? super S>> extends Map<S
 
     default @NotNull <T> Processor<T> process(VarBind<? extends S, ?, ?, T> bind) {
         return getComputedReference(bind).process();
+    }
+
+    @Override
+    default UniNode toUniNode() {
+        return toObjectNode(this);
     }
 
     default UniObjectNode toObjectNode(ContextualProvider context) {

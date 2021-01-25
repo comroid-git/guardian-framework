@@ -5,6 +5,7 @@ import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.model.NodeType;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.model.SerializationAdapterHolder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
@@ -14,7 +15,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, Named {
+public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, Named, Serializable {
+    @Override
+    default UniNode toUniNode() {
+        return this;
+    }
+
     Rewrapper<? extends UniNode> getParentNode();
 
     @Internal
