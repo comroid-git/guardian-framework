@@ -131,7 +131,6 @@ public interface ValueCache<T> {
 
         @Override
         public final Collection<? extends ValueCache<?>> getDependents() {
-            dependents.removeIf(ref -> ref.get() == null);
             return dependents.stream()
                     .filter(Objects::nonNull)
                     .map(WeakReference::get)
