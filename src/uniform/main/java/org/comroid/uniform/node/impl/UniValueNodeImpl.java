@@ -217,7 +217,11 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
         if (valueAdapter.getValueType().equals(type))
             //noinspection unchecked
             return (R) valueAdapter.asActualType();
-        R yield = valueAdapter.asType(type);
-        return yield == null ? fallback : yield;
+        try {
+            R yield = valueAdapter.asType(type);
+            return yield == null ? fallback : yield;
+        } catch (IllegalArgumentException ignored) {
+            return fallback;
+        }
     }
 }
