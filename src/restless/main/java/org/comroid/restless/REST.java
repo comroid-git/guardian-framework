@@ -536,7 +536,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public CompletableFuture<T> execute$deserializeSingle() {
-            return execute$deserialize().thenApply(Span::requireNonNull);
+            return execute$deserialize().thenApply(span -> span.isEmpty() ? null : span.requireSingle());
         }
 
         public <R> CompletableFuture<Span<R>> execute$map(Function<T, R> remapper) {
