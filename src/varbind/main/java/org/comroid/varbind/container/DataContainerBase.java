@@ -279,6 +279,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public final UniObjectNode toObjectNode(UniObjectNode applyTo) {
         binds.keySet().forEach(key -> {
+            final VarBind<? extends S, Object, Object, Object> bind = binds.get(key);
             final @NotNull Span<Object> them = getExtractionReference(key).requireNonNull("Span is null");
 
             if (them.isEmpty()) {
@@ -299,9 +300,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 return;
             }
 
-            if (them.isSingle()) {
-
-                final Reference<?> comp = getComputedReference(binds.get(key));
+            if (them.isSingle() && !bind.isListing()) {
+                final Reference<?> comp = getComputedReference(bind);
 
                 if (comp.test(DataContainer.class::isInstance)) {
                     applyValueToNode(applyTo, key, comp.flatMap(DataContainer.class)
