@@ -50,7 +50,7 @@ public interface DataContainer<S extends DataContainer<? super S>> extends Map<S
     }
 
     @Override
-    default UniNode toUniNode() {
+    default UniObjectNode toUniNode() {
         return toObjectNode(this);
     }
 
