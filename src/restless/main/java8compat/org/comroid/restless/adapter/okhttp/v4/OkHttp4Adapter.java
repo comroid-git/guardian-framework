@@ -28,14 +28,10 @@ public final class OkHttp4Adapter implements HttpAdapter {
                 final REST.Method requestMethod = request.getMethod();
                 final String requestBody = request.getBody();
 
-                final Request.Builder builder = new Request.Builder().url(request.getEndpoint().getURL())
-                        // only support null body for GET method, else throw
-                        .method(requestMethod.toString(), (
-                                requestBody == null && requestMethod == REST.Method.GET ? null : RequestBody.create(
-                                        MediaType.parse(request.getHeaders().get(CommonHeaderNames.REQUEST_CONTENT_TYPE)),
-                                        Objects.requireNonNull(requestBody, "Null body not supported with " + requestMethod)
-                                )
-                        ));
+                final Request.Builder builder = new Request.Builder().url(request.getEndpoint().getURL());
+
+                final MediaType mediaType = MediaType.parse(request.getHeaders().get(CommonHeaderNames.REQUEST_CONTENT_TYPE));
+                builder.method(requestMethod.name(), requestBody == null ? null : RequestBody.create(mediaType, requestBody));
 
                 request.getHeaders().forEach(header -> builder.addHeader(header.getName(), header.getValue()));
 
