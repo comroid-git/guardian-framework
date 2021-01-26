@@ -13,9 +13,8 @@ import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.uniform.node.impl.AbstractUniNode;
-import org.comroid.util.StandardValueType;
 import org.comroid.util.ReflectionHelper;
+import org.comroid.util.StandardValueType;
 import org.comroid.varbind.annotation.Location;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
@@ -184,25 +183,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                     .map(it -> (VarBind<? extends S, Object, Object, Object>) it)
                     .collect(Collectors.toList());
             for (VarBind<? extends S, Object, Object, Object> bind : binds) {
-                final String fieldName = bind.getFieldName();
-                if (fieldName.isEmpty() || data.has(fieldName))
-                    try {
-                        Span<Object> extract = bind.extract(data);
-
-                        getExtractionReference(bind).set(extract);
-                        //getComputedReference(bind).get(); // compute once*/
-                        logger.trace(String.format("%s@%s - Changed %s to ( %s / %s )",
-                                getClass().getSimpleName(),
-                                Integer.toHexString(hashCode()),
-                                bind,
-                                Arrays.toString(extract.toArray()),
-                                getComputedReference(bind).get())
-                        );
-
-                        changed.add(bind);
-                    } catch (Throwable t) {
-                        throw new ThrownVarBind(bind, t);
-                    }
+                if (changed.contains(bind))
+                    continue;
+                final Set<VarBind<? extends S, Object, Object, Object>> dependencies = Polyfill.uncheckedCast(bind.getDependencies());
+                if (!dependencies.isEmpty())
+                    dependencies.forEach(dep -> extractBind(dep, data, changed));
+                extractBind(bind, data, changed);
             }
 
 
@@ -218,6 +204,33 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         }
 
         return unmodifiableSet(changed);
+    }
+
+    private void extractBind(
+            VarBind<? extends S, Object, Object, Object> bind,
+            UniObjectNode data,
+            HashSet<VarBind<? extends S, Object, ?, Object>> changed
+    ) {
+        final String fieldName = bind.getFieldName();
+        if (fieldName.isEmpty() || data.has(fieldName))
+            try {
+                Span<Object> extract = bind.extract(data);
+
+                getExtractionReference(bind).set(extract);
+                //getComputedReference(bind).get(); // compute once*/
+                final Object value = getComputedReference(bind).get();
+                logger.trace(String.format("%s@%s - Changed %s to ( %s / %s )",
+                        getClass().getSimpleName(),
+                        Integer.toHexString(hashCode()),
+                        bind,
+                        Arrays.toString(extract.toArray()),
+                        value)
+                );
+
+                changed.add(bind);
+            } catch (Throwable t) {
+                throw new ThrownVarBind(bind, t);
+            }
     }
 
     private static class ThrownVarBind extends Error {

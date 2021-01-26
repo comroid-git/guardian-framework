@@ -6,7 +6,7 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
-import java.util.Collection;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -16,6 +16,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
     private final VarBind.ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> resolver;
     private final Function<Span<REMAP>, FINAL> finisher;
+    private final Set<VarBind<? extends SELF,?,?,?>> dependencies = new HashSet<>();
     private boolean required = false;
 
     protected BuilderStep4$Properties(
@@ -60,6 +61,11 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
         return setRequired(false);
     }
 
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> addDependency(VarBind<? extends SELF,?,?,?> varBind) {
+        dependencies.add(varBind);
+        return this;
+    }
+
     public VarBind<SELF, EXTR, REMAP, FINAL> build() {
         if (valueType == null)
             throw new IllegalArgumentException("ValueType is Missing!");
@@ -70,7 +76,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
         if (finisher == null)
             throw new IllegalArgumentException("No Finishing method defined");
         Binding<SELF, EXTR, REMAP, FINAL> binding
-                = new Binding<>(group, fieldName, required, valueType, extractionMethod, resolver, finisher);
+                = new Binding<>(group, fieldName, required, valueType, extractionMethod, resolver, finisher, dependencies);
         group.addChild(binding);
         return binding;
     }

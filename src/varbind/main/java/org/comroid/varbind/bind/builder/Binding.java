@@ -11,6 +11,7 @@ import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -23,6 +24,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
     private final Function<? super Span<REMAP>, ? extends FINAL> finisher;
+    private final Set<VarBind<? extends SELF, ?, ?, ?>> dependencies;
 
     @Override
     public ValueType<EXTR> getHeldType() {
@@ -40,6 +42,11 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
+    public Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies() {
+        return dependencies;
+    }
+
+    @Override
     public GroupBind<SELF> getGroup() {
         return group;
     }
@@ -51,7 +58,8 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             ValueType<EXTR> valueType,
             ExtractionMethod extractionMethod,
             BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
-            Function<? super Span<REMAP>, ? extends FINAL> finisher
+            Function<? super Span<REMAP>, ? extends FINAL> finisher,
+            Set<VarBind<? extends SELF,?,?,?>> dependencies
     ) {
         this.group = group;
         this.fieldName = fieldName;
@@ -60,6 +68,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         this.extractionMethod = extractionMethod;
         this.remapper = remapper;
         this.finisher = finisher;
+        this.dependencies = dependencies;
     }
 
     @Override

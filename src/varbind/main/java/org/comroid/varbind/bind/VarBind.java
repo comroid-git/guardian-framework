@@ -7,6 +7,8 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainer;
 
+import java.util.Set;
+
 public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         extends Named, ValuePointer<EXTR> {
     String getFieldName();
@@ -40,6 +42,8 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
     default FINAL process(final SELF context, Span<EXTR> from) {
         return finish(remapAll(context, from));
     }
+
+    Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies();
 
     GroupBind<SELF> getGroup();
 
