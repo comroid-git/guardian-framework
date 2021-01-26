@@ -171,6 +171,11 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     @NotNull
+    default UniObjectNode putObject(Named key) throws UnsupportedOperationException {
+        return putObject(key.getName());
+    }
+
+    @NotNull
     default UniObjectNode putObject(String key) throws UnsupportedOperationException {
         final UniObjectNode node = getSerializationAdapter().createUniObjectNode();
         put(key, getFromContext().getObjectType(), node);
