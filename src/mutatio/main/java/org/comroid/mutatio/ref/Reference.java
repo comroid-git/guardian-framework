@@ -19,95 +19,129 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 
-public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
-    @Override
-    @Nullable T get();
+public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
+    private final boolean mutable;
+    private Supplier<T> overriddenSupplier = null;
+
+    @Internal
+    protected <X> X getFromParent() {
+        return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
+    }
 
     @Override
-    Rewrapper<? extends Reference<?>> getParent();
+    public final Rewrapper<? extends Reference<?>> getParent() {
+        return () -> super.getParent().into(Reference.class);
+    }
 
-    boolean isMutable();
+    public boolean isMutable() {
+        return mutable;
+    }
 
-    default boolean isImmutable() {
+    public boolean isImmutable() {
         return !isMutable();
     }
 
     @Deprecated
-    default boolean isPresent() {
+    public boolean isPresent() {
         return test(Objects::nonNull);
     }
 
-    static <T> Reference<T> constant(@Nullable T of) {
+    protected Reference(boolean mutable) {
+        this(null, mutable);
+    }
+
+    protected Reference(@Nullable SingleValueCache<?> parent, boolean mutable) {
+        super(parent);
+
+        this.mutable = mutable;
+    }
+
+    public static <T> Reference<T> constant(@Nullable T of) {
         if (of == null)
             return empty();
         //noinspection unchecked
         return (Reference<T>) Support.IMMUTABLE_CACHE.computeIfAbsent(of, v -> new Support.Default<>(false, of));
     }
 
-    static <T> Reference<T> empty() {
+    public static <T> Reference<T> empty() {
         //noinspection unchecked
         return (Reference<T>) Support.EMPTY;
     }
 
-    static <T> Reference<T> provided(Supplier<T> supplier) {
+    public static <T> Reference<T> provided(Supplier<T> supplier) {
         return conditional(() -> true, supplier);
     }
 
-    static <T> Reference<T> conditional(BooleanSupplier condition, Supplier<T> supplier) {
+    public static <T> Reference<T> conditional(BooleanSupplier condition, Supplier<T> supplier) {
         return new Support.Conditional<>(condition, supplier);
     }
 
-    static <T> FutureReference<T> later(CompletableFuture<T> future) {
+    public static <T> FutureReference<T> later(CompletableFuture<T> future) {
         return new FutureReference<>(future);
     }
 
-    static <T> Reference<T> create() {
+    public static <T> Reference<T> create() {
         return create(null);
     }
 
-    static <T> Reference<T> create(@Nullable T initialValue) {
+    public static <T> Reference<T> create(@Nullable T initialValue) {
         return create(true, initialValue);
     }
 
-    static <T> Reference<T> create(boolean mutable, @Nullable T initialValue) {
+    public static <T> Reference<T> create(boolean mutable, @Nullable T initialValue) {
         return new Support.Default<>(mutable, initialValue);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    static <T> Reference<T> optional(Optional<T> optional) {
+    public static <T> Reference<T> optional(Optional<T> optional) {
         return provided(() -> optional.orElse(null));
     }
 
-    default Processor<T> peek(Consumer<? super T> action) {
+    protected abstract T doGet();
+
+    @OverrideOnly
+    protected boolean doSet(T value) {
+        putIntoCache(value);
+        return true;
+    }
+
+    @Override
+    public synchronized final T get() {
+        T fromCache = getFromCache();
+        if (isUpToDate() && fromCache != null) {
+            //logger.trace("{} is up to date; does not need computing", toString());
+            return fromCache;
+        }
+        //logger.trace("{} is not up to date; recomputing", toString());
+        T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
+        if (value == null)
+            return null;
+        return putIntoCache(value);
+    }
+
+    public Processor<T> peek(Consumer<? super T> action) {
         return new Processor.Support.Remapped<>(this, it -> {
             action.accept(it);
             return it;
         }, Function.identity());
     }
 
-    default Processor<T> process() {
+    public Processor<T> process() {
         return Processor.ofReference(this);
     }
 
-    default Pipe<T> pipe() {
+    public Pipe<T> pipe() {
         return Pipe.of(get());
     }
 
-    /**
-     * @return Whether the new value could be set.
-     */
-    default boolean set(T newValue) {
-        return false;
-    }
-
-    default boolean unset() {
+    public boolean unset() {
         return set(null);
     }
 
     /**
      * @return The new value if it could be set, else the previous value.
      */
-    default T compute(Function<T, T> computor) {
+    public T compute(Function<T, T> computor) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
         if (!set(into(computor)))
@@ -118,7 +152,7 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
     /**
      * @return The new value if it could be set, else the previous value.
      */
-    default T computeIfPresent(Function<T, T> computor) {
+    public T computeIfPresent(Function<T, T> computor) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
         if (!isNull() && !set(into(computor)))
@@ -129,7 +163,7 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
     /**
      * @return The new value if it could be set, else the previous value.
      */
-    default T computeIfAbsent(Supplier<T> supplier) {
+    public T computeIfAbsent(Supplier<T> supplier) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
         if (isNull() && !set(supplier.get()))
@@ -138,143 +172,96 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
     }
 
     @Override
-    default <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
+    public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
         return new Processor.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
     }
 
-    void rebind(Supplier<T> behind);
+    public final boolean set(T value) {
+        if (isImmutable())
+            return false;
+
+        boolean doSet = doSet(value);
+        if (!doSet)
+            return false;
+        putIntoCache(value);
+        return true;
+    }
+
+    public final void rebind(Supplier<T> behind) {
+        if (behind == this || (behind instanceof Processor
+                && ((Processor<T>) behind).upstream().noneMatch(this::equals)))
+            throw new IllegalArgumentException("Cannot rebind behind itself");
+
+        this.overriddenSupplier = behind;
+        outdateCache();
+    }
 
     /**
      * Applies the provided consumer to the current value and attaches a ValueUpdateListener for future updates.
+     *
      * @param action The action to apply
      * @return The attached ValueUpdateListener
      */
-    default ValueUpdateListener<T> apply(Consumer<T> action) {
+    public ValueUpdateListener<T> apply(Consumer<T> action) {
         ifPresent(action);
         return onChange(action);
     }
 
-    default Processor<T> filter(Predicate<? super T> predicate) {
+    public Processor<T> filter(Predicate<? super T> predicate) {
         return new Processor.Support.Filtered<>(this, predicate);
     }
 
-    default <R> Processor<R> flatMap(Class<R> type) {
+    public <R> Processor<R> flatMap(Class<R> type) {
         return filter(type::isInstance).map(type::cast);
     }
 
-    default <R> Processor<R> map(Function<? super T, ? extends R> mapper) {
+    public <R> Processor<R> map(Function<? super T, ? extends R> mapper) {
         return new Processor.Support.Remapped<>(this, mapper, null);
     }
 
-    default <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
+    public <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
         return new Processor.Support.ReferenceFlatMapped<>(this, mapper, null);
     }
 
-    default <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
+    public <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return new Processor.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
     }
 
-    default <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+    public <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
     }
 
-    default <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
+    public <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
-    @Deprecated
-    interface Settable<T> extends Reference<T> {
+    @Override
+    public final String toString() {
+        return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
+                Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
     @Internal
-    final class Support {
+    public static final class Support {
         private static final Logger logger = LogManager.getLogger();
         private static final Reference<?> EMPTY = new Default<>(false, null);
         private static final Map<Object, Reference<?>> IMMUTABLE_CACHE = new ConcurrentHashMap<>();
 
-        public static abstract class Base<T> extends SingleValueCache.Abstract<T> implements Reference<T> {
-            private final boolean mutable;
-            private Supplier<T> overriddenSupplier = null;
-
-            @Override
-            public final Rewrapper<? extends Reference<?>> getParent() {
-                return () -> super.getParent().into(Reference.class);
-            }
-
-            @Override
-            public boolean isMutable() {
-                return mutable;
-            }
-
-            @Internal
-            protected <X> X getFromParent() {
-                return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
-            }
-
+        @Deprecated
+        public static abstract class Base<T> extends Reference<T> {
+            @Deprecated
             protected Base(boolean mutable) {
                 this(null, mutable);
             }
 
+            @Deprecated
             protected Base(@Nullable SingleValueCache<?> parent, boolean mutable) {
-                super(parent);
-
-                this.mutable = mutable;
-            }
-
-            protected abstract T doGet();
-
-            @OverrideOnly
-            protected boolean doSet(T value) {
-                putIntoCache(value);
-                return true;
-            }
-
-            @Nullable
-            @Override
-            public synchronized final T get() {
-                T fromCache = getFromCache();
-                if (isUpToDate() && fromCache != null) {
-                    //logger.trace("{} is up to date; does not need computing", toString());
-                    return fromCache;
-                }
-                //logger.trace("{} is not up to date; recomputing", toString());
-                T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
-                if (value == null)
-                    return null;
-                return putIntoCache(value);
-            }
-
-            @Override
-            public final boolean set(T value) {
-                if (isImmutable())
-                    return false;
-
-                boolean doSet = doSet(value);
-                if (!doSet)
-                    return false;
-                putIntoCache(value);
-                return true;
-            }
-
-            @Override
-            public final void rebind(Supplier<T> behind) {
-                if (behind == this || (behind instanceof Processor
-                        && ((Processor<T>) behind).upstream().noneMatch(this::equals)))
-                    throw new IllegalArgumentException("Cannot rebind behind itself");
-
-                this.overriddenSupplier = behind;
-                outdateCache();
-            }
-
-            @Override
-            public final String toString() {
-                return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
-                        Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
-            }
-
-            @Override
-            public boolean equals(Object other) {
-                return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
+                super(parent, mutable);
             }
         }
 
@@ -300,12 +287,13 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
         private static final class Rebound<T> extends Base<T> {
             private final Consumer<T> setter;
             private final Supplier<T> getter;
-/*
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
- */
+
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+             */
             public Rebound(Consumer<T> setter, Supplier<T> getter) {
                 super(true);
 
@@ -329,12 +317,13 @@ public interface Reference<T> extends SingleValueCache<T>, Rewrapper<T> {
         private static final class Conditional<T> extends Base<T> {
             private final BooleanSupplier condition;
             private final Supplier<T> supplier;
-/*
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
-*/
+
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+            */
             public Conditional(BooleanSupplier condition, Supplier<T> supplier) {
                 super(false);
 

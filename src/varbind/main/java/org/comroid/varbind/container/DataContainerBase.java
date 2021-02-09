@@ -6,7 +6,6 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.span.Span;

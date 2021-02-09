@@ -8,29 +8,51 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
+public abstract class KeyedReference<K, V> extends Reference<V> implements Map.Entry<K, V> {
+    private final K key;
+    private final Reference<V> valueHolder;
+
     @Override
-    default V getValue() {
+    public V getValue() {
         return get();
     }
 
-    static <K, V> KeyedReference<K, V> create(K key) {
-        return create(key, null);
+    @Override
+    public K getKey() {
+        return key;
     }
 
-    static <K, V> KeyedReference<K, V> create(K key, @Nullable V initialValue) {
-        return create(true, key, initialValue);
+    public KeyedReference(K key, Reference<V> valueHolder) {
+        super(valueHolder, valueHolder.isMutable());
+
+        this.key = key;
+        this.valueHolder = valueHolder;
     }
 
-    static <K, V> KeyedReference<K, V> create(boolean mutable, K key) {
-        return create(mutable, key, null);
+    protected KeyedReference(boolean mutable, K key, @Nullable V initialValue) {
+        super(mutable);
+
+        this.key = key;
+        this.valueHolder = Reference.create(initialValue);
     }
 
-    static <K, V> KeyedReference<K, V> create(boolean mutable, K key, @Nullable V initialValue) {
+    public static <K, V> KeyedReference<K, V> createKey(K key) {
+        return createKey(key, null);
+    }
+
+    public static <K, V> KeyedReference<K, V> createKey(K key, @Nullable V initialValue) {
+        return createKey(true, key, initialValue);
+    }
+
+    public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key) {
+        return createKey(mutable, key, null);
+    }
+
+    public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key, @Nullable V initialValue) {
         return new Support.Base<>(mutable, key, initialValue);
     }
 
-    static <K, V> KeyedReference<K, V> conditional(
+    public static <K, V> KeyedReference<K, V> conditional(
             BooleanSupplier condition,
             Supplier<K> keySupplier,
             Supplier<V> valueSupplier
@@ -39,53 +61,30 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
     }
 
     @Override
-    default V setValue(V value) {
-        V rtrn = null;
-        if (isUpToDate())
-            rtrn = get();
-        set(value);
-        return rtrn;
+    public V setValue(V value) {
+        V prev = get();
+
+        return set(value) ? prev : null;
     }
 
-    final class Support {
-        public static class Base<K, V> extends Reference.Support.Base<V> implements KeyedReference<K, V> {
-            private final K key;
-            private final Reference<V> valueHolder;
+    @Override
+    protected V doGet() {
+        return valueHolder.get();
+    }
 
-            @Override
-            public K getKey() {
-                return key;
-            }
+    @Override
+    protected boolean doSet(V value) {
+        return valueHolder.set(value);
+    }
 
+    public static final class Support {
+        public static class Base<K, V> extends KeyedReference<K, V> {
             public Base(K key, Reference<V> valueHolder) {
-                super(valueHolder, valueHolder.isMutable());
-
-                this.key = key;
-                this.valueHolder = valueHolder;
+                super(key, valueHolder);
             }
 
             protected Base(boolean mutable, K key, @Nullable V initialValue) {
-                super(mutable);
-
-                this.key = key;
-                this.valueHolder = Reference.create(initialValue);
-            }
-
-            @Override
-            public V setValue(V value) {
-                V prev = get();
-
-                return set(value) ? prev : null;
-            }
-
-            @Override
-            protected V doGet() {
-                return valueHolder.get();
-            }
-
-            @Override
-            protected boolean doSet(V value) {
-                return valueHolder.set(value);
+                super(mutable, key, initialValue);
             }
         }
 
@@ -117,6 +116,11 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
             private final KeyedReference<InK, InV> parent;
             private final Function<? super InK, ? extends K> keyMapper;
 
+            @Override
+            public K getKey() {
+                return keyMapper.apply(parent.getKey());
+            }
+
             public Mapped(
                     KeyedReference<InK, InV> parent,
                     Function<? super InK, ? extends K> keyMapper,
@@ -127,23 +131,25 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
                 this.parent = parent;
                 this.keyMapper = keyMapper;
             }
-
-            @Override
-            public K getKey() {
-                return keyMapper.apply(parent.getKey());
-            }
         }
 
         private static final class Conditional<K, V> extends Support.Base<K, V> {
             private final BooleanSupplier condition;
             private final Supplier<K> keySupplier;
             private final Supplier<V> valueSupplier;
-/*
+
             @Override
-            public boolean isOutdated() {
-                return true;
+            public K getKey() {
+                return keySupplier.get();
             }
-*/
+
+
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+            */
             public Conditional(
                     BooleanSupplier condition,
                     Supplier<K> keySupplier,
@@ -156,17 +162,11 @@ public interface KeyedReference<K, V> extends Reference<V>, Map.Entry<K, V> {
                 this.valueSupplier = valueSupplier;
             }
 
-
             @Override
             protected V doGet() {
                 if (condition.getAsBoolean())
                     return valueSupplier.get();
                 return null;
-            }
-
-            @Override
-            public K getKey() {
-                return keySupplier.get();
             }
         }
     }

@@ -2,7 +2,6 @@ package org.comroid.mutatio.pipe;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 

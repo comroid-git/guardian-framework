@@ -1,23 +1,17 @@
 package org.comroid.varbind;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.cache.CacheReference;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
-import org.comroid.varbind.container.DataContainerBase;
 
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.function.BiFunction;
 
 public abstract class DataContainerCache<K, V extends DataContainer<? super V>>

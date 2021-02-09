@@ -5,7 +5,6 @@ import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.jetbrains.annotations.Contract;

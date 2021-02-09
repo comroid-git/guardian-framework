@@ -2,7 +2,6 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Provider;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

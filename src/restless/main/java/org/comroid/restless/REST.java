@@ -7,7 +7,6 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.common.io.FileHandle;
-import org.comroid.mutatio.ref.Processor;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
