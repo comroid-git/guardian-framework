@@ -1,6 +1,7 @@
 package org.comroid.common.io;
 
 import org.comroid.api.Named;
+import org.comroid.api.Rewrapper;
 import org.comroid.common.os.OSBasedFileMover;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,10 +47,6 @@ public final class FileHandle extends File implements Named {
         return yields;
     }
 
-    public String getContent() {
-        return getContent(false);
-    }
-
     public void setContent(String content) {
         validateExists();
         try (FileWriter writer = new FileWriter(this, false)) {
@@ -87,6 +84,10 @@ public final class FileHandle extends File implements Named {
         return new FileHandle(file);
     }
 
+    public String getContent() {
+        return getContent(false);
+    }
+
     public String getContent(boolean createIfAbsent) {
         if (!exists() && createIfAbsent) {
             try {
@@ -97,6 +98,14 @@ public final class FileHandle extends File implements Named {
         }
 
         return String.join("", getLines());
+    }
+
+    public Rewrapper<String> wrapContent() {
+        return wrapContent(false);
+    }
+
+    public Rewrapper<String> wrapContent(boolean createIfAbsent) {
+        return Rewrapper.of(getContent(createIfAbsent));
     }
 
     public FileHandle createSubFile(String name) {
