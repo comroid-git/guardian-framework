@@ -118,7 +118,7 @@ public final class JavaWebsocket implements Websocket {
 
         public void pushData() {
             feed(new WebsocketPacket.Empty(WebsocketPacket.Type.DATA) {
-                final Processor<String> string = builder.map(StringBuilder::toString);
+                final Reference<String> string = builder.map(StringBuilder::toString);
 
                 @Override
                 public Rewrapper<String> getData() {
