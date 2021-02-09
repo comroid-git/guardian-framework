@@ -119,15 +119,15 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return putIntoCache(value);
     }
 
-    public Processor<T> peek(Consumer<? super T> action) {
-        return new Processor.Support.Remapped<>(this, it -> {
+    public Reference<T> peek(Consumer<? super T> action) {
+        return new Reference.Support.Remapped<>(this, it -> {
             action.accept(it);
             return it;
         }, Function.identity());
     }
 
-    public Processor<T> process() {
-        return Processor.ofReference(this);
+    public Reference<T> process() {
+        return Reference.ofReference(this);
     }
 
     public Pipe<T> pipe() {
@@ -188,8 +188,8 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     public final void rebind(Supplier<T> behind) {
-        if (behind == this || (behind instanceof Processor
-                && ((Processor<T>) behind).upstream().noneMatch(this::equals)))
+        if (behind == this || (behind instanceof Reference
+                && ((Reference<T>) behind).upstream().noneMatch(this::equals)))
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
         this.overriddenSupplier = behind;
@@ -207,31 +207,31 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return onChange(action);
     }
 
-    public Processor<T> filter(Predicate<? super T> predicate) {
-        return new Processor.Support.Filtered<>(this, predicate);
+    public Reference<T> filter(Predicate<? super T> predicate) {
+        return new Reference.Support.Filtered<>(this, predicate);
     }
 
-    public <R> Processor<R> flatMap(Class<R> type) {
+    public <R> Reference<R> flatMap(Class<R> type) {
         return filter(type::isInstance).map(type::cast);
     }
 
-    public <R> Processor<R> map(Function<? super T, ? extends R> mapper) {
-        return new Processor.Support.Remapped<>(this, mapper, null);
+    public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
+        return new Reference.Support.Remapped<>(this, mapper, null);
     }
 
-    public <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
-        return new Processor.Support.ReferenceFlatMapped<>(this, mapper, null);
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
+        return new Reference.Support.ReferenceFlatMapped<>(this, mapper, null);
     }
 
-    public <R> Processor<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return new Processor.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
+        return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
     }
 
-    public <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
     }
 
-    public <R> Processor<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
+    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
@@ -265,7 +265,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             }
         }
 
-        private static class Default<T> extends Base<T> {
+        private static class Default<T> extends Reference<T> {
             private Default(boolean mutable, T initialValue) {
                 super(mutable);
 
@@ -284,7 +284,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             }
         }
 
-        private static final class Rebound<T> extends Base<T> {
+        private static final class Rebound<T> extends Reference<T> {
             private final Consumer<T> setter;
             private final Supplier<T> getter;
 
@@ -314,7 +314,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             }
         }
 
-        private static final class Conditional<T> extends Base<T> {
+        private static final class Conditional<T> extends Reference<T> {
             private final BooleanSupplier condition;
             private final Supplier<T> supplier;
 
@@ -336,6 +336,103 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
                 if (condition.getAsBoolean())
                     return supplier.get();
                 return null;
+            }
+        }
+
+        public static final Reference<?> EMPTY = new Identity<>(Reference.empty());
+
+        public static class Identity<T> extends Reference<T> {
+            public Identity(Reference<T> parent) {
+                super(parent);
+            }
+
+            @Override
+            protected T doGet() {
+                return getFromParent();
+            }
+        }
+
+        public static final class Filtered<T> extends Reference<T> {
+            private final Predicate<? super T> filter;
+
+            public Filtered(Reference<T> base, Predicate<? super T> filter) {
+                super(base, Function.identity());
+
+                this.filter = filter;
+            }
+
+            @Override
+            protected T doGet() {
+                final T value = getFromParent();
+
+                if (value != null && filter.test(value))
+                    return value;
+                return null;
+            }
+        }
+
+        public static final class Remapped<I, O> extends Reference<O> {
+            private final Function<? super I, ? extends O> remapper;
+
+            public <R> Remapped(
+                    Reference<I> base,
+                    Function<? super I, ? extends O> remapper,
+                    Function<O, I> backwardsConverter
+            ) {
+                super(base, backwardsConverter);
+
+                this.remapper = remapper;
+            }
+
+            @Override
+            protected O doGet() {
+                final I in = getFromParent();
+
+                if (in != null)
+                    return remapper.apply(in);
+                return null;
+            }
+        }
+
+        public static final class ReferenceFlatMapped<I, O> extends Reference<O> {
+            private final Function<? super I, ? extends Reference<? extends O>> remapper;
+
+            public ReferenceFlatMapped(
+                    Reference<I> base,
+                    Function<? super I, ? extends Reference<? extends O>> remapper,
+                    Function<O, I> backwardsConverter
+            ) {
+                super(base, backwardsConverter);
+
+                this.remapper = remapper;
+            }
+
+            @Override
+            protected O doGet() {
+                final I in = getFromParent();
+
+                if (in != null)
+                    return remapper.apply(in).orElse(null);
+                return null;
+            }
+        }
+
+        public static final class Or<T> extends Reference<T> {
+            private final Supplier<T> other;
+
+            public Or(Reference<T> base, Supplier<T> other) {
+                super(base, Function.identity());
+
+                this.other = other;
+            }
+
+            @Override
+            protected T doGet() {
+                final T in = getFromParent();
+
+                if (in == null)
+                    return other.get();
+                return in;
             }
         }
     }
