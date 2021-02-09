@@ -2,6 +2,7 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
+import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
@@ -24,7 +25,7 @@ import java.util.stream.Stream;
 
 import static org.comroid.util.StandardValueType.*;
 
-public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode {
+public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode, SingleValueCache<Object> {
     private final String name;
     private final ValueAdapter<?, Object> valueAdapter;
 
@@ -69,11 +70,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
-    public boolean isMutable() {
-        return baseNode.isMutable();
-    }
-
-    @Override
     public ValueType<Object> getHeldType() {
         return valueAdapter.getValueType();
     }
@@ -83,11 +79,6 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
 
         this.name = name;
         this.valueAdapter = valueAdapter;
-    }
-
-    @Override
-    public void rebind(Supplier behind) {
-        baseNode.rebind(behind);
     }
 
     @Override
@@ -128,7 +119,7 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
 
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
-        return new KeyedReference.Support.Base<Void, UniNode>(true, nil, null) {
+        return new KeyedReference.Support.Base<Void, UniNode>(nil, null, true) {
             /*
                         @Override
                         public boolean isOutdated() {

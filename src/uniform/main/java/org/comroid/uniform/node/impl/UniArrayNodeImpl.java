@@ -167,7 +167,7 @@ public class UniArrayNodeImpl
 
     @Override
     protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
-        return new KeyedReference.Support.Base<Integer, UniNode>(true, key, null) {
+        return new KeyedReference.Support.Base<Integer, UniNode>(key, null, true) {
 /*
             @Override
             public boolean isOutdated() {

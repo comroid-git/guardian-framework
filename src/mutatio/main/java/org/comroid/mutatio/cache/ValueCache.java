@@ -14,6 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.System.nanoTime;
 
@@ -25,6 +26,18 @@ public interface ValueCache<T> {
 
     boolean isUpToDate();
 
+    @Internal
+    Collection<? extends ValueCache<?>> getDependents();
+
+    default Stream<? extends ValueCache<?>> upstream() {
+        return Stream.concat(
+                getParent().stream(),
+                getParent().ifPresentMapOrElseGet(
+                        ValueCache::upstream,
+                        Stream::empty
+                ));
+    }
+
     @NonExtendable
     default ValueUpdateListener<T> onChange(Consumer<T> consumer) {
         return ValueUpdateListener.ofConsumer(this, consumer);
@@ -34,7 +47,6 @@ public interface ValueCache<T> {
      * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
-     *
      */
     @Internal
     void updateCache();
@@ -43,7 +55,6 @@ public interface ValueCache<T> {
      * Marks this cache as outdated, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
      * Bulk operations may choose to not mark each change individually.
-     *
      */
     @Internal
     void outdateCache();
@@ -59,9 +70,6 @@ public interface ValueCache<T> {
 
     @Internal
     boolean addDependent(ValueCache<?> dependency);
-
-    @Internal
-    Collection<? extends ValueCache<?>> getDependents();
 
     @Internal
     boolean attach(ValueUpdateListener<T> listener);
@@ -91,10 +99,10 @@ public interface ValueCache<T> {
     int deployListeners(T forValue, Executor executor);
 
     abstract class Abstract<T> implements ValueCache<T> {
+        protected final ValueCache.Abstract<?> parent;
         private final Set<WeakReference<? extends ValueCache<?>>> dependents = new HashSet<>();
         private final AtomicLong lastUpdate = new AtomicLong(0);
         private final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
-        protected final ValueCache.Abstract<?> parent;
 
         @Override
         public Rewrapper<? extends ValueCache<?>> getParent() {
@@ -113,6 +121,15 @@ public interface ValueCache<T> {
             return lastUpdate.get() == 0;
         }
 
+        @Override
+        public final Collection<? extends ValueCache<?>> getDependents() {
+            return dependents.stream()
+                    .filter(Objects::nonNull)
+                    .map(WeakReference::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        }
+
         protected Abstract(ValueCache<?> parent) {
             try {
                 this.parent = (Abstract<?>) parent;
@@ -127,15 +144,6 @@ public interface ValueCache<T> {
         @Override
         public final boolean addDependent(ValueCache<?> dependency) {
             return dependents.add(new WeakReference<>(dependency));
-        }
-
-        @Override
-        public final Collection<? extends ValueCache<?>> getDependents() {
-            return dependents.stream()
-                    .filter(Objects::nonNull)
-                    .map(WeakReference::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
         }
 
         @Override
@@ -185,6 +193,11 @@ public interface ValueCache<T> {
             return underlying.isUpToDate();
         }
 
+        @Override
+        public final Collection<? extends ValueCache<?>> getDependents() {
+            return underlying.getDependents();
+        }
+
         protected Underlying(ValueCache<T> underlying) {
             this.underlying = underlying;
         }
@@ -202,11 +215,6 @@ public interface ValueCache<T> {
         @Override
         public final boolean addDependent(ValueCache<?> dependency) {
             return underlying.addDependent(dependency);
-        }
-
-        @Override
-        public final Collection<? extends ValueCache<?>> getDependents() {
-            return underlying.getDependents();
         }
 
         @Override

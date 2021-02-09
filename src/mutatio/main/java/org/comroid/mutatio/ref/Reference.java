@@ -10,6 +10,8 @@ import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.util.ReflectionHelper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -21,6 +23,7 @@ import java.util.function.*;
 
 public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
     private final boolean mutable;
+    private final Predicate<T> setter;
     private Supplier<T> overriddenSupplier = null;
 
     @Internal
@@ -33,12 +36,9 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return () -> super.getParent().into(Reference.class);
     }
 
+    @Override
     public boolean isMutable() {
         return mutable;
-    }
-
-    public boolean isImmutable() {
-        return !isMutable();
     }
 
     @Deprecated
@@ -50,9 +50,32 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         this(null, mutable);
     }
 
-    protected Reference(@Nullable SingleValueCache<?> parent, boolean mutable) {
+    protected Reference(@Nullable Reference<?> parent) {
+        this(parent, false);
+    }
+
+    protected <X> Reference(
+            final @Nullable Reference<X> parent,
+            final @NotNull Function<T, X> backwardsConverter
+    ) {
+        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null);
+    }
+
+    protected Reference(
+            @Nullable SingleValueCache<?> parent,
+            boolean mutable
+    ) {
+        this(parent, null, mutable);
+    }
+
+    private Reference(
+            @Nullable SingleValueCache<?> parent,
+            @Nullable Predicate<T> setter,
+            boolean mutable
+    ) {
         super(parent);
 
+        this.setter = setter;
         this.mutable = mutable;
     }
 
@@ -126,8 +149,10 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         }, Function.identity());
     }
 
+    @Contract("-> this")
+    @Deprecated
     public Reference<T> process() {
-        return Reference.ofReference(this);
+        return this;
     }
 
     public Pipe<T> pipe() {
@@ -138,49 +163,17 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return set(null);
     }
 
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    public T compute(Function<T, T> computor) {
-        if (isImmutable())
-            throw new UnsupportedOperationException("Reference is immutable");
-        if (!set(into(computor)))
-            throw new UnsupportedOperationException("Could not set value");
-        return get();
-    }
-
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    public T computeIfPresent(Function<T, T> computor) {
-        if (isImmutable())
-            throw new UnsupportedOperationException("Reference is immutable");
-        if (!isNull() && !set(into(computor)))
-            throw new UnsupportedOperationException("Could not set value");
-        return get();
-    }
-
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    public T computeIfAbsent(Supplier<T> supplier) {
-        if (isImmutable())
-            throw new UnsupportedOperationException("Reference is immutable");
-        if (isNull() && !set(supplier.get()))
-            throw new UnsupportedOperationException("Could not set value");
-        return get();
+    @Override
+    public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
+        return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
     }
 
     @Override
-    public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
-        return new Processor.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
-    }
-
     public final boolean set(T value) {
         if (isImmutable())
             return false;
 
-        boolean doSet = doSet(value);
+        boolean doSet = setter == null ? doSet(value) : setter.test(value);
         if (!doSet)
             return false;
         putIntoCache(value);
@@ -235,6 +228,10 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
+    public Reference<T> or(Supplier<T> orElse) {
+        return new Support.Or<>(this, orElse);
+    }
+
     @Override
     public final String toString() {
         return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
@@ -244,6 +241,9 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     @Override
     public boolean equals(Object other) {
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
+    }
+
+    public interface Advancer<I, O> extends ReferenceAdvancer<I, O, Reference<I>, Reference<O>> {
     }
 
     @Internal
@@ -338,8 +338,6 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
                 return null;
             }
         }
-
-        public static final Reference<?> EMPTY = new Identity<>(Reference.empty());
 
         public static class Identity<T> extends Reference<T> {
             public Identity(Reference<T> parent) {

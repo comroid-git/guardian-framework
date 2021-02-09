@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -48,7 +47,7 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         }
 */
         public SubRef(int accessedIndex) {
-            super(false, null, null);
+            super(null, null, false);
 
             this.accessedIndex = accessedIndex;
         }

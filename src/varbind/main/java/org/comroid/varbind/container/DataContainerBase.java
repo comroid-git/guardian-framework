@@ -267,7 +267,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         }
 
         // any stage in the groupbind tree
-        Processor<GroupBind<? super S>> parentGroup = Processor.ofConstant(getRootBind());
+        Reference<GroupBind<? super S>> parentGroup = Reference.constant(getRootBind());
 
         // find the topmost parent
         while (parentGroup.requireNonNull()

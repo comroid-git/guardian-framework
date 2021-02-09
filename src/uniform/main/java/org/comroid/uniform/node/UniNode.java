@@ -90,18 +90,21 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     @NotNull
-    default Processor<UniNode> process(int index) {
-        return Processor.ofConstant(get(index));
+    @Deprecated
+    default Reference<UniNode> process(int index) {
+        return Reference.constant(get(index));
     }
 
     @NotNull
-    default Processor<UniNode> process(Named key) {
+    @Deprecated
+    default Reference<UniNode> process(Named key) {
         return process(key.getName());
     }
 
     @NotNull
-    default Processor<UniNode> process(String fieldName) {
-        return Processor.ofConstant(get(fieldName));
+    @Deprecated
+    default Reference<UniNode> process(String fieldName) {
+        return Reference.constant(get(fieldName));
     }
 
     default boolean has(int index) {

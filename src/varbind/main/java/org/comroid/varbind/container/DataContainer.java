@@ -43,8 +43,9 @@ public interface DataContainer<S extends DataContainer<? super S>> extends Map<S
         return getComputedReference(bind).requireNonNull(message);
     }
 
-    default @NotNull <T> Processor<T> process(VarBind<? extends S, ?, ?, T> bind) {
-        return getComputedReference(bind).process();
+    @Deprecated
+    default @NotNull <T> Reference<T> process(VarBind<? extends S, ?, ?, T> bind) {
+        return getComputedReference(bind);
     }
 
     @Override

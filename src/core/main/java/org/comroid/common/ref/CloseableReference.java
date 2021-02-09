@@ -1,14 +1,28 @@
 package org.comroid.common.ref;
 
+import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.util.StackTraceUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public abstract class CloseableReference<T> implements Reference<T>, Closeable {
+public abstract class CloseableReference<T> extends Reference<T> implements Closeable {
     private final Collection<ClosedEvent.Listener<T>> listeners = new ArrayList<>();
+
+    protected CloseableReference(boolean mutable) {
+        super(mutable);
+    }
+
+    protected CloseableReference(@Nullable Reference<?> parent) {
+        super(parent);
+    }
+
+    protected CloseableReference(@Nullable SingleValueCache<?> parent, boolean mutable) {
+        super(parent, mutable);
+    }
 
     @Override
     public final void close() {

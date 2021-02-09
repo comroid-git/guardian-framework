@@ -1,5 +1,6 @@
 package org.comroid.uniform.node;
 
+import org.comroid.api.Rewrapper;
 import org.comroid.api.ValuePointer;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
@@ -9,7 +10,7 @@ import org.comroid.util.StandardValueType;
 
 import java.util.stream.Stream;
 
-public interface UniValueNode extends Reference<Object>, UniNode, ValuePointer<Object> {
+public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<Object> {
     UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override

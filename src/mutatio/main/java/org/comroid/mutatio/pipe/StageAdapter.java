@@ -112,7 +112,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
 
             @Override
             public Reference<T> advance(Reference<T> ref) {
-                return new Processor.Support.Filtered<>(ref, predicate);
+                return new Reference.Support.Filtered<>(ref, predicate);
             }
 
             @Override
@@ -130,7 +130,7 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
 
             @Override
             public Reference<T> advance(Reference<O> ref) {
-                return new Processor.Support.Remapped<>(ref, mapper, null);
+                return new Reference.Support.Remapped<>(ref, mapper, null);
             }
 
             @Override

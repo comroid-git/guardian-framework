@@ -53,8 +53,8 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
     }
 
     @Override
-    public <R> Processor<R> accessor(K key, String name, Processor.Advancer<V, ? extends R> advancer) {
-        return null;
+    public <R> Reference<R> accessor(K key, String name, Reference.Advancer<V, ? extends R> advancer) {
+        return null; // todo
     }
 
     @NotNull

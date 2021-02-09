@@ -6,7 +6,9 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.common.io.FileHandle;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
@@ -36,8 +38,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.*;
-
-import static org.comroid.mutatio.ref.Processor.ofConstant;
 
 public final class REST implements ContextualProvider.Underlying {
     private static final Logger logger = LogManager.getLogger();
@@ -220,12 +220,12 @@ public final class REST implements ContextualProvider.Underlying {
             return mimeType;
         }
 
-        public Processor<UniNode> getBody() {
-            return ofConstant(body);
+        public Reference<UniNode> getBody() {
+            return Reference.constant(body);
         }
 
-        public Processor<FileHandle> getFile() {
-            return ofConstant(file);
+        public Reference<FileHandle> getFile() {
+            return Reference.constant(file);
         }
 
         public Header.List getHeaders() {
@@ -369,7 +369,7 @@ public final class REST implements ContextualProvider.Underlying {
             this.statusCode = statusCode;
             this.mimeType = mimeType;
             this.body = body;
-            this.file = ofConstant(file).into(FileHandle::of);
+            this.file = Rewrapper.of(file).into(FileHandle::of);
             this.headers = headers;
         }
 
@@ -513,7 +513,7 @@ public final class REST implements ContextualProvider.Underlying {
         public CompletableFuture<UniNode> execute$body() {
             return execute()
                     .thenApply(Response::getBody)
-                    .thenApply(Processor::get);
+                    .thenApply(Rewrapper::get);
         }
 
         public CompletableFuture<Span<T>> execute$deserialize() {

@@ -248,8 +248,9 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
         return storage.addReference(in);
     }
 
-    public Processor<T> process(int index) {
-        return getReference(index).process();
+    @Deprecated
+    public Reference<T> process(int index) {
+        return getReference(index);
     }
 
     @Override

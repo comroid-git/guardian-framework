@@ -29,7 +29,11 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
         this.valueHolder = valueHolder;
     }
 
-    protected KeyedReference(boolean mutable, K key, @Nullable V initialValue) {
+    protected KeyedReference(K key, boolean mutable) {
+        this(key, null, mutable);
+    }
+
+    protected KeyedReference(K key, @Nullable V initialValue, boolean mutable) {
         super(mutable);
 
         this.key = key;
@@ -49,7 +53,7 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     }
 
     public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key, @Nullable V initialValue) {
-        return new Support.Base<>(mutable, key, initialValue);
+        return new Support.Base<>(key, initialValue, mutable);
     }
 
     public static <K, V> KeyedReference<K, V> conditional(
@@ -83,8 +87,8 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
                 super(key, valueHolder);
             }
 
-            protected Base(boolean mutable, K key, @Nullable V initialValue) {
-                super(mutable, key, initialValue);
+            protected Base(K key, @Nullable V initialValue, boolean mutable) {
+                super(key, initialValue, mutable);
             }
         }
 
@@ -155,7 +159,7 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
                     Supplier<K> keySupplier,
                     Supplier<V> valueSupplier
             ) {
-                super(false, null, null);
+                super(null, null, false);
 
                 this.condition = condition;
                 this.keySupplier = keySupplier;

@@ -11,31 +11,24 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CacheReference<K, V> extends Reference.Support.Base<V> implements KeyedReference<K, V> {
+public class CacheReference<K, V> extends KeyedReference<K, V> {
     public final AtomicReference<V> reference = new AtomicReference<>(null);
     private final org.comroid.mutatio.ref.Reference<CompletableFuture<V>> firstValueFuture = Reference.create();
     private final Object lock = Polyfill.selfawareObject();
-    private final K key;
-
-    public @NotNull K getKey() {
-        return key;
-    }
 
     public CacheReference(K key) {
-        super(true);
+        super(key, true);
 
-        this.key = key;
         this.firstValueFuture.putIntoCache(new CompletableFuture<>());
     }
 
     public CacheReference(K key, V initValue) {
-        super(true);
+        super(key, true);
 
-        this.key = key;
         this.firstValueFuture.outdateCache();
     }
 
-    public static <K, V> CacheReference<K, V> create() {
+    public static <K, V> CacheReference<K, V> createCache() {
         //noinspection unchecked
         return (CacheReference<K, V>) new CacheReference<>(null);
     }

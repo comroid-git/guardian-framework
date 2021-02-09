@@ -125,7 +125,7 @@ public class UniObjectNodeImpl
 
     @Override
     protected KeyedReference<String, UniNode> generateAccessor(final String key) {
-        return new KeyedReference.Support.Base<String, UniNode>(true, key, null) {
+        return new KeyedReference.Support.Base<String, UniNode>(key, null, true) {
 /*
             @Override
             public boolean isOutdated() {

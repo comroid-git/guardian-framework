@@ -1,12 +1,13 @@
 package org.comroid.restless.server;
 
 import com.sun.net.httpserver.Headers;
+import org.comroid.api.Rewrapper;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.impl.AbstractUniNode;
+import org.comroid.util.StandardValueType;
 
 import java.util.stream.Stream;
 
@@ -32,7 +33,7 @@ public interface EndpointHandler {
             throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: " + method.name());
 
         final UniNode data = body.isEmpty() ? null
-                : Processor.ofConstant(server.getSerializationAdapter().createUniNode(body))
+                : Rewrapper.of(server.getSerializationAdapter().createUniNode(body))
                 .orElseGet(() -> {
                     // try to wrap http form data
                     try {

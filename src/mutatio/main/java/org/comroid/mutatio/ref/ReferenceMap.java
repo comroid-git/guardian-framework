@@ -62,8 +62,9 @@ public interface ReferenceMap<K, V> extends Pipeable<V>, ValueCache<Void> {
         return getReference(key, true).wrap();
     }
 
-    default Processor<V> process(K key) {
-        return getReference(key, true).process();
+    @Deprecated
+    default Reference<V> process(K key) {
+        return getReference(key, true);
     }
 
     default @NotNull V requireNonNull(K key) {
@@ -144,7 +145,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V>, ValueCache<Void> {
             private final Function<K, KeyedReference<K, V>> referenceFunction;
 
             public Basic(Map<K, KeyedReference<K, V>> refMap) {
-                this(refMap, KeyedReference::create);
+                this(refMap, KeyedReference::createKey);
             }
 
             public Basic(Map<K, KeyedReference<K, V>> refMap, Function<K, KeyedReference<K, V>> referenceFunction) {

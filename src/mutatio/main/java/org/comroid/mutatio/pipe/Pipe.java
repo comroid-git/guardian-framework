@@ -168,13 +168,13 @@ public interface Pipe<T> extends ReferenceIndex<T>, Closeable {
     }
 
     @NotNull
-    default Processor<T> findFirst() {
+    default Reference<T> findFirst() {
         return sorted().findAny();
     }
 
     @NotNull
-    default Processor<T> findAny() {
-        return Processor.ofReference(Reference.conditional(() -> size() > 0, () -> get(0)));
+    default Reference<T> findAny() {
+        return Reference.conditional(() -> size() > 0, () -> get(0));
     }
 
     @Override
