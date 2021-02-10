@@ -39,16 +39,16 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
 
     @Override
     public UniNode parse(@Nullable String data) {
-        return createUniObjectNode(ofString(data));
+        return createObjectNode(ofString(data));
     }
 
     @Override
-    public UniObjectNode createUniObjectNode(Properties node) {
+    public UniObjectNode createObjectNode(Properties node) {
         return new UniObjectNodeImpl(this, null, MapUtil.hashtable(Polyfill.uncheckedCast(node)));
     }
 
     @Override
-    public UniArrayNode createUniArrayNode(Properties node) {
+    public UniArrayNode createArrayNode(Properties node) {
         throw new UnsupportedOperationException("Cannot create ArrayNode for Properties");
     }
 

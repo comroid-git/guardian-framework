@@ -56,7 +56,7 @@ public interface DataContainer<S extends DataContainer<? super S>> extends Map<S
     default UniObjectNode toObjectNode(ContextualProvider context) {
         //noinspection unchecked
         return toObjectNode(context.requireFromContext(SerializationAdapter.class)
-                .createUniObjectNode(context.requireFromContext(SerializationAdapter.class).getObjectType().get()));
+                .createObjectNode(context.requireFromContext(SerializationAdapter.class).getObjectType().get()));
     }
 
     UniObjectNode toObjectNode(UniObjectNode node);

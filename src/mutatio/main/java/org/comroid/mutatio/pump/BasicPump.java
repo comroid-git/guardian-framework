@@ -2,10 +2,11 @@ package org.comroid.mutatio.pump;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.pipe.StageAdapter;
+import org.comroid.mutatio.pipe.impl.BasicPipe;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
+    private static final Logger logger = LogManager.getLogger();
     final Collection<Pump<?>> subStages = new ArrayList<>();
     private final Consumer<Throwable> exceptionHandler;
     private final Executor executor;
@@ -42,12 +44,14 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
             Executor executor,
             ReferenceIndex<O> old,
             StageAdapter<O, T, Reference<O>, Reference<T>> adapter,
-            Consumer<Throwable> exceptionHandler
+            @Nullable Consumer<Throwable> exceptionHandler
     ) {
         super(old, adapter, 50);
 
         this.executor = executor;
-        this.exceptionHandler = new Consumer<Throwable>() {
+        this.exceptionHandler = exceptionHandler == null
+                ? null
+                : new Consumer<Throwable>() {
             private final Set<Throwable> distinct = new HashSet<>();
 
             @Override
@@ -91,6 +95,4 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         if (out.isOutdated())
             out.get();
     }
-
-    private static final Logger logger = LogManager.getLogger();
 }

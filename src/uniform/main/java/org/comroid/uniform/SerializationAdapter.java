@@ -54,9 +54,9 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
         }
 
         if (getObjectType().test(it))
-            return createUniObjectNode(getObjectType().cast(it));
+            return createObjectNode(getObjectType().cast(it));
         if (getArrayType().test(it))
-            return createUniArrayNode(getArrayType().cast(it));
+            return createArrayNode(getArrayType().cast(it));
         ValueType<Object> typeOf = StandardValueType.typeOf(it);
         if (typeOf != null)
             return UniValueNode.create(this, typeOf, it);
@@ -70,17 +70,17 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
 
     @NonExtendable
     default UniObjectNode createObjectNode() {
-        return createUniObjectNode(getObjectType().get());
+        return createObjectNode(getObjectType().get());
     }
 
     @NonExtendable
     default UniArrayNode createArrayNode() {
-        return createUniArrayNode(getArrayType().get());
+        return createArrayNode(getArrayType().get());
     }
 
-    UniObjectNode createUniObjectNode(OBJ node);
+    UniObjectNode createObjectNode(OBJ node);
 
-    UniArrayNode createUniArrayNode(ARR node);
+    UniArrayNode createArrayNode(ARR node);
 
     ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter);
 }

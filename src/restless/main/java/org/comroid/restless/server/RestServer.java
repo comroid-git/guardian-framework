@@ -106,7 +106,7 @@ public class RestServer implements Closeable {
     }
 
     private UniObjectNode generateErrorNode(RestEndpointException reex) {
-        final UniObjectNode rsp = seriLib.createUniObjectNode();
+        final UniObjectNode rsp = seriLib.createObjectNode();
 
         rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
         rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));

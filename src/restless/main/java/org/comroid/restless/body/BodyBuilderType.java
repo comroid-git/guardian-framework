@@ -10,9 +10,9 @@ import java.util.function.Function;
 
 public final class BodyBuilderType<B extends UniNode> implements Function<SerializationAdapter<?, ?, ?>, B> {
     public static final BodyBuilderType<UniObjectNode> OBJECT
-            = new BodyBuilderType<>(SerializationAdapter::createUniObjectNode);
+            = new BodyBuilderType<>(SerializationAdapter::createObjectNode);
     public static final BodyBuilderType<UniArrayNode> ARRAY
-            = new BodyBuilderType<>(SerializationAdapter::createUniArrayNode);
+            = new BodyBuilderType<>(SerializationAdapter::createArrayNode);
 
     private final Function<SerializationAdapter<?, ?, ?>, B> underlying;
 

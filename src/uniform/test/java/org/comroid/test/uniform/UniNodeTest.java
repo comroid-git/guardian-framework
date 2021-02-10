@@ -40,8 +40,8 @@ public class UniNodeTest {
         object.putAll(randomMap);
         array.addAll(randomInts);
 
-        this.object = fastJsonLib.createUniObjectNode(object);
-        this.array = fastJsonLib.createUniArrayNode(array);
+        this.object = fastJsonLib.createObjectNode(object);
+        this.array = fastJsonLib.createArrayNode(array);
 
         Assert.assertNotNull("object node", object);
         Assert.assertNotNull("arry node", array);

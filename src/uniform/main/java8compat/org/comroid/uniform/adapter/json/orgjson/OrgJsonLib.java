@@ -34,12 +34,12 @@ public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONO
     }
 
     @Override
-    public UniObjectNode createUniObjectNode(JSONObject node) {
+    public UniObjectNode createObjectNode(JSONObject node) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UniArrayNode createUniArrayNode(JSONArray node) {
+    public UniArrayNode createArrayNode(JSONArray node) {
         throw new UnsupportedOperationException();
     }
 

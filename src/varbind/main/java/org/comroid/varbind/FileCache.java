@@ -13,7 +13,6 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
@@ -74,7 +73,7 @@ public class FileCache<K, V extends DataContainer<V>>
 
     @Override
     public synchronized int storeData() throws IOException {
-        final UniArrayNode data = seriLib.createUniArrayNode(null);
+        final UniArrayNode data = seriLib.createArrayNode(null);
 
         entryIndex()
                 .stream()

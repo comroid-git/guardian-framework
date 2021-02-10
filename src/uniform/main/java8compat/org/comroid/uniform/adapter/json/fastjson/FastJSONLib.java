@@ -60,16 +60,16 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
 
         switch (type.getTyp()) {
             case OBJECT:
-                return createUniObjectNode(JSONObject.parseObject(data));
+                return createObjectNode(JSONObject.parseObject(data));
             case ARRAY:
-                return createUniArrayNode(JSONArray.parseArray(data));
+                return createArrayNode(JSONArray.parseArray(data));
         }
 
         throw new IllegalArgumentException("Cannot parse JSON Value");
     }
 
     @Override
-    public UniObjectNode createUniObjectNode(JSONObject node) {
+    public UniObjectNode createObjectNode(JSONObject node) {
         return new UniObjectNodeImpl(this, null, node) {
             @Override
             public String toString() {
@@ -79,7 +79,7 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
     }
 
     @Override
-    public UniArrayNode createUniArrayNode(JSONArray node) {
+    public UniArrayNode createArrayNode(JSONArray node) {
         return new UniArrayNodeImpl(this, null, node) {
             @Override
             public String toString() {

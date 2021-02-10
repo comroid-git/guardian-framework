@@ -142,10 +142,10 @@ public class UniObjectNodeImpl
                     return UniValueNode.NULL;
                 if (seriLib.getObjectType().test(value)) {
                     // value is object
-                    return seriLib.createUniObjectNode(value);
+                    return seriLib.createObjectNode(value);
                 } else if (seriLib.getArrayType().test(value)) {
                     // value is array
-                    return seriLib.createUniArrayNode(value);
+                    return seriLib.createArrayNode(value);
                 } else return new UniValueNodeImpl(key, seriLib, UniObjectNodeImpl.this, seriLib
                         .createValueAdapter(value, nv -> baseNode.put(key, nv) != nv));
             }

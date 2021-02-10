@@ -167,7 +167,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     @NotNull
     default UniObjectNode putObject(int index) throws UnsupportedOperationException {
-        final UniObjectNode node = getSerializationAdapter().createUniObjectNode();
+        final UniObjectNode node = getSerializationAdapter().createObjectNode();
         put(index, getFromContext().getObjectType(), node);
         return node;
     }
@@ -179,7 +179,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     @NotNull
     default UniObjectNode putObject(String key) throws UnsupportedOperationException {
-        final UniObjectNode node = getSerializationAdapter().createUniObjectNode();
+        final UniObjectNode node = getSerializationAdapter().createObjectNode();
         put(key, getFromContext().getObjectType(), node);
         return node;
     }
@@ -191,7 +191,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     @NotNull
     default UniArrayNode putArray(int index) throws UnsupportedOperationException {
-        final UniArrayNode node = getSerializationAdapter().createUniArrayNode();
+        final UniArrayNode node = getSerializationAdapter().createArrayNode();
         put(index, getFromContext().getArrayType(), node);
         return node;
     }
@@ -203,7 +203,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     @NotNull
     default UniArrayNode putArray(String key) throws UnsupportedOperationException {
-        final UniArrayNode node = getSerializationAdapter().createUniArrayNode();
+        final UniArrayNode node = getSerializationAdapter().createArrayNode();
         put(key, getFromContext().getArrayType(), node);
         return node;
     }

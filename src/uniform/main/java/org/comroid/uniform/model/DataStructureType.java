@@ -59,8 +59,8 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
 
         //noinspection unchecked
         final UniNode uni = typ == DataStructureType.Primitive.OBJECT
-                ? seriLib.createUniObjectNode(value)
-                : seriLib.createUniArrayNode(value);
+                ? seriLib.createObjectNode(value)
+                : seriLib.createArrayNode(value);
 
         if (uni.size() == 1)
             //noinspection unchecked

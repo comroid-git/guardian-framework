@@ -37,7 +37,7 @@ public interface EndpointHandler {
                 .orElseGet(() -> {
                     // try to wrap http form data
                     try {
-                        UniObjectNode node = server.getSerializationAdapter().createUniObjectNode();
+                        UniObjectNode node = server.getSerializationAdapter().createObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
                                 .forEach(field -> node.put(field[0], StandardValueType.STRING, field[1]));
