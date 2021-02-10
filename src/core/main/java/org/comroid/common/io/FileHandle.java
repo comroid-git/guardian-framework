@@ -1,5 +1,6 @@
 package org.comroid.common.io;
 
+import org.comroid.api.ContentParser;
 import org.comroid.api.Named;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.os.OSBasedFileMover;
@@ -12,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 
-public final class FileHandle extends File implements Named {
+public final class FileHandle extends File implements Named, ContentParser {
     private final boolean dir;
 
     @NotNull
@@ -84,10 +85,7 @@ public final class FileHandle extends File implements Named {
         return new FileHandle(file);
     }
 
-    public String getContent() {
-        return getContent(false);
-    }
-
+    @Override
     public String getContent(boolean createIfAbsent) {
         if (!exists() && createIfAbsent) {
             try {
@@ -98,14 +96,6 @@ public final class FileHandle extends File implements Named {
         }
 
         return String.join("", getLines());
-    }
-
-    public Rewrapper<String> wrapContent() {
-        return wrapContent(false);
-    }
-
-    public Rewrapper<String> wrapContent(boolean createIfAbsent) {
-        return Rewrapper.of(getContent(createIfAbsent));
     }
 
     public FileHandle createSubFile(String name) {

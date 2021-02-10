@@ -311,25 +311,25 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     Object getBaseNode();
 
-    default UniObjectNode object(String key) {
+    default UniObjectNode computeObject(String key) {
         if (has(key))
             return get(key).asObjectNode();
         return putObject(key);
     }
 
-    default UniObjectNode object(int index) {
+    default UniObjectNode computeObject(int index) {
         if (has(index))
             return get(index).asObjectNode();
         return putObject(index);
     }
 
-    default UniArrayNode array(String key) {
+    default UniArrayNode computeArray(String key) {
         if (has(key))
             return get(key).asArrayNode();
         return putArray(key);
     }
 
-    default UniArrayNode array(int index) {
+    default UniArrayNode computeArray(int index) {
         if (has(index))
             return get(index).asArrayNode();
         return putArray(index);

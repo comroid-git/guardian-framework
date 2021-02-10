@@ -1,6 +1,7 @@
 package org.comroid.uniform;
 
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.Serializer;
 import org.comroid.api.ValueType;
 import org.comroid.common.io.FileHandle;
 import org.comroid.uniform.model.DataStructureType;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This {
+public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This, Serializer<UniNode> {
     String getMimeType();
 
     DataStructureType.Obj<BAS, OBJ> getObjectType();
@@ -64,15 +65,16 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
 
     DataStructureType<BAS, ? extends BAS, ? extends UniNode> typeOfData(String data);
 
+    @Override
     UniNode parse(@Nullable String data);
 
     @NonExtendable
-    default UniObjectNode createUniObjectNode() {
+    default UniObjectNode createObjectNode() {
         return createUniObjectNode(getObjectType().get());
     }
 
     @NonExtendable
-    default UniArrayNode createUniArrayNode() {
+    default UniArrayNode createArrayNode() {
         return createUniArrayNode(getArrayType().get());
     }
 
