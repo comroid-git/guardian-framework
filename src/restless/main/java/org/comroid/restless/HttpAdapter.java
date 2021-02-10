@@ -9,7 +9,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 @SuppressWarnings("rawtypes")
-public interface HttpAdapter extends ContextualProvider.This {
+public interface HttpAdapter extends ContextualProvider.This<Object> {
     static HttpAdapter autodetect() {
         throw new UnsupportedOperationException();
     }

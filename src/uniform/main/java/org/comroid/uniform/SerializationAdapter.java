@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This, Serializer<UniNode> {
+public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This<Object>, Serializer<UniNode> {
     String getMimeType();
 
     DataStructureType.Obj<BAS, OBJ> getObjectType();
