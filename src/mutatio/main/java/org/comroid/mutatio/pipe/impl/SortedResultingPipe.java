@@ -2,6 +2,7 @@ package org.comroid.mutatio.pipe.impl;
 
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceIndex;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -17,7 +18,7 @@ public class SortedResultingPipe<T> extends BasicPipe<T, T> implements Pipe<T> {
         return true;
     }
 
-    public SortedResultingPipe(Pipe<T> base, Comparator<? super T> comparator) {
+    public SortedResultingPipe(ReferenceIndex<T> base, Comparator<? super T> comparator) {
         super(base);
         this.comparator = comparator;
     }

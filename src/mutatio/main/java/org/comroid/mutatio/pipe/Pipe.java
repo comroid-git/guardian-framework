@@ -15,5 +15,4 @@ import java.util.function.*;
 
 @Deprecated
 public interface Pipe<T> extends ReferenceIndex<T> {
-
 }

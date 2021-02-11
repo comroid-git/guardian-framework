@@ -46,6 +46,10 @@ public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Refe
         return filter(new Structure.Skipper<>(skip));
     }
 
+    static <T> StageAdapter<?, T, Reference<?>, Reference<T>> identity() {
+        return map(Polyfill::<T>uncheckedCast);
+    }
+
     RO advance(RI ref);
 
     @OverrideOnly

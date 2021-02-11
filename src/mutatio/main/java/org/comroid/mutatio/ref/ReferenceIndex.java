@@ -28,11 +28,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void>, Closeable {
-    default boolean addReference(Reference<T> in) {
-        throw new UnsupportedOperationException("Please add the Reference to the Pipe's base");
+    default StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter() {
+        return StageAdapter.identity();
     }
-
-    StageAdapter<?, T, Reference<?>, Reference<T>> getAdapter();
 
     default boolean isSorted() {
         return false;
@@ -66,24 +64,20 @@ public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void>, Closea
         return subset;
     }
 
-    static <T> Pipe<T> create() {
-        return new BasicPipe<>(ReferenceIndex.create());
-    }
-
     @SafeVarargs
-    static <T> Pipe<T> of(T... values) {
+    static <T> ReferenceIndex<T> of(T... values) {
         return of(Arrays.asList(values));
     }
 
-    static <T> Pipe<T> of(Collection<T> collection) {
-        final Pipe<T> pipe = create();
+    static <T> ReferenceIndex<T> of(Collection<T> collection) {
+        final ReferenceIndex<T> pipe = create();
         collection.forEach(pipe::add);
 
         return pipe;
     }
 
-    static <T> Pipe<T> ofStream(Stream<T> stream) {
-        final Pipe<T> pipe = create();
+    static <T> ReferenceIndex<T> ofStream(Stream<T> stream) {
+        final ReferenceIndex<T> pipe = create();
         stream.iterator().forEachRemaining(pipe::add);
         return pipe;
     }
@@ -198,15 +192,15 @@ public interface ReferenceIndex<T> extends Pipeable<T>, ValueCache<Void>, Closea
     }
 
     @Deprecated // todo: fix
-    default Pipe<T> skip(long skip) {
+    default ReferenceIndex<T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
-    default Pipe<T> sorted() {
+    default ReferenceIndex<T> sorted() {
         return sorted(Polyfill.uncheckedCast(Comparator.naturalOrder()));
     }
 
-    default Pipe<T> sorted(Comparator<? super T> comparator) {
+    default ReferenceIndex<T> sorted(Comparator<? super T> comparator) {
         return new SortedResultingPipe<>(this, comparator);
     }
 
