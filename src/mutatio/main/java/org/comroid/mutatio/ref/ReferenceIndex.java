@@ -143,8 +143,10 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     public boolean add(T item) {
-        validateBaseExists();
-        return base.add(Polyfill.uncheckedCast(reverser.apply(item)));
+        if (base != null && reverser != null)
+            return base.add(Polyfill.uncheckedCast(reverser.apply(item)));
+        Reference<T> ref = computeRef(size());
+        return ref.set(item);
     }
 
     public void clear() {
@@ -152,7 +154,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         base.clear();
     }
 
-    public final Stream<? extends Reference<T>> streamRefs() {
+    public Stream<? extends Reference<T>> streamRefs() {
         if (base != null)
             base.streamRefs();
         return IntStream.range(0, size())
@@ -188,7 +190,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         return this;
     }
 
-    public final Reference<T> getReference(int index) {
+    public Reference<T> getReference(int index) {
         return computeRef(index);
     }
 
@@ -212,7 +214,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     @OverrideOnly
-    public final boolean addReference(int index, Reference<T> ref) {
+    public boolean addReference(int index, Reference<T> ref) {
         computeRef(index).rebind(ref);
         return true;
     }
@@ -471,13 +473,6 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            public boolean add(T item) {
-                list.add(Reference.constant(item));
-                updateCache();
-                return true;
-            }
-
-            @Override
             public boolean addReference(int index, Reference<T> ref) {
                 list.add(ref);
                 updateCache();
@@ -485,7 +480,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            public boolean remove(T item) {
+            public boolean remove(Object item) {
                 if (list.removeIf(ref -> ref.contentEquals(item))) {
                     updateCache();
                     return true;
@@ -505,15 +500,13 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            public Reference<T> getReference(final int index) {
-                return list.get(index);
+            protected Reference<T> createRef(int index) {
+                return Reference.create();
             }
 
             @Override
-            public List<T> unwrap() {
-                return Collections.unmodifiableList(list.stream()
-                        .flatMap(Reference::stream)
-                        .collect(Collectors.toList()));
+            public Reference<T> getReference(final int index) {
+                return list.get(index);
             }
 
             @Override
@@ -525,6 +518,11 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         public static class OfRange<T> extends ReferenceIndex<T> {
             public OfRange(ReferenceIndex<T> base, int fromIndex, int toIndex) {
                 // todo
+            }
+
+            @Override
+            protected Reference<T> createRef(int index) {
+                return Reference.create();
             }
         }
     }
