@@ -43,7 +43,7 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     public BasicPump(
             Executor executor,
             ReferenceIndex<O> old,
-            StageAdapter<O, T, Reference<O>, Reference<T>> adapter,
+            StageAdapter<O, T> adapter,
             @Nullable Consumer<Throwable> exceptionHandler
     ) {
         super(old, adapter, 50);
@@ -63,12 +63,12 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     }
 
     @Override
-    public <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
+    public <R> Pump<R> addStage(StageAdapter<T, R> stage) {
         return addStage(executor, stage);
     }
 
     @Override
-    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
+    public <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage) {
         BasicPump<T, R> sub = new BasicPump<>(executor, this, stage, exceptionHandler);
         subStages.add(sub);
         return sub;

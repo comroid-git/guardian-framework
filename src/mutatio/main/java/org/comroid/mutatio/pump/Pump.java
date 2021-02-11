@@ -10,7 +10,6 @@ import org.comroid.mutatio.ref.ReferenceIndex;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound {
@@ -62,7 +61,7 @@ public interface Pump<T> extends Pipe<T>, Consumer<Reference<?>>, ExecutorBound 
     Consumer<Throwable> getExceptionHandler();
 
     @Override
-    <R> Pump<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage);
+    <R> Pump<R> addStage(StageAdapter<T, R> stage);
 
-    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R, Reference<T>, Reference<R>> stage);
+    <R> Pump<R> addStage(Executor executor, StageAdapter<T, R> stage);
 }

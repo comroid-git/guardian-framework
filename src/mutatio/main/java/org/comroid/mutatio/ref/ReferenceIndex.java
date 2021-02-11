@@ -5,14 +5,13 @@ import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.*;
-import org.comroid.mutatio.pipe.impl.BasicPipe;
-import org.comroid.mutatio.pipe.impl.KeyedPipe;
 import org.comroid.mutatio.pipe.impl.SortedResultingPipe;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -151,14 +150,14 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         children.add(child);
     }
 
-    public <R> ReferenceIndex<R> addStage(StageAdapter<T, R, Reference<T>, Reference<R>> stage) {
+    public <R> ReferenceIndex<R> addStage(Reference.Advancer<T, R> stage) {
         return new ReferenceIndex.Support.WithStage<>(this, stage);
     }
-
-    public <X> BiPipe<X, T> bi(Function<T, X> source) {
+/*
+    public <X> ReferenceIndex<X, T> bi(Function<T, X> source) {
         return new KeyedPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
     }
-
+*/
     public int size() {
         return refs.size();
     }
@@ -182,8 +181,10 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     @Override
-    public Pipe<T> pipe() {
-        return new BasicPipe<>(refs);
+    @Deprecated
+    @Contract("-> this")
+    public ReferenceIndex<T> pipe() {
+        return this;
     }
 
     public Reference<T> getReference(int index) {
@@ -194,7 +195,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         if (this instanceof BiPipe && !(reference instanceof KeyedReference)) {
             BiStageAdapter.Support.BiSource<T, ?> biSource = (BiStageAdapter.Support.BiSource<T, ?>) adapter;
             Object myKey = biSource.convertKey(reference.into(Polyfill::uncheckedCast));
-            return Polyfill.uncheckedCast(new KeyedReference.Support.Base<?, ?>(Polyfill.uncheckedCast(myKey), reference));
+            return Polyfill.uncheckedCast(new KeyedReference.Support.Base<>(Polyfill.uncheckedCast(myKey), (Reference<Object>) reference));
         } else return Polyfill.uncheckedCast(reference);
     }
 
@@ -230,7 +231,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         return addStage(StageAdapter.filter(predicate));
     }
 
-    public Pipe<T> yield(Predicate<? super T> predicate, Consumer<T> elseConsume) {
+    public ReferenceIndex<T> yield(Predicate<? super T> predicate, Consumer<T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
                 return true;
@@ -240,23 +241,23 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     @Deprecated
-    public <R> Pipe<R> map(Class<R> target) {
+    public <R> ReferenceIndex<R> map(Class<R> target) {
         return flatMap(target);
     }
 
-    public <R> Pipe<R> map(Function<? super T, ? extends R> mapper) {
+    public <R> ReferenceIndex<R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
-    public <R> Pipe<R> flatMap(Class<R> target) {
+    public <R> ReferenceIndex<R> flatMap(Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
 
-    public <R> Pipe<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    public <R> ReferenceIndex<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
-    public Pipe<T> peek(Consumer<? super T> action) {
+    public ReferenceIndex<T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
@@ -265,12 +266,12 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     @Deprecated // todo: fix
-    public Pipe<T> distinct() {
+    public ReferenceIndex<T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
     @Deprecated // todo: fix
-    public Pipe<T> limit(long maxSize) {
+    public ReferenceIndex<T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
@@ -332,7 +333,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             InRef extends Reference<T>,
             OutRef extends Reference<Out>,
             Count,
-            Adp extends StageAdapter<T, Out, InRef, OutRef>
+            Adp extends StageAdapter<T, Out>
             > void generateAccessors(
             final Map<Integer, OutRef> accessors,
             final Adp adapter,
@@ -351,7 +352,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     public CompletableFuture<T> next() {
-        class OnceCompletingStage implements StageAdapter<T, T, Reference<T>, Reference<T>> {
+        class OnceCompletingStage implements StageAdapter<T, T> {
             private final CompletableFuture<T> future = new CompletableFuture<>();
 
             @Override
@@ -363,7 +364,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final Pipe<T> resulting = addStage(stage);
+        final ReferenceIndex<T> resulting = addStage(stage);
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;
