@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     private static final Logger logger = LogManager.getLogger();
-    final Collection<Pump<?>> subStages = new ArrayList<>();
+    private final Collection<BasicPump<T, ?>> subStages = new ArrayList<>();
     private final Consumer<Throwable> exceptionHandler;
     private final Executor executor;
 
