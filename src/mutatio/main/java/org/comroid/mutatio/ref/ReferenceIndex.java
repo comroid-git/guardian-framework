@@ -4,9 +4,11 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.*;
+import org.comroid.mutatio.pipe.BiPipe;
+import org.comroid.mutatio.pipe.BiStageAdapter;
+import org.comroid.mutatio.pipe.Pipeable;
+import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.pipe.impl.SortedResultingPipe;
-import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -19,52 +21,68 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.function.*;
-import java.util.stream.Collector;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, ValueCache<Void>, Closeable {
-    public static final int AUTOEMPTY_DISABLED = -1;
-    protected final ReferenceIndex<?> refs;
-    protected final int autoEmptyLimit;
-    private final Collection<Pipe<?>> subs = new ArrayList<>();
-    private final Reference.Advancer<?, T> adapter;
-    private final Map<Integer, Reference<T>> accessors = new ConcurrentHashMap<>();
-    private final List<Closeable> children = new ArrayList<>();
+public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, Closeable {
+    private final ReferenceIndex<?> base;
+    private final Reference.Advancer<?, T> advancer;
+    private final List<Reference<T>> accessors;
+    private final Function<T, ?> reverser;
 
-    public final Reference.Advancer<?, T> getAdapter() {
-        return adapter;
-    }
-
-    public final Collection<? extends Closeable> getChildren() {
-        return Collections.unmodifiableList(children);
+    public final Reference.Advancer<?, T> getAdvancer() {
+        return advancer;
     }
 
     public boolean isSorted() {
         return false;
     }
 
-    public ReferenceIndex(ReferenceIndex<?> old) {
-        this(old, 100);
+    protected <R> ReferenceIndex() {
+        this(null, (Reference.Advancer<R, T>) null);
     }
 
-    public ReferenceIndex(ReferenceIndex<?> old, int autoEmptyLimit) {
-        this(old, StageAdapter.identity(), autoEmptyLimit);
+    protected <R> ReferenceIndex(
+            @NotNull ReferenceIndex<R> parent
+    ) {
+        this(parent, (Reference.Advancer<R, T>) null);
     }
 
-    public ReferenceIndex(ReferenceIndex<?> old, Reference.Advancer<?, T> adapter) {
-        this(old, adapter, AUTOEMPTY_DISABLED);
+    @Contract("null, !null -> fail")
+    protected <R> ReferenceIndex(
+            ReferenceIndex<R> parent,
+            @Nullable Reference.Advancer<R, T> advancer
+    ) {
+        this(parent, advancer, null);
     }
 
-    protected ReferenceIndex(ReferenceIndex<?> old, Reference.Advancer<?, T> adapter, int autoEmptyLimit) {
-        super(old);
+    protected <R> ReferenceIndex(
+            @NotNull ReferenceIndex<R> parent,
+            @Nullable Function<T, R> reverser
+    ) {
+        this(parent, StageAdapter.identity(), reverser);
+    }
 
-        this.refs = old;
-        this.adapter = adapter;
-        this.autoEmptyLimit = autoEmptyLimit;
+    @Contract("null, !null, _ -> fail")
+    protected <R> ReferenceIndex(
+            ReferenceIndex<R> parent,
+            @Nullable Reference.Advancer<R, T> advancer,
+            @Nullable Function<T, R> reverser
+    ) {
+        super(parent);
+
+        if (parent == null && advancer != null) {
+            throw new NullPointerException("parent required with defined advancer");
+        }
+
+        this.base = parent;
+        this.advancer = advancer;
+        this.reverser = reverser == null ? Polyfill::uncheckedCast : reverser;
+        this.accessors = new ArrayList<>();
     }
 
     public static <T> ReferenceIndex<T> create() {
@@ -100,83 +118,33 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         return pipe;
     }
 
-    public static <T> Collector<Pump<T>, List<Pump<T>>, Pipe<T>> resultingPipeCollector(Executor executor) {
-        class ResultingPipeCollector implements Collector<Pump<T>, List<Pump<T>>, Pipe<T>> {
-            private final Pump<T> yield = Pump.create(executor);
-            private final Supplier<List<Pump<T>>> supplier = ArrayList::new;
-            private final BiConsumer<List<Pump<T>>, Pump<T>> accumulator = List::add;
-            private final BinaryOperator<List<Pump<T>>> combiner = (l, r) -> {
-                l.addAll(r);
-                return l;
-            };
-            private final Function<List<Pump<T>>, Pipe<T>> finisher = pipes -> {
-                pipes.forEach(pump -> pump
-                        .map(Reference::constant)
-                        .map(ref -> ref.map(Object.class::cast))
-                        .peek(yield));
-                return yield;
-            };
+    public final <R> ReferenceIndex<R> addStage(Reference.Advancer<T, R> stage) {
+        ReferenceIndex<R> sub = new Support.WithStage<>(this, stage);
+        addDependent(sub);
+        return sub;
+    }
 
-            @Override
-            public Supplier<List<Pump<T>>> supplier() {
-                return supplier;
-            }
-
-            @Override
-            public BiConsumer<List<Pump<T>>, Pump<T>> accumulator() {
-                return accumulator;
-            }
-
-            @Override
-            public BinaryOperator<List<Pump<T>>> combiner() {
-                return combiner;
-            }
-
-            @Override
-            public Function<List<Pump<T>>, Pipe<T>> finisher() {
-                return finisher;
-            }
-
-            @Override
-            public Set<Characteristics> characteristics() {
-                return Collections.singleton(Characteristics.IDENTITY_FINISH);
-            }
+    /*
+        public <X> ReferenceIndex<X, T> bi(Function<T, X> source) {
+            return new KeyedPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
         }
+    */
 
-        return new ResultingPipeCollector();
-    }
-
-    public final void addChildren(Closeable child) {
-        children.add(child);
-    }
-
-    public <R> ReferenceIndex<R> addStage(Reference.Advancer<T, R> stage) {
-        return new ReferenceIndex.Support.WithStage<>(this, stage);
-    }
-/*
-    public <X> ReferenceIndex<X, T> bi(Function<T, X> source) {
-        return new KeyedPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
-    }
-*/
     public int size() {
-        return refs.size();
+        return base.size();
     }
 
     public boolean add(T item) {
-        if (autoEmptyLimit != AUTOEMPTY_DISABLED
-                && refs.size() >= autoEmptyLimit)
-            refs.clear();
-
-        return refs.add(Polyfill.uncheckedCast(item));
+        return base.add(Polyfill.uncheckedCast(reverser.apply(item)));
     }
 
     public void clear() {
-        refs.clear();
+        base.clear();
     }
 
     public Stream<? extends Reference<T>> streamRefs() {
         // generate accessors
-        refs.generateAccessors(accessors, Polyfill.uncheckedCast(getAdapter()), StageAdapter::advance);
+        base.generateAccessors(accessors, Polyfill.uncheckedCast(getAdvancer()), StageAdapter::advance);
         return accessors.values().stream();
     }
 
@@ -188,12 +156,12 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     public Reference<T> getReference(int index) {
-        return accessors.computeIfAbsent(index, key -> adapter.advance(prefabRef(refs.getReference(index))));
+        return accessors.computeIfAbsent(index, key -> advancer.advance(prefabRef(base.getReference(index))));
     }
 
     protected <R extends Reference<?>> R prefabRef(Reference<?> reference) {
         if (this instanceof BiPipe && !(reference instanceof KeyedReference)) {
-            BiStageAdapter.Support.BiSource<T, ?> biSource = (BiStageAdapter.Support.BiSource<T, ?>) adapter;
+            BiStageAdapter.Support.BiSource<T, ?> biSource = (BiStageAdapter.Support.BiSource<T, ?>) advancer;
             Object myKey = biSource.convertKey(reference.into(Polyfill::uncheckedCast));
             return Polyfill.uncheckedCast(new KeyedReference.Support.Base<>(Polyfill.uncheckedCast(myKey), (Reference<Object>) reference));
         } else return Polyfill.uncheckedCast(reference);
@@ -201,8 +169,9 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
 
     @Override
     public void close() throws IOException {
-        for (Closeable child : getChildren())
-            child.close();
+        for (ValueCache<?> valueCache : getDependents())
+            if (valueCache instanceof Closeable)
+                ((Closeable) valueCache).close();
     }
 
     public ReferenceIndex<T> subset() {
@@ -375,7 +344,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
 
         private static class WithStage<T, R> extends ReferenceIndex<R> {
             private WithStage(ReferenceIndex<T> base, Reference.Advancer<T, R> stage) {
-                super(base, stage);
+                super(base, stage, reverser);
             }
         }
 
@@ -387,8 +356,6 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             private OfList(List<Reference<T>> list) {
-                super(null);
-
                 this.list = list;
             }
 
@@ -427,7 +394,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            public Pipe<T> pipe() {
+            public ReferenceIndex<T> pipe() {
                 return ReferenceIndex.of(list).flatMap(Function.identity());
             }
 

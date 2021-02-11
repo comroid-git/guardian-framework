@@ -55,21 +55,21 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
         @Nullable
         @Override
         public V doGet() {
-            return refs.streamRefs()
+            return base.streamRefs()
                     .sorted((a, b) -> a.accumulate(b, comparator::compare))
                     .skip(accessedIndex)
                     .findFirst()
                     .flatMap(Rewrapper::wrap)
                     .orElseGet(() -> {
-                        if (accessedIndex >= refs.size())
-                            throw new NoSuchElementException(String.format("No element at index %d; refs: %s", accessedIndex, Arrays.toString(refs.stream().toArray())));
+                        if (accessedIndex >= base.size())
+                            throw new NoSuchElementException(String.format("No element at index %d; refs: %s", accessedIndex, Arrays.toString(base.stream().toArray())));
                         return null; // empty
                     });
         }
 
         @Override
         public K getKey() {
-            return refs.streamRefs()
+            return base.streamRefs()
                     .filter(Reference::isNonNull)
                     .sorted((a, b) -> a.accumulate(b, comparator::compare))
                     .skip(accessedIndex)
@@ -92,7 +92,7 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
     }
 
     private Optional<KeyedReference<K, V>> tryFindReference(K key) {
-        return refs.streamRefs()
+        return base.streamRefs()
                 .map(ref -> (KeyedReference<K, V>) ref)
                 .filter(ref -> ref.getKey().equals(key))
                 .findAny();

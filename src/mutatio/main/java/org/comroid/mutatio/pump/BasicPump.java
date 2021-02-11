@@ -76,7 +76,7 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
 
     @Override
     public void accept(final Reference<?> in) {
-        final Reference<T> out = getAdapter().advance(in);
+        final Reference<T> out = getAdvancer().advance(in);
 
         if (out.isNull())
             return;

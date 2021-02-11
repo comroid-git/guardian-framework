@@ -42,7 +42,7 @@ public class SortedResultingPipe<T> extends BasicPipe<T, T> implements Pipe<T> {
             @Nullable
             @Override
             public T doGet() {
-                final List<T> sorted = refs.stream()
+                final List<T> sorted = base.stream()
                         .filter(Objects::nonNull)
                         .sorted(comparator)
                         .collect(Collectors.toList());

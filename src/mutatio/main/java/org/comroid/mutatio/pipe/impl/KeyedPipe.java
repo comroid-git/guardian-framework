@@ -1,6 +1,5 @@
 package org.comroid.mutatio.pipe.impl;
 
-import org.comroid.api.Polyfill;
 import org.comroid.mutatio.pipe.BiPipe;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipe;
@@ -34,7 +33,7 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
     @Override
     public KeyedReference<K, V> getReference(int index) {
         return accessors.computeIfAbsent(index, key -> {
-            Reference<InV> in = refs.getReference(index);
+            Reference<InV> in = base.getReference(index);
             if (in == null || in.isNull())
                 return null;
             KeyedReference<InK, InV> prefab = prefabRef(in);
@@ -45,7 +44,7 @@ public class KeyedPipe<InK, InV, K, V> extends BasicPipe<InV, V> implements BiPi
     @Override
     public Stream<KeyedReference<K, V>> streamRefs() {
         // generate accessors
-        refs.generateAccessors(accessors, adapter, BiStageAdapter::advance);
+        base.generateAccessors(accessors, adapter, BiStageAdapter::advance);
         return accessors.values().stream();
     }
 }

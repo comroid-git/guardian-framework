@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
+@Deprecated
 public interface Pipeable<T> {
     ReferenceIndex<? extends T> pipe();
 
