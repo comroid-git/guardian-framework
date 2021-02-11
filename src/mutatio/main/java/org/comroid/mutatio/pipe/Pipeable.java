@@ -1,5 +1,7 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.mutatio.ref.ReferenceIndex;
+
 import java.util.Collection;
 
 import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
@@ -10,7 +12,7 @@ public interface Pipeable<T> {
     interface From<T> extends Pipeable<T> {
         @Override
         default Pipe<? extends T> pipe() {
-            return Pipe.of(fetchPipeContent());
+            return ReferenceIndex.of(fetchPipeContent());
         }
 
         @OverrideOnly

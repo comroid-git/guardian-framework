@@ -1,6 +1,6 @@
 package org.comroid.test.mutatio.pipe;
 
-import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,14 +25,14 @@ public class BiPipeTest {
 
     @Test
     public void testSimple() {
-        Pipe.of(controlGroup)
+        ReferenceIndex.of(controlGroup)
                 .bi(String::hashCode)
                 .forEach((hash, str) -> Assert.assertEquals("hash code", (long) hash, str.hashCode()));
     }
 
     @Test
     public void testMap() {
-        final ReferenceMap<Integer, String> map = Pipe.of(controlGroup)
+        final ReferenceMap<Integer, String> map = ReferenceIndex.of(controlGroup)
                 .bi(String::hashCode)
                 .mapKey(String::valueOf)
                 .map(String::toUpperCase)

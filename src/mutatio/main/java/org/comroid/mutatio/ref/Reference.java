@@ -156,7 +156,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     public Pipe<T> pipe() {
-        return Pipe.of(get());
+        return ReferenceIndex.of(get());
     }
 
     public boolean unset() {
