@@ -155,10 +155,6 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return this;
     }
 
-    public Pipe<T> pipe() {
-        return ReferenceIndex.of(get());
-    }
-
     public boolean unset() {
         return set(null);
     }
@@ -176,6 +172,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         boolean doSet = setter == null ? doSet(value) : setter.test(value);
         if (!doSet)
             return false;
+        overriddenSupplier = null;
         putIntoCache(value);
         return true;
     }
@@ -185,7 +182,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
                 && ((Reference<T>) behind).upstream().noneMatch(this::equals)))
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
-        this.overriddenSupplier = behind;
+        overriddenSupplier = behind;
         outdateCache();
     }
 

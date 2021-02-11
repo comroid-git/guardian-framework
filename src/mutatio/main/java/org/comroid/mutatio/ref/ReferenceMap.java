@@ -244,7 +244,7 @@ public interface ReferenceMap<K, V> extends Pipeable<V>, ValueCache<Void> {
                 }
 
                 @Override
-                public boolean addReference(Reference<KeyedReference<K, V>> ref) {
+                public boolean addReference(int index, Reference<KeyedReference<K, V>> ref) {
                     return false;
                 }
 
