@@ -82,17 +82,29 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
             add(out.get());
         if (out.isNull())
             return;
-
         // and then all substages
-        executor.execute(() -> subStages.forEach(sub -> {
-            try {
-                sub.accept(out);
-            } catch (Throwable t) {
-                exceptionHandler.accept(t);
-            }
-        }));
+        executor.execute(new PumpCascade(out));
         // compute this once if hasnt already
         if (out.isOutdated())
             out.get();
+    }
+
+    private class PumpCascade implements Runnable {
+        private final Reference<T> out;
+
+        PumpCascade(Reference<T> out) {
+            this.out = out;
+        }
+
+        @Override
+        public void run() {
+            subStages.forEach(sub -> {
+                try {
+                    sub.accept(out);
+                } catch (Throwable t) {
+                    exceptionHandler.accept(t);
+                }
+            });
+        }
     }
 }
