@@ -78,15 +78,13 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
     public void accept(final Reference<?> in) {
         final Reference<T> out = getAdapter().advance(in);
 
-        if (!(refs instanceof Pump))
-            add(out.get());
         if (out.isNull())
             return;
-        // and then all substages
-        executor.execute(new PumpCascade(out));
         // compute this once if hasnt already
         if (out.isOutdated())
             out.get();
+        // and then all substages
+        executor.execute(new PumpCascade(out));
     }
 
     private class PumpCascade implements Runnable {
