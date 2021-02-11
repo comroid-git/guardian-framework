@@ -243,7 +243,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
-    public interface Advancer<I, O> extends ReferenceAdvancer<I, O, Reference<I>, Reference<O>> {
+    public interface Advancer<I, O> {
     }
 
     @Internal

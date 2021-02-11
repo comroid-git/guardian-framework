@@ -3,6 +3,7 @@ package org.comroid.mutatio.pipe;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
 import java.util.HashSet;
@@ -10,7 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Reference<Out>> {
+public interface StageAdapter<In, Out, RI extends Reference<In>, RO extends Reference<Out>> extends ReferenceOverwriter<In, Out, RI, RO> {
     default boolean isIdentity() {
         return false;
     }
