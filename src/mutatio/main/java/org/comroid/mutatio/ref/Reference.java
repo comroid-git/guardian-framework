@@ -262,7 +262,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     @Override
-    public T computeValue() {
+    public void computeAndStoreValue() {
         return get();
     }
 

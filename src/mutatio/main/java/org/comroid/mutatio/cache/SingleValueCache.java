@@ -26,9 +26,8 @@ public interface SingleValueCache<T> extends ValueCache<T> {
     @Contract("_ -> param1")
     T putIntoCache(T withValue);
 
-    @SuppressWarnings("UnusedReturnValue")
     @Internal
-    T computeValue();
+    void computeAndStoreValue();
 
     abstract class Abstract<T> extends ValueCache.Abstract<T> implements SingleValueCache<T> {
         private final AtomicReference<T> cache = new AtomicReference<>();
@@ -60,15 +59,13 @@ public interface SingleValueCache<T> extends ValueCache<T> {
             updateCache();
             if (autocomputor == null)
                 deployListeners(withValue);
-            else {
-                autocomputor.execute(() -> {
-                    deployListeners(withValue);
-                    getDependents().stream()
-                            .filter(SingleValueCache.class::isInstance)
-                            .map(SingleValueCache.class::cast)
-                            .forEach(SingleValueCache::computeValue);
-                });
-            }
+            else autocomputor.execute(() -> {
+                deployListeners(withValue);
+                getDependents().stream()
+                        .filter(SingleValueCache.class::isInstance)
+                        .map(SingleValueCache.class::cast)
+                        .forEach(SingleValueCache::computeAndStoreValue);
+            });
             return withValue;
         }
     }

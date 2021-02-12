@@ -161,9 +161,9 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
                 .mapToObj(this::computeRef);
     }
 
-    protected final @NotNull Reference<T> computeRef(int index) {
+    protected final @Nullable Reference<T> computeRef(int index) {
         if (0 > index || index > size())
-            throw new IndexOutOfBoundsException(String.format("-1 < %d < %d", index, size()));
+            return null;
         Reference<T> ref;
         if (index <= accessors.size()) {
             ref = accessors.get(index);
@@ -171,12 +171,12 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
                 return ref;
         } else while (accessors.size() < index)
             accessors.add(null);
-        ref = createRef(index);
+        ref = createRef(base.getReference(index), index);
         accessors.set(index, ref);
         return ref;
     }
 
-    protected abstract Reference<T> createRef(int index);
+    protected abstract Reference<T> createRef(@Nullable Reference<?> parent, int index);
 
     private void validateBaseExists() {
         if (base == null)
@@ -190,7 +190,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         return this;
     }
 
-    public Reference<T> getReference(int index) {
+    public @Nullable Reference<T> getReference(int index) {
         return computeRef(index);
     }
 
@@ -456,7 +456,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            protected Reference<R> createRef(int index) {
+            protected Reference<R> createRef(Reference<?> parent, int index) {
                 return Reference.create();
             }
         }
@@ -500,7 +500,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            protected Reference<T> createRef(int index) {
+            protected Reference<T> createRef(Reference<?> parent, int index) {
                 return Reference.create();
             }
 
@@ -521,7 +521,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            protected Reference<T> createRef(int index) {
+            protected Reference<T> createRef(Reference<?> parent, int index) {
                 return Reference.create();
             }
         }
@@ -602,7 +602,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         @Override
         public void add(T t) {
             if (!index.test(i -> {
-                Reference<T> ref = createRef(i);
+                Reference<T> ref = createRef(null, i);
                 ref.set(t);
                 return ReferenceIndex.this.addReference(i, ref);
             })) throw new UnsupportedOperationException("Unable to add");
