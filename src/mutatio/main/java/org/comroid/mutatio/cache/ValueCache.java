@@ -40,9 +40,6 @@ public interface ValueCache<T> {
                 ));
     }
 
-    @Internal
-    Collection<? extends ValueCache<?>> getDependents();
-
     /**
      * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
@@ -67,6 +64,9 @@ public interface ValueCache<T> {
     default void outdateDependents() {
         getDependents().forEach(ValueCache::outdateCache);
     }
+
+    @Internal
+    Collection<? extends ValueCache<?>> getDependents();
 
     @Internal
     boolean addDependent(ValueCache<?> dependency);
