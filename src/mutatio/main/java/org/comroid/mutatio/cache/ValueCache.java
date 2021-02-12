@@ -26,8 +26,10 @@ public interface ValueCache<T> {
 
     boolean isUpToDate();
 
-    @Internal
-    Collection<? extends ValueCache<?>> getDependents();
+    @NonExtendable
+    default ValueUpdateListener<T> onChange(Consumer<T> consumer) {
+        return ValueUpdateListener.ofConsumer(this, consumer);
+    }
 
     default Stream<? extends ValueCache<?>> upstream() {
         return Stream.concat(
@@ -38,10 +40,8 @@ public interface ValueCache<T> {
                 ));
     }
 
-    @NonExtendable
-    default ValueUpdateListener<T> onChange(Consumer<T> consumer) {
-        return ValueUpdateListener.ofConsumer(this, consumer);
-    }
+    @Internal
+    Collection<? extends ValueCache<?>> getDependents();
 
     /**
      * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
