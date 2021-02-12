@@ -21,7 +21,7 @@ public abstract class CloseableReference<T> extends Reference<T> implements Clos
     }
 
     protected CloseableReference(@Nullable SingleValueCache<?> parent, boolean mutable) {
-        super(parent, mutable);
+        super(parent, mutable, autoComputor);
     }
 
     @Override

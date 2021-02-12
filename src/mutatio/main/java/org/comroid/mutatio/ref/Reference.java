@@ -6,7 +6,6 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
-import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.util.ReflectionHelper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
@@ -19,6 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.function.*;
 
 public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
@@ -46,34 +46,55 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return test(Objects::nonNull);
     }
 
-    protected Reference(boolean mutable) {
-        this(null, mutable);
-    }
-
-    protected Reference(@Nullable Reference<?> parent) {
-        this(parent, false);
-    }
-
-    protected <X> Reference(
-            final @Nullable Reference<X> parent,
-            final @NotNull Function<T, X> backwardsConverter
+    protected Reference(
+            boolean mutable
     ) {
-        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null);
+        this(null, mutable, null);
+    }
+
+    protected Reference(
+            @Nullable Reference<?> parent
+    ) {
+        this(parent, false, parent != null ? parent.getAutocomputor() : null);
     }
 
     protected Reference(
             @Nullable SingleValueCache<?> parent,
             boolean mutable
     ) {
-        this(parent, null, mutable);
+        this(parent, mutable, parent != null ? parent.getAutocomputor() : null);
+    }
+
+    protected Reference(
+            @Nullable SingleValueCache<?> parent,
+            boolean mutable,
+            Executor autoComputor
+    ) {
+        this(parent, null, mutable, autoComputor);
+    }
+
+    protected <X> Reference(
+            final @Nullable Reference<X> parent,
+            final @NotNull Function<T, X> backwardsConverter
+    ) {
+        this(parent, backwardsConverter, parent != null ? parent.getAutocomputor() : null);
+    }
+
+    protected <X> Reference(
+            final @Nullable Reference<X> parent,
+            final @NotNull Function<T, X> backwardsConverter,
+            Executor autoComputor
+    ) {
+        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, autoComputor);
     }
 
     private Reference(
             @Nullable SingleValueCache<?> parent,
             @Nullable Predicate<T> setter,
-            boolean mutable
+            boolean mutable,
+            Executor autoComputor
     ) {
-        super(parent);
+        super(parent, autoComputor);
 
         this.setter = setter;
         this.mutable = mutable;
@@ -238,6 +259,11 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     @Override
     public boolean equals(Object other) {
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
+    }
+
+    @Override
+    public T computeValue() {
+        return get();
     }
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {

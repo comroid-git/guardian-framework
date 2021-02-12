@@ -23,7 +23,7 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     }
 
     public KeyedReference(K key, Reference<V> valueHolder) {
-        super(valueHolder, valueHolder.isMutable());
+        super(valueHolder, valueHolder.isMutable(), autoComputor);
 
         this.key = key;
         this.valueHolder = valueHolder;

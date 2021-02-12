@@ -10,7 +10,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public interface SingleValueCache<T> extends ValueCache<T> {
     T getFromCache();
 
-    boolean isAutoCompute();
+    default boolean isAutoCompute() {
+        return getAutocomputor() != null;
+    }
+
+    @Nullable
+    Executor getAutocomputor();
 
     /**
      * Updates this cache with the new value and {@linkplain #deployListeners(Object) causes a ValueUpdate Event}.
@@ -21,6 +26,7 @@ public interface SingleValueCache<T> extends ValueCache<T> {
     @Contract("_ -> param1")
     T putIntoCache(T withValue);
 
+    @SuppressWarnings("UnusedReturnValue")
     @Internal
     T computeValue();
 
@@ -34,12 +40,12 @@ public interface SingleValueCache<T> extends ValueCache<T> {
         }
 
         @Override
-        public boolean isAutoCompute() {
-            return autocomputor != null;
+        public @Nullable Executor getAutocomputor() {
+            return autocomputor;
         }
 
         protected Abstract(@Nullable SingleValueCache<?> parent) {
-            this(parent, null);
+            this(parent, parent != null ? parent.getAutocomputor() : null);
         }
 
         protected Abstract(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
