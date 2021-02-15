@@ -9,6 +9,7 @@ import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,6 +31,8 @@ public final class OrgJsonLib extends AbstractSerializationAdapter<Object, JSONO
 
     @Override
     public UniNode parse(@Nullable String data) {
+        if (data == null || data.equals("null"))
+            return UniValueNode.NULL;
         throw new UnsupportedOperationException();
     }
 
