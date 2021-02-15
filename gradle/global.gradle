@@ -51,9 +51,9 @@ repositories {
 
 dependencies {
     if (isAutoDeploy) {
-        api project(':api')
+        api 'org.comroid:api:0.+'
     } else {
-        api 'org.comroid:api:0.10.2-SNAPSHOT'
+        api project(':api')
     }
     if (project.name != 'core')
         api project((isAutoDeploy ? '' : ':guardian') + ':core')
