@@ -1,5 +1,6 @@
 package org.comroid.varbind.container;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
@@ -218,27 +219,17 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 getExtractionReference(bind).set(extract);
                 //getComputedReference(bind).get(); // compute once*/
                 final Object value = getComputedReference(bind).get();
-                logger.trace(String.format("%s@%s - Changed %s to ( %s / %s )",
+                logger.log(Level.ALL, String.format("%s@%s - Changed %s to ( %s / %s )",
                         getClass().getSimpleName(),
                         Integer.toHexString(hashCode()),
                         bind,
                         Arrays.toString(extract.toArray()),
-                        value)
-                );
+                        value));
 
                 changed.add(bind);
             } catch (Throwable t) {
                 throw new ThrownVarBind(bind, t);
             }
-    }
-
-    private static class ThrownVarBind extends Error {
-        private final VarBind bind;
-
-        public ThrownVarBind(VarBind bind, Throwable cause) {
-            super(cause);
-            this.bind = bind;
-        }
     }
 
     public final boolean containsKey(VarBind<? extends S, Object, Object, Object> bind) {
@@ -412,5 +403,14 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public final Set<Entry<String, Object>> entrySet() {
         return unmodifiableSet(new HashSet<>(computedRefs.values()));
+    }
+
+    private static class ThrownVarBind extends Error {
+        private final VarBind bind;
+
+        public ThrownVarBind(VarBind bind, Throwable cause) {
+            super(cause);
+            this.bind = bind;
+        }
     }
 }
