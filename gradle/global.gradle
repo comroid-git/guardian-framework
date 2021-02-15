@@ -13,10 +13,10 @@ tasks.withType(Javadoc) {
 }
 
 sourceSets {
-    main.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java")
-    main.resources.srcDirs = files("$parent.projectDir/src/$artifactName/main/resources")
-    test.java.srcDirs = files("$parent.projectDir/src/$artifactName/test/java")
-    test.resources.srcDirs = files("$parent.projectDir/src/$artifactName/test/resources")
+    main.java.srcDirs = files("$parent.projectDir/src/$project.name/main/java")
+    main.resources.srcDirs = files("$parent.projectDir/src/$project.name/main/resources")
+    test.java.srcDirs = files("$parent.projectDir/src/$project.name/test/java")
+    test.resources.srcDirs = files("$parent.projectDir/src/$project.name/test/resources")
 }
 
 task sourcesJar(type: Jar) {
@@ -50,13 +50,13 @@ repositories {
 }
 
 dependencies {
-    if (project.name != 'interfaces') {
-        if (isAutoDeploy) {
-            api 'org.comroid:api:0.+'
-        } else {
-            api project(':api')
-        }
+    if (isAutoDeploy) {
+        api project(':api')
+    } else {
+        api 'org.comroid:api:0.10.2-SNAPSHOT'
     }
+    if (project.name != 'core')
+        api project((isAutoDeploy ? '' : ':guardian') + ':core')
 
     // logging dependencies
     implementation 'org.apache.logging.log4j:log4j-api:2.11.0'
