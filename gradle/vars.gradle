@@ -3,7 +3,7 @@ import static java.lang.System.getenv
 ext {
     isAutoDeploy = rootProject.name != 'repo' || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
 
-    artifactName = project.name
+    artifactName = project.name == 'core' ? 'guardian-core' : project.name
     projectDescription = ''
     userbase = 'comroid-git'
     snapshot = project.version.endsWith('SNAPSHOT')
