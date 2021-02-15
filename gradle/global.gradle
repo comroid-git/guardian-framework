@@ -55,7 +55,7 @@ dependencies {
     } else {
         api project(':api')
     }
-    if (project.name != 'core' && project.name != 'mutatio')
+    if (project.name != 'core' || project.name != 'mutatio')
         api project((isAutoDeploy ? '' : ':guardian') + ':core')
 
     // logging dependencies
