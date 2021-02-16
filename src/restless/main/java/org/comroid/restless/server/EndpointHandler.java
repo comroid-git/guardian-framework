@@ -6,20 +6,21 @@ import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.util.StandardValueType;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 public interface EndpointHandler {
     default boolean supports(REST.Method method) {
-        try {
-            return !getClass().getMethod("execute" + method.name(), Headers.class, String[].class, AbstractUniNode.class)
-                    .getDeclaringClass()
-                    .equals(EndpointHandler.class);
-        } catch (NoSuchMethodException e) {
-            throw new AssertionError(e);
-        }
+        final String mName = "execute" + method.name();
+        return Arrays.stream(getClass().getMethods())
+                .filter(mtd -> mtd.getName().equals(mName))
+                .findAny()
+                .map(Method::getDeclaringClass)
+                .filter(cls -> !cls.equals(EndpointHandler.class))
+                .isPresent();
     }
 
     default REST.Response executeMethod(
