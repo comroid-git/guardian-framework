@@ -67,8 +67,6 @@ public class FileCache<K, V extends DataContainer<V>>
         this.seriLib = seriLib;
         this.resolver = resolver;
         this.file = file;
-
-        reloadData();
     }
 
     @Override
