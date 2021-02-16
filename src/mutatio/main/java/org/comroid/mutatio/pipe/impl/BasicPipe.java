@@ -76,7 +76,6 @@ public class BasicPipe<O, T> extends ValueCache.Underlying<Void> implements Pipe
         return refs.size();
     }
 
-    @Override
     public boolean add(T item) {
         if (autoEmptyLimit != AUTOEMPTY_DISABLED
                 && refs.size() >= autoEmptyLimit)

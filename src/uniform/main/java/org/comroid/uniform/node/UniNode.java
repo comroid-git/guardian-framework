@@ -298,15 +298,21 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     Stream<? extends Reference<? extends UniNode>> streamRefs();
 
     default UniObjectNode asObjectNode() {
-        return as(UniObjectNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.OBJECT));
+        if (isObjectNode())
+            return (UniObjectNode) this;
+        throw new UnsupportedOperationException(String.format("Node is of %s type; expected %s", getNodeType(), NodeType.OBJECT));
     }
 
     default UniArrayNode asArrayNode() {
-        return as(UniArrayNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.ARRAY));
+        if (isArrayNode())
+            return (UniArrayNode) this;
+        throw new UnsupportedOperationException(String.format("Node is of %s type; expected %s", getNodeType(), NodeType.ARRAY));
     }
 
     default UniValueNode asValueNode() {
-        return as(UniValueNode.class, MessageSupplier.format("Node is of %s type; expected %s", getNodeType(), NodeType.VALUE));
+        if (isValueNode())
+            return (UniValueNode) this;
+        throw new UnsupportedOperationException(String.format("Node is of %s type; expected %s", getNodeType(), NodeType.VALUE));
     }
 
     Object getBaseNode();
