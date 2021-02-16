@@ -73,9 +73,7 @@ public class FileCache<K, V extends DataContainer<V>>
 
     @Override
     public synchronized int storeData() throws IOException {
-        final UniArrayNode data = seriLib.createArrayNode(null);
-        if (data == null || data.isNull())
-            return 0;
+        final UniArrayNode data = seriLib.createArrayNode();
 
         entryIndex()
                 .stream()
