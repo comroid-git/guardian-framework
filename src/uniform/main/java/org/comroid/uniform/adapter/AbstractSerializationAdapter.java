@@ -1,13 +1,13 @@
 package org.comroid.uniform.adapter;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.node.UniValueNode;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public abstract class AbstractSerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> implements SerializationAdapter<BAS, OBJ, ARR> {
+public abstract class AbstractSerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.Base implements SerializationAdapter<BAS, OBJ, ARR> {
     private final String mimeType;
     private final DataStructureType.Obj<BAS, OBJ> objectType;
     private final DataStructureType.Arr<BAS, ARR> arrayType;
@@ -40,6 +40,7 @@ public abstract class AbstractSerializationAdapter<BAS, OBJ extends BAS, ARR ext
             Class<? extends ARR> arrType,
             Supplier<? extends ARR> arrFactory
     ) {
+        super("Serializer(" + mimeType + ")");
         this.mimeType = mimeType;
         this.objectType = new DataStructureType.Obj<>(this, objType, objFactory);
         this.arrayType = new DataStructureType.Arr<>(this, arrType, arrFactory);
