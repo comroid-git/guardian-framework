@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
+import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.pipe.StageAdapter;
@@ -26,7 +27,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, List<T>, Closeable {
+public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, List<T>, UncheckedCloseable {
     private final ReferenceIndex<?> base;
     private final Reference.Advancer<?, T> advancer;
     private final List<Reference<T>> accessors;
@@ -195,10 +196,10 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         for (ValueCache<?> valueCache : getDependents())
-            if (valueCache instanceof Closeable)
-                ((Closeable) valueCache).close();
+            if (valueCache instanceof UncheckedCloseable)
+                ((UncheckedCloseable) valueCache).close();
     }
 
     @NotNull

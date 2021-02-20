@@ -263,7 +263,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
 
     @Override
     public void computeAndStoreValue() {
-        return get();
+        get();
     }
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
