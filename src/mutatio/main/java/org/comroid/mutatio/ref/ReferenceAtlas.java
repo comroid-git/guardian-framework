@@ -1,6 +1,6 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.mutatio.MutableState;
+import org.comroid.api.MutableState;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.ReferenceConverter;

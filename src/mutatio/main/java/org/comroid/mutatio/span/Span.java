@@ -15,8 +15,7 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
-@Deprecated
-public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>, Rewrapper<T> {
+public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
     private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
@@ -45,15 +44,15 @@ public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>,
         this(ReferenceIndex.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceIndex<Object, T> referenceIndex, ModifyPolicy modifyPolicy) {
+    public Span(ReferenceIndex<?, T> referenceIndex, ModifyPolicy modifyPolicy) {
         this(referenceIndex, UNFIXED_SIZE, modifyPolicy);
     }
 
-    public Span(ReferenceIndex<Object, ? extends T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
+    public Span(ReferenceIndex<?, T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceIndex<Object, ? extends T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(ReferenceIndex<?, T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
@@ -101,28 +100,9 @@ public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>,
                 .span();
     }
 
-    @Override
-    public boolean contains(Object other) {
-        for (T it : this) {
-            if (other.equals(it)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    @Override
     public List<T> unwrap() {
         //noinspection unchecked
         return Arrays.asList((T[]) toArray());
-    }
-
-    @Override
-    @Contract
-    public final int size() {
-        return storage.size();
     }
 
     @Override
@@ -161,42 +141,6 @@ public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>,
     @Deprecated
     public Reference<T> process(int index) {
         return getReference(index);
-    }
-
-    @Override
-    public final synchronized boolean remove(Object other) {
-        synchronized (dataLock) {
-            if (isFixedSize())
-                throw new UnsupportedOperationException("Span has fixed size; cannot remove");
-
-            for (int i = 0; i < storage.size(); i++) {
-                final T valueAt = valueAt(i);
-
-                if (valueAt == null)
-                    throw new AssertionError();
-
-                if (valueAt.equals(other)) {
-                    if (!modifyPolicy.canRemove(other))
-                        modifyPolicy.fail("removing " + other);
-
-                    return storage.remove(valueAt);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    @Override
-    public final void clear() {
-        synchronized (dataLock) {
-            storage.clear();
-        }
-    }
-
-    @Override
-    public Stream<T> stream() {
-        return Stream.of(toArray()).map(Polyfill::uncheckedCast);
     }
 
     @Override

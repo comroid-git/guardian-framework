@@ -220,7 +220,7 @@ public class ReferenceIndex<In, T>
     }
 
     public final Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
+        return streamValues();
     }
 
     @Nullable
