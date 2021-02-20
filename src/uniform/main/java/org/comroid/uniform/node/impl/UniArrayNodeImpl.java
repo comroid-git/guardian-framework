@@ -205,6 +205,8 @@ public class UniArrayNodeImpl
 
     @Override
     public int size() {
+        if (baseNode == null)
+            return 0;
         return baseNode.size();
     }
 

@@ -77,7 +77,7 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
                 if (request.isExecuted())
                     throw new IllegalStateException("Request was already executed");
                 if (Arrays.stream(pool).noneMatch(restEndpoint::equals))
-                    throw new IllegalArgumentException("Given endpoint is not part of pool");
+                    return CompletableFuture.completedFuture(request);
 
                 final int rps = restEndpoint.getRatePerSecond();
                 final Queue<BoxedRequest> queue = queueOf(restEndpoint);

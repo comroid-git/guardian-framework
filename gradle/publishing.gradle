@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 publishing {
     repositories {
         mavenLocal()
-
+/*
         if (canPublishToSpace) {
             maven {
                 name = 'Space'
@@ -43,6 +43,7 @@ publishing {
                 }
             }
         }
+ */
     }
 
     publications {

@@ -12,6 +12,7 @@ import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.comroid.uniform.node.impl.UniArrayNodeImpl;
 import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +54,9 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
 
     @Override
     public UniNode parse(@Nullable String data) {
+        if (data == null || data.equals("null"))
+            return UniValueNode.NULL;
+
         DataStructureType<JSON, ? extends JSON, ? extends UniNode> type = typeOfData(data);
 
         if (type == null)

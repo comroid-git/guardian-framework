@@ -67,13 +67,11 @@ public class FileCache<K, V extends DataContainer<V>>
         this.seriLib = seriLib;
         this.resolver = resolver;
         this.file = file;
-
-        reloadData();
     }
 
     @Override
     public synchronized int storeData() throws IOException {
-        final UniArrayNode data = seriLib.createArrayNode(null);
+        final UniArrayNode data = seriLib.createArrayNode();
 
         entryIndex()
                 .stream()
@@ -109,6 +107,9 @@ public class FileCache<K, V extends DataContainer<V>>
             return 0;
 
         final UniNode uniNode = seriLib.createUniNode(str);
+
+        if (uniNode == null || uniNode.isNull())
+            return 0;
         if (!uniNode.isArrayNode())
             throw new IllegalArgumentException("Data is not an array");
 

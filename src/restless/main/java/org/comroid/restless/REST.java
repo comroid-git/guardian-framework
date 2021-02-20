@@ -18,6 +18,7 @@ import org.comroid.restless.endpoint.TypeBoundEndpoint;
 import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.Cache;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
@@ -94,7 +95,7 @@ public final class REST implements ContextualProvider.Underlying {
             Executor requestExecutor,
             Ratelimiter ratelimiter
     ) {
-        this.context = context;
+        this.context = context.plus(this);
         this.executor = Objects.requireNonNull(requestExecutor, "RequestExecutor");
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
     }
@@ -270,7 +271,7 @@ public final class REST implements ContextualProvider.Underlying {
          */
         public Response(
                 int statusCode,
-                UniNode body
+                Serializable body
         ) {
             this(statusCode, body, new Header.List());
         }
@@ -284,12 +285,13 @@ public final class REST implements ContextualProvider.Underlying {
          */
         public Response(
                 int statusCode,
-                UniNode body,
+                Serializable body,
                 Header.List headers
         ) {
             this.statusCode = statusCode;
-            this.body = Objects.requireNonNull(body, "body");
-            this.mimeType = body.getMimeType();
+            UniNode uniNode = body.toUniNode();
+            this.body = Objects.requireNonNull(uniNode, "body");
+            this.mimeType = uniNode.getMimeType();
             this.file = null;
             this.headers = Objects.requireNonNull(headers, "headers list");
         }

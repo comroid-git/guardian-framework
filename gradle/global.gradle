@@ -13,10 +13,10 @@ tasks.withType(Javadoc) {
 }
 
 sourceSets {
-    main.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java")
-    main.resources.srcDirs = files("$parent.projectDir/src/$artifactName/main/resources")
-    test.java.srcDirs = files("$parent.projectDir/src/$artifactName/test/java")
-    test.resources.srcDirs = files("$parent.projectDir/src/$artifactName/test/resources")
+    main.java.srcDirs = files("$parent.projectDir/src/$project.name/main/java")
+    main.resources.srcDirs = files("$parent.projectDir/src/$project.name/main/resources")
+    test.java.srcDirs = files("$parent.projectDir/src/$project.name/test/java")
+    test.resources.srcDirs = files("$parent.projectDir/src/$project.name/test/resources")
 }
 
 task sourcesJar(type: Jar) {
@@ -44,29 +44,19 @@ task javadocJar(type: Jar) {
 compileJava.options.encoding = 'UTF-8'
 
 repositories {
+    maven { url 'https://maven.comroid.org' }
     mavenLocal()
-    maven {
-        url "https://maven.jetbrains.space/comroid/release"
-        credentials.username "Anonymous.User"
-        credentials.password "anonymous"
-    }
-    maven {
-        url "https://maven.jetbrains.space/comroid/repo"
-        credentials.username "Anonymous.User"
-        credentials.password "anonymous"
-    }
     jcenter()
-    maven { url 'https://www.jitpack.io' }
 }
 
 dependencies {
-    if (project.name != 'interfaces') {
-        if (isAutoDeploy) {
-            api 'com.github.comroid-git:api:master-SNAPSHOT'
-        } else {
-            api project(':api')
-        }
+    if (isAutoDeploy) {
+        api 'org.comroid:api:0.11.+'
+    } else {
+        api project(':api')
     }
+    if (project.name != 'core' && project.name != 'mutatio')
+        api project((isAutoDeploy ? '' : ':guardian') + ':core')
 
     // logging dependencies
     implementation 'org.apache.logging.log4j:log4j-api:2.11.0'

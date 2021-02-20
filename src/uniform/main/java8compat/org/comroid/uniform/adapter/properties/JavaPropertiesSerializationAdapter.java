@@ -8,6 +8,7 @@ import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.comroid.util.MapUtil;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +40,8 @@ public final class JavaPropertiesSerializationAdapter extends AbstractSerializat
 
     @Override
     public UniNode parse(@Nullable String data) {
+        if (data == null || data.equals("null"))
+            return UniValueNode.NULL;
         return createObjectNode(ofString(data));
     }
 

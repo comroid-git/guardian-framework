@@ -16,6 +16,7 @@ import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.comroid.uniform.node.impl.UniArrayNodeImpl;
 import org.comroid.uniform.node.impl.UniObjectNodeImpl;
 import org.comroid.uniform.node.impl.UniValueNodeImpl;
@@ -57,6 +58,8 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
 
     @Override
     public UniNode parse(@Nullable String data) {
+        if (data == null || data.equals("null"))
+            return UniValueNode.NULL;
         try {
             final JsonNode node = objectMapper.readTree(data);
 

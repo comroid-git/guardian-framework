@@ -3,7 +3,6 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.info.MessageSupplier;
-import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
@@ -12,7 +11,6 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import sun.jvm.hotspot.gc.shared.CardGeneration;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -20,11 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
-    private final UniNode parent;
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
     protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap.Support.Basic<>(
             new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
+    private final UniNode parent;
 
     @Override
     public SerializationAdapter<?, ?, ?> getSerializationAdapter() {
@@ -34,6 +32,26 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public String getName() {
         return "<root node>";
+    }
+
+    @Override
+    public Object getBaseNode() {
+        return baseNode;
+    }
+
+    @Override
+    public Rewrapper<? extends UniNode> getParentNode() {
+        return parent == null ? Rewrapper.empty() : () -> parent;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    @Override
+    public String getAlternateFormattedName() {
+        return String.format("UniNode<%s=%s>", getNodeType(), toString());
     }
 
     protected AbstractUniNode(SerializationAdapter seriLib, @Nullable UniNode parent, Bas baseNode) {
@@ -56,21 +74,6 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public Stream<Ref> streamRefs() {
         return streamKeys().map(this::generateAccessor);
-    }
-
-    @Override
-    public Object getBaseNode() {
-        return baseNode;
-    }
-
-    @Override
-    public Rewrapper<? extends UniNode> getParentNode() {
-        return parent == null ? Rewrapper.empty() : () -> parent;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return size() == 0;
     }
 
     @Override
@@ -118,10 +121,5 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     @Override
     public String toString() {
         return baseNode.toString();
-    }
-
-    @Override
-    public String getAlternateFormattedName() {
-        return String.format("UniNode<%s=%s>", getNodeType(), toString());
     }
 }
