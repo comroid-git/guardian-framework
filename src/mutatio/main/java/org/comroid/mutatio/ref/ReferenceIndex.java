@@ -84,20 +84,14 @@ public class ReferenceIndex<In, T>
         }
     */
 
-    public final <R> ReferenceIndex<Object, R> addStage(Reference.Advancer<T, R> stage) {
-        return addStage(stage, null);
-    }
-
-    public final <R> ReferenceIndex<Object, R> addStage(Reference.Advancer<T, R> stage, Function<R, T> reverser) {
-        ReferenceIndex<Object, R> sub = new Support.WithStage<>(this, stage, reverser);
+    public final <R> ReferenceIndex<T, R> addStage(StageAdapter<T, R> stage) {
+        ReferenceIndex<T, R> sub = new ReferenceIndex<>(this, stage);
         addDependent(sub);
         return sub;
     }
 
-    public Reference<T> getReference(int index) {
-        Reference<T> ref = computeRef(index);
-        if (ref == null) ref = Reference.empty();
-        return ref;
+    public @Nullable Reference<T> getReference(int index) {
+        return getReference(index, false);
     }
 
     @Override
