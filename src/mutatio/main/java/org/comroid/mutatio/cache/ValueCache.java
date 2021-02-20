@@ -175,61 +175,57 @@ public interface ValueCache<T> {
         }
     }
 
-    class Underlying<T> implements ValueCache<T> {
-        private final ValueCache<T> underlying;
+    interface Underlying<T> extends ValueCache<T> {
+        ValueCache<T> getUnderlyingValueCache();
 
         @Override
-        public final Rewrapper<? extends ValueCache<?>> getParent() {
-            return underlying.getParent();
+        default Rewrapper<? extends ValueCache<?>> getParent() {
+            return getUnderlyingValueCache().getParent();
         }
 
         @Override
-        public final boolean isOutdated() {
-            return underlying.isOutdated();
+        default boolean isOutdated() {
+            return getUnderlyingValueCache().isOutdated();
         }
 
         @Override
-        public final boolean isUpToDate() {
-            return underlying.isUpToDate();
+        default boolean isUpToDate() {
+            return getUnderlyingValueCache().isUpToDate();
         }
 
         @Override
-        public final Collection<? extends ValueCache<?>> getDependents() {
-            return underlying.getDependents();
-        }
-
-        protected Underlying(ValueCache<T> underlying) {
-            this.underlying = underlying;
+        default Collection<? extends ValueCache<?>> getDependents() {
+            return getUnderlyingValueCache().getDependents();
         }
 
         @Override
-        public final void updateCache() {
-            underlying.updateCache();
+        default void updateCache() {
+            getUnderlyingValueCache().updateCache();
         }
 
         @Override
-        public final void outdateCache() {
-            underlying.outdateCache();
+        default void outdateCache() {
+            getUnderlyingValueCache().outdateCache();
         }
 
         @Override
-        public final boolean addDependent(ValueCache<?> dependency) {
-            return underlying.addDependent(dependency);
+        default boolean addDependent(ValueCache<?> dependency) {
+            return getUnderlyingValueCache().addDependent(dependency);
         }
 
         @Override
-        public final boolean attach(ValueUpdateListener<T> listener) {
-            return underlying.attach(listener);
+        default boolean attach(ValueUpdateListener<T> listener) {
+            return getUnderlyingValueCache().attach(listener);
         }
 
         @Override
-        public final boolean detach(ValueUpdateListener<T> listener) {
-            return underlying.detach(listener);
+        default boolean detach(ValueUpdateListener<T> listener) {
+            return getUnderlyingValueCache().detach(listener);
         }
 
         @Override
-        public int deployListeners(T forValue, Executor executor) {
-            return underlying.deployListeners(forValue, executor);
+        default int deployListeners(T forValue, Executor executor) {
+            return getUnderlyingValueCache().deployListeners(forValue, executor);
         }
     }
 }

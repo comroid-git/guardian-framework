@@ -11,10 +11,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
-    default boolean isIdentity() {
-        return false;
-    }
-
     static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
         return new Support.Filter<>(predicate);
     }
@@ -51,10 +47,9 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
     }
 
     @OverrideOnly
+    @Deprecated
     default Out convertValue(In value) {
-        if (isIdentity())
-            return Polyfill.uncheckedCast(value);
-        throw new AbstractMethodError();
+        return advanceValue(value);
     }
 
     final class Structure {
@@ -118,13 +113,23 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
             }
 
             @Override
-            public boolean isIdentity() {
+            public T advanceValue(T value) {
+                return value;
+            }
+
+            @Override
+            public boolean isIdentityValue() {
                 return true;
             }
         }
 
         public static final class Map<O, T> implements StageAdapter<O, T> {
             private final Function<? super O, ? extends T> mapper;
+
+            @Override
+            public boolean isIdentityValue() {
+                return false;
+            }
 
             public Map(Function<? super O, ? extends T> mapper) {
                 this.mapper = mapper;
@@ -136,7 +141,7 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
             }
 
             @Override
-            public T convertValue(O value) {
+            public T advanceValue(O value) {
                 return mapper.apply(value);
             }
         }

@@ -12,6 +12,24 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     private final K key;
     private final Reference<V> valueHolder;
 
+    public static <K, V> KeyedReference<K, V> emptyKey() {
+        //noinspection unchecked
+        return (KeyedReference<K, V>) Support.EMPTY;
+    }
+
+    public static <K, V> KeyedReference<K, V> emptyValue(K key) {
+        return createKey(false, key);
+    }
+
+    public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
+        @Override
+        KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
+
+        OK advanceKey(IK key);
+
+        OV advanceValue(IV value);
+    }
+
     @Override
     public V getValue() {
         return get();
@@ -82,6 +100,8 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     }
 
     public static final class Support {
+        public static final KeyedReference<?, ?> EMPTY = createKey(false, null);
+
         public static class Base<K, V> extends KeyedReference<K, V> {
             public Base(K key, Reference<V> valueHolder) {
                 super(key, valueHolder);

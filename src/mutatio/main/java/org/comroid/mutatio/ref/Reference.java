@@ -268,6 +268,8 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
+
+        O advanceValue(I value);
     }
 
     @Internal

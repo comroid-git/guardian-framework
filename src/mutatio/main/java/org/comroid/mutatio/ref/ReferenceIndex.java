@@ -14,8 +14,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -28,10 +26,10 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, List<T>, UncheckedCloseable {
-    private final ReferenceIndex<?> base;
-    private final Reference.Advancer<?, T> advancer;
+    private final ReferenceIndex<Object> base;
+    private final Reference.Advancer<Object, T> advancer;
     private final List<Reference<T>> accessors;
-    private final Function<T, ?> reverser;
+    private final Function<T, Object> reverser;
 
     public final Reference.Advancer<?, T> getAdvancer() {
         return advancer;
@@ -162,7 +160,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
                 .mapToObj(this::computeRef);
     }
 
-    protected final @Nullable Reference<T> computeRef(int index) {
+    public final @Nullable Reference<T> computeRef(int index) {
         if (0 > index || index > size())
             return null;
         Reference<T> ref;
@@ -172,12 +170,13 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
                 return ref;
         } else while (accessors.size() < index)
             accessors.add(null);
-        ref = createRef(base.getReference(index), index);
+        Reference<Object> comp = base == null ? null : base.computeRef(index);
+        ref = comp == null
+                ? Reference.create()
+                : advancer.advance(comp);
         accessors.set(index, ref);
         return ref;
     }
-
-    protected abstract Reference<T> createRef(@Nullable Reference<?> parent, int index);
 
     private void validateBaseExists() {
         if (base == null)
@@ -191,8 +190,10 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         return this;
     }
 
-    public @Nullable Reference<T> getReference(int index) {
-        return computeRef(index);
+    public Reference<T> getReference(int index) {
+        Reference<T> ref = computeRef(index);
+        if (ref == null) ref = Reference.empty();
+        return ref;
     }
 
     @Override
@@ -434,10 +435,20 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             private final CompletableFuture<T> future = new CompletableFuture<>();
 
             @Override
+            public boolean isIdentityValue() {
+                return false;
+            }
+
+            @Override
             public Reference<T> advance(Reference<T> ref) {
                 if (!ref.isNull() && !future.isDone())
                     future.complete(ref.get());
                 return Reference.empty();
+            }
+
+            @Override
+            public T advanceValue(T value) {
+                return value;
             }
         }
 
@@ -454,11 +465,6 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         private static class WithStage<T, R> extends ReferenceIndex<R> {
             private WithStage(ReferenceIndex<T> base, Reference.Advancer<T, R> stage, Function<R, T> reverser) {
                 super(base, stage, reverser);
-            }
-
-            @Override
-            protected Reference<R> createRef(Reference<?> parent, int index) {
-                return Reference.create();
             }
         }
 
@@ -501,11 +507,6 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             }
 
             @Override
-            protected Reference<T> createRef(Reference<?> parent, int index) {
-                return Reference.create();
-            }
-
-            @Override
             public Reference<T> getReference(final int index) {
                 return list.get(index);
             }
@@ -519,11 +520,6 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
         public static class OfRange<T> extends ReferenceIndex<T> {
             public OfRange(ReferenceIndex<T> base, int fromIndex, int toIndex) {
                 // todo
-            }
-
-            @Override
-            protected Reference<T> createRef(Reference<?> parent, int index) {
-                return Reference.create();
             }
         }
     }
@@ -602,11 +598,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
 
         @Override
         public void add(T t) {
-            if (!index.test(i -> {
-                Reference<T> ref = createRef(null, i);
-                ref.set(t);
-                return ReferenceIndex.this.addReference(i, ref);
-            })) throw new UnsupportedOperationException("Unable to add");
+            index.ifPresent(i -> ReferenceIndex.this.add(i, t));
         }
     }
 }

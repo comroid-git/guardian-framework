@@ -1,275 +1,165 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.BiPipe;
-import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public interface ReferenceMap<K, V> extends Pipeable<V>, ValueCache<Void> {
-    static <K, V> ReferenceMap<K, V> create() {
-        return create(new ConcurrentHashMap<>());
-    }
+public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void> implements Pipeable<V>, Map<K, V>, UncheckedCloseable {
+    private final ReferenceMap<Object, Object> base;
+    private final KeyedReference.Advancer<Object, Object, K, V> advancer;
+    private final Map<K, KeyedReference<K, V>> accessors;
+    private final Function<K, Object> kReverser;
+    private final Function<V, Object> vReverser;
 
-    static <K, V> ReferenceMap<K, V> create(Map<K, KeyedReference<K, V>> refMap) {
-        return new ReferenceMap.Support.Basic<K, V>(refMap);
-    }
-
-    default boolean put(K key, V value) {
-        return getReference(key, true).set(value);
-    }
-
-    default KeyedReference<K, V> getReference(K key) {
-        return getReference(key, false);
-    }
-
-    /**
-     * Gets a reference to the value at the specified key in the map.
-     * As described by the {@linkplain Contract method contract}; this method will
-     * <ul>
-     *     <li>Fail, if the first parameter is {@code null}</li>
-     *     <li>Return a {@link Nullable} Reference, if the second parameter is {@code false}</li>
-     *     <li>Return q {@link NotNull} Reference, if the second parameter is {@code true}</li>
-     * </ul>
-     *
-     * @param key            The key to look at.
-     * @param createIfAbsent Whether to create the reference if its non-existent
-     * @return A {@link Reference}, or {@code null}
-     */
-    @Contract("null, _ -> fail; !null, false -> _; !null, true -> !null")
-    @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent);
-
-    ReferenceIndex<? extends KeyedReference<K, V>> entryIndex();
-
-    default V get(K key) {
-        return getReference(key, true).get();
-    }
-
-    default Optional<V> wrap(K key) {
-        return getReference(key, true).wrap();
-    }
-
-    @Deprecated
-    default Reference<V> process(K key) {
-        return getReference(key, true);
-    }
-
-    default @NotNull V requireNonNull(K key) {
-        return getReference(key, true).requireNonNull();
-    }
-
-    default @NotNull V requireNonNull(K key, String message) {
-        return getReference(key, true).requireNonNull(message);
-    }
-
-    int size();
-
-    boolean containsKey(K key);
-
-    boolean containsValue(V value);
-
-    Stream<? extends KeyedReference<K, V>> streamRefs();
-
-    default Stream<? extends V> stream() {
-        return stream(any -> true).map(Reference::get);
-    }
-
-    default Stream<? extends KeyedReference<K, V>> stream(Predicate<K> filter) {
-        return streamRefs().filter(ref -> filter.test(ref.getKey()));
+    public final KeyedReference.Advancer<?, ?, K, V> getAdvancer() {
+        return advancer;
     }
 
     @Override
-    default Pipe<? extends V> pipe() {
-        return entryIndex()
-                .pipe()
-                .map(Map.Entry::getValue);
+    public final boolean isEmpty() {
+        return size() == 0;
     }
 
-    Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter);
-
-    default BiPipe<K, V> biPipe() {
-        return pipe(any -> true)
-                .bi(Map.Entry::getKey)
-                .map(Map.Entry::getValue);
+    protected ReferenceMap(ValueCache<?> parent) {
+        super(parent);
     }
 
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    default boolean set(K key, V newValue) {
-        return getReference(key).set(newValue);
+    private void validateBaseExists() {
+        if (base == null)
+            throw new AbstractMethodError();
     }
 
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    default @Nullable V compute(K key, Function<V, V> computor) {
-        return getReference(key, true).compute(computor);
+    @Override
+    public final int size() throws AbstractMethodError {
+        return base == null ? accessors.size() : base.size();
     }
 
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    default @Nullable V computeIfPresent(K key, Function<V, V> computor) {
-        return getReference(key, true).computeIfPresent(computor);
+    public final Stream<K> streamKeys() {
+        return Stream.concat(
+                base.streamKeys().map(advancer::advanceKey),
+                accessors.keySet().stream()
+        ).distinct();
     }
 
-    /**
-     * @return The new value if it could be set, else the previous value.
-     */
-    default @Nullable V computeIfAbsent(K key, Supplier<V> supplier) {
-        return getReference(key, true).computeIfAbsent(supplier);
+    public final Stream<KeyedReference<K, V>> streamRefs() {
+        return streamKeys().map(this::getReference);
     }
 
-    void forEach(BiConsumer<? super K, ? super V> action);
+    public final @Nullable KeyedReference<K, V> getReference(Object k) {
+        return getReference(k, false);
+    }
 
-    void clear();
-
-    final class Support {
-        public static class Basic<K, V> extends ValueCache.Abstract<Void> implements ReferenceMap<K, V> {
-            private final EntryIndex entryIndex = new EntryIndex(this);
-            private final Map<K, KeyedReference<K, V>> refMap;
-            private final Function<K, KeyedReference<K, V>> referenceFunction;
-
-            public Basic(Map<K, KeyedReference<K, V>> refMap) {
-                this(refMap, KeyedReference::createKey);
-            }
-
-            public Basic(Map<K, KeyedReference<K, V>> refMap, Function<K, KeyedReference<K, V>> referenceFunction) {
-                super(null);
-
-                this.refMap = refMap;
-                this.referenceFunction = referenceFunction;
-            }
-
-            @Override
-            public @Nullable KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
-                if (!containsKey(key) && createIfAbsent) {
-                    return refMap.computeIfAbsent(key, k -> {
-                        updateCache();
-                        return referenceFunction.apply(k);
-                    });
-                }
-                return refMap.get(key);
-            }
-
-            @Override
-            public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
-                return entryIndex;
-            }
-
-            @Override
-            public int size() {
-                return refMap.size();
-            }
-
-            @Override
-            public boolean containsKey(K key) {
-                return refMap.containsKey(key);
-            }
-
-            @Override
-            public boolean containsValue(V value) {
-                return refMap.values()
-                        .stream()
-                        .anyMatch(ref -> ref.test(value::equals));
-            }
-
-            @Override
-            public Stream<? extends KeyedReference<K, V>> streamRefs() {
-                return refMap.values().stream();
-            }
-
-            @Override
-            public Pipe<KeyedReference<K, V>> pipe(Predicate<K> filter) {
-                return entryIndex.pipe().filter(ref -> filter.test(ref.getKey()));
-            }
-
-            @Override
-            public void forEach(BiConsumer<? super K, ? super V> action) {
-                refMap.forEach((k, ref) -> ref.consume(it -> action.accept(k, it)));
-            }
-
-            @Override
-            public void clear() {
-                refMap.clear();
-            }
-
-            private final class EntryIndex extends ValueCache.Underlying<Void> implements ReferenceIndex<KeyedReference<K, V>> {
-                private final Map<Integer, Reference<KeyedReference<K, V>>> indexAccessors = new ConcurrentHashMap<>();
-
-                private EntryIndex(ValueCache<Void> underlying) {
-                    super(underlying);
-                }
-
-                @Override
-                public List<KeyedReference<K, V>> unwrap() {
-                    return new ArrayList<>(refMap.values());
-                }
-
-                @Override
-                public int size() {
-                    return Basic.this.size();
-                }
-
-                @Override
-                public boolean add(KeyedReference<K, V> ref) {
-                    final K key = ref.getKey();
-
-                    if (!containsKey(key)) {
-                        refMap.put(key, ref);
-                        return true;
-                    }
-
-                    refMap.compute(key, (k, v) -> {
-                        if (v == null)
-                            return ref;
-                        v.rebind(ref);
-                        return v;
-                    });
-                    return true;
-                }
-
-                @Override
-                public boolean addReference(int index, Reference<KeyedReference<K, V>> ref) {
-                    return false;
-                }
-
-                @Override
-                public boolean remove(KeyedReference<K, V> ref) {
-                    final K key = ref.getKey();
-
-                    return refMap.remove(key) != null;
-                }
-
-                @Override
-                public void clear() {
-                    Basic.this.clear();
-                }
-
-                @Override
-                public Stream<? extends Reference<KeyedReference<K, V>>> streamRefs() {
-                    return indexAccessors.values().stream();
-                }
-
-                @Override
-                public Reference<KeyedReference<K, V>> getReference(int index) {
-                    return indexAccessors.computeIfAbsent(index, k -> Reference.provided(() -> unwrap().get(index)));
-                }
-            }
+    @Contract("!null, false -> _; !null, true -> !null")
+    public final KeyedReference<K, V> getReference(Object k, boolean createIfAbsent) {
+        K key;
+        try {
+            //noinspection unchecked
+            key = (K) k;
+        } catch (ClassCastException cce) {
+            throw new IllegalArgumentException("Not a valid key: " + k, cce);
+            // todo: Return empty instead?
         }
+        KeyedReference<K, V> ref = accessors.get(key);
+        if (ref != null && createIfAbsent) {
+            ref = computeRef(key);
+            if (ref == null)
+                ref = KeyedReference.createKey(false, key);
+            if (accessors.containsKey(key))
+                accessors.get(key).rebind(ref);
+            else accessors.put(key, ref);
+        }
+        return ref;
+    }
+
+    public final @Nullable KeyedReference<K, V> computeRef(K key) {
+        Object revK = kReverser == null ? null : kReverser.apply(key);
+        KeyedReference<K, V> ref;
+        if (revK != null && base != null && base.containsKey(revK))
+            ref = advancer.advance(base.getReference(revK));
+        else ref = KeyedReference.createKey(key);
+        accessors.put(key, ref);
+        return ref;
+    }
+
+    @Override
+    public final boolean containsKey(Object key) {
+        return streamKeys().anyMatch(key::equals);
+    }
+
+    @Override
+    public final boolean containsValue(Object value) {
+        return streamRefs().map(KeyedReference::getValue).anyMatch(value::equals);
+    }
+
+    @Override
+    public final V get(Object key) {
+        KeyedReference<K, V> ref = getReference(key);
+        if (ref == null)
+            return null;
+        return ref.get();
+    }
+
+    @Nullable
+    @Override
+    public final V put(K key, V value) {
+        KeyedReference<K, V> ref = getReference(key, true);
+        V old = ref.get();
+        ref.set(value);
+        return old;
+    }
+
+    @Override
+    public final V remove(Object key) {
+        KeyedReference<K, V> ref = getReference(key, false);
+        if (ref == null)
+            return null;
+        if (!ref.unset())
+            throw new UnsupportedOperationException("Could not unset");
+    }
+
+    @Override
+    public final void putAll(@NotNull Map<? extends K, ? extends V> m) {
+    }
+
+    @Override
+    public void clear() {
+
+    }
+
+    @NotNull
+    @Override
+    public Set<K> keySet() {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Collection<V> values() {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        return null;
+    }
+
+    @Override
+    public void close() {
+
+    }
+
+    @Override
+    public ReferenceIndex<? extends V> pipe() {
+        return null;
     }
 }

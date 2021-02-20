@@ -3,6 +3,7 @@ package org.comroid.mutatio.pipe;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +12,7 @@ import java.util.HashSet;
 import java.util.function.*;
 
 public interface BiStageAdapter<InK, InV, OutK, OutV>
-        extends StageAdapter<InV, OutV> {
+        extends ReferenceConverter<KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>, KeyedReference.Advancer<InK, InV, OutK, OutV> {
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Support.Filter<>(predicate, any -> true);
     }
@@ -87,6 +88,11 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             private final Predicate<@NotNull ? super X> keyFilter;
             private final Predicate<@Nullable ? super Y> valueFilter;
 
+            @Override
+            public boolean isIdentityValue() {
+                return true;
+            }
+
             private Filter(Predicate<@NotNull ? super X> keyFilter, Predicate<@Nullable ? super Y> valueFilter) {
                 this.keyFilter = keyFilter;
                 this.valueFilter = valueFilter;
@@ -96,11 +102,26 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
                 return new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
             }
+
+            @Override
+            public X advanceKey(X key) {
+                return key;
+            }
+
+            @Override
+            public Y advanceValue(Y value) {
+                return value;
+            }
         }
 
         public final static class Map<IX, IY, OX, OY> implements BiStageAdapter<IX, IY, OX, OY> {
             private final Function<@NotNull ? super IX, @NotNull ? extends OX> keyMapper;
             private final Function<@Nullable ? super IY, @Nullable ? extends OY> valueMapper;
+
+            @Override
+            public boolean isIdentityValue() {
+                return false;
+            }
 
             private Map(
                     Function<@NotNull ? super IX, @NotNull ? extends OX> keyMapper,
@@ -116,18 +137,28 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             }
 
             @Override
-            public OX convertKey(IX key) {
+            public OX advanceKey(IX key) {
                 return keyMapper.apply(key);
             }
 
             @Override
-            public OY convertValue(IY value) {
+            public OY advanceValue(IY value) {
                 return valueMapper.apply(value);
+            }
+
+            @Override
+            public OX convertKey(IX key) {
+                return keyMapper.apply(key);
             }
         }
 
         public static class BiSource<T, X> implements BiStageAdapter<T, T, X, T> {
             private final Function<T, X> source;
+
+            @Override
+            public boolean isIdentityValue() {
+                return true;
+            }
 
             public BiSource(Function<T, X> source) {
                 this.source = source;
@@ -139,7 +170,12 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
             }
 
             @Override
-            public T convertValue(T value) {
+            public X advanceKey(T key) {
+                return source.apply(key);
+            }
+
+            @Override
+            public T advanceValue(T value) {
                 return value;
             }
 
