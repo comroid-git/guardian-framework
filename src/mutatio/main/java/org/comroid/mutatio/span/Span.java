@@ -208,43 +208,9 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
         return requireNonNull(() -> "No iterable value present");
     }
 
-    public Span<T> range(int startIncl, int endExcl) {
-        synchronized (dataLock) {
-            return new Span<>(storage.subset(startIncl, endExcl), DefaultModifyPolicy.IMMUTABLE);
-        }
-    }
-
-    @Contract(mutates = "this")
-    public void sort(Comparator<T> comparator) {
-        synchronized (dataLock) {
-            final List<T> list = new ArrayList<>(storage.unwrap());
-            list.sort(comparator);
-
-            storage.clear();
-            list.forEach(storage::add);
-        }
-
-        cleanup();
-    }
-
-    @Contract(mutates = "this")
-    public final synchronized void cleanup() {
-        synchronized (dataLock) {
-            if (isFixedSize()) {
-                final ArrayList<T> list = new ArrayList<>(storage.unwrap());
-
-                storage.clear();
-                list.stream()
-                        .filter(it -> !modifyPolicy.canCleanup(it))
-                        .forEachOrdered(storage::add);
-            } else {
-                final @NotNull Object[] array = toArray();
-
-                storage.clear();
-                for (Object it : array) //noinspection unchecked
-                    storage.add((T) it);
-            }
-        }
+    @Override
+    public void sort(Comparator<? super T> comparator) {
+        super.comparator = wrapComparator(comparator);
     }
 
     @Contract("-> new")
@@ -345,7 +311,7 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
     //region API Class
     public static final class API<T> {
         private static final int RESULT_FIXED_SIZE = -2;
-        private final ReferenceIndex<Object, T> storage;
+        private final ReferenceIndex<?, T> storage;
         private ModifyPolicy modifyPolicy = Span.DEFAULT_MODIFY_POLICY;
         private int fixedSize;
 
@@ -353,7 +319,7 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
             this(ReferenceIndex.create());
         }
 
-        private API(ReferenceIndex<Object, T> storage) {
+        private API(ReferenceIndex<?, T> storage) {
             this.storage = storage;
         }
 

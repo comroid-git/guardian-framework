@@ -195,7 +195,7 @@ public class ReferenceIndex<In, T>
     }
 
     public final ReferenceIndex<T, T> sorted(Comparator<? super T> comparator) {
-        return new ReferenceIndex<>(this, (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare));
+        return new ReferenceIndex<>(this, ReferenceAtlas.wrapComparator(comparator));
     }
 
     @NotNull
