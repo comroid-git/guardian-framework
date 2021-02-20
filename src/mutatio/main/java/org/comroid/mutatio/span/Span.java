@@ -24,12 +24,6 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
 
-
-    @Override
-    public boolean isEmpty() {
-        return size() == 0;
-    }
-
     public final boolean isSingle() {
         return size() == 1;
     }
@@ -123,62 +117,6 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
         return false;
     }
 
-    @Override
-    public boolean containsAll(@NotNull Collection<?> objects) {
-        return objects.stream()
-                .allMatch(this::contains);
-    }
-
-    @Override
-    public boolean addAll(@NotNull Collection<? extends T> objects) {
-        boolean added = false;
-
-        for (T object : objects) {
-            if (add(object) && !added) {
-                added = true;
-            }
-        }
-
-        return added;
-    }
-
-    @Override
-    public boolean removeAll(@NotNull Collection<?> objects) {
-        boolean removed = false;
-
-        for (Object object : objects) {
-            if (remove(object) && !removed) {
-                removed = true;
-            }
-        }
-
-        return removed;
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> keep) {
-        boolean removed = false;
-
-        if (keep.size() > size()) {
-            for (Object k : keep) {
-                for (T each : this) {
-                    if (!k.equals(each) && remove(each)) {
-                        removed = true;
-                    }
-                }
-            }
-        } else {
-            for (T each : this) {
-                for (Object k : keep) {
-                    if (!k.equals(each) && remove(each)) {
-                        removed = true;
-                    }
-                }
-            }
-        }
-
-        return removed;
-    }
 
     @Override
     public List<T> unwrap() {
@@ -190,26 +128,6 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
     @Contract
     public final int size() {
         return storage.size();
-    }
-
-    @NotNull
-    @Override
-    public final Iterator iterator() {
-        synchronized (dataLock) {
-            return new Iterator();
-        }
-    }
-
-    @NotNull
-    @Override
-    public final Object[] toArray() {
-        return toArray(new Object[0], Function.identity());
-    }
-
-    @Override
-    public final <R> @NotNull R[] toArray(@NotNull R[] dummy) {
-        //noinspection unchecked
-        return toArray(dummy, it -> (R) it);
     }
 
     @Override

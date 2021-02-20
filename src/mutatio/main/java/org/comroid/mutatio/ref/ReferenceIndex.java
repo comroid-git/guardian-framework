@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.abstr.AbstractList;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
@@ -21,13 +22,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public abstract class ReferenceIndex<T>
+public class ReferenceIndex<T>
         extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, Object, T, Reference<Object>, Reference<T>>
-        implements Pipeable<T>, List<T>, UncheckedCloseable {
+        implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
     private final ReferenceIndex<Object> base;
     private final Reference.Advancer<Object, T> advancer;
     private final List<Reference<T>> accessors;
@@ -39,11 +39,6 @@ public abstract class ReferenceIndex<T>
 
     public boolean isSorted() {
         return false;
-    }
-
-    @Override
-    public final boolean isEmpty() {
-        return size() == 0;
     }
 
     protected <R> ReferenceIndex() {
@@ -138,46 +133,11 @@ public abstract class ReferenceIndex<T>
         return sub;
     }
 
-    public int size() {
-        validateBaseExists();
-        return base.size();
-    }
-
     public boolean add(T item) {
         if (base != null && reverser != null)
             return base.add(Polyfill.uncheckedCast(reverser.apply(item)));
         Reference<T> ref = computeRef(size());
         return ref.set(item);
-    }
-
-    public void clear() {
-        validateBaseExists();
-        base.clear();
-    }
-
-    public Stream<? extends Reference<T>> streamRefs() {
-        if (base != null)
-            base.streamRefs();
-        return IntStream.range(0, size())
-                .mapToObj(this::computeRef);
-    }
-
-    public final @Nullable Reference<T> computeRef(int index) {
-        if (0 > index || index > size())
-            return null;
-        Reference<T> ref;
-        if (index <= accessors.size()) {
-            ref = accessors.get(index);
-            if (ref != null)
-                return ref;
-        } else while (accessors.size() < index)
-            accessors.add(null);
-        Reference<Object> comp = base == null ? null : base.computeRef(index);
-        ref = comp == null
-                ? Reference.create()
-                : advancer.advance(comp);
-        accessors.set(index, ref);
-        return ref;
     }
 
     private void validateBaseExists() {
@@ -327,60 +287,9 @@ public abstract class ReferenceIndex<T>
         return stream().anyMatch(other::equals);
     }
 
-    @NotNull
-    @Override
-    public final Iterator<T> iterator() {
-        return listIterator();
-    }
-
-    @NotNull
-    @Override
-    public final Object[] toArray() {
-        //noinspection SimplifyStreamApiCallChains
-        return stream().toArray(Object[]::new);
-    }
-
-    @NotNull
-    @Override
-    public final <ARR> ARR[] toArray(@NotNull ARR[] a) {
-        //noinspection SuspiciousToArrayCall
-        return stream().toArray(size -> Arrays.copyOf(a, size));
-    }
-
-    @Override
-    public final boolean containsAll(@NotNull Collection<?> c) {
-        return c.stream().allMatch(this::contains);
-    }
-
-    @Override
-    public final boolean addAll(@NotNull Collection<? extends T> c) {
-        //noinspection ConstantConditions
-        return c.stream().allMatch(this::add);
-    }
-
-    @Override
-    public final boolean addAll(int index, @NotNull Collection<? extends T> ts) {
-        int c = 0;
-        for (T t : ts)
-            add(c++, t);
-        return true;
-    }
-
-    @Override
-    public boolean removeAll(@NotNull Collection<?> c) {
-        return c.stream().allMatch(this::remove);
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> c) {
-        List<T> collect = stream().filter(c::contains)
-                .collect(Collectors.toList());
-        return collect.stream().allMatch(this::remove);
-    }
-
     @Override
     public final T set(int index, T element) {
-        return computeRef(index).replace(element);
+        return getReference(index, true).replace(element);
     }
 
     @Override
@@ -414,12 +323,6 @@ public abstract class ReferenceIndex<T>
                 return i;
         }
         return -1;
-    }
-
-    @NotNull
-    @Override
-    public final ListIterator<T> listIterator() {
-        return listIterator(0);
     }
 
     @NotNull
@@ -459,6 +362,11 @@ public abstract class ReferenceIndex<T>
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;
+    }
+
+    @Override
+    protected Reference<T> createEmptyRef(@NotNull Integer key) {
+        return KeyedReference.createKey(key);
     }
 
     private static final class Support {
