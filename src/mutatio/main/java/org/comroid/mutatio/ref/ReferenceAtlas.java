@@ -4,8 +4,10 @@ import org.comroid.api.Polyfill;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.StageAdapter;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -47,6 +49,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         this.keyReverser = keyReverser;
     }
 
+    protected abstract OutRef createEmptyRef(K key);
+
+    public final int size() {
+        return (int) streamKeys().count();
+    }
+
     public final void clear() {
         parent.clear();
         accessors.clear();
@@ -67,14 +75,17 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return streamKeys().map(key -> getReference(key, true));
     }
 
+    @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     public final OutRef getReference(K key, boolean createIfAbsent) {
+        Objects.requireNonNull(key, "key");
         OutRef ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
             return ref;
         InK revK = keyReverser.apply(key);
-        InRef inRef = parent.getReference(revK, true);
+        InRef inRef = parent.getReference(revK, false);
         if (inRef != null)
             ref = advancer.advance(inRef);
+        else ref = createEmptyRef(key);
         if (accessors.containsKey(key))
             accessors.get(key).rebind(ref);
         else accessors.put(key, ref);
