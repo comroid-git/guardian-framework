@@ -18,7 +18,7 @@ public class SortedResultingPipe<T> extends BasicPipe<T, T> implements Pipe<T> {
         return true;
     }
 
-    public SortedResultingPipe(ReferenceIndex<T> base, Comparator<? super T> comparator) {
+    public SortedResultingPipe(ReferenceIndex<Object, T> base, Comparator<? super T> comparator) {
         super(base);
         this.comparator = comparator;
     }

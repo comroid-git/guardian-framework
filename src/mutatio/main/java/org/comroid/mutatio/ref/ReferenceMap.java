@@ -1,8 +1,8 @@
 package org.comroid.mutatio.ref;
 
 import org.comroid.abstr.AbstractMap;
+import org.comroid.api.Polyfill;
 import org.comroid.api.UncheckedCloseable;
-import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.Contract;
@@ -19,20 +19,22 @@ public abstract class ReferenceMap<InK, InV, K, V>
         extends ReferenceAtlas.ForMap<InK, InV, K, V>
         implements AbstractMap<K, V>, Pipeable<V>, UncheckedCloseable {
     public ReferenceMap(
+    ) {
+        this(null);
+    }
+
+    public ReferenceMap(
+            @Nullable ReferenceMap<?, ?, K, V> parent
+    ) {
+        this(Polyfill.uncheckedCast(parent), Polyfill.uncheckedCast(BiStageAdapter.identity()), Polyfill.uncheckedCast(Function.identity()));
+    }
+
+    public ReferenceMap(
             @Nullable ReferenceMap<?, ?, InK, InV> parent,
             @NotNull BiStageAdapter<InK, InV, K, V> advancer,
             @NotNull Function<K, InK> keyReverser
     ) {
         super(parent, advancer, keyReverser);
-    }
-
-    public final KeyedReference.Advancer<?, ?, K, V> getAdvancer() {
-        return advancer;
-    }
-
-    @Override
-    public final boolean isEmpty() {
-        return size() == 0;
     }
 
     private void validateBaseExists() {

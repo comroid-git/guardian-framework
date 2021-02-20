@@ -75,6 +75,10 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         return new Support.BiSource<>(source);
     }
 
+    static <K, V> BiStageAdapter<K,V,K,V> identity() {
+        return filterValue(any -> true);
+    }
+
     @Override
     KeyedReference<OutK, OutV> advance(KeyedReference<InK, InV> ref);
 

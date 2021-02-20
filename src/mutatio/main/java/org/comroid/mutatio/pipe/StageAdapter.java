@@ -42,7 +42,7 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
         return filter(new Structure.Skipper<>(skip));
     }
 
-    static <T> StageAdapter<?, T> identity() {
+    static <In, T> StageAdapter<In, T> identity() {
         return map(Polyfill::<T>uncheckedCast);
     }
 
