@@ -99,7 +99,7 @@ public class SortedResultingBiPipe<K, V> extends KeyedPipe<K, V, K, V> implement
     }
 
     @Override
-    public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
+    public ReferenceIndex<Object, ? extends KeyedReference<K, V>> entryIndex() {
         throw new UnsupportedOperationException();
     }
 

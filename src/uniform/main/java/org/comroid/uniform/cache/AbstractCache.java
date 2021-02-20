@@ -67,7 +67,7 @@ public abstract class AbstractCache<K, V> extends ValueCache.Underlying<Void> im
     }
 
     @Override
-    public ReferenceIndex<? extends KeyedReference<K, V>> entryIndex() {
+    public ReferenceIndex<Object, ? extends KeyedReference<K, V>> entryIndex() {
         return cache.entryIndex();
     }
 }

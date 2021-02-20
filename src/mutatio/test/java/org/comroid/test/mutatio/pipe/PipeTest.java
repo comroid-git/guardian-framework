@@ -25,7 +25,7 @@ public class PipeTest {
 
     @Test
     public void testBasicOperations() {
-        final ReferenceIndex<String> strings = ReferenceIndex.of(controlGroup);
+        final ReferenceIndex<Object, String> strings = ReferenceIndex.of(controlGroup);
 
         final Pipe<String> remapOp = strings.pipe()
                 .map(String::toLowerCase);

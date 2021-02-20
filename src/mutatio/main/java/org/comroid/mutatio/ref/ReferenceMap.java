@@ -1,7 +1,9 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.abstr.AbstractMap;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.cache.ValueCache;
+import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -13,12 +15,16 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void, ValueCache.Abstract<?>> implements Pipeable<V>, Map<K, V>, UncheckedCloseable {
-    private final ReferenceMap<Object, Object> base;
-    private final KeyedReference.Advancer<Object, Object, K, V> advancer;
-    private final Map<K, KeyedReference<K, V>> accessors;
-    private final Function<K, Object> kReverser;
-    private final Function<V, Object> vReverser;
+public abstract class ReferenceMap<InK, InV, K, V>
+        extends ReferenceAtlas.ForMap<InK, InV, K, V>
+        implements AbstractMap<K, V>, Pipeable<V>, UncheckedCloseable {
+    public ReferenceMap(
+            @Nullable ReferenceMap<?, ?, InK, InV> parent,
+            @NotNull BiStageAdapter<InK, InV, K, V> advancer,
+            @NotNull Function<K, InK> keyReverser
+    ) {
+        super(parent, advancer, keyReverser);
+    }
 
     public final KeyedReference.Advancer<?, ?, K, V> getAdvancer() {
         return advancer;
@@ -27,10 +33,6 @@ public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void, Value
     @Override
     public final boolean isEmpty() {
         return size() == 0;
-    }
-
-    protected ReferenceMap(ValueCache<?> parent) {
-        super(parent);
     }
 
     private void validateBaseExists() {
@@ -159,7 +161,7 @@ public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void, Value
     }
 
     @Override
-    public ReferenceIndex<? extends V> pipe() {
+    public ReferenceIndex<Object, ? extends V> pipe() {
         return null;
     }
 }

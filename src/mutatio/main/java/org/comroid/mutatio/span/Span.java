@@ -15,12 +15,12 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
-public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapper<T> {
+public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>, Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
     private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
     private final Object dataLock = Polyfill.selfawareObject();
-    private final ReferenceIndex<T> storage;
+    private final ReferenceIndex<Object, T> storage;
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
 
@@ -50,19 +50,19 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
         this(ReferenceIndex.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceIndex<T> referenceIndex, ModifyPolicy modifyPolicy) {
+    public Span(ReferenceIndex<Object, T> referenceIndex, ModifyPolicy modifyPolicy) {
         this(referenceIndex, UNFIXED_SIZE, modifyPolicy);
     }
 
-    public Span(ReferenceIndex<? extends T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
+    public Span(ReferenceIndex<Object, ? extends T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceIndex<? extends T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(ReferenceIndex<Object, ? extends T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
-        this.storage = (ReferenceIndex<T>) data;
+        this.storage = (ReferenceIndex<Object, T>) data;
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }
@@ -406,7 +406,7 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
     //region API Class
     public static final class API<T> {
         private static final int RESULT_FIXED_SIZE = -2;
-        private final ReferenceIndex<T> storage;
+        private final ReferenceIndex<Object, T> storage;
         private ModifyPolicy modifyPolicy = Span.DEFAULT_MODIFY_POLICY;
         private int fixedSize;
 
@@ -414,7 +414,7 @@ public class Span<T> extends ReferenceIndex<T> implements Collection<T>, Rewrapp
             this(ReferenceIndex.create());
         }
 
-        private API(ReferenceIndex<T> storage) {
+        private API(ReferenceIndex<Object, T> storage) {
             this.storage = storage;
         }
 

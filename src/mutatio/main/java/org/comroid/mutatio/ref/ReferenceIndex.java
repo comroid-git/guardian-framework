@@ -25,94 +25,55 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class ReferenceIndex<T>
-        extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, Object, T, Reference<Object>, Reference<T>>
+public class ReferenceIndex<In, T>
+        extends ReferenceAtlas.ForList<In, T>
         implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
-    private final ReferenceIndex<Object> base;
-    private final Reference.Advancer<Object, T> advancer;
-    private final List<Reference<T>> accessors;
-    private final Function<T, Object> reverser;
-
-    public final Reference.Advancer<?, T> getAdvancer() {
-        return advancer;
+    public ReferenceIndex() {
+        this(null, StageAdapter.identity());
     }
 
-    public boolean isSorted() {
-        return false;
-    }
-
-    protected <R> ReferenceIndex() {
-        this(null, (Reference.Advancer<R, T>) null);
-    }
-
-    protected <R> ReferenceIndex(
-            @NotNull ReferenceIndex<R> parent
+    public ReferenceIndex(
+            @NotNull ReferenceIndex<?, T> parent
     ) {
-        this(parent, (Reference.Advancer<R, T>) null);
+        this(Polyfill.uncheckedCast(parent), StageAdapter.identity());
     }
 
-    @Contract("null, !null -> fail")
-    protected <R> ReferenceIndex(
-            ReferenceIndex<R> parent,
-            @Nullable Reference.Advancer<R, T> advancer
+    public ReferenceIndex(
+            @Nullable ReferenceIndex<?, In> parent,
+            @NotNull StageAdapter<In, T> advancer
     ) {
-        this(parent, advancer, null);
+        super(parent, advancer);
     }
 
-    protected <R> ReferenceIndex(
-            @NotNull ReferenceIndex<R> parent,
-            @Nullable Function<T, R> reverser
-    ) {
-        this(parent, StageAdapter.identity(), reverser);
-    }
-
-    @Contract("null, !null, _ -> fail")
-    protected <R> ReferenceIndex(
-            ReferenceIndex<R> parent,
-            @Nullable Reference.Advancer<R, T> advancer,
-            @Nullable Function<T, R> reverser
-    ) {
-        super(parent, advancer, Function.identity(), Function.identity());
-
-        if (parent == null && advancer != null) {
-            throw new NullPointerException("parent required with defined advancer");
-        }
-
-        this.base = parent;
-        this.advancer = advancer;
-        this.reverser = reverser == null ? Polyfill::uncheckedCast : reverser;
-        this.accessors = new ArrayList<>();
-    }
-
-    public static <T> ReferenceIndex<T> create() {
+    public static <T> ReferenceIndex<Object, T> create() {
         return of(new ArrayList<>());
     }
 
-    public static <T> ReferenceIndex<T> of(List<T> list) {
+    public static <T> ReferenceIndex<Object, T> of(List<T> list) {
         Support.OfList<T> index = new Support.OfList<>();
         list.forEach(index::add);
         return index;
     }
 
-    public static <T> ReferenceIndex<T> empty() {
+    public static <T> ReferenceIndex<Object, T> empty() {
         //noinspection unchecked
-        return (ReferenceIndex<T>) Support.EMPTY;
+        return (ReferenceIndex<Object, T>) Support.EMPTY;
     }
 
     @SafeVarargs
-    public static <T> ReferenceIndex<T> of(T... values) {
+    public static <T> ReferenceIndex<Object, T> of(T... values) {
         return of(Arrays.asList(values));
     }
 
-    public static <T> ReferenceIndex<T> of(Collection<T> collection) {
-        final ReferenceIndex<T> pipe = create();
+    public static <T> ReferenceIndex<Object, T> of(Collection<T> collection) {
+        final ReferenceIndex<Object, T> pipe = create();
         collection.forEach(pipe::add);
 
         return pipe;
     }
 
-    public static <T> ReferenceIndex<T> ofStream(Stream<T> stream) {
-        final ReferenceIndex<T> pipe = create();
+    public static <T> ReferenceIndex<Object, T> ofStream(Stream<T> stream) {
+        final ReferenceIndex<Object, T> pipe = create();
         stream.iterator().forEachRemaining(pipe::add);
         return pipe;
     }
@@ -123,33 +84,14 @@ public class ReferenceIndex<T>
         }
     */
 
-    public final <R> ReferenceIndex<R> addStage(Reference.Advancer<T, R> stage) {
+    public final <R> ReferenceIndex<Object, R> addStage(Reference.Advancer<T, R> stage) {
         return addStage(stage, null);
     }
 
-    public final <R> ReferenceIndex<R> addStage(Reference.Advancer<T, R> stage, Function<R, T> reverser) {
-        ReferenceIndex<R> sub = new Support.WithStage<>(this, stage, reverser);
+    public final <R> ReferenceIndex<Object, R> addStage(Reference.Advancer<T, R> stage, Function<R, T> reverser) {
+        ReferenceIndex<Object, R> sub = new Support.WithStage<>(this, stage, reverser);
         addDependent(sub);
         return sub;
-    }
-
-    public boolean add(T item) {
-        if (base != null && reverser != null)
-            return base.add(Polyfill.uncheckedCast(reverser.apply(item)));
-        Reference<T> ref = computeRef(size());
-        return ref.set(item);
-    }
-
-    private void validateBaseExists() {
-        if (base == null)
-            throw new AbstractMethodError();
-    }
-
-    @Override
-    @Deprecated
-    @Contract("-> this")
-    public final ReferenceIndex<T> pipe() {
-        return this;
     }
 
     public Reference<T> getReference(int index) {
@@ -167,7 +109,7 @@ public class ReferenceIndex<T>
 
     @NotNull
     @Override
-    public final ReferenceIndex<T> subList(int fromIndex, int toIndex) {
+    public final ReferenceIndex<Object, T> subList(int fromIndex, int toIndex) {
         return new Support.OfRange<>(this, fromIndex, toIndex);
     }
 
@@ -183,11 +125,11 @@ public class ReferenceIndex<T>
         return true;
     }
 
-    public final ReferenceIndex<T> filter(Predicate<? super T> predicate) {
+    public final ReferenceIndex<Object, T> filter(Predicate<? super T> predicate) {
         return addStage(StageAdapter.filter(predicate));
     }
 
-    public final ReferenceIndex<T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
+    public final ReferenceIndex<Object, T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
                 return true;
@@ -196,19 +138,19 @@ public class ReferenceIndex<T>
         });
     }
 
-    public final <R> ReferenceIndex<R> map(Function<? super T, ? extends R> mapper) {
+    public final <R> ReferenceIndex<Object, R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
-    public final <R> ReferenceIndex<R> flatMap(Class<R> target) {
+    public final <R> ReferenceIndex<Object, R> flatMap(Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
 
-    public final <R> ReferenceIndex<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    public final <R> ReferenceIndex<Object, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
-    public final ReferenceIndex<T> peek(Consumer<? super T> action) {
+    public final ReferenceIndex<Object, T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
@@ -218,25 +160,25 @@ public class ReferenceIndex<T>
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> distinct() {
+    public final ReferenceIndex<Object, T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> limit(long maxSize) {
+    public final ReferenceIndex<Object, T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> skip(long skip) {
+    public final ReferenceIndex<Object, T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
-    public final ReferenceIndex<T> sorted() {
+    public final ReferenceIndex<Object, T> sorted() {
         return sorted(Polyfill.uncheckedCast(Comparator.naturalOrder()));
     }
 
-    public final ReferenceIndex<T> sorted(Comparator<? super T> comparator) {
+    public final ReferenceIndex<Object, T> sorted(Comparator<? super T> comparator) {
         return new SortedResultingPipe<>(this, comparator);
     }
 
@@ -358,7 +300,7 @@ public class ReferenceIndex<T>
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final ReferenceIndex<T> resulting = addStage(stage);
+        final ReferenceIndex<Object, T> resulting = addStage(stage);
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;
@@ -370,15 +312,15 @@ public class ReferenceIndex<T>
     }
 
     private static final class Support {
-        public static final ReferenceIndex<?> EMPTY = ReferenceIndex.of(Collections.emptyList());
+        public static final ReferenceIndex<Object, ?> EMPTY = ReferenceIndex.of(Collections.emptyList());
 
-        private static class WithStage<T, R> extends ReferenceIndex<R> {
-            private WithStage(ReferenceIndex<T> base, Reference.Advancer<T, R> stage, Function<R, T> reverser) {
+        private static class WithStage<T, R> extends ReferenceIndex<Object, R> {
+            private WithStage(ReferenceIndex<Object, T> base, Reference.Advancer<T, R> stage, Function<R, T> reverser) {
                 super(base, stage, reverser);
             }
         }
 
-        private static final class OfList<T> extends ReferenceIndex<T> {
+        private static final class OfList<T> extends ReferenceIndex<Object, T> {
             private final List<Reference<T>> list;
 
             private OfList() {
@@ -427,8 +369,8 @@ public class ReferenceIndex<T>
             }
         }
 
-        public static class OfRange<T> extends ReferenceIndex<T> {
-            public OfRange(ReferenceIndex<T> base, int fromIndex, int toIndex) {
+        public static class OfRange<T> extends ReferenceIndex<Object, T> {
+            public OfRange(ReferenceIndex<Object, T> base, int fromIndex, int toIndex) {
                 // todo
             }
         }

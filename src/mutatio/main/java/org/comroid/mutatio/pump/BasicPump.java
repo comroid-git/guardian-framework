@@ -31,18 +31,18 @@ public class BasicPump<O, T> extends BasicPipe<O, T> implements Pump<T> {
         return executor;
     }
 
-    public BasicPump(ReferenceIndex<O> old, Consumer<Throwable> exceptionHandler) {
+    public BasicPump(ReferenceIndex<Object, O> old, Consumer<Throwable> exceptionHandler) {
         this(Runnable::run, old, exceptionHandler);
     }
 
-    public BasicPump(Executor executor, ReferenceIndex<O> old, Consumer<Throwable> exceptionHandler) {
+    public BasicPump(Executor executor, ReferenceIndex<Object, O> old, Consumer<Throwable> exceptionHandler) {
         //noinspection unchecked
         this(executor, old, StageAdapter.map(it -> (T) it), exceptionHandler);
     }
 
     public BasicPump(
             Executor executor,
-            ReferenceIndex<O> old,
+            ReferenceIndex<Object, O> old,
             StageAdapter<O, T> adapter,
             @Nullable Consumer<Throwable> exceptionHandler
     ) {

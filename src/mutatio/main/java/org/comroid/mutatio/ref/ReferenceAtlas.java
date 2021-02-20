@@ -1,10 +1,11 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.api.Polyfill;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
+import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -13,35 +14,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.comroid.api.Polyfill.uncheckedCast;
-
-public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
+abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>> {
-    private final ReferenceOverwriter<In, V, InRef, OutRef> advancer;
+    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> {
+        protected ForList(
+                @Nullable ReferenceIndex<?, In> parent,
+                @NotNull StageAdapter<In, T> advancer
+        ) {
+            super(parent, advancer, Function.identity(), Function.identity());
+        }
+    }
+
+    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> {
+        protected ForMap(
+                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @NotNull BiStageAdapter<InK, InV, K, V> advancer,
+                @NotNull Function<K, InK> keyReverser
+        ) {
+            super(parent, advancer, advancer::advanceKey, keyReverser);
+        }
+    }
+
+    private final ReferenceConverter<InRef, OutRef> advancer;
     private final Map<K, OutRef> accessors = new ConcurrentHashMap<>();
     private final Function<InK, K> keyAdvancer;
     private final Function<K, InK> keyReverser;
 
-    protected ReferenceAtlas(
-            ReferenceIndex<In> parent,
-            StageAdapter<In, V> adapter
-    ) {
-        this(uncheckedCast(parent), uncheckedCast(adapter), Polyfill::uncheckedCast, Polyfill::uncheckedCast);
-    }
-
-    protected ReferenceAtlas(
-            ReferenceMap<InK, In> parent,
-            BiStageAdapter<InK, In, K, V> adapter,
-            Function<K, InK> keyReverser
-    ) {
-        this(uncheckedCast(parent), uncheckedCast(adapter), adapter::advanceKey, keyReverser);
-    }
-
-    protected ReferenceAtlas(
+    private ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-            ReferenceOverwriter<In, V, InRef, OutRef> advancer,
-            Function<InK, K> keyAdvancer,
-            Function<K, InK> keyReverser
+            @NotNull ReferenceConverter<InRef, OutRef> advancer,
+            @NotNull Function<InK, K> keyAdvancer,
+            @NotNull Function<K, InK> keyReverser
     ) {
         super(parent);
 
@@ -84,8 +87,8 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         OutRef ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
             return ref;
-        InK revK = keyReverser.apply(key);
-        if (parent != null) {
+        InK revK = keyReverser == null ? null : keyReverser.apply(key);
+        if (parent != null && revK != null) {
             InRef inRef = parent.getReference(revK, false);
             if (inRef != null)
                 ref = advancer.advance(inRef);
