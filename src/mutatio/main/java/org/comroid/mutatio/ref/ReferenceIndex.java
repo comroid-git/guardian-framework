@@ -45,34 +45,27 @@ public class ReferenceIndex<In, T>
         super(parent, advancer);
     }
 
-    public static <T> ReferenceIndex<Object, T> create() {
+    public static <T> ReferenceIndex<?, T> create() {
         return of(new ArrayList<>());
     }
 
-    public static <T> ReferenceIndex<Object, T> of(List<T> list) {
-        Support.OfList<T> index = new Support.OfList<>();
-        list.forEach(index::add);
-        return index;
+    public static <T> ReferenceIndex<?, T> of(Collection<T> list) {
+        ReferenceIndex<?, T> refs = new ReferenceIndex<>();
+        refs.addAll(list);
+        return refs;
     }
 
-    public static <T> ReferenceIndex<Object, T> empty() {
+    public static <T> ReferenceIndex<?, T> empty() {
         //noinspection unchecked
         return (ReferenceIndex<Object, T>) Support.EMPTY;
     }
 
     @SafeVarargs
-    public static <T> ReferenceIndex<Object, T> of(T... values) {
+    public static <T> ReferenceIndex<?, T> of(T... values) {
         return of(Arrays.asList(values));
     }
 
-    public static <T> ReferenceIndex<Object, T> of(Collection<T> collection) {
-        final ReferenceIndex<Object, T> pipe = create();
-        collection.forEach(pipe::add);
-
-        return pipe;
-    }
-
-    public static <T> ReferenceIndex<Object, T> ofStream(Stream<T> stream) {
+    public static <T> ReferenceIndex<?, T> ofStream(Stream<T> stream) {
         final ReferenceIndex<Object, T> pipe = create();
         stream.iterator().forEachRemaining(pipe::add);
         return pipe;
@@ -107,23 +100,16 @@ public class ReferenceIndex<In, T>
         return new Support.OfRange<>(this, fromIndex, toIndex);
     }
 
-    @Deprecated
-    public final List<T> unwrap() {
-        //noinspection SimplifyStreamApiCallChains
-        return stream().collect(Collectors.toList());
-    }
-
     @OverrideOnly
     public boolean addReference(int index, Reference<T> ref) {
-        computeRef(index).rebind(ref);
-        return true;
+        return putAccessor(index, ref);
     }
 
-    public final ReferenceIndex<Object, T> filter(Predicate<? super T> predicate) {
+    public final ReferenceIndex<T, T> filter(Predicate<? super T> predicate) {
         return addStage(StageAdapter.filter(predicate));
     }
 
-    public final ReferenceIndex<Object, T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
+    public final ReferenceIndex<T, T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
                 return true;
@@ -132,19 +118,19 @@ public class ReferenceIndex<In, T>
         });
     }
 
-    public final <R> ReferenceIndex<Object, R> map(Function<? super T, ? extends R> mapper) {
+    public final <R> ReferenceIndex<T, R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
-    public final <R> ReferenceIndex<Object, R> flatMap(Class<R> target) {
+    public final <R> ReferenceIndex<T, R> flatMap(Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
 
-    public final <R> ReferenceIndex<Object, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    public final <R> ReferenceIndex<T, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
-    public final ReferenceIndex<Object, T> peek(Consumer<? super T> action) {
+    public final ReferenceIndex<T, T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
@@ -154,25 +140,25 @@ public class ReferenceIndex<In, T>
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<Object, T> distinct() {
+    public final ReferenceIndex<T, T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<Object, T> limit(long maxSize) {
+    public final ReferenceIndex<T, T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<Object, T> skip(long skip) {
+    public final ReferenceIndex<T, T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
-    public final ReferenceIndex<Object, T> sorted() {
+    public final ReferenceIndex<T, T> sorted() {
         return sorted(Polyfill.uncheckedCast(Comparator.naturalOrder()));
     }
 
-    public final ReferenceIndex<Object, T> sorted(Comparator<? super T> comparator) {
+    public final ReferenceIndex<T, T> sorted(Comparator<? super T> comparator) {
         return new SortedResultingPipe<>(this, comparator);
     }
 
@@ -186,11 +172,15 @@ public class ReferenceIndex<In, T>
         return Reference.conditional(() -> size() > 0, () -> span().get(0));
     }
 
-    public boolean remove(Object item) throws UnsupportedOperationException {
-        validateBaseExists();
-        //noinspection unchecked
-        Object it = reverser.apply((T) item);
-        return base.remove(it);
+    public final boolean remove(Object item) {
+        for (int i = 0; i < this.size(); i++) {
+            Reference<T> ref = getReference(i);
+            if (ref == null)
+                continue;
+            if (ref.contentEquals(item))
+                return removeRef(i);
+        }
+        return false;
     }
 
     public final Stream<T> stream() {
@@ -224,6 +214,12 @@ public class ReferenceIndex<In, T>
     }
 
     @Override
+    public boolean add(T t) {
+        Reference<T> ref = getReference(size(), true);
+        return ref.set(t);
+    }
+
+    @Override
     public final T set(int index, T element) {
         return getReference(index, true).replace(element);
     }
@@ -236,16 +232,16 @@ public class ReferenceIndex<In, T>
     @Override
     public final T remove(int index) {
         T old = get(index);
-        base.remove(index);
-        accessors.remove(index);
+        if (removeRef(index))
         return old;
+        else return null;
     }
 
     @Override
     public final int indexOf(Object other) {
         for (int i = 0; i < size(); i++) {
             T each = get(i);
-            if (each.equals(other))
+            if (other.equals(each))
                 return i;
         }
         return -1;
@@ -267,6 +263,7 @@ public class ReferenceIndex<In, T>
         return new RefIndIterator(index);
     }
 
+    @Deprecated
     public Span<T> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);
     }
@@ -294,80 +291,10 @@ public class ReferenceIndex<In, T>
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final ReferenceIndex<Object, T> resulting = addStage(stage);
+        final ReferenceIndex<T, T> resulting = addStage(stage);
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;
-    }
-
-    @Override
-    protected Reference<T> createEmptyRef(@NotNull Integer key) {
-        return KeyedReference.createKey(key);
-    }
-
-    private static final class Support {
-        public static final ReferenceIndex<Object, ?> EMPTY = ReferenceIndex.of(Collections.emptyList());
-
-        private static class WithStage<T, R> extends ReferenceIndex<Object, R> {
-            private WithStage(ReferenceIndex<Object, T> base, Reference.Advancer<T, R> stage, Function<R, T> reverser) {
-                super(base, stage, reverser);
-            }
-        }
-
-        private static final class OfList<T> extends ReferenceIndex<Object, T> {
-            private final List<Reference<T>> list;
-
-            private OfList() {
-                this(new ArrayList<>());
-            }
-
-            private OfList(List<Reference<T>> list) {
-                this.list = list;
-            }
-
-            @Override
-            public boolean addReference(int index, Reference<T> ref) {
-                list.add(ref);
-                updateCache();
-                return true;
-            }
-
-            @Override
-            public boolean remove(Object item) {
-                if (list.removeIf(ref -> ref.contentEquals(item))) {
-                    updateCache();
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void clear() {
-                list.clear();
-                updateCache();
-            }
-
-            @Override
-            public Stream<Reference<T>> streamRefs() {
-                return list.stream();
-            }
-
-            @Override
-            public Reference<T> getReference(final int index) {
-                return list.get(index);
-            }
-
-            @Override
-            public int size() {
-                return list.size();
-            }
-        }
-
-        public static class OfRange<T> extends ReferenceIndex<Object, T> {
-            public OfRange(ReferenceIndex<Object, T> base, int fromIndex, int toIndex) {
-                // todo
-            }
-        }
     }
 
     private class RefIndIterator implements ListIterator<T> {

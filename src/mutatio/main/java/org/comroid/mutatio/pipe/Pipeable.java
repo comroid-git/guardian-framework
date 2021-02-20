@@ -8,7 +8,10 @@ import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
 @Deprecated
 public interface Pipeable<T> {
-    ReferenceIndex<Object, ? extends T> pipe();
+    @Deprecated
+    default ReferenceIndex<Object, ? extends T> pipe() {
+        throw new AbstractMethodError("deprecated");
+    }
 
     interface From<T> extends Pipeable<T> {
         @Override

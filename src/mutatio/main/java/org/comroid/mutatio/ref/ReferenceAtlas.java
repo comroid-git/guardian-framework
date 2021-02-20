@@ -16,35 +16,15 @@ import java.util.stream.Stream;
 
 abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>> {
-    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> {
-        protected ForList(
-                @Nullable ReferenceIndex<?, In> parent,
-                @NotNull StageAdapter<In, T> advancer
-        ) {
-            super(parent, advancer, Function.identity(), Function.identity());
-        }
-    }
-
-    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> {
-        protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
-                @NotNull BiStageAdapter<InK, InV, K, V> advancer,
-                @NotNull Function<K, InK> keyReverser
-        ) {
-            super(parent, advancer, advancer::advanceKey, keyReverser);
-        }
-    }
-
     private final ReferenceConverter<InRef, OutRef> advancer;
     private final Map<K, OutRef> accessors = new ConcurrentHashMap<>();
     private final Function<InK, K> keyAdvancer;
     private final Function<K, InK> keyReverser;
-
     private ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
             @NotNull ReferenceConverter<InRef, OutRef> advancer,
             @NotNull Function<InK, K> keyAdvancer,
-            @NotNull Function<K, InK> keyReverser
+            @Nullable Function<K, InK> keyReverser
     ) {
         super(parent);
 
@@ -57,6 +37,17 @@ abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef
 
     public final int size() {
         return (int) streamKeys().count();
+    }
+
+    public final boolean removeRef(K key) {
+        InK revK = keyReverser == null ? null : keyReverser.apply(key);
+        if (revK != null) {
+            InRef pRef = parent == null ? null
+                    : parent.getReference(revK, false);
+            if (pRef != null)
+                parent.removeRef(revK);
+        }
+        return accessors.remove(key) != null;
     }
 
     public final void clear() {
@@ -97,5 +88,38 @@ abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef
             accessors.get(key).rebind(ref);
         else accessors.put(key, ref);
         return ref;
+    }
+
+    protected final boolean putAccessor(K key, OutRef ref) {
+        return accessors.put(key, ref) != ref;
+    }
+
+    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> {
+        protected ForList(
+                @Nullable ReferenceIndex<?, In> parent,
+                @NotNull StageAdapter<In, T> advancer
+        ) {
+            super(parent, advancer, Function.identity(), Function.identity());
+        }
+
+        @Override
+        protected final Reference<T> createEmptyRef(@NotNull Integer key) {
+            return KeyedReference.createKey(key);
+        }
+    }
+
+    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> {
+        protected ForMap(
+                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @NotNull BiStageAdapter<InK, InV, K, V> advancer,
+                @NotNull Function<K, InK> keyReverser
+        ) {
+            super(parent, advancer, advancer::advanceKey, keyReverser);
+        }
+
+        @Override
+        protected final KeyedReference<K, V> createEmptyRef(K key) {
+            return KeyedReference.createKey(key);
+        }
     }
 }

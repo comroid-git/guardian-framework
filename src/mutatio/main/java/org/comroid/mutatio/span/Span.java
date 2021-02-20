@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
+@Deprecated
 public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>, Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;

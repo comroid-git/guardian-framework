@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.abstr.AbstractMap;
 import org.comroid.api.Polyfill;
 import org.comroid.api.UncheckedCloseable;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.Contract;
@@ -10,9 +11,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class ReferenceMap<InK, InV, K, V>
@@ -37,61 +40,9 @@ public abstract class ReferenceMap<InK, InV, K, V>
         super(parent, advancer, keyReverser);
     }
 
-    private void validateBaseExists() {
-        if (base == null)
-            throw new AbstractMethodError();
-    }
-
-    @Override
-    public final int size() throws AbstractMethodError {
-        return base == null ? accessors.size() : base.size();
-    }
-
-    public final Stream<K> streamKeys() {
-        return Stream.concat(
-                base.streamKeys().map(advancer::advanceKey),
-                accessors.keySet().stream()
-        ).distinct();
-    }
-
-    public final Stream<KeyedReference<K, V>> streamRefs() {
-        return streamKeys().map(this::getReference);
-    }
-
     public final @Nullable KeyedReference<K, V> getReference(Object k) {
-        return getReference(k, false);
-    }
-
-    @Contract("!null, false -> _; !null, true -> !null")
-    public final KeyedReference<K, V> getReference(Object k, boolean createIfAbsent) {
-        K key;
-        try {
-            //noinspection unchecked
-            key = (K) k;
-        } catch (ClassCastException cce) {
-            throw new IllegalArgumentException("Not a valid key: " + k, cce);
-            // todo: Return empty instead?
-        }
-        KeyedReference<K, V> ref = accessors.get(key);
-        if (ref != null && createIfAbsent) {
-            ref = computeRef(key);
-            if (ref == null)
-                ref = KeyedReference.createKey(false, key);
-            if (accessors.containsKey(key))
-                accessors.get(key).rebind(ref);
-            else accessors.put(key, ref);
-        }
-        return ref;
-    }
-
-    public final @Nullable KeyedReference<K, V> computeRef(K key) {
-        Object revK = kReverser == null ? null : kReverser.apply(key);
-        KeyedReference<K, V> ref;
-        if (revK != null && base != null && base.containsKey(revK))
-            ref = advancer.advance(base.getReference(revK));
-        else ref = KeyedReference.createKey(key);
-        accessors.put(key, ref);
-        return ref;
+        //noinspection unchecked
+        return getReference((K) k, false);
     }
 
     @Override
@@ -123,47 +74,25 @@ public abstract class ReferenceMap<InK, InV, K, V>
 
     @Override
     public final V remove(Object key) {
-        KeyedReference<K, V> ref = getReference(key, false);
+        KeyedReference<K, V> ref = getReference(key);
         if (ref == null)
             return null;
+        V old = ref.get();
         if (!ref.unset())
             throw new UnsupportedOperationException("Could not unset");
-    }
-
-    @Override
-    public final void putAll(@NotNull Map<? extends K, ? extends V> m) {
-    }
-
-    @Override
-    public void clear() {
-
-    }
-
-    @NotNull
-    @Override
-    public Set<K> keySet() {
-        return null;
-    }
-
-    @NotNull
-    @Override
-    public Collection<V> values() {
-        return null;
+        return old;
     }
 
     @NotNull
     @Override
     public Set<Entry<K, V>> entrySet() {
-        return null;
+        return Collections.unmodifiableSet(streamRefs().collect(Collectors.toSet()));
     }
 
     @Override
     public void close() {
-
-    }
-
-    @Override
-    public ReferenceIndex<Object, ? extends V> pipe() {
-        return null;
+        for (ValueCache<?> each : getDependents())
+            if (each instanceof UncheckedCloseable)
+                ((UncheckedCloseable) each).close();
     }
 }
