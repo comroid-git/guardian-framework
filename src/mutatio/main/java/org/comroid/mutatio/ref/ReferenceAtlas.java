@@ -14,13 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
+public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>> {
     private final ReferenceConverter<InRef, OutRef> advancer;
     private final Map<K, OutRef> accessors = new ConcurrentHashMap<>();
     private final Function<InK, K> keyAdvancer;
     private final Function<K, InK> keyReverser;
-    private ReferenceAtlas(
+
+    protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
             @NotNull ReferenceConverter<InRef, OutRef> advancer,
             @NotNull Function<InK, K> keyAdvancer,
