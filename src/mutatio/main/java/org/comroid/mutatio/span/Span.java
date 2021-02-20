@@ -37,12 +37,6 @@ public class Span<T> extends ReferenceIndex<Object, T> implements Collection<T>,
         return fixedCapacity != UNFIXED_SIZE;
     }
 
-    public boolean isMutable() {
-        return fixedCapacity == UNFIXED_SIZE
-                && modifyPolicy.canOverwrite(new Object(), new Object())
-                && modifyPolicy.canOverwrite(null, new Object());
-    }
-
     public Span() {
         this(ReferenceIndex.create(), UNFIXED_SIZE, DEFAULT_MODIFY_POLICY);
     }

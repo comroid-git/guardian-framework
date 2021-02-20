@@ -11,7 +11,6 @@ import org.comroid.mutatio.pipe.StageAdapter;
 import org.comroid.mutatio.pipe.impl.SortedResultingPipe;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,13 +20,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class ReferenceIndex<In, T>
         extends ReferenceAtlas.ForList<In, T>
         implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
+    private static final ReferenceIndex<?, Void> EMPTY = new ReferenceIndex<Void, Void>() {{
+        setImmutable();
+    }};
+
     public ReferenceIndex() {
         this(null, StageAdapter.identity());
     }
@@ -57,7 +59,7 @@ public class ReferenceIndex<In, T>
 
     public static <T> ReferenceIndex<?, T> empty() {
         //noinspection unchecked
-        return (ReferenceIndex<Object, T>) Support.EMPTY;
+        return (ReferenceIndex<?, T>) EMPTY;
     }
 
     @SafeVarargs
@@ -227,7 +229,7 @@ public class ReferenceIndex<In, T>
     public final T remove(int index) {
         T old = get(index);
         if (removeRef(index))
-        return old;
+            return old;
         else return null;
     }
 

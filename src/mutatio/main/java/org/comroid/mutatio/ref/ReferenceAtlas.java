@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.mutatio.MutableState;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.ReferenceConverter;
@@ -11,15 +12,23 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
-        extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>> {
+        extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
+        implements MutableState {
+    private final AtomicBoolean mutable;
+    private final Map<K, OutRef> accessors;
     private final ReferenceConverter<InRef, OutRef> advancer;
-    private final Map<K, OutRef> accessors = new ConcurrentHashMap<>();
     private final Function<InK, K> keyAdvancer;
     private final Function<K, InK> keyReverser;
+
+    @Override
+    public final boolean isMutable() {
+        return mutable.get();
+    }
 
     protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
@@ -32,6 +41,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         this.advancer = advancer;
         this.keyAdvancer = keyAdvancer;
         this.keyReverser = keyReverser;
+
+        this.mutable = new AtomicBoolean(parent != null);
+        this.accessors = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public final boolean setMutable(boolean state) {
+        return mutable.compareAndSet(!state, state);
     }
 
     protected abstract OutRef createEmptyRef(K key);
@@ -41,6 +58,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     public final boolean removeRef(K key) {
+        validateMutability();
         InK revK = keyReverser == null ? null : keyReverser.apply(key);
         if (revK != null) {
             InRef pRef = parent == null ? null
@@ -51,7 +69,13 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return accessors.remove(key) != null;
     }
 
+    private void validateMutability() {
+        if (isImmutable())
+            throw new UnsupportedOperationException("Atlas is immutable");
+    }
+
     public final void clear() {
+        validateMutability();
         if (parent != null)
             parent.clear();
         accessors.clear();
@@ -79,6 +103,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         OutRef ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
             return ref;
+        validateMutability();
         InK revK = keyReverser == null ? null : keyReverser.apply(key);
         if (parent != null && revK != null) {
             InRef inRef = parent.getReference(revK, false);
@@ -92,6 +117,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     protected final boolean putAccessor(K key, OutRef ref) {
+        validateMutability();
         return accessors.put(key, ref) != ref;
     }
 
