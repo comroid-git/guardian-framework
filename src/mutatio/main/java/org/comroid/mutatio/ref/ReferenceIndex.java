@@ -46,11 +46,11 @@ public class ReferenceIndex<In, T>
     }
 
     public static <T> ReferenceIndex<?, T> create() {
-        return of(new ArrayList<>());
+        return new ReferenceIndex<>();
     }
 
     public static <T> ReferenceIndex<?, T> of(Collection<T> list) {
-        ReferenceIndex<?, T> refs = new ReferenceIndex<>();
+        ReferenceIndex<?, T> refs = create();
         refs.addAll(list);
         return refs;
     }
