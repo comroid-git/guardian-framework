@@ -8,7 +8,6 @@ import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.pipe.StageAdapter;
-import org.comroid.mutatio.pipe.impl.SortedResultingPipe;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +28,8 @@ public class ReferenceIndex<In, T>
     private static final ReferenceIndex<?, Void> EMPTY = new ReferenceIndex<Void, Void>() {{
         setImmutable();
     }};
+    private final int fromIndex;
+    private final int toIndex;
 
     public ReferenceIndex() {
         this(null, StageAdapter.identity());
@@ -44,7 +45,36 @@ public class ReferenceIndex<In, T>
             @Nullable ReferenceIndex<?, In> parent,
             @NotNull StageAdapter<In, T> advancer
     ) {
-        super(parent, advancer);
+        this(parent, advancer, null);
+    }
+
+    public ReferenceIndex(
+            @Nullable ReferenceIndex<?, In> parent,
+            @NotNull StageAdapter<In, T> advancer,
+            @Nullable Comparator<Reference<T>> comparator
+    ) {
+        super(parent, advancer, comparator);
+
+        this.fromIndex = -1;
+        this.toIndex = -1;
+    }
+
+    private ReferenceIndex(
+            @NotNull ReferenceIndex<?, T> parent,
+            int fromIndex,
+            int toIndex
+    ) {
+        super(Polyfill.uncheckedCast(parent), StageAdapter.identity());
+
+        this.fromIndex = fromIndex;
+        this.toIndex = toIndex;
+    }
+
+    private ReferenceIndex(
+            @NotNull ReferenceIndex<?, T> parent,
+            @NotNull Comparator<Reference<T>> comparator
+    ) {
+        this(Polyfill.uncheckedCast(parent), StageAdapter.identity(), comparator);
     }
 
     public static <T> ReferenceIndex<?, T> create() {
@@ -65,6 +95,16 @@ public class ReferenceIndex<In, T>
     @SafeVarargs
     public static <T> ReferenceIndex<?, T> of(T... values) {
         return of(Arrays.asList(values));
+    }
+
+    @Override
+    protected final @Nullable Integer prefabBaseKey(@NotNull Integer key) {
+        if (fromIndex == -1 & toIndex == -1)
+            return key;
+        int yield = fromIndex + key;
+        if (yield > toIndex)
+            return yield;
+        return null;
     }
 
     /*
@@ -93,7 +133,7 @@ public class ReferenceIndex<In, T>
     @NotNull
     @Override
     public final ReferenceIndex<?, T> subList(int fromIndex, int toIndex) {
-        return new Support.OfRange<>(this, fromIndex, toIndex);
+        return new ReferenceIndex<>(this, fromIndex, toIndex);
     }
 
     @OverrideOnly
@@ -155,7 +195,7 @@ public class ReferenceIndex<In, T>
     }
 
     public final ReferenceIndex<T, T> sorted(Comparator<? super T> comparator) {
-        return new SortedResultingPipe<>(this, comparator);
+        return new ReferenceIndex<>(this, (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare));
     }
 
     @NotNull
