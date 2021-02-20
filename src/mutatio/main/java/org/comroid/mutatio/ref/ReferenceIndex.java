@@ -65,12 +65,6 @@ public class ReferenceIndex<In, T>
         return of(Arrays.asList(values));
     }
 
-    public static <T> ReferenceIndex<?, T> ofStream(Stream<T> stream) {
-        final ReferenceIndex<Object, T> pipe = create();
-        stream.iterator().forEachRemaining(pipe::add);
-        return pipe;
-    }
-
     /*
         public <X> ReferenceIndex<X, T> bi(Function<T, X> source) {
             return new KeyedPipe<>(this, BiStageAdapter.source(source), autoEmptyLimit);
@@ -96,7 +90,7 @@ public class ReferenceIndex<In, T>
 
     @NotNull
     @Override
-    public final ReferenceIndex<Object, T> subList(int fromIndex, int toIndex) {
+    public final ReferenceIndex<?, T> subList(int fromIndex, int toIndex) {
         return new Support.OfRange<>(this, fromIndex, toIndex);
     }
 
