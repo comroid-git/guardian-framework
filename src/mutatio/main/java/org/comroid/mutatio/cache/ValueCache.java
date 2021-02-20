@@ -40,6 +40,9 @@ public interface ValueCache<T> {
                 ));
     }
 
+    @Internal
+    long getLastUpdateTime();
+
     /**
      * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.
@@ -98,8 +101,8 @@ public interface ValueCache<T> {
     @Internal
     int deployListeners(T forValue, Executor executor);
 
-    abstract class Abstract<T> implements ValueCache<T> {
-        protected final ValueCache.Abstract<?> parent;
+    abstract class Abstract<T, P extends ValueCache<?>> implements ValueCache<T> {
+        protected final P parent;
         private final Set<WeakReference<? extends ValueCache<?>>> dependents = new HashSet<>();
         private final AtomicLong lastUpdate = new AtomicLong(0);
         private final Set<ValueUpdateListener<T>> listeners = new HashSet<>();
@@ -115,9 +118,14 @@ public interface ValueCache<T> {
         }
 
         @Override
+        public final long getLastUpdateTime() {
+            return lastUpdate.get();
+        }
+
+        @Override
         public final synchronized boolean isOutdated() {
             if (parent != null)
-                return parent.lastUpdate.get() >= lastUpdate.get();
+                return parent.getLastUpdateTime() >= lastUpdate.get();
             return lastUpdate.get() == 0;
         }
 
@@ -130,9 +138,9 @@ public interface ValueCache<T> {
                     .collect(Collectors.toSet());
         }
 
-        protected Abstract(ValueCache<?> parent) {
+        protected Abstract(P parent) {
             try {
-                this.parent = (Abstract<?>) parent;
+                this.parent = parent;
             } catch (ClassCastException cce) {
                 throw new IllegalArgumentException("Invalid parent; must implement ValueCache.Abstract: " + parent, cce);
             }

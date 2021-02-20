@@ -25,7 +25,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implements Pipeable<T>, List<T>, UncheckedCloseable {
+public abstract class ReferenceIndex<T>
+        extends ReferenceAtlas<Object, @NotNull Integer, Object, T, Reference<Object>, Reference<T>>
+        implements Pipeable<T>, List<T>, UncheckedCloseable {
     private final ReferenceIndex<Object> base;
     private final Reference.Advancer<Object, T> advancer;
     private final List<Reference<T>> accessors;
@@ -75,7 +77,7 @@ public abstract class ReferenceIndex<T> extends ValueCache.Abstract<Void> implem
             @Nullable Reference.Advancer<R, T> advancer,
             @Nullable Function<T, R> reverser
     ) {
-        super(parent);
+        super(parent, advancer);
 
         if (parent == null && advancer != null) {
             throw new NullPointerException("parent required with defined advancer");

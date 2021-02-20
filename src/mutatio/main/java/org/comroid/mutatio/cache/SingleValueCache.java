@@ -29,7 +29,7 @@ public interface SingleValueCache<T> extends ValueCache<T> {
     @Internal
     void computeAndStoreValue();
 
-    abstract class Abstract<T> extends ValueCache.Abstract<T> implements SingleValueCache<T> {
+    abstract class Abstract<T> extends ValueCache.Abstract<T, SingleValueCache<?>> implements SingleValueCache<T> {
         private final AtomicReference<T> cache = new AtomicReference<>();
         private final @Nullable Executor autocomputor;
 

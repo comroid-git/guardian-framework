@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void> implements Pipeable<V>, Map<K, V>, UncheckedCloseable {
+public abstract class ReferenceMap<K, V> extends ValueCache.Abstract<Void, ValueCache.Abstract<?>> implements Pipeable<V>, Map<K, V>, UncheckedCloseable {
     private final ReferenceMap<Object, Object> base;
     private final KeyedReference.Advancer<Object, Object, K, V> advancer;
     private final Map<K, KeyedReference<K, V>> accessors;
