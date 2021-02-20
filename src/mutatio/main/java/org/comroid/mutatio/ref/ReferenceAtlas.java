@@ -5,6 +5,7 @@ import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
 import org.comroid.mutatio.pipe.StageAdapter;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     protected ReferenceAtlas(
-            ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
+            @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
             ReferenceOverwriter<In, V, InRef, OutRef> advancer,
             Function<InK, K> keyAdvancer,
             Function<K, InK> keyReverser
@@ -56,13 +57,15 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     public final void clear() {
-        parent.clear();
+        if (parent != null)
+            parent.clear();
         accessors.clear();
     }
 
     public final Stream<K> streamKeys() {
         return Stream.concat(
-                parent.streamKeys().map(keyAdvancer),
+                parent == null ? Stream.empty()
+                        : parent.streamKeys().map(keyAdvancer),
                 accessors.keySet().stream()
         ).distinct();
     }
@@ -82,10 +85,11 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         if (ref != null | !createIfAbsent)
             return ref;
         InK revK = keyReverser.apply(key);
-        InRef inRef = parent.getReference(revK, false);
-        if (inRef != null)
-            ref = advancer.advance(inRef);
-        else ref = createEmptyRef(key);
+        if (parent != null) {
+            InRef inRef = parent.getReference(revK, false);
+            if (inRef != null)
+                ref = advancer.advance(inRef);
+        } else ref = createEmptyRef(key);
         if (accessors.containsKey(key))
             accessors.get(key).rebind(ref);
         else accessors.put(key, ref);
