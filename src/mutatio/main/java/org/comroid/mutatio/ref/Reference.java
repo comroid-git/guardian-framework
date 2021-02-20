@@ -23,7 +23,7 @@ import java.util.function.*;
 
 public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
     private final boolean mutable;
-    private final Predicate<T> setter;
+    private Predicate<T> overriddenSetter;
     private Supplier<T> overriddenSupplier = null;
 
     @Internal
@@ -96,7 +96,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     ) {
         super(parent, autoComputor);
 
-        this.setter = setter;
+        this.overriddenSetter = setter;
         this.mutable = mutable;
     }
 
@@ -190,7 +190,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         if (isImmutable())
             return false;
 
-        boolean doSet = setter == null ? doSet(value) : setter.test(value);
+        boolean doSet = overriddenSetter == null ? doSet(value) : overriddenSetter.test(value);
         if (!doSet)
             return false;
         overriddenSupplier = null;
@@ -204,6 +204,8 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
         overriddenSupplier = behind;
+        if (behind instanceof Reference)
+            overriddenSetter = ((Reference<Object>) behind)::set;
         outdateCache();
     }
 

@@ -34,7 +34,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         this(uncheckedCast(parent), uncheckedCast(adapter), adapter::advanceKey, keyReverser);
     }
 
-    private ReferenceAtlas(
+    protected ReferenceAtlas(
             ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
             ReferenceOverwriter<In, V, InRef, OutRef> advancer,
             Function<InK, K> keyAdvancer,
@@ -45,6 +45,11 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         this.advancer = advancer;
         this.keyAdvancer = keyAdvancer;
         this.keyReverser = keyReverser;
+    }
+
+    public final void clear() {
+        parent.clear();
+        accessors.clear();
     }
 
     public final Stream<K> streamKeys() {
@@ -59,9 +64,20 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     public final Stream<OutRef> streamRefs() {
-        return streamKeys().map(key -> getAccessor(key, true));
+        return streamKeys().map(key -> getReference(key, true));
     }
 
-    public final OutRef getAccessor(K key, boolean createIfAbsent) {
+    public final OutRef getReference(K key, boolean createIfAbsent) {
+        OutRef ref = accessors.get(key);
+        if (ref != null | !createIfAbsent)
+            return ref;
+        InK revK = keyReverser.apply(key);
+        InRef inRef = parent.getReference(revK, true);
+        if (inRef != null)
+            ref = advancer.advance(inRef);
+        if (accessors.containsKey(key))
+            accessors.get(key).rebind(ref);
+        else accessors.put(key, ref);
+        return ref;
     }
 }

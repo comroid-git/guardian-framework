@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ReferenceIndex<T>
-        extends ReferenceAtlas<Object, @NotNull Integer, Object, T, Reference<Object>, Reference<T>>
+        extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, Object, T, Reference<Object>, Reference<T>>
         implements Pipeable<T>, List<T>, UncheckedCloseable {
     private final ReferenceIndex<Object> base;
     private final Reference.Advancer<Object, T> advancer;
@@ -77,7 +77,7 @@ public abstract class ReferenceIndex<T>
             @Nullable Reference.Advancer<R, T> advancer,
             @Nullable Function<T, R> reverser
     ) {
-        super(parent, advancer);
+        super(parent, advancer, Function.identity(), Function.identity());
 
         if (parent == null && advancer != null) {
             throw new NullPointerException("parent required with defined advancer");
