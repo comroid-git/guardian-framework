@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+@Deprecated
 public final class JITAssistant {
     public static CompletableFuture<Void> prepare(Class<?>... classes) {
         return CompletableFuture.allOf(Arrays.stream(classes)
