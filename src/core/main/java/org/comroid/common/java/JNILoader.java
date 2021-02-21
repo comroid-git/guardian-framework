@@ -13,14 +13,19 @@ public final class JNILoader {
     }
 
     public static void loadLibrary(String name) {
-        loadLibrary(null, name);
+        loadLibrary(name + "-32", name + "-64");
     }
 
-    public static void loadLibrary(String path, String name) {
+    public static void loadLibrary(String x32name, String x64name) {
+        loadLibrary(null, x32name, x64name);
+    }
+
+    public static void loadLibrary(String path, String x32name, String x64name) {
+        String useName = OS.currentArchitecture == OS.Architecture.x64 ? x64name : x32name;
         try {
-            System.loadLibrary(path == null ? "" : (path + File.separator) + name);
+            System.loadLibrary((path == null ? "" : path + File.separator) + useName);
         } catch (UnsatisfiedLinkError ignored) {
-            loadFromJar(name);
+            loadFromJar(useName);
         }
     }
 
