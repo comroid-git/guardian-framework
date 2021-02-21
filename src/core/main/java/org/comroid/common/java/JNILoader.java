@@ -1,5 +1,6 @@
 package org.comroid.common.java;
 
+import org.comroid.common.io.FileHandle;
 import org.comroid.common.os.OS;
 import org.comroid.util.StackTraceUtils;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +13,8 @@ import java.net.URISyntaxException;
 import java.util.UUID;
 
 public final class JNILoader {
+    public static final FileHandle TEMP = new FileHandle(System.getProperty("java.io.tmpdir"), true);
+
     private JNILoader() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
@@ -40,14 +43,13 @@ public final class JNILoader {
     }
 
     public static void loadFromJar(String jarName, String name) {
-        String extension = OS.current.getLibraryExtension();
-        name = name + extension;
+        name = name + OS.current.getLibraryExtension();
         File fileOut = null;
 
         try {
             // have to use a stream
             // always write to different location
-            fileOut = new File(jarName + File.separator + name);
+            fileOut = new File(TEMP.createSubDir(jarName), name);
 
             if (!fileOut.exists()) {
                 if (!fileOut.createNewFile())
@@ -66,6 +68,7 @@ public final class JNILoader {
                 }
             }
             System.load(fileOut.toString());
+            fileOut.deleteOnExit();
         } catch (Exception e) {
             throw new RuntimeException("Error loading library into file: "
                     + (fileOut == null ? "null" : fileOut.getAbsolutePath()), e);
