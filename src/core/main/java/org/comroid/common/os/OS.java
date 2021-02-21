@@ -16,7 +16,8 @@ public enum OS implements Named {
     SOLARIS(".so", "sunos");
 
     public static final OS current = detect();
-    public static final Architecture currentArchitecture = Architecture.detect();
+    public static final Architecture currentArchitecture = Architecture.detect("os.arch");
+    public static final Architecture currentJvmArchitecture = Architecture.detect("sun.arch.data.model");
 
     private final String libExtension;
     private final List<String> validators;
@@ -62,8 +63,8 @@ public enum OS implements Named {
             return name().substring(1);
         }
 
-        private static Architecture detect() {
-            String arch = System.getProperty("os.arch");
+        private static Architecture detect(String prop) {
+            String arch = System.getProperty(prop);
             return Arrays.stream(values())
                     .filter(it -> arch.contains(it.getValueAsString()))
                     .findAny()
