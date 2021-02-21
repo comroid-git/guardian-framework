@@ -1,20 +1,13 @@
 package org.comroid.common.java;
 
-import org.comroid.common.io.FileHandle;
 import org.comroid.common.os.OS;
-import org.comroid.util.StackTraceUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.util.UUID;
 
 public final class JNILoader {
-    public static final FileHandle TEMP = new FileHandle(System.getProperty("java.io.tmpdir"), true);
-
     private JNILoader() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
@@ -23,33 +16,15 @@ public final class JNILoader {
         try {
             System.loadLibrary(name);
         } catch (UnsatisfiedLinkError ignored) {
-            String jarName = getNameOfJarfile(StackTraceUtils.callerClass(1));
-            if (jarName == null)
-                loadFromJar(UUID.randomUUID().toString(), name);
-            else loadFromJar(jarName, name);
+            loadFromJar(name);
         }
     }
 
-    public static @Nullable String getNameOfJarfile(Class<?> ofClass) {
-        try {
-            return new File(ofClass.getProtectionDomain()
-                    .getCodeSource()
-                    .getLocation()
-                    .toURI())
-                    .getName();
-        } catch (URISyntaxException ignored) {
-            return null;
-        }
-    }
-
-    public static void loadFromJar(String jarName, String name) {
-        name = name + OS.current.getLibraryExtension();
+    public static void loadFromJar(String name) {
         File fileOut = null;
 
         try {
-            // have to use a stream
-            // always write to different location
-            fileOut = new File(TEMP.createSubDir(jarName), name);
+            fileOut = File.createTempFile(name + '-', OS.current.getLibraryExtension());
 
             if (!fileOut.exists()) {
                 if (!fileOut.createNewFile())
@@ -68,7 +43,6 @@ public final class JNILoader {
                 }
             }
             System.load(fileOut.toString());
-            fileOut.deleteOnExit();
         } catch (Exception e) {
             throw new RuntimeException("Error loading library into file: "
                     + (fileOut == null ? "null" : fileOut.getAbsolutePath()), e);
