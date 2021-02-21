@@ -1,8 +1,6 @@
 package org.comroid.common.os;
 
-import org.comroid.api.IntEnum;
 import org.comroid.api.Named;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,22 +49,19 @@ public enum OS implements Named {
         throw new NoSuchElementException("Unknown OS: " + osName);
     }
 
-    public enum Architecture implements IntEnum {
-        x16, x32, x64;
+    public enum Architecture {
+        x32("32", "86"), x64("64");
 
-        @Override
-        public @NotNull Integer getValue() {
-            return Integer.parseInt(getValueAsString());
-        }
+        private final List<String> idents;
 
-        public @NotNull String getValueAsString() {
-            return name().substring(1);
+        Architecture(String... idents) {
+            this.idents = Collections.unmodifiableList(Arrays.asList(idents));
         }
 
         private static Architecture detect(String prop) {
             String arch = System.getProperty(prop);
             return Arrays.stream(values())
-                    .filter(it -> arch.contains(it.getValueAsString()))
+                    .filter(it -> it.idents.stream().anyMatch(arch::contains))
                     .findAny()
                     .orElseThrow(() -> new NoSuchElementException("Unknown architecture: " + arch));
         }
