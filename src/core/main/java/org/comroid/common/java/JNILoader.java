@@ -13,8 +13,12 @@ public final class JNILoader {
     }
 
     public static void loadLibrary(String name) {
+        loadLibrary(null, name);
+    }
+
+    public static void loadLibrary(String path, String name) {
         try {
-            System.loadLibrary(name);
+            System.loadLibrary(path == null ? "" : (path + File.separator) + name);
         } catch (UnsatisfiedLinkError ignored) {
             loadFromJar(name);
         }
