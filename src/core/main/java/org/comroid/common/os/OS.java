@@ -19,7 +19,6 @@ public enum OS implements Named {
     SOLARIS(".so", "sunos");
 
     public static final OS current = detect();
-    private static final Pattern ArchPattern = Pattern.compile(".*(?<num>\\d{2,3}).*");
     public static final Architecture currentArchitecture = detectArchitecture();
 
     private final String libExtension;
@@ -51,16 +50,14 @@ public enum OS implements Named {
     }
 
     private static Architecture detectArchitecture() {
-        final String arch = System.getProperty("os.arch");
-        try {
-            Matcher matcher = ArchPattern.matcher(arch);
-            String num = Polyfill.regexGroupOrDefault(matcher, "num", null);
-            if (num == null)
-                throw new IllegalStateException("No numeric identifier found in: " + arch);
-            return Architecture.valueOf('x' + num);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid Architecture: " + arch, e);
-        }
+        String arch = System.getProperty("os.arch");
+        if (arch.contains("16"))
+            return Architecture.x16;
+        if (arch.contains("32") || arch.contains("86"))
+            return Architecture.x32;
+        if (arch.contains("64"))
+            return Architecture.x64;
+        throw new NoSuchElementException("Unknown architecture: " + arch);
     }
 
     public String getLibraryExtension() {
@@ -68,7 +65,7 @@ public enum OS implements Named {
     }
 
     public enum Architecture implements IntEnum {
-        x32, x64, x86;
+        x16, x32, x64;
 
         @Override
         public @NotNull Integer getValue() {
