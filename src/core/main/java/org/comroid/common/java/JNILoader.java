@@ -1,7 +1,7 @@
 package org.comroid.common.java;
 
-import org.comroid.common.os.Architecture;
-import org.comroid.common.os.OS;
+import org.comroid.api.os.Architecture;
+import org.comroid.api.os.OS;
 
 import java.io.File;
 import java.io.FileOutputStream;
