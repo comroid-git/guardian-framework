@@ -2,15 +2,12 @@ package org.comroid.common.os;
 
 import org.comroid.api.IntEnum;
 import org.comroid.api.Named;
-import org.comroid.api.Polyfill;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public enum OS implements Named {
     WINDOWS(".dll", "win"),
@@ -19,7 +16,7 @@ public enum OS implements Named {
     SOLARIS(".so", "sunos");
 
     public static final OS current = detect();
-    public static final Architecture currentArchitecture = detectArchitecture();
+    public static final Architecture currentArchitecture = Architecture.detect();
 
     private final String libExtension;
     private final List<String> validators;
@@ -28,6 +25,10 @@ public enum OS implements Named {
     public String getName() {
         final String str = name().toLowerCase();
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+    }
+
+    public String getLibraryExtension() {
+        return libExtension;
     }
 
     OS(String libExtension, String... validators) {
@@ -49,27 +50,24 @@ public enum OS implements Named {
         throw new NoSuchElementException("Unknown OS: " + osName);
     }
 
-    private static Architecture detectArchitecture() {
-        String arch = System.getProperty("os.arch");
-        if (arch.contains("16"))
-            return Architecture.x16;
-        if (arch.contains("32") || arch.contains("86"))
-            return Architecture.x32;
-        if (arch.contains("64"))
-            return Architecture.x64;
-        throw new NoSuchElementException("Unknown architecture: " + arch);
-    }
-
-    public String getLibraryExtension() {
-        return libExtension;
-    }
-
     public enum Architecture implements IntEnum {
         x16, x32, x64;
 
         @Override
         public @NotNull Integer getValue() {
-            return Integer.parseInt(name().substring(1));
+            return Integer.parseInt(getValueAsString());
+        }
+
+        public @NotNull String getValueAsString() {
+            return name().substring(1);
+        }
+
+        private static Architecture detect() {
+            String arch = System.getProperty("os.arch");
+            return Arrays.stream(values())
+                    .filter(it -> arch.contains(it.getValueAsString()))
+                    .findAny()
+                    .orElseThrow(() -> new NoSuchElementException("Unknown architecture: " + arch));
         }
     }
 }
