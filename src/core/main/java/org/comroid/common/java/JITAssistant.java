@@ -1,4 +1,4 @@
-package org.comroid.common.jvm;
+package org.comroid.common.java;
 
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;

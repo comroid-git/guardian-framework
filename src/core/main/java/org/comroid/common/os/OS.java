@@ -13,15 +13,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum OS implements Named {
-    WINDOWS("win"),
-    MAC("mac"),
-    UNIX("nix", "nux", "aix"),
-    SOLARIS("sunos");
+    WINDOWS(".dll", "win"),
+    MAC(".so", "mac"),
+    UNIX(".so", "nix", "nux", "aix"),
+    SOLARIS(".so", "sunos");
 
     public static final OS current = detect();
     private static final Pattern ArchPattern = Pattern.compile(".*(?<num>\\d{2,3}).*");
     public static final Architecture currentArchitecture = detectArchitecture();
 
+    private final String libExtension;
     private final List<String> validators;
 
     @Override
@@ -30,7 +31,8 @@ public enum OS implements Named {
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
-    OS(String... validators) {
+    OS(String libExtension, String... validators) {
+        this.libExtension = libExtension;
         this.validators = Collections.unmodifiableList(Arrays.asList(validators));
     }
 
@@ -59,6 +61,10 @@ public enum OS implements Named {
         } catch (Exception e) {
             throw new RuntimeException("Invalid Architecture: " + arch, e);
         }
+    }
+
+    public String getLibraryExtension() {
+        return libExtension;
     }
 
     public enum Architecture implements IntEnum {
