@@ -1,5 +1,6 @@
 package org.comroid.common.java;
 
+import org.comroid.common.os.Architecture;
 import org.comroid.common.os.OS;
 
 import java.io.File;
@@ -21,7 +22,7 @@ public final class JNILoader {
     }
 
     public static void loadLibrary(String path, String x32name, String x64name) {
-        String useName = OS.currentJvmArchitecture == OS.Architecture.x64 ? x64name : x32name;
+        String useName = Architecture.current == Architecture.x64 ? x64name : x32name;
         try {
             System.loadLibrary((path == null ? "" : path + File.separator) + useName);
         } catch (UnsatisfiedLinkError ignored) {

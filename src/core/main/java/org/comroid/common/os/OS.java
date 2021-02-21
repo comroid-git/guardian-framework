@@ -14,17 +14,9 @@ public enum OS implements Named {
     SOLARIS(".so", "sunos");
 
     public static final OS current = detect();
-    public static final Architecture currentArchitecture = Architecture.detect("os.arch");
-    public static final Architecture currentJvmArchitecture = Architecture.detect("sun.arch.data.model");
 
     private final String libExtension;
     private final List<String> validators;
-
-    @Override
-    public String getName() {
-        final String str = name().toLowerCase();
-        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
-    }
 
     public String getLibraryExtension() {
         return libExtension;
@@ -49,21 +41,4 @@ public enum OS implements Named {
         throw new NoSuchElementException("Unknown OS: " + osName);
     }
 
-    public enum Architecture {
-        x32("32", "86"), x64("64");
-
-        private final List<String> idents;
-
-        Architecture(String... idents) {
-            this.idents = Collections.unmodifiableList(Arrays.asList(idents));
-        }
-
-        private static Architecture detect(String prop) {
-            String arch = System.getProperty(prop);
-            return Arrays.stream(values())
-                    .filter(it -> it.idents.stream().anyMatch(arch::contains))
-                    .findAny()
-                    .orElseThrow(() -> new NoSuchElementException("Unknown architecture: " + arch));
-        }
-    }
 }
