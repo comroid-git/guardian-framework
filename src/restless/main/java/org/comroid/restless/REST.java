@@ -453,6 +453,10 @@ public final class REST implements ContextualProvider.Underlying {
             return this;
         }
 
+        public Request<T> body(Serializable body) {
+            return body(body.toSerializedString());
+        }
+
         public Request<T> body(String body) {
             this.body = body;
 
