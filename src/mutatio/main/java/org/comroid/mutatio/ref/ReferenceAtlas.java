@@ -157,7 +157,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         if (parent != null && revK != null && fabK != null) {
             InRef inRef = getInputReference(fabK, true);
             if (inRef != null)
-                ref = advancer.advance(inRef);
+                ref = advanceReference(inRef);
         } else ref = createEmptyRef(key);
         if (accessors.containsKey(key))
             accessors.get(key).rebind(ref);
