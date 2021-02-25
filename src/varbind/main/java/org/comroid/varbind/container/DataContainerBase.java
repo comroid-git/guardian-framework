@@ -41,7 +41,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     protected DataContainerBase(
             ContextualProvider context,
             final GroupBind<S> group,
-            @Nullable Comparator<OutputReference> comparator,
+            @Nullable Comparator<KeyedReference<VarBind, Object>> comparator,
             UniObjectNode initialData
     ) {
         super(
@@ -124,18 +124,26 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    protected final OutputReference createEmptyRef(VarBind bind) {
-        KeyedReference<String, ReferenceIndex> base = getInputReference(bind.getFieldName(), true);
+    protected final KeyedReference<VarBind, Object> createEmptyRef(VarBind bind) {
+        //noinspection unchecked
+        KeyedReference<String, ReferenceIndex> base = getExtractionReference(bind);
         if (base == null)
             throw new NullPointerException("Could not create base reference");
-        return new OutputReference(bind, base);
+        return advanceReference(base);
     }
 
     @Override
-    protected final OutputReference advanceReference(KeyedReference<String, ReferenceIndex> inputRef) {
+    protected final KeyedReference<VarBind, Object> advanceReference(KeyedReference<String, ReferenceIndex> inputRef) {
+        class OutputReference extends KeyedReference.Support.Base<VarBind, Object> {
+            private OutputReference(final VarBind bind) {
+                //noinspection unchecked
+                super(bind, inputRef.map(refs -> bind.process((DataContainer) self(), refs)));
+            }
+        }
+
         String key = inputRef.getKey();
-        VarBind bind = keyAdvancer.apply(key);
-        return new OutputReference(bind, inputRef);
+        VarBind bind = getBindByName(key);
+        return new OutputReference(bind);
     }
 
     private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<?, T> fromBase) {
@@ -155,15 +163,5 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public final Set<Entry<VarBind, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs().collect(Collectors.toSet()));
-    }
-
-    protected final class OutputReference<T, R> extends KeyedReference<VarBind<? super S, T, ?, R>, R> {
-        private final KeyedReference<String, ReferenceIndex> inputReference;
-
-        public OutputReference(VarBind<? super S, T, ?, R> bind, KeyedReference<String, ReferenceIndex> inputReference) {
-            super(bind, inputReference.map(v -> Polyfill.uncheckedCast(computeValueFor(bind, v))));
-
-            this.inputReference = inputReference;
-        }
     }
 }
