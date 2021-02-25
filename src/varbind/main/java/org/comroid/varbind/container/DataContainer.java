@@ -2,8 +2,9 @@ package org.comroid.varbind.container;
 
 import org.comroid.abstr.AbstractMap;
 import org.comroid.api.*;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.span.Span;
+import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
@@ -12,7 +13,6 @@ import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -21,13 +21,9 @@ public interface DataContainer<S extends DataContainer<? super S>>
         extends AbstractMap<String, Object>, Serializable, ContextualProvider.Underlying {
     GroupBind<S> getRootBind();
 
-    Class<? extends S> getRepresentedType();
-
     Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node);
 
     Set<VarBind<? extends S, Object, ?, Object>> initiallySet();
-
-    <T> Optional<Reference<T>> getByName(String name);
 
     default <T> @Nullable T get(VarBind<? extends S, ?, ?, T> bind) {
         return getComputedReference(bind).get();
@@ -71,19 +67,25 @@ public interface DataContainer<S extends DataContainer<? super S>>
 
     <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value);
 
-    <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value);
-
-    default <E> Reference<Span<E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
-        return getExtractionReference(bind.getFieldName());
+    default <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value) {
+        //noinspection unchecked
+        return (T) put(bind, parser.apply(value));
     }
 
-    <E> Reference<Span<E>> getExtractionReference(String name);
-
-    default <T> Reference<T> getComputedReference(VarBind<?, ?, ?, T> bind) {
-        return getComputedReference(bind.getFieldName());
+    default <E> KeyedReference<String, ReferenceIndex<?, E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
+        return Polyfill.uncheckedCast(getExtractionReference(bind.getFieldName()));
     }
 
-    <T> Reference<T> getComputedReference(String name);
+    <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String name);
+
+    <T> KeyedReference<VarBind, T> getComputedReference(VarBind<?, ?, ?, T> bind);
+
+    @Deprecated
+    default <T> KeyedReference<VarBind, Object> getComputedReference(String name) {
+        return getComputedReference(getBindByName(name));
+    }
+
+    VarBind<? extends S, ?, ?, Object> getBindByName(String name);
 
     interface Underlying<S extends DataContainer<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
@@ -91,11 +93,6 @@ public interface DataContainer<S extends DataContainer<? super S>>
         @Override
         default GroupBind<S> getRootBind() {
             return getUnderlyingVarCarrier().getRootBind();
-        }
-
-        @Override
-        default Class<? extends S> getRepresentedType() {
-            return getUnderlyingVarCarrier().getRepresentedType();
         }
 
         @Override
@@ -109,11 +106,6 @@ public interface DataContainer<S extends DataContainer<? super S>>
         }
 
         @Override
-        default <T> Optional<Reference<T>> getByName(String name) {
-            return getUnderlyingVarCarrier().getByName(name);
-        }
-
-        @Override
         default UniObjectNode toObjectNode(UniObjectNode node) {
             return getUnderlyingVarCarrier().toObjectNode(node);
         }
@@ -124,12 +116,12 @@ public interface DataContainer<S extends DataContainer<? super S>>
         }
 
         @Override
-        default <E> Reference<Span<E>> getExtractionReference(String fieldName) {
+        default <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String fieldName) {
             return getUnderlyingVarCarrier().getExtractionReference(fieldName);
         }
 
         @Override
-        default <T> Reference<T> getComputedReference(String name) {
+        default <T> KeyedReference<VarBind, Object> getComputedReference(String name) {
             return getUnderlyingVarCarrier().getComputedReference(name);
         }
 

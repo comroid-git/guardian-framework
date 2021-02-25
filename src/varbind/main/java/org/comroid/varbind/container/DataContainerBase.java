@@ -3,7 +3,10 @@ package org.comroid.varbind.container;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.common.info.MessageSupplier;
-import org.comroid.mutatio.ref.*;
+import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.ReferenceAtlas;
+import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +19,16 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         implements DataContainer<S> {
     private final ContextualProvider context;
     private final GroupBind<S> group;
+
+    @Override
+    public final GroupBind<S> getRootBind() {
+        return group;
+    }
+
+    @Override
+    public final ContextualProvider getUnderlyingContextualProvider() {
+        return context;
+    }
 
     private DataContainerBase(
             ContextualProvider context,
@@ -37,6 +50,22 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
+    public final <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String name) {
+        return Polyfill.uncheckedCast(getInputReference(name, true));
+    }
+
+    @Override
+    public final <T> KeyedReference<VarBind, T> getComputedReference(VarBind<?, ?, ?, T> bind) {
+        return Polyfill.uncheckedCast(getReference(bind, true));
+    }
+
+    @Override
+    public final VarBind<? extends S, ?, ?, Object> getBindByName(String name) {
+        //noinspection unchecked
+        return keyAdvancer.apply(name);
+    }
+
+    @Override
     protected OutputReference createEmptyRef(VarBind bind) {
         KeyedReference<String, ReferenceIndex> base = getInputReference(bind.getFieldName(), true);
         if (base == null)
@@ -51,7 +80,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return new OutputReference(bind, inputRef);
     }
 
-    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<?,T> fromBase) {
+    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<?, T> fromBase) {
         for (VarBind<?, ?, ?, ?> dependency : bind.getDependencies())
             getExtractionReference(dependency).requireNonNull(MessageSupplier
                     .format("Could not compute dependency %s of bind %s", dependency, bind));
