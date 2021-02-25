@@ -1,5 +1,6 @@
 package org.comroid.varbind.container;
 
+import org.comroid.abstr.AbstractMap;
 import org.comroid.api.*;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.span.Span;
@@ -16,7 +17,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S>> extends Map<String, Object>, Serializable, ContextualProvider.Underlying {
+public interface DataContainer<S extends DataContainer<? super S>>
+        extends AbstractMap<String, Object>, Serializable, ContextualProvider.Underlying {
     GroupBind<S> getRootBind();
 
     Class<? extends S> getRepresentedType();
