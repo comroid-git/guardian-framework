@@ -4,6 +4,7 @@ import org.comroid.api.*;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -58,7 +59,9 @@ public class UniObjectNodeImpl
                             ? seriLib.getObjectType()
                             : seriLib.getArrayType());
             return put(key, nodetype, (UniNode) value);
-        } else {
+        } else if (value instanceof Serializable)
+            return put(key, ((Serializable) value).toUniNode());
+        else {
             if (value instanceof ValueBox)
                 value = ((ValueBox<?>) value).getValue();
             return put(key, StandardValueType.typeOf(value), value);
