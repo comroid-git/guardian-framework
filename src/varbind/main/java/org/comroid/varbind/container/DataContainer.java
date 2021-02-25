@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 public interface DataContainer<S extends DataContainer<? super S>>
-        extends AbstractMap<String, Object>, Serializable, ContextualProvider.Underlying {
+        extends AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
     @Override
     default ContextualProvider getUnderlyingContextualProvider() {
         return null;

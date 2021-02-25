@@ -187,7 +187,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         }
 
         @Override
-        protected final Reference<T> createEmptyRef(@NotNull Integer key) {
+        protected Reference<T> createEmptyRef(@NotNull Integer key) {
             return KeyedReference.createKey(key);
         }
     }
@@ -211,7 +211,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         }
 
         @Override
-        protected final KeyedReference<K, V> createEmptyRef(K key) {
+        protected KeyedReference<K, V> createEmptyRef(K key) {
             return KeyedReference.createKey(key);
         }
     }

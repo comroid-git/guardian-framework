@@ -22,8 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DataContainerBase<S extends DataContainer<? super S>>
-        extends ReferenceAtlas<String, VarBind, ReferenceIndex, Object
-        , KeyedReference<String, ReferenceIndex>, DataContainerBase.OutputReference>
+        extends ReferenceAtlas.ForMap<String, ReferenceIndex, VarBind, Object>
         implements DataContainer<S> {
     private final ContextualProvider context;
     private final GroupBind<S> group;
@@ -48,12 +47,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         super(
                 new ReferenceMap<>(),
                 null,
-                Polyfill.uncheckedCast(comparator),
-                name -> group.streamAllChildren()
-                        .filter(vb -> vb.getFieldName().equals(name))
-                        .findFirst()
-                        .orElse(null),
-                VarBind::getFieldName
+                VarBind::getFieldName,
+                Polyfill.uncheckedCast(comparator)
         );
         this.context = context;
         this.group = group;
@@ -146,11 +141,16 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return bind.process(self().into(Polyfill::uncheckedCast), fromBase);
     }
 
+    @Nullable
+    @Override
+    public final Object put(VarBind key, Object value) {
+        return put(key.getFieldName(), value);
+    }
+
     @NotNull
     @Override
-    @SuppressWarnings("unchecked")
-    public final Set<Entry<String, Object>> entrySet() {
-        return streamRefs().collect(Collectors.toSet());
+    public final Set<Entry<VarBind, Object>> entrySet() {
+        return Collections.unmodifiableSet(streamRefs().collect(Collectors.toSet()));
     }
 
     protected final class OutputReference<T, R> extends KeyedReference<VarBind<? super S, T, ?, R>, R> {
