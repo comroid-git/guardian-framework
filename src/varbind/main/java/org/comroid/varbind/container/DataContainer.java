@@ -1,7 +1,9 @@
 package org.comroid.varbind.container;
 
 import org.comroid.abstr.AbstractMap;
-import org.comroid.api.*;
+import org.comroid.api.ContextualProvider;
+import org.comroid.api.Polyfill;
+import org.comroid.api.ValueBox;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
@@ -10,16 +12,59 @@ import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
 public interface DataContainer<S extends DataContainer<? super S>>
         extends AbstractMap<String, Object>, Serializable, ContextualProvider.Underlying {
+    @Override
+    default ContextualProvider getUnderlyingContextualProvider() {
+        return null;
+    }
+
     GroupBind<S> getRootBind();
+
+    @Override
+    default Object get(Object key) {
+        if (key instanceof VarBind)
+            //noinspection unchecked
+            return getComputedReference((VarBind) key).get();
+        else return getExtractionReference((String) key).get();
+    }
+
+    @Nullable
+    @Override
+    default Object put(String key, Object value) {
+        KeyedReference<String, ReferenceIndex<?, Object>> ref = getExtractionReference(key);
+        ReferenceIndex<?, Object> prev = ref.get();
+        if (ref.isNull())
+            ref.set(ReferenceIndex.of(value));
+        else ref.computeIfPresent(refs -> {
+            refs.clear();
+            refs.add(value);
+            return refs;
+        });
+        return unwrapPrev(prev);
+    }
+
+    @Override
+    default Object remove(Object key) {
+        final Reference ref = key instanceof VarBind
+                ? getComputedReference((VarBind) key)
+                : getExtractionReference((String) key);
+        if (ref == null)
+            return null;
+        Object prev = ref.get();
+        if (ref.unset())
+            return unwrapPrev(prev);
+        return null;
+    }
 
     Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node);
 
@@ -129,5 +174,14 @@ public interface DataContainer<S extends DataContainer<? super S>>
         default <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value) {
             return getUnderlyingVarCarrier().put(bind, value);
         }
+    }
+
+    @Nullable
+    @Internal
+    @SuppressWarnings("unchecked")
+    default Object unwrapPrev(Object prev) {
+        if (prev != null && prev instanceof List && ((List) prev).size() == 1)
+            return ((List<Object>) prev).get(0);
+        return prev;
     }
 }
