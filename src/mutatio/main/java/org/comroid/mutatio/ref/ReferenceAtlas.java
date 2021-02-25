@@ -212,7 +212,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
         protected ForMap(
                 @Nullable ReferenceMap<?, ?, InK, InV> parent,
-                @NotNull KeyedReference.Advancer<InK, InV, K, V> advancer,
+                @Nullable KeyedReference.Advancer<InK, InV, K, V> advancer,
                 @NotNull Function<InK, K> keyAdvancer,
                 @NotNull Function<K, InK> keyReverser,
                 @Nullable Comparator<KeyedReference<K, V>> comparator

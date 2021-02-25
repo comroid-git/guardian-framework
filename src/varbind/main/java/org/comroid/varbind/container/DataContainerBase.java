@@ -10,6 +10,7 @@ import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.StringBasedComparator;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,6 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     protected DataContainerBase(
             ContextualProvider context,
             final GroupBind<S> group,
-            @Nullable Comparator<KeyedReference<VarBind, Object>> comparator,
             UniObjectNode initialData
     ) {
         super(
@@ -52,7 +52,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                         .findFirst()
                         .orElse(null),
                 VarBind::getFieldName,
-                Polyfill.uncheckedCast(comparator)
+                new StringBasedComparator<>(ref -> ref.getKey().getFieldName())
         );
         this.context = context;
         this.group = group;
