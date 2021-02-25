@@ -37,7 +37,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-            @NotNull ReferenceConverter<InRef, OutRef> advancer,
+            @Nullable ReferenceConverter<InRef, OutRef> advancer,
             @NotNull Function<InK, K> keyAdvancer,
             @Nullable Function<K, InK> keyReverser
     ) {
@@ -46,7 +46,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     protected ReferenceAtlas(
                 @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-                @NotNull ReferenceConverter<InRef, OutRef> advancer,
+                @Nullable ReferenceConverter<InRef, OutRef> advancer,
                 @Nullable Comparator<OutRef> comparator,
                 @NotNull Function<InK, K> keyAdvancer,
                 @Nullable Function<K, InK> keyReverser
@@ -60,6 +60,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
         this.mutable = new AtomicBoolean(parent != null);
         this.accessors = new ConcurrentHashMap<>();
+    }
+
+    protected OutRef advanceReference(InRef inputRef) {
+        if (advancer == null)
+            throw new AbstractMethodError("Advancer not defined");
+        return advancer.advance(inputRef);
     }
 
     public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
