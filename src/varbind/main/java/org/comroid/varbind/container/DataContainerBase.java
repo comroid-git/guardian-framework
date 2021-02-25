@@ -47,6 +47,10 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         super(
                 new ReferenceMap<>(),
                 null,
+                name -> group.streamAllChildren()
+                        .filter(vb -> vb.getFieldName().equals(name))
+                        .findFirst()
+                        .orElse(null),
                 VarBind::getFieldName,
                 Polyfill.uncheckedCast(comparator)
         );
