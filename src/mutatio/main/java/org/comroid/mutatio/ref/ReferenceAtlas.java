@@ -131,6 +131,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return streamRefs().flatMap(Reference::stream);
     }
 
+    public final @Nullable InRef getInputReference(InK key, boolean createIfAbsent) {
+        if (parent == null)
+            return null;
+        return parent.getReference(key, createIfAbsent);
+    }
+
     @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     public final OutRef getReference(K key, boolean createIfAbsent) {
         Objects.requireNonNull(key, "key");
@@ -141,7 +147,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         InK revK = keyReverser == null ? null : keyReverser.apply(key);
         InK fabK = revK == null ? null : prefabBaseKey(revK);
         if (parent != null && revK != null && fabK != null) {
-            InRef inRef = parent.getReference(fabK, false);
+            InRef inRef = getInputReference(fabK, true);
             if (inRef != null)
                 ref = advancer.advance(inRef);
         } else ref = createEmptyRef(key);
