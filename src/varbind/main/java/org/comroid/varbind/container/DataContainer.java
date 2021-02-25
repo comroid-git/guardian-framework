@@ -110,7 +110,10 @@ public interface DataContainer<S extends DataContainer<? super S>>
         return put(bind, value.getValue());
     }
 
-    <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value);
+    default <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value) {
+        //noinspection unchecked
+        return (T) put(bind.getFieldName(), value);
+    }
 
     default <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value) {
         //noinspection unchecked
