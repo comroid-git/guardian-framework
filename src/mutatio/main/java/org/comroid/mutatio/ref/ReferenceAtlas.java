@@ -1,5 +1,7 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.abstr.AbstractList;
+import org.comroid.abstr.AbstractMap;
 import org.comroid.api.MutableState;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.BiStageAdapter;
@@ -162,7 +164,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return accessors.put(key, ref) != ref;
     }
 
-    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> {
+    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> implements AbstractList<T> {
         protected ForList(
                 @Nullable ReferenceIndex<?, In> parent,
                 @NotNull StageAdapter<In, T> advancer
@@ -184,7 +186,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         }
     }
 
-    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> {
+    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> implements AbstractMap<K, V> {
         protected ForMap(
                 @Nullable ReferenceMap<?, ?, InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
