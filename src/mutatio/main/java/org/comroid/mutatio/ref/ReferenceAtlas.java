@@ -26,8 +26,8 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
     private final ReferenceConverter<InRef, OutRef> advancer;
-    private final Function<InK, K> keyAdvancer;
-    private final Function<K, InK> keyReverser;
+    protected final Function<InK, K> keyAdvancer;
+    protected final Function<K, InK> keyReverser;
     protected Comparator<OutRef> comparator;
 
     @Override
