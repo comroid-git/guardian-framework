@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Rewrapper<T> {
+public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
     private Predicate<T> overriddenSetter;
 
@@ -35,6 +35,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return mutable;
     }
 
+    @Override
     @Deprecated
     public boolean isPresent() {
         return test(Objects::nonNull);
@@ -146,6 +147,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return true;
     }
 
+    @Override
     public Reference<T> peek(Consumer<? super T> action) {
         return new Reference.Support.Remapped<>(this, it -> {
             action.accept(it);
@@ -153,12 +155,14 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         }, Function.identity());
     }
 
+    @Override
     @Contract("-> this")
     @Deprecated
     public Reference<T> process() {
         return this;
     }
 
+    @Override
     public boolean unset() {
         return set(null);
     }
@@ -181,6 +185,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return true;
     }
 
+    @Override
     public final void rebind(final Supplier<T> behind) {
         if (behind == this || (behind instanceof Reference
                 && ((Reference<T>) behind).upstream().noneMatch(this::equals)))
@@ -198,39 +203,48 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
      * @param action The action to apply
      * @return The attached ValueUpdateListener
      */
+    @Override
     public ValueUpdateListener<T> apply(Consumer<T> action) {
         ifPresent(action);
         return onChange(action);
     }
 
+    @Override
     public Reference<T> filter(Predicate<? super T> predicate) {
         return new Reference.Support.Filtered<>(this, predicate);
     }
 
+    @Override
     public <R> Reference<R> flatMap(Class<R> type) {
         return filter(type::isInstance).map(type::cast);
     }
 
+    @Override
     public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
         return new Reference.Support.Remapped<>(this, mapper, null);
     }
 
+    @Override
     public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, null);
     }
 
+    @Override
     public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
     }
 
+    @Override
     public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
     }
 
+    @Override
     public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
+    @Override
     public Reference<T> or(Supplier<T> orElse) {
         return new Support.Or<>(this, orElse);
     }
