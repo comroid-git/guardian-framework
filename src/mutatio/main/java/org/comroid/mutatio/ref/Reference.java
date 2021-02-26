@@ -197,18 +197,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         outdateCache();
     }
 
-    /**
-     * Applies the provided consumer to the current value and attaches a ValueUpdateListener for future updates.
-     *
-     * @param action The action to apply
-     * @return The attached ValueUpdateListener
-     */
-    @Override
-    public ValueUpdateListener<T> apply(Consumer<T> action) {
-        ifPresent(action);
-        return onChange(action);
-    }
-
     @Override
     public Reference<T> filter(Predicate<? super T> predicate) {
         return new Reference.Support.Filtered<>(this, predicate);
@@ -225,12 +213,12 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, null);
     }
 
     @Override
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
     }
 
@@ -413,11 +401,11 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         }
 
         public static final class ReferenceFlatMapped<I, O> extends Reference<O> {
-            private final Function<? super I, ? extends Reference<? extends O>> remapper;
+            private final Function<? super I, ? extends Rewrapper<? extends O>> remapper;
 
             public ReferenceFlatMapped(
                     Reference<I> base,
-                    Function<? super I, ? extends Reference<? extends O>> remapper,
+                    Function<? super I, ? extends Rewrapper<? extends O>> remapper,
                     Function<O, I> backwardsConverter
             ) {
                 super(base, backwardsConverter);

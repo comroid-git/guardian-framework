@@ -2,7 +2,6 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
-import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Optional;
@@ -15,16 +14,19 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
     @Deprecated
     boolean isPresent();
 
-    Reference<T> peek(Consumer<? super T> action);
+    @Override
+    T get();
+
+    Ref<T> peek(Consumer<? super T> action);
 
     @Contract("-> this")
     @Deprecated
-    Reference<T> process();
+    Ref<T> process();
 
     boolean unset();
 
     @Override
-    <X, R> Reference<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
+    <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
 
     boolean set(T value);
 
@@ -79,21 +81,19 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
 
     void rebind(Supplier<T> behind);
 
-    ValueUpdateListener<T> apply(Consumer<T> action);
+    Ref<T> filter(Predicate<? super T> predicate);
 
-    Reference<T> filter(Predicate<? super T> predicate);
+    <R> Ref<R> flatMap(Class<R> type);
 
-    <R> Reference<R> flatMap(Class<R> type);
+    <R> Ref<R> map(Function<? super T, ? extends R> mapper);
 
-    <R> Reference<R> map(Function<? super T, ? extends R> mapper);
+    <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper);
 
-    <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper);
+    <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter);
 
-    <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter);
+    <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper);
 
-    <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper);
+    <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter);
 
-    <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter);
-
-    Reference<T> or(Supplier<T> orElse);
+    Ref<T> or(Supplier<T> orElse);
 }
