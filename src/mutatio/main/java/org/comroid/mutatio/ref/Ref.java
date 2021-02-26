@@ -2,7 +2,6 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
-import org.jetbrains.annotations.Contract;
 
 import java.util.Optional;
 import java.util.function.*;
@@ -11,22 +10,10 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
     @Override
     boolean isMutable();
 
-    @Deprecated
-    boolean isPresent();
-
     @Override
     T get();
 
-    Ref<T> peek(Consumer<? super T> action);
-
-    @Contract("-> this")
-    @Deprecated
-    Ref<T> process();
-
     boolean unset();
-
-    @Override
-    <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
 
     boolean set(T value);
 
@@ -81,9 +68,16 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
 
     void rebind(Supplier<T> behind);
 
+    @Override
+    <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
+
+    Ref<T> peek(Consumer<? super T> action);
+
     Ref<T> filter(Predicate<? super T> predicate);
 
-    <R> Ref<R> flatMap(Class<R> type);
+    default <R> Ref<R> flatMap(Class<R> type) {
+        return filter(type::isInstance).map(type::cast);
+    }
 
     <R> Ref<R> map(Function<? super T, ? extends R> mapper);
 
@@ -91,9 +85,13 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
 
     <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter);
 
-    <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper);
+    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
+    }
 
-    <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter);
+    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
+        return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
+    }
 
     Ref<T> or(Supplier<T> orElse);
 }

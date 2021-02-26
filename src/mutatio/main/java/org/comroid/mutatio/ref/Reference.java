@@ -35,12 +35,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return mutable;
     }
 
-    @Override
-    @Deprecated
-    public boolean isPresent() {
-        return test(Objects::nonNull);
-    }
-
     protected Reference(
             boolean mutable
     ) {
@@ -156,13 +150,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    @Contract("-> this")
-    @Deprecated
-    public Reference<T> process() {
-        return this;
-    }
-
-    @Override
     public boolean unset() {
         return set(null);
     }
@@ -193,18 +180,13 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
         overriddenSupplier = nil -> behind.get();
         if (behind instanceof Reference)
-            overriddenSetter = ((Reference<Object>) behind)::set;
+            overriddenSetter = ((Reference<T>) behind)::set;
         outdateCache();
     }
 
     @Override
     public Reference<T> filter(Predicate<? super T> predicate) {
         return new Reference.Support.Filtered<>(this, predicate);
-    }
-
-    @Override
-    public <R> Reference<R> flatMap(Class<R> type) {
-        return filter(type::isInstance).map(type::cast);
     }
 
     @Override
@@ -220,16 +202,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     @Override
     public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
-    }
-
-    @Override
-    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
-    }
-
-    @Override
-    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
     }
 
     @Override
