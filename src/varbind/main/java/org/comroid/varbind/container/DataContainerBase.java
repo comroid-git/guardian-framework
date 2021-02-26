@@ -3,10 +3,7 @@ package org.comroid.varbind.container;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.common.info.MessageSupplier;
-import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.ReferenceAtlas;
-import org.comroid.mutatio.ref.ReferenceIndex;
-import org.comroid.mutatio.ref.ReferenceMap;
+import org.comroid.mutatio.ref.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -28,6 +25,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     private final ContextualProvider context;
     private final GroupBind<S> group;
     private final Set<VarBind<? extends S, Object, ?, Object>> initialValues;
+    private final ParameterizedReference<UniObjectNode, UniObjectNode> parser;
 
     @Override
     public final GroupBind<S> getRootBind() {
