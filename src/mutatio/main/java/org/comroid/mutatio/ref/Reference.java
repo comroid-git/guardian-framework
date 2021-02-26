@@ -160,6 +160,11 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
+    public final <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source) {
+        return new ParameterizedReference.Support.Source<>(this, source);
+    }
+
+    @Override
     public final boolean set(T value) {
         if (isImmutable())
             return false;

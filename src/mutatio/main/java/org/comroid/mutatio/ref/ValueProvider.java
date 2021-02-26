@@ -15,7 +15,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
         return () -> super.getParent().into(Reference.class);
     }
 
-    protected ValueProvider(@Nullable ValueProvider<?, ?> parent, @Nullable Executor autocomputor) {
+    protected ValueProvider(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
     }
 
@@ -50,7 +50,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
     }
 
     public static abstract class NoParam<T> extends ValueProvider<@Nullable("always") Object, T> {
-        protected NoParam(@Nullable ValueProvider<?, ?> parent, @Nullable Executor autocomputor) {
+        protected NoParam(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
             super(parent, autocomputor);
         }
 

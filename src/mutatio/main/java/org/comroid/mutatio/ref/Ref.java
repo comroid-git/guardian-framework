@@ -2,6 +2,10 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.function.*;
@@ -10,10 +14,27 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
     @Override
     boolean isMutable();
 
+    @NotNull
+    @Internal
+    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
+        return any -> {
+            action.accept(any);
+            return true;
+        };
+    }
+
+    @NotNull
+    @Internal
+    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
+    }
+
     @Override
     T get();
 
-    boolean unset();
+    default boolean unset() {
+        return set(null);
+    }
 
     boolean set(T value);
 
@@ -71,7 +92,11 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
     @Override
     <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
 
-    Ref<T> peek(Consumer<? super T> action);
+    <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source);
+
+    default Ref<T> peek(Consumer<? super T> action) {
+        return filter(wrapPeek(action));
+    }
 
     Ref<T> filter(Predicate<? super T> predicate);
 
@@ -79,18 +104,26 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
         return filter(type::isInstance).map(type::cast);
     }
 
-    <R> Ref<R> map(Function<? super T, ? extends R> mapper);
-
-    <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper);
-
-    <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter);
-
-    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
+    default<R> Ref<R> map(Function<? super T, ? extends R> mapper) {
+        return map(mapper, null);
     }
 
-    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
+    <R> Ref<R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter);
+
+    default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+        return flatMap(mapper, null);
+    }
+
+    default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
+        return map(mapper.andThen(Rewrapper::get), backwardsConverter);
+    }
+
+    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return flatMap(wrapOpt2Ref(mapper));
+    }
+
+    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
+        return flatMap(wrapOpt2Ref(mapper), backwardsConverter);
     }
 
     Ref<T> or(Supplier<T> orElse);
