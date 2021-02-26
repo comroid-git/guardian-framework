@@ -21,19 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
+public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Rewrapper<T> {
     private final boolean mutable;
     private Predicate<T> overriddenSetter;
-    private Supplier<T> overriddenSupplier = null;
 
     @Internal
     protected <X> X getFromParent() {
         return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
-    }
-
-    @Override
-    public final Rewrapper<? extends Reference<?>> getParent() {
-        return () -> super.getParent().into(Reference.class);
     }
 
     @Override
@@ -59,14 +53,14 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     protected Reference(
-            @Nullable SingleValueCache<?> parent,
+            @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable
     ) {
         this(parent, mutable, parent != null ? parent.getAutocomputor() : null);
     }
 
     protected Reference(
-            @Nullable SingleValueCache<?> parent,
+            @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable,
             Executor autoComputor
     ) {
@@ -89,7 +83,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     private Reference(
-            @Nullable SingleValueCache<?> parent,
+            @Nullable ValueProvider.NoParam<?> parent,
             @Nullable Predicate<T> setter,
             boolean mutable,
             Executor autoComputor
@@ -141,26 +135,15 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return provided(() -> optional.orElse(null));
     }
 
-    protected abstract T doGet();
+    @Override
+    public final @Nullable T get() {
+        return super.get(null);
+    }
 
     @OverrideOnly
     protected boolean doSet(T value) {
         putIntoCache(value);
         return true;
-    }
-
-    @Override
-    public synchronized final T get() {
-        T fromCache = getFromCache();
-        if (isUpToDate() && fromCache != null) {
-            //logger.trace("{} is up to date; does not need computing", toString());
-            return fromCache;
-        }
-        //logger.trace("{} is not up to date; recomputing", toString());
-        T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
-        if (value == null)
-            return null;
-        return putIntoCache(value);
     }
 
     public Reference<T> peek(Consumer<? super T> action) {
@@ -198,12 +181,12 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return true;
     }
 
-    public final void rebind(Supplier<T> behind) {
+    public final void rebind(final Supplier<T> behind) {
         if (behind == this || (behind instanceof Reference
                 && ((Reference<T>) behind).upstream().noneMatch(this::equals)))
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
-        overriddenSupplier = behind;
+        overriddenSupplier = nil -> behind.get();
         if (behind instanceof Reference)
             overriddenSetter = ((Reference<Object>) behind)::set;
         outdateCache();
@@ -263,11 +246,6 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
-    @Override
-    public void computeAndStoreValue() {
-        get();
-    }
-
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
 
@@ -288,7 +266,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             }
 
             @Deprecated
-            protected Base(@Nullable SingleValueCache<?> parent, boolean mutable) {
+            protected Base(@Nullable ValueProvider.NoParam<?> parent, boolean mutable) {
                 super(parent, mutable);
             }
         }
