@@ -4,17 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.cache.SingleValueCache;
-import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.util.ReflectionHelper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -196,12 +192,17 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Override
     public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
-        return new Reference.Support.Remapped<>(this, mapper, null);
+        return map(mapper, null);
+    }
+
+    @Override
+    public <R> Reference<R> map(Function<? super T, ? extends R> mapper, Function<R, T> backwardsConverter) {
+        return new Reference.Support.Remapped<>(this, mapper, backwardsConverter);
     }
 
     @Override
     public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return new Reference.Support.ReferenceFlatMapped<>(this, mapper, null);
+        return flatMap(mapper, null);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -41,7 +42,7 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     }
 
     public KeyedReference(K key, Reference<V> valueHolder) {
-        super(valueHolder, valueHolder.isMutable(), autoComputor);
+        super(valueHolder, valueHolder.isMutable(), valueHolder.getAutocomputor());
 
         this.key = key;
         this.valueHolder = valueHolder;
@@ -51,8 +52,16 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
         this(key, null, mutable);
     }
 
+    protected KeyedReference(K key, boolean mutable, Executor autoComputor) {
+        this(key, null, mutable, autoComputor);
+    }
+
     protected KeyedReference(K key, @Nullable V initialValue, boolean mutable) {
-        super(mutable);
+        this(key, initialValue, mutable, null);
+    }
+
+    protected KeyedReference(K key, @Nullable V initialValue, boolean mutable, Executor autoComputor) {
+        super(null, mutable, autoComputor);
 
         this.key = key;
         this.valueHolder = Reference.create(initialValue);
@@ -108,7 +117,11 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
             }
 
             protected Base(K key, @Nullable V initialValue, boolean mutable) {
-                super(key, initialValue, mutable);
+                this(key, initialValue, mutable, null);
+            }
+
+            protected Base(K key, @Nullable V initialValue, boolean mutable, Executor autoComputor) {
+                super(key, initialValue, mutable, autoComputor);
             }
         }
 
