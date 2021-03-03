@@ -63,22 +63,6 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     @Override
-    public <X, Y> ReferencePipe<K, V, X, Y> addStage(
-            ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
-            @Nullable Comparator<KeyedReference<X, Y>> comparator,
-            @Nullable Executor executor
-    ) {
-        if (executor == null && this instanceof RefPipe)
-            executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
-        return new ReferencePipe<K, V, X, Y>(
-                Polyfill.uncheckedCast(this),
-                Polyfill.uncheckedCast(adapter),
-                comparator,
-                executor) {
-        };
-    }
-
-    @Override
     public void close() {
         if (parent != null && !parent.removeDependent(this))
             throw new IllegalStateException("Could not remove from parent");
