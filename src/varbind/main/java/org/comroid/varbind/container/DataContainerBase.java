@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DataContainerBase<S extends DataContainer<? super S>>
@@ -24,7 +25,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     private final ContextualProvider context;
     private final GroupBind<S> group;
     private final Set<VarBind<? extends S, Object, ?, Object>> initialValues;
-    private final ParameterizedReference<UniObjectNode, UniObjectNode> parser;
+    private final Function<UniObjectNode, UniObjectNode> parser;
 
     @Override
     public final GroupBind<S> getRootBind() {
