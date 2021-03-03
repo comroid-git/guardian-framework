@@ -2,7 +2,7 @@ package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,8 +12,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class StageAdapter<In, Out>
-        extends ReferenceStageAdapter<@Nullable Integer, @NotNull Integer, In, Out, Reference<In>, Reference<Out>>
-        implements Reference.Advancer<In, Out> {
+        extends ReferenceStageAdapter<@Nullable Integer, @NotNull Integer, In, Out, KeyedReference<@NotNull Integer, In>, KeyedReference<@NotNull Integer, Out>>
+        implements KeyedReference.Advancer<@NotNull Integer, In, @NotNull Integer, Out> {
     protected StageAdapter(boolean isIdentity, final Function<? super In, ? extends Out> valueMapper) {
         super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in));
     }
@@ -67,8 +67,8 @@ public abstract class StageAdapter<In, Out>
         }
 
         @Override
-        public Reference<T> advance(Reference<T> ref) {
-            return new Reference.Support.Filtered<>(ref, predicate);
+        public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, T> reference) {
+            return new KeyedReference.Support.Filtered<>(reference, (i, v) -> predicate.test(v));
         }
     }
 
@@ -78,8 +78,8 @@ public abstract class StageAdapter<In, Out>
         }
 
         @Override
-        public Reference<T> advance(Reference<O> ref) {
-            return new Reference.Support.Remapped<>(ref, this::advanceValue, null);
+        public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, O> reference) {
+            return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
         }
     }
 }

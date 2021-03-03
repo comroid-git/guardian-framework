@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ReferenceMap<InK, InV, K, V>
-        extends ReferenceAtlas.ForMap<InK, InV, K, V>
+        extends ReferencePipe.ForMap<InK, InV, K, V>
         implements AbstractMap<K, V>, Pipeable<V>, UncheckedCloseable {
     public ReferenceMap(
     ) {

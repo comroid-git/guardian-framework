@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
         implements MutableState {
-    private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
+    protected final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
     protected Comparator<OutRef> comparator;
@@ -163,29 +163,33 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return accessors.put(key, ref) != ref;
     }
 
-    public static abstract class ForList<In, T> extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, In, T, Reference<In>, Reference<T>> implements AbstractList<T> {
+    public static abstract class ForList<InV, V>
+            extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, Reference<InV>, Reference<V>>
+            implements AbstractList<V> {
         protected ForList(
-                @Nullable ReferenceIndex<?, In> parent,
-                @NotNull StageAdapter<In, T> advancer
+                @Nullable ReferenceIndex<?, InV> parent,
+                @NotNull StageAdapter<InV, V> advancer
         ) {
-            this(parent, advancer, null);
+            super(parent, advancer);
         }
 
         protected ForList(
-                @Nullable ReferenceIndex<?, In> parent,
-                @NotNull StageAdapter<In, T> advancer,
-                @Nullable Comparator<Reference<T>> comparator
+                @Nullable ReferenceIndex<?, InV> parent,
+                @NotNull StageAdapter<InV, V> advancer,
+                @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator
         ) {
             super(parent, advancer, comparator);
         }
 
         @Override
-        protected Reference<T> createEmptyRef(@NotNull Integer key) {
+        protected Reference<V> createEmptyRef(@NotNull Integer key) {
             return KeyedReference.createKey(key);
         }
     }
 
-    public static abstract class ForMap<InK, InV, K, V> extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> implements AbstractMap<K, V> {
+    public static abstract class ForMap<InK, InV, K, V>
+            extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
+            implements AbstractMap<K, V> {
         protected ForMap(
                 @Nullable ReferenceMap<?, ?, InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,

@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ReferenceIndex<In, T>
-        extends ReferenceAtlas.ForList<In, T>
+        extends ReferencePipe.ForList<In, T>
         implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
     private static final ReferenceIndex<?, Void> EMPTY = new ReferenceIndex<Void, Void>() {{
         setImmutable();
@@ -50,7 +50,7 @@ public class ReferenceIndex<In, T>
     public ReferenceIndex(
             @Nullable ReferenceIndex<?, In> parent,
             @NotNull StageAdapter<In, T> advancer,
-            @Nullable Comparator<Reference<T>> comparator
+            @Nullable Comparator<KeyedReference<@NotNull Integer, T>> comparator
     ) {
         super(parent, advancer, comparator);
 
@@ -71,7 +71,7 @@ public class ReferenceIndex<In, T>
 
     private ReferenceIndex(
             @NotNull ReferenceIndex<?, T> parent,
-            @NotNull Comparator<Reference<T>> comparator
+            @NotNull Comparator<KeyedReference<@NotNull Integer, T>> comparator
     ) {
         this(Polyfill.uncheckedCast(parent), StageAdapter.identity(), comparator);
     }
@@ -135,9 +135,8 @@ public class ReferenceIndex<In, T>
         return new ReferenceIndex<>(this, fromIndex, toIndex);
     }
 
-    @OverrideOnly
-    public boolean addReference(int index, Reference<T> ref) {
-        return putAccessor(index, ref);
+    public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
+        return putAccessor(ref.getKey(), ref);
     }
 
     public final ReferenceIndex<T, T> filter(Predicate<? super T> predicate) {
@@ -261,7 +260,7 @@ public class ReferenceIndex<In, T>
 
     @Override
     public final void add(int index, T element) {
-        addReference(index, Reference.constant(element));
+        addReference(KeyedReference.createKey(index, element));
     }
 
     @Override
@@ -312,10 +311,12 @@ public class ReferenceIndex<In, T>
             }
 
             @Override
-            public Reference<T> advance(Reference<T> ref) {
-                if (!ref.isNull() && !future.isDone())
+            public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, T> ref) {
+                if (!ref.isNull() && !future.isDone()) {
                     future.complete(ref.get());
-                return Reference.empty();
+                    return ref;
+                }
+                return null;
             }
         }
 
