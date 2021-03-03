@@ -14,7 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
-        extends RefOPs<K, V, OutRef>, ValueCache<Void>, MutableState, RefContainer<K, V, OutRef> {
+        extends ValueCache<Void>, MutableState, RefContainer<K, V> {
     ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> getAdvancer();
 
     @Override
@@ -22,7 +22,7 @@ public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef ext
 
     @Override
     default <X, Y> ReferencePipe<K, V, X, Y> addStage(
-            ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
+            ReferenceStageAdapter<K, X, V, Y, KeyedReference<K, V>, KeyedReference<X, Y>> adapter,
             @Nullable Comparator<KeyedReference<X, Y>> comparator,
             @Nullable Executor executor
     ) {

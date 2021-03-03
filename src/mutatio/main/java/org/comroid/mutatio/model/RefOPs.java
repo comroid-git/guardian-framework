@@ -155,7 +155,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
     @NotNull
     default KeyedReference<K, V> findFirst() {
         //noinspection unchecked
-        return ((RefContainer<K, V, KeyedReference<K, V>>) this).streamRefs()
+        return ((RefContainer<K, V>) this).streamRefs()
                 .findFirst()
                 .orElseGet(KeyedReference::emptyKey);
     }
@@ -163,7 +163,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
     @NotNull
     default KeyedReference<K, V> findAny() {
         //noinspection unchecked
-        return ((RefContainer<K, V, KeyedReference<K, V>>) this).streamRefs()
+        return ((RefContainer<K, V>) this).streamRefs()
                 .findAny()
                 .orElseGet(KeyedReference::emptyKey);
     }
