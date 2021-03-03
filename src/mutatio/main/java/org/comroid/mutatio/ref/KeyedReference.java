@@ -4,10 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.function.BooleanSupplier;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public abstract class KeyedReference<K, V> extends Reference<V> implements Map.Entry<K, V> {
     private final K key;
@@ -157,9 +154,9 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
             public Mapped(
                     KeyedReference<InK, InV> parent,
                     Function<? super InK, ? extends K> keyMapper,
-                    Function<? super InV, ? extends V> valueMapper
+                    BiFunction<? super InK, ? super InV, ? extends V> valueMapper
             ) {
-                super(null, parent.map(valueMapper));
+                super(null, parent.map(in -> valueMapper.apply(parent.getKey(), in)));
 
                 this.parent = parent;
                 this.keyMapper = keyMapper;

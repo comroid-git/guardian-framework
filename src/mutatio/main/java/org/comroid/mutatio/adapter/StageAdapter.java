@@ -14,6 +14,10 @@ import java.util.function.Predicate;
 public abstract class StageAdapter<In, Out>
         extends ReferenceStageAdapter<@Nullable("always") Void, @Nullable("always") Void, In, Out, Reference<In>, Reference<Out>>
         implements Reference.Advancer<In, Out> {
+    protected StageAdapter(boolean isIdentity, final Function<? super In, ? extends Out> valueMapper) {
+        super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in));
+    }
+
     static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
         return new Filter<>(predicate);
     }
@@ -49,9 +53,8 @@ public abstract class StageAdapter<In, Out>
         return map(Polyfill::uncheckedCast);
     }
 
-    @Override
-    public final @Nullable("always") Void advanceKey(@Nullable("always") Void key) {
-        return key;
+    public final Out advanceValue(In value) {
+        return advanceValue(null, value);
     }
 
     @OverrideOnly
@@ -63,12 +66,9 @@ public abstract class StageAdapter<In, Out>
     private static final class Filter<T> extends StageAdapter<T, T> {
         private final Predicate<? super T> predicate;
 
-        @Override
-        public boolean isIdentityValue() {
-            return true;
-        }
-
         public Filter(Predicate<? super T> predicate) {
+            super(true, Function.identity());
+
             this.predicate = predicate;
         }
 
@@ -76,33 +76,16 @@ public abstract class StageAdapter<In, Out>
         public Reference<T> advance(Reference<T> ref) {
             return new Reference.Support.Filtered<>(ref, predicate);
         }
-
-        @Override
-        public T advanceValue(Void nil, T value) {
-            return value;
-        }
     }
 
     private static final class Map<O, T> extends StageAdapter<O, T> {
-        private final Function<? super O, ? extends T> mapper;
-
-        @Override
-        public boolean isIdentityValue() {
-            return false;
-        }
-
         public Map(Function<? super O, ? extends T> mapper) {
-            this.mapper = mapper;
+            super(false, mapper);
         }
 
         @Override
         public Reference<T> advance(Reference<O> ref) {
-            return new Reference.Support.Remapped<>(ref, mapper, null);
-        }
-
-        @Override
-        public T advanceValue(Void nil, O value) {
-            return mapper.apply(value);
+            return new Reference.Support.Remapped<>(ref, this::advanceValue, null);
         }
     }
 }

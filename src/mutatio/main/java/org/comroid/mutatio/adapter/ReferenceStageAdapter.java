@@ -2,18 +2,43 @@ package org.comroid.mutatio.adapter;
 
 import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends Reference<InV>, OutRef extends Reference<OutV>>
         implements ReferenceConverter<InRef, OutRef> {
+    private final boolean isIdentity;
+    private final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
+    private final BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper;
+
+    public final boolean isIdentityValue() {
+        return isIdentity;
+    }
+
+    protected ReferenceStageAdapter(
+            boolean isIdentity,
+            Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
+            BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper
+    ) {
+        this.isIdentity = isIdentity;
+        this.keyMapper = keyMapper;
+        this.valueMapper = valueMapper;
+    }
+
     @Override
     public abstract OutRef advance(InRef reference);
 
-    public abstract OutK advanceKey(InK key);
+    public final @NotNull OutK advanceKey(@NotNull InK key) {
+        return keyMapper.apply(key);
+    }
 
-    public abstract OutV advanceValue(InK key, InV value);
+    public final OutV advanceValue(InK key, InV value) {
+        return valueMapper.apply(key, value);
+    }
 
     protected static final class Structure {
         public static final class ConsumingFilter<T> implements Predicate<T> {
