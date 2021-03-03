@@ -34,12 +34,6 @@ public class ReferenceMap<K, V>
     }
 
     @Override
-    public final @Nullable KeyedReference<K, V> getReference(Object k) {
-        //noinspection unchecked
-        return getReference((K) k, false);
-    }
-
-    @Override
     public final boolean containsKey(Object key) {
         return streamKeys().anyMatch(key::equals);
     }
@@ -88,5 +82,11 @@ public class ReferenceMap<K, V>
         for (ValueCache<?> each : getDependents())
             if (each instanceof UncheckedCloseable)
                 ((UncheckedCloseable) each).close();
+    }
+
+    @Override
+    public @Nullable KeyedReference<K, V> getReference(Object key) {
+        //noinspection unchecked
+        return getReference((K) key, false);
     }
 }

@@ -6,6 +6,7 @@ import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.span.Span;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,6 +18,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+@Experimental
 public interface RefList<T> extends ValueCache<Void>, AbstractList<T>, Pipeable<T> {
     <R> ReferenceList<R> addStage(StageAdapter<T, R> stage);
 
