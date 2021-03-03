@@ -1,11 +1,11 @@
 package org.comroid.mutatio.adapter;
 
-import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -56,12 +56,16 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
         return valueMapper.apply(key, value);
     }
 
-    public final Rewrapper<InK> revertKey(OutK key) {
-        return () -> keyReverser == null ? null : keyReverser.apply(key);
+    public final Optional<InK> revertKey(OutK key) {
+        if (keyReverser == null)
+            return Optional.empty();
+        return Optional.ofNullable(keyReverser.apply(key));
     }
 
-    public final Rewrapper<InV> revertValue(OutV value) {
-        return () -> valueReverser == null ? null : valueReverser.apply(value);
+    public final Optional<InV> revertValue(OutV value) {
+        if (valueReverser == null)
+            return Optional.empty();
+        return Optional.ofNullable(valueReverser.apply(value));
     }
 
     protected static final class Structure {
