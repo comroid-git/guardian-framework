@@ -2,6 +2,7 @@ package org.comroid.mutatio.model;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.api.UncheckedCloseable;
+import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.ref.KeyedReference;
@@ -24,7 +25,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
     <X, Y> RefOPs<X, Y, KeyedReference<X, Y>> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter, @Nullable Executor executor);
 
     default RefOPs<K, V, Ref> filter(Predicate<? super V> predicate) {
-        return null;
+        return addStage(BiStageAdapter.<K, V>filterValue(predicate));
     }
 
     default RefOPs<K, V, Ref> yield(Predicate<? super V> predicate, Consumer<? super V> elseConsume) {

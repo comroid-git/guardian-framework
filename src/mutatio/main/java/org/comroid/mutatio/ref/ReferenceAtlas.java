@@ -8,6 +8,7 @@ import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefAtlas;
+import org.comroid.mutatio.model.RefPipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -72,10 +73,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     ) {
         ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> yield;
 
-        if (executor != null)
+        if (executor != null || this instanceof RefPipe) {
+            if (executor == null)
+                executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
             yield = new ReferencePipe<K, V, X, Y>(Polyfill.uncheckedCast(this), Polyfill.uncheckedCast(adapter), executor) {
             };
-        else yield = new ReferenceAtlas<K, X, V, Y, OutRef, KeyedReference<X, Y>>(this, adapter) {
+        } else yield = new ReferenceAtlas<K, X, V, Y, OutRef, KeyedReference<X, Y>>(this, adapter) {
             @Override
             protected KeyedReference<X, Y> createEmptyRef(X key) {
                 return KeyedReference.createKey(key);
