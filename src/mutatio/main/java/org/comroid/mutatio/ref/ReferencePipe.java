@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
 import java.util.concurrent.Executor;
 
-public abstract class ReferencePipe<InK, InV, K, V>
+public class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
         implements RefPipe<InK, InV, K, V> {
     @Nullable
@@ -51,7 +51,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         this(parent, advancer, comparator, getExecutorFromAtlas(parent));
     }
 
-    protected ReferencePipe(
+    public ReferencePipe(
             @Nullable RefAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Comparator<KeyedReference<K, V>> comparator,

@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 public class ReferenceList<T>
-        extends ReferencePipe.ForList<Object, T>
+        extends ReferenceAtlas.ForList<Object, T>
         implements UncheckedCloseable, RefList<T> {
     private static final ReferenceList<Void> EMPTY = new ReferenceList<Void>() {{
         setImmutable();

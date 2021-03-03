@@ -8,7 +8,7 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 @Experimental
-public interface RefMap<K, V> extends RefPipe<Object, Object, K, V>, ValueCache<Void>, AbstractMap<K, V>, Pipeable<V> {
+public interface RefMap<K, V> extends RefAtlas<Object, K, Object, V, KeyedReference<Object, Object>, KeyedReference<K, V>>, ValueCache<Void>, AbstractMap<K, V>, Pipeable<V> {
     @Override
     default int size() {
         return entrySet().size();

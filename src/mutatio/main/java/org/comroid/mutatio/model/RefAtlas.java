@@ -27,12 +27,12 @@ public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef ext
     ) {
         if (executor == null && this instanceof RefPipe)
             executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
-        return new ReferencePipe<K, V, X, Y>(
+        return new ReferencePipe<>(
                 Polyfill.uncheckedCast(this),
                 Polyfill.uncheckedCast(adapter),
                 comparator,
-                executor) {
-        };
+                executor
+        );
     }
 
     @Override

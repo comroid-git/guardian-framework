@@ -8,13 +8,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 public class ReferenceMap<K, V>
-        extends ReferencePipe.ForMap<Object, Object, K, V>
+        extends ReferenceAtlas.ForMap<Object, Object, K, V>
         implements UncheckedCloseable, RefMap<K, V> {
     public ReferenceMap(
     ) {
@@ -31,7 +32,15 @@ public class ReferenceMap<K, V>
             @Nullable ReferenceMap<InK, InV> parent,
             @NotNull BiStageAdapter<InK, InV, K, V> advancer
     ) {
-        super(uncheckedCast(parent), uncheckedCast(advancer));
+        this(parent, advancer, null);
+    }
+
+    public <InK, InV> ReferenceMap(
+            @Nullable ReferenceMap<InK, InV> parent,
+            @NotNull BiStageAdapter<InK, InV, K, V> advancer,
+            @Nullable Comparator<KeyedReference<K, V>> comparator
+    ) {
+        super(uncheckedCast(parent), uncheckedCast(advancer), comparator);
     }
 
     @Override
