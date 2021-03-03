@@ -148,6 +148,13 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     @Override
+    public final Stream<InRef> streamInputRefs() {
+        if (parent == null)
+            return Stream.empty();
+        return parent.streamRefs();
+    }
+
+    @Override
     public final @Nullable InRef getInputReference(InK key, boolean createIfAbsent) {
         if (parent == null)
             return null;

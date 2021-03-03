@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends RefOPs<K, V, OutRef>, ValueCache<Void>, MutableState, RefContainer<K, V, OutRef> {
@@ -39,6 +40,8 @@ public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef ext
     boolean setMutable(boolean state);
 
     void clear();
+
+    Stream<InRef> streamInputRefs();
 
     InRef getInputReference(InK key, boolean createIfAbsent);
 }
