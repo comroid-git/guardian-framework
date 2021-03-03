@@ -2,20 +2,14 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
-import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.ref.RefMap;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceMap;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
-public interface Cache<K, V> extends Iterable<CacheReference<K, V>>, ReferenceMap<K, V>, ContextualProvider.Underlying {
+public interface Cache<K, V> extends Iterable<CacheReference<K, V>>, RefMap<K, V>, ContextualProvider.Underlying {
     <R> Reference<R> accessor(K key, String name, Reference.Advancer<V, ? extends R> advancer);
-
-    @Override
-    default Pipe<V> pipe() {
-        return pipe(any -> true).map(org.comroid.mutatio.ref.Reference::get);
-    }
 
     default boolean canProvide() {
         return false;

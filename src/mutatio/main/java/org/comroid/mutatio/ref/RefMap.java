@@ -12,7 +12,7 @@ public interface RefMap<K, V> extends RefPipe<Object, Object, K, V>, ValueCache<
     default int size() {
         return entrySet().size();
     }
-    
+
     @Nullable
     KeyedReference<K, V> getReference(Object key);
 }

@@ -2,7 +2,6 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
-import org.comroid.api.MutableState;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
