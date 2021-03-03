@@ -26,14 +26,25 @@ public class ReferencePipe<InK, InV, K, V>
         return stageExecutor;
     }
 
-    protected ReferencePipe(
+    public ReferencePipe(
+    ) {
+        this(null);
+    }
+
+    public ReferencePipe(
+            @Nullable RefAtlas<?, K, ?, V> parent
+    ) {
+        this(Polyfill.uncheckedCast(parent), Polyfill.uncheckedCast(BiStageAdapter.identity()));
+    }
+
+    public ReferencePipe(
             @Nullable RefAtlas<?, InK, ?, InV> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer
     ) {
         this(parent, advancer, getExecutorFromAtlas(parent));
     }
 
-    protected ReferencePipe(
+    public ReferencePipe(
             @Nullable RefAtlas<?, InK, ?, InV> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Executor stageExecutor
@@ -43,7 +54,7 @@ public class ReferencePipe<InK, InV, K, V>
         this.stageExecutor = stageExecutor;
     }
 
-    protected ReferencePipe(
+    public ReferencePipe(
             @Nullable RefAtlas<?, InK, ?, InV> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Comparator<KeyedReference<K, V>> comparator

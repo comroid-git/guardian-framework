@@ -3,10 +3,12 @@ package org.comroid.restless.adapter.java;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.FutureReference;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.restless.socket.Websocket;
@@ -26,12 +28,11 @@ public final class JavaWebsocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
     private final Executor executor;
     private final URI uri;
-    private final Pump<? extends WebsocketPacket> pump;
-    private final Pipe<? extends WebsocketPacket> pipeline;
+    private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, ? extends WebsocketPacket> pipeline;
     private final FutureReference<WebSocket> jSocket = new FutureReference<>();
 
     @Override
-    public Pipe<? extends WebsocketPacket> getPacketPipeline() {
+    public RefPipe<?, ?, WebsocketPacket.Type, ? extends WebsocketPacket> getPacketPipeline() {
         return pipeline;
     }
 
@@ -59,8 +60,7 @@ public final class JavaWebsocket implements Websocket {
     JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
-        this.pump = Pump.create(executor, exceptionHandler);
-        this.pipeline = pump.peek(packet -> logger.trace("{} - Received packet: {}", getName(), packet));
+        this.pipeline = new ReferencePipe<>();
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
@@ -77,7 +77,7 @@ public final class JavaWebsocket implements Websocket {
 
     private void feed(WebsocketPacket packet) {
         try {
-            pump.accept(Reference.constant(packet));
+            pipeline.accept(packet.getType(), packet);
         } catch (Throwable t) {
             logger.error(String.format("%s - A problem occurred when feeding packet %s", getName(), packet), t);
         }
@@ -86,7 +86,7 @@ public final class JavaWebsocket implements Websocket {
     @Override
     public void close() throws IOException {
         jSocket.future.join().sendClose(1000, String.format("%s - Socket Closed", getName()));
-        pump.close();
+        pipeline.close();
     }
 
     private class Listener implements WebSocket.Listener {
