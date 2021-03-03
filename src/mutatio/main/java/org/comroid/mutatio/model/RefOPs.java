@@ -1,52 +1,89 @@
 package org.comroid.mutatio.model;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V> {
-    <X, Y, OutRef extends KeyedReference<X, Y>> RefOPs<X, Y, OutRef> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, OutRef> adapter);
+public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, UncheckedCloseable {
+    default<X, Y> RefOPs<X, Y, KeyedReference<X, Y>> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter) {
+        return addStage(adapter, null);
+    }
 
-    RefOPs<K, V, Ref> filter(Predicate<? super V> predicate);
+    <X, Y> RefOPs<X, Y, KeyedReference<X, Y>> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter, @Nullable Executor executor);
 
-    RefOPs<K, V, Ref> yield(Predicate<? super V> predicate, Consumer<? super V> elseConsume);
+    default RefOPs<K, V, Ref> filter(Predicate<? super V> predicate) {
+        return null;
+    }
 
-    <R> RefOPs<K, R, ? extends Reference<R>> map(Function<? super V, ? extends R> mapper);
+    default RefOPs<K, V, Ref> yield(Predicate<? super V> predicate, Consumer<? super V> elseConsume) {
+        return null;
+    }
 
-    <R> RefOPs<K, R, ? extends Reference<R>> flatMap(Class<R> target);
+    default <R> RefOPs<K, R, ? extends Reference<R>> map(Function<? super V, ? extends R> mapper) {
+        return null;
+    }
 
-    <R> RefOPs<K, R, ? extends Reference<R>> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper);
+    default <R> RefOPs<K, R, ? extends Reference<R>> flatMap(Class<R> target) {
+        return null;
+    }
 
-    <R> RefOPs<K, R, ? extends Reference<R>> flatMapOptional(Function<? super V, ? extends Optional<? extends R>> mapper);
+    default <R> RefOPs<K, R, ? extends Reference<R>> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return null;
+    }
 
-    RefOPs<K, V, Ref> peek(Consumer<? super V> action);
+    default <R> RefOPs<K, R, ? extends Reference<R>> flatMapOptional(Function<? super V, ? extends Optional<? extends R>> mapper) {
+        return null;
+    }
+
+    default RefOPs<K, V, Ref> peek(Consumer<? super V> action) {
+        return null;
+    }
 
     // todo: fix
     @Deprecated
-    RefOPs<K, V, Ref> distinct();
+    default RefOPs<K, V, Ref> distinct() {
+        return null;
+    }
 
     // todo: fix
     @Deprecated
-    RefOPs<K, V, Ref> limit(long maxSize);
+    default RefOPs<K, V, Ref> limit(long maxSize) {
+        return null;
+    }
 
     // todo: fix
     @Deprecated
-    RefOPs<K, V, Ref> skip(long skip);
+    default RefOPs<K, V, Ref> skip(long skip) {
+        return null;
+    }
 
-    RefOPs<K, V, Ref> sorted();
+    default RefOPs<K, V, Ref> sorted() {
+        return null;
+    }
 
-    RefOPs<K, V, Ref> sorted(Comparator<? super V> comparator);
+    default RefOPs<K, V, Ref> sorted(Comparator<? super V> comparator) {
+        return null;
+    }
 
-    @NotNull Reference<V> findFirst();
+    @NotNull
+    default Reference<V> findFirst() {
+        return null;
+    }
 
-    @NotNull Reference<V> findAny();
+    @NotNull
+    default Reference<V> findAny() {
+        return null;
+    }
 }

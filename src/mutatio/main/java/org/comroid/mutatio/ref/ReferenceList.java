@@ -114,13 +114,6 @@ public class ReferenceList<T>
     */
 
     @Override
-    public final <R> ReferenceList<R> addStage(StageAdapter<T, R> stage) {
-        ReferenceList<R> sub = new ReferenceList<>(this, stage);
-        addDependent(sub);
-        return sub;
-    }
-
-    @Override
     public @Nullable Reference<T> getReference(int index) {
         return getReference(index, false);
     }
@@ -141,92 +134,6 @@ public class ReferenceList<T>
     @Override
     public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
         return putAccessor(ref.getKey(), ref);
-    }
-
-    @Override
-    public final ReferenceList<T> filter(Predicate<? super T> predicate) {
-        return addStage(StageAdapter.filter(predicate));
-    }
-
-    @Override
-    public final ReferenceList<T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
-        return filter(it -> {
-            if (predicate.test(it))
-                return true;
-            elseConsume.accept(it);
-            return false;
-        });
-    }
-
-    @Override
-    public final <R> ReferenceList<R> map(Function<? super T, ? extends R> mapper) {
-        return addStage(StageAdapter.map(mapper));
-    }
-
-    @Override
-    public final <R> ReferenceList<R> flatMap(Class<R> target) {
-        return filter(target::isInstance).map(target::cast);
-    }
-
-    @Override
-    public final <R> ReferenceList<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return addStage(StageAdapter.flatMap(mapper));
-    }
-
-    @Override
-    public <R> ReferenceList<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return null;
-    }
-
-    @Override
-    public final ReferenceList<T> peek(Consumer<? super T> action) {
-        return addStage(StageAdapter.peek(action));
-    }
-
-    @Override
-    public final void forEach(Consumer<? super T> action) {
-        //noinspection SimplifyStreamApiCallChains
-        stream().forEach(action);
-    }
-
-    @Override
-    @Deprecated // todo: fix
-    public final ReferenceList<T> distinct() {
-        return addStage(StageAdapter.distinct());
-    }
-
-    @Override
-    @Deprecated // todo: fix
-    public final ReferenceList<T> limit(long maxSize) {
-        return addStage(StageAdapter.limit(maxSize));
-    }
-
-    @Override
-    @Deprecated // todo: fix
-    public final ReferenceList<T> skip(long skip) {
-        return addStage(StageAdapter.skip(skip));
-    }
-
-    @Override
-    public final ReferenceList<T> sorted() {
-        return sorted(uncheckedCast(Comparator.naturalOrder()));
-    }
-
-    @Override
-    public final ReferenceList<T> sorted(Comparator<? super T> comparator) {
-        return new ReferenceList<>(this, ReferenceAtlas.wrapComparator(comparator));
-    }
-
-    @Override
-    @NotNull
-    public final Reference<T> findFirst() {
-        return sorted().findAny();
-    }
-
-    @Override
-    @NotNull
-    public final Reference<T> findAny() {
-        return Reference.conditional(() -> size() > 0, () -> span().get(0));
     }
 
     @Override
@@ -353,8 +260,8 @@ public class ReferenceList<T>
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final ReferenceList<T> resulting = addStage(stage);
-        stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
+        final RefOPs<@NotNull Integer, T, KeyedReference<@NotNull Integer, T>> resulting = addStage(stage);
+        stage.future.thenRun(resulting::close);
 
         return stage.future;
     }

@@ -2,6 +2,7 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
+import org.comroid.api.Polyfill;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -62,6 +64,32 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
         return (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare);
+    }
+
+    @Override
+    public <X, Y> ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> addStage(
+            ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
+            @Nullable Executor executor
+    ) {
+        ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> yield;
+
+        if (executor != null)
+            yield = new ReferencePipe<K, V, X, Y>(Polyfill.uncheckedCast(this), Polyfill.uncheckedCast(adapter), executor) {
+            };
+        else yield = new ReferenceAtlas<K, X, V, Y, OutRef, KeyedReference<X, Y>>(this, adapter) {
+            @Override
+            protected KeyedReference<X, Y> createEmptyRef(X key) {
+                return KeyedReference.createKey(key);
+            }
+        };
+        addDependent(yield);
+        return yield;
+    }
+
+    @Override
+    public void close() {
+        if (parent != null && !parent.removeDependent(this))
+            throw new IllegalStateException("Could not remove from parent");
     }
 
     protected OutRef advanceReference(InRef inputRef) {

@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Experimental
-public interface RefList<T> extends RefPipe<@Nullable Integer, Object, @NotNull Integer, T>, ValueCache<Void>, AbstractList<T>, RefOPs<Object, T> {
+public interface RefList<T> extends RefPipe<@Nullable Integer, Object, @NotNull Integer, T>, ValueCache<Void>, AbstractList<T> {
 
     @Nullable Reference<T> getReference(int index);
 
