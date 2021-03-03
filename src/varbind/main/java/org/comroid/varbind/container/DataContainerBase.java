@@ -66,13 +66,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 VarBind::getFieldName
         );
         this.context = context;
-        this.group = group != null ? group : ReflectionHelper.fieldWithAnnotation(getClass(), RootBind.class)
-                .stream()
-                .filter(field -> Modifier.isStatic(field.getModifiers()))
-                .findAny()
-                .map(ThrowingFunction.rethrowing(field -> field.get(null), null))
-                .map(Polyfill::<GroupBind<S>>uncheckedCast)
-                .orElseThrow(() -> new NoSuchElementException("No RootBind found in class " + getClass()));
+        //noinspection unchecked
+        this.group = group != null ? group : findRootBind(getClass());
         this.adapter = new BindBasedAdapter();
         this.initialValues = updateFrom(initialData);
         this.parser = new ParameterizedReference<UniObjectNode, UniObjectNode>(this, null) {
@@ -82,6 +77,16 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 return obj;
             }
         };
+    }
+
+    public static <S extends DataContainer<? super S>> GroupBind<S> findRootBind(Class<? extends S> aClass) {
+        return ReflectionHelper.fieldWithAnnotation(aClass, RootBind.class)
+                .stream()
+                .filter(field -> Modifier.isStatic(field.getModifiers()))
+                .findAny()
+                .map(ThrowingFunction.rethrowing(field -> field.get(null), null))
+                .map(Polyfill::<GroupBind<S>>uncheckedCast)
+                .orElseThrow(() -> new NoSuchElementException("No RootBind found in class " + aClass));
     }
 
     @Override
