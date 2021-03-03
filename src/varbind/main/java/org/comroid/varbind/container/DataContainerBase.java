@@ -45,7 +45,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> getAdvancer() {
+    public final ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> getAdvancer() {
         return adapter;
     }
 
