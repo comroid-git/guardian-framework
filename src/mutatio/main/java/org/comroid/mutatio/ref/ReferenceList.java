@@ -230,32 +230,6 @@ public class ReferenceList<T>
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);
     }
 
-    @Override
-    public CompletableFuture<T> next() {
-        class OnceCompletingStage extends StageAdapter<T, T> {
-            private final CompletableFuture<T> future = new CompletableFuture<>();
-
-            protected OnceCompletingStage() {
-                super(true, Function.identity());
-            }
-
-            @Override
-            public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, T> ref) {
-                if (!ref.isNull() && !future.isDone()) {
-                    future.complete(ref.get());
-                    return ref;
-                }
-                return null;
-            }
-        }
-
-        final OnceCompletingStage stage = new OnceCompletingStage();
-        final RefOPs<@NotNull Integer, T, KeyedReference<@NotNull Integer, T>> resulting = addStage(stage);
-        stage.future.thenRun(resulting::close);
-
-        return stage.future;
-    }
-
     private class RefIndIterator implements ListIterator<T> {
         private final Reference<Integer> index;
         private final Reference<T> next;

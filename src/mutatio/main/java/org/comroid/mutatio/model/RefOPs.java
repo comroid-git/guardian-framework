@@ -1,5 +1,6 @@
 package org.comroid.mutatio.model;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.BiStageAdapter;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
@@ -154,7 +156,6 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
 
     @NotNull
     default KeyedReference<K, V> findFirst() {
-        //noinspection unchecked
         return ((RefContainer<K, V>) this).streamRefs()
                 .findFirst()
                 .orElseGet(KeyedReference::emptyKey);
@@ -162,9 +163,33 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
 
     @NotNull
     default KeyedReference<K, V> findAny() {
-        //noinspection unchecked
         return ((RefContainer<K, V>) this).streamRefs()
                 .findAny()
                 .orElseGet(KeyedReference::emptyKey);
+    }
+
+    default CompletableFuture<V> next() {
+        class OnceCompletingStage extends BiStageAdapter<V, V, V, V> {
+            private final CompletableFuture<V> future = new CompletableFuture<>();
+
+            protected OnceCompletingStage() {
+                super(true, Function.identity(), (v, v2) -> v);
+            }
+
+            @Override
+            public KeyedReference<V, V> advance(KeyedReference<V, V> ref) {
+                if (!ref.isNull() && !future.isDone()) {
+                    future.complete(ref.get());
+                    return ref;
+                }
+                return null;
+            }
+        }
+
+        final OnceCompletingStage stage = new OnceCompletingStage();
+        final RefOPs<V, V, KeyedReference<V, V>> resulting = addStage(Polyfill.uncheckedCast(stage));
+        stage.future.thenRun(resulting::close);
+
+        return stage.future;
     }
 }

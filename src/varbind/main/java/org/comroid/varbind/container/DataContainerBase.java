@@ -2,6 +2,7 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingFunction;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.adapter.BiStageAdapter;
@@ -180,6 +181,11 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             getExtractionReference(dependency).requireNonNull(MessageSupplier
                     .format("Could not compute dependency %s of bind %s", dependency, bind));
         return bind.process(self().into(Polyfill::uncheckedCast), fromBase);
+    }
+
+    @Override
+    public final Rewrapper<? extends ContextualProvider> self() {
+        return () -> this;
     }
 
     @Nullable

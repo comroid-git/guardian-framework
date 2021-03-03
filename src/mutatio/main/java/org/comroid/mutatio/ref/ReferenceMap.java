@@ -95,7 +95,7 @@ public class ReferenceMap<K, V>
     }
 
     @Override
-    public @Nullable KeyedReference<K, V> getReference(Object key) {
+    public KeyedReference<K, V> getReference(Object key) {
         //noinspection unchecked
         return getReference((K) key, false);
     }

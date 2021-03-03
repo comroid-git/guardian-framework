@@ -166,12 +166,11 @@ public abstract class ReferenceAtlas<InK, K, In, V>
     }
 
     @Override
-    @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     public final KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
         Objects.requireNonNull(key, "key");
         KeyedReference<K, V> ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
-            return ref;
+            return ref != null ? ref : KeyedReference.emptyValue(key);
         validateMutability();
         InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
@@ -182,7 +181,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
                 ref = advanceReference(inRef);
         } else ref = createEmptyRef(key);
         if (putAccessor(key, ref))
-            return ref;
+            return ref != null ? ref : KeyedReference.emptyValue(key);
         throw new AssertionError("Could not create Reference for key " + key);
     }
 

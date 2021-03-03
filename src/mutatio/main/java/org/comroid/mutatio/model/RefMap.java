@@ -14,6 +14,5 @@ public interface RefMap<K, V> extends RefAtlas<Object, K, Object, V>, ValueCache
         return entrySet().size();
     }
 
-    @Nullable
     KeyedReference<K, V> getReference(Object key);
 }
