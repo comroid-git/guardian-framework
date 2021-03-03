@@ -14,7 +14,7 @@ public abstract class StageAdapter<In, Out>
         extends ReferenceStageAdapter<@Nullable("always") Void, @Nullable("always") Void, In, Out, Reference<In>, Reference<Out>>
         implements Reference.Advancer<In, Out> {
     protected StageAdapter(boolean isIdentity, final Function<? super In, ? extends Out> valueMapper) {
-        super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in));
+        super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in), keyReverser, valueReverser);
     }
 
     public static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {

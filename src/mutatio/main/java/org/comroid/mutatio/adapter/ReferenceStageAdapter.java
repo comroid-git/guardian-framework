@@ -5,6 +5,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -15,6 +16,8 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
     private final boolean isIdentity;
     private final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
     private final BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper;
+    private final @Nullable Function<? super OutK, ? extends InK> keyReverser;
+    private final @Nullable Function<? super OutV, ? extends InV> valueReverser;
 
     public final boolean isIdentityValue() {
         return isIdentity;
@@ -25,9 +28,21 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
             Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
             BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper
     ) {
+        this(isIdentity, keyMapper, valueMapper, null, null);
+    }
+
+    protected ReferenceStageAdapter(
+            boolean isIdentity,
+            Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
+            BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper,
+            @Nullable Function<? super OutK, ? extends InK> keyReverser,
+            @Nullable Function<? super OutV, ? extends InV> valueReverser
+    ) {
         this.isIdentity = isIdentity;
         this.keyMapper = keyMapper;
         this.valueMapper = valueMapper;
+        this.keyReverser = keyReverser;
+        this.valueReverser = valueReverser;
     }
 
     @Override
@@ -39,6 +54,18 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
 
     public final @Nullable OutV advanceValue(InK key, InV value) {
         return valueMapper.apply(key, value);
+    }
+
+    public final Optional<InK> revertKey(OutK key) {
+        if (keyReverser == null)
+            return Optional.empty();
+        return Optional.ofNullable(keyReverser.apply(key));
+    }
+
+    public final Optional<InV> revertValue(OutV value) {
+        if (valueReverser == null)
+            return Optional.empty();
+        return Optional.ofNullable(valueReverser.apply(value));
     }
 
     protected static final class Structure {

@@ -24,7 +24,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
             Function<? super InK, ? extends OutK> keyMapper,
             BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper
     ) {
-        super(isIdentity, keyMapper, valueMapper);
+        super(isIdentity, keyMapper, valueMapper, keyReverser, valueReverser);
     }
 
     public static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {
