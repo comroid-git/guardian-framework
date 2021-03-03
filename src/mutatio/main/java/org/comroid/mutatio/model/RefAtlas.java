@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Contract;
 import java.util.stream.Stream;
 
 public interface RefAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
-        extends ValueCache<Void>, MutableState {
+        extends RefOPs<K, V, OutRef>, ValueCache<Void>, MutableState {
     ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> getAdvancer();
 
     @Override
