@@ -219,7 +219,8 @@ public class RestServer implements Closeable {
                     .filter(endpoint -> endpoint.test(requestURI))
                     // handle member accessing endpoints with lower priority
                     .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
-                    .span()
+                    .flatMap(ServerEndpoint.class)
+                    .streamValues()
                     .iterator();
             Throwable lastException = null;
             Response response = dummyResponse;

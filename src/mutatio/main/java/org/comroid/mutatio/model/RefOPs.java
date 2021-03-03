@@ -19,7 +19,7 @@ import java.util.function.*;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 
-public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, UncheckedCloseable {
+public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseable, Pipeable<V> {
     default <X, Y> ReferencePipe<K, V, X, Y> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter) {
         return addStage(adapter, null, null);
     }
