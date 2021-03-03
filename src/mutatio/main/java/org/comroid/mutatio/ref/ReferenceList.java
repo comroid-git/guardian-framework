@@ -66,13 +66,6 @@ public class ReferenceList<T>
         this.toIndex = toIndex;
     }
 
-    private ReferenceList(
-            @NotNull ReferenceList<T> parent,
-            @NotNull Comparator<KeyedReference<@NotNull Integer, T>> comparator
-    ) {
-        this(uncheckedCast(parent), StageAdapter.identity(), comparator);
-    }
-
     public static <T> ReferenceList<T> create() {
         return new ReferenceList<>();
     }
