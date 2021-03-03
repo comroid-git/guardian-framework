@@ -2,18 +2,18 @@ package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class StageAdapter<In, Out> implements
-        ReferenceConverter<Reference<In>, Reference<Out>>,
-        Reference.Advancer<In, Out> {
+public abstract class StageAdapter<In, Out>
+        extends ReferenceStageAdapter<@Nullable("always") Void, @Nullable("always") Void, In, Out, Reference<In>, Reference<Out>>
+        implements Reference.Advancer<In, Out> {
     private StageAdapter() {
     }
 
@@ -53,59 +53,14 @@ public abstract class StageAdapter<In, Out> implements
     }
 
     @Override
-    public abstract Reference<Out> advance(Reference<In> reference);
+    public final @Nullable("always") Void advanceKey(@Nullable("always") Void key) {
+        return key;
+    }
 
     @OverrideOnly
     @Deprecated
     public Out convertValue(In value) {
-        return advanceValue(value);
-    }
-
-    public static final class Structure {
-        public static final class ConsumingFilter<T> implements Predicate<T> {
-            private final Consumer<? super T> action;
-
-            protected ConsumingFilter(Consumer<? super T> action) {
-                this.action = action;
-            }
-
-            @Override
-            public boolean test(T it) {
-                action.accept(it);
-
-                return true;
-            }
-        }
-
-        public static final class Limiter<T> implements Predicate<T> {
-            private final long limit;
-            private long c = 0;
-
-            @Deprecated // todo: fix
-            protected Limiter(long limit) {
-                this.limit = limit;
-            }
-
-            @Override
-            public boolean test(T t) {
-                return c++ < limit;
-            }
-        }
-
-        public static final class Skipper<T> implements Predicate<T> {
-            private final long skip;
-            private long c = 0;
-
-            @Deprecated // todo: fix
-            protected Skipper(long skip) {
-                this.skip = skip;
-            }
-
-            @Override
-            public boolean test(T t) {
-                return c++ >= skip;
-            }
-        }
+        return advanceValue(null, value);
     }
 
     private static final class Filter<T> extends StageAdapter<T, T> {
@@ -126,7 +81,7 @@ public abstract class StageAdapter<In, Out> implements
         }
 
         @Override
-        public T advanceValue(T value) {
+        public T advanceValue(Void nil, T value) {
             return value;
         }
     }
@@ -149,7 +104,7 @@ public abstract class StageAdapter<In, Out> implements
         }
 
         @Override
-        public T advanceValue(O value) {
+        public T advanceValue(Void nil, O value) {
             return mapper.apply(value);
         }
     }

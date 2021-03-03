@@ -2,7 +2,6 @@ package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
@@ -11,9 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.function.*;
 
-public abstract class BiStageAdapter<InK, InV, OutK, OutV> implements
-        ReferenceConverter<KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>,
-        KeyedReference.Advancer<InK, InV, OutK, OutV> {
+public abstract class BiStageAdapter<InK, InV, OutK, OutV>
+        extends ReferenceStageAdapter<InK, OutK, InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>
+        implements KeyedReference.Advancer<InK, InV, OutK, OutV> {
     private BiStageAdapter() {
     }
 
@@ -116,7 +115,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV> implements
         }
 
         @Override
-        public Y advanceValue(Y value) {
+        public Y advanceValue(X key, Y value) {
             return value;
         }
     }
@@ -149,7 +148,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV> implements
         }
 
         @Override
-        public OY advanceValue(IY value) {
+        public OY advanceValue(IX key, IY value) {
             return valueMapper.apply(value);
         }
 
@@ -182,7 +181,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV> implements
         }
 
         @Override
-        public T advanceValue(T value) {
+        public T advanceValue(T key, T value) {
             return value;
         }
 

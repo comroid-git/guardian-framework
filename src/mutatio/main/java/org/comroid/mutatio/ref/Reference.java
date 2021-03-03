@@ -228,8 +228,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
-
-        O advanceValue(I value);
     }
 
     @Internal

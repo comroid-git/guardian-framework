@@ -102,10 +102,6 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
         @Override
         KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
-
-        OK advanceKey(IK key);
-
-        OV advanceValue(IV value);
     }
 
     public static final class Support {
