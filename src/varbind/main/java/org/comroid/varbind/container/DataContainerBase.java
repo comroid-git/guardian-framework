@@ -70,7 +70,13 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         this.context = context;
         this.group = group;
         this.initialValues = updateFrom(initialData);
-        this.parser = null;
+        this.parser = new ParameterizedReference<UniObjectNode, UniObjectNode>(this, null) {
+            @Override
+            protected UniObjectNode doGet(final UniObjectNode obj) {
+                streamInputRefs().forEach(ref -> ref.into(v -> obj.put(ref.getKey(), v)));
+                return obj;
+            }
+        };
     }
 
     @Override

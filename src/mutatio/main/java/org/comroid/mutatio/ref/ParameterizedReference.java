@@ -2,6 +2,7 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +26,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
         return overriddenSetter != null;
     }
 
-    protected ParameterizedReference(@NotNull SingleValueCache<?> parent, @Nullable Executor autocomputor) {
+    protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
     }
 

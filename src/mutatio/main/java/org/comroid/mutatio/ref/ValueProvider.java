@@ -2,6 +2,7 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.Executor;
@@ -15,7 +16,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
         return () -> super.getParent().into(Reference.class);
     }
 
-    protected ValueProvider(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
+    protected ValueProvider(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
     }
 

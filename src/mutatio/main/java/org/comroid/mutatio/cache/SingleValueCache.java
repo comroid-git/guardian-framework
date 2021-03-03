@@ -29,7 +29,7 @@ public interface SingleValueCache<T> extends ValueCache<T> {
     @Internal
     void computeAndStoreValue();
 
-    abstract class Abstract<T> extends ValueCache.Abstract<T, SingleValueCache<?>> implements SingleValueCache<T> {
+    abstract class Abstract<T> extends ValueCache.Abstract<T, ValueCache<?>> implements SingleValueCache<T> {
         private final AtomicReference<T> cache = new AtomicReference<>();
         private final @Nullable Executor autocomputor;
 
@@ -47,7 +47,7 @@ public interface SingleValueCache<T> extends ValueCache<T> {
             this(parent, parent != null ? parent.getAutocomputor() : null);
         }
 
-        protected Abstract(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
+        protected Abstract(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
             super(parent);
 
             this.autocomputor = autocomputor;
