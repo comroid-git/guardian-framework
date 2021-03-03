@@ -25,7 +25,9 @@ import java.util.stream.Stream;
 
 import static org.comroid.util.StandardValueType.*;
 
-public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniNode>, Reference<Object>> implements UniValueNode, SingleValueCache<Object> {
+public final class UniValueNodeImpl
+        extends AbstractUniNode<Void, KeyedReference<Void, UniNode>, Reference<Object>>
+        implements UniValueNode, SingleValueCache<Object> {
     private final String name;
     private final ValueAdapter<?, Object> valueAdapter;
 
@@ -47,6 +49,11 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     @Override
     public boolean isUpToDate() {
         return baseNode.isUpToDate();
+    }
+
+    @Override
+    public long getLastUpdateTime() {
+        return baseNode.getLastUpdateTime();
     }
 
     @Override
@@ -87,8 +94,18 @@ public final class UniValueNodeImpl extends AbstractUniNode<Void, Reference<UniN
     }
 
     @Override
+    public void computeAndStoreValue() {
+        baseNode.computeAndStoreValue();
+    }
+
+    @Override
     public Object getFromCache() {
         return baseNode.getFromCache();
+    }
+
+    @Override
+    public @Nullable Executor getAutocomputor() {
+        return baseNode.getAutocomputor();
     }
 
     @Override

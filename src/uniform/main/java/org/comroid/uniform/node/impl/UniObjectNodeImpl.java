@@ -83,7 +83,7 @@ public class UniObjectNodeImpl
     public @NotNull <T> UniNode put(final String key, final ValueType<? extends T> type, final T value)
             throws UnsupportedOperationException {
         //noinspection ConstantConditions
-        return accessors.compute(key, node -> {
+        return accessors.compute(key, (k, v) -> {
             if (value == null)
                 return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
@@ -170,7 +170,7 @@ public class UniObjectNodeImpl
     protected Stream<String> streamKeys() {
         return Stream.concat(
                 baseNode.keySet().stream().filter(key -> baseNode.get(key) != null),
-                accessors.stream(any -> true).map(Map.Entry::getKey)
+                accessors.streamRefs().map(Map.Entry::getKey)
         ).distinct();
     }
 }
