@@ -43,7 +43,7 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
     }
 
     static <In, T> StageAdapter<In, T> identity() {
-        return map(Polyfill::<T>uncheckedCast);
+        return map(Polyfill::uncheckedCast);
     }
 
     @OverrideOnly
@@ -103,6 +103,11 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
         public static final class Filter<T> implements StageAdapter<T, T> {
             private final Predicate<? super T> predicate;
 
+            @Override
+            public boolean isIdentityValue() {
+                return true;
+            }
+
             public Filter(Predicate<? super T> predicate) {
                 this.predicate = predicate;
             }
@@ -115,11 +120,6 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
             @Override
             public T advanceValue(T value) {
                 return value;
-            }
-
-            @Override
-            public boolean isIdentityValue() {
-                return true;
             }
         }
 

@@ -3,7 +3,6 @@ package org.comroid.mutatio.pipe;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,8 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.function.*;
 
-public interface BiStageAdapter<InK, InV, OutK, OutV>
-        extends ReferenceConverter<KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>, KeyedReference.Advancer<InK, InV, OutK, OutV> {
+public interface BiStageAdapter<InK, InV, OutK, OutV> extends
+        ReferenceConverter<KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>,
+        KeyedReference.Advancer<InK, InV, OutK, OutV> {
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Support.Filter<>(predicate, any -> true);
     }
@@ -75,7 +75,7 @@ public interface BiStageAdapter<InK, InV, OutK, OutV>
         return new Support.BiSource<>(source);
     }
 
-    static <K, V> BiStageAdapter<K,V,K,V> identity() {
+    static <K, V> BiStageAdapter<K, V, K, V> identity() {
         return filterValue(any -> true);
     }
 

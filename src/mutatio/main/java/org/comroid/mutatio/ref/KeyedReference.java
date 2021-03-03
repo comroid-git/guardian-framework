@@ -13,24 +13,6 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     private final K key;
     private final Reference<V> valueHolder;
 
-    public static <K, V> KeyedReference<K, V> emptyKey() {
-        //noinspection unchecked
-        return (KeyedReference<K, V>) Support.EMPTY;
-    }
-
-    public static <K, V> KeyedReference<K, V> emptyValue(K key) {
-        return createKey(false, key);
-    }
-
-    public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
-        @Override
-        KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
-
-        OK advanceKey(IK key);
-
-        OV advanceValue(IV value);
-    }
-
     @Override
     public V getValue() {
         return get();
@@ -65,6 +47,15 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
 
         this.key = key;
         this.valueHolder = Reference.create(initialValue);
+    }
+
+    public static <K, V> KeyedReference<K, V> emptyKey() {
+        //noinspection unchecked
+        return (KeyedReference<K, V>) Support.EMPTY;
+    }
+
+    public static <K, V> KeyedReference<K, V> emptyValue(K key) {
+        return createKey(false, key);
     }
 
     public static <K, V> KeyedReference<K, V> createKey(K key) {
@@ -106,6 +97,15 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
     @Override
     protected boolean doSet(V value) {
         return valueHolder.set(value);
+    }
+
+    public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
+        @Override
+        KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
+
+        OK advanceKey(IK key);
+
+        OV advanceValue(IV value);
     }
 
     public static final class Support {

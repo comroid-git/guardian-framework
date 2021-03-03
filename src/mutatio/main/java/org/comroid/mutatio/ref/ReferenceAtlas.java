@@ -23,11 +23,11 @@ import java.util.stream.Stream;
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
         implements MutableState {
+    protected final Function<InK, K> keyAdvancer;
+    protected final Function<K, InK> keyReverser;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
     private final ReferenceConverter<InRef, OutRef> advancer;
-    protected final Function<InK, K> keyAdvancer;
-    protected final Function<K, InK> keyReverser;
     protected Comparator<OutRef> comparator;
 
     @Override
@@ -45,11 +45,11 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     protected ReferenceAtlas(
-                @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-                @Nullable ReferenceConverter<InRef, OutRef> advancer,
-                @Nullable Comparator<OutRef> comparator,
-                @NotNull Function<InK, K> keyAdvancer,
-                @Nullable Function<K, InK> keyReverser
+            @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
+            @Nullable ReferenceConverter<InRef, OutRef> advancer,
+            @Nullable Comparator<OutRef> comparator,
+            @NotNull Function<InK, K> keyAdvancer,
+            @Nullable Function<K, InK> keyReverser
     ) {
         super(parent);
 
@@ -62,14 +62,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         this.accessors = new ConcurrentHashMap<>();
     }
 
+    public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
+        return (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare);
+    }
+
     protected OutRef advanceReference(InRef inputRef) {
         if (advancer == null)
             throw new AbstractMethodError("Advancer not defined");
         return advancer.advance(inputRef);
-    }
-
-    public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
-        return (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare);
     }
 
     @Override

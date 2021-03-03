@@ -16,7 +16,7 @@ public interface Pipeable<T> {
     interface From<T> extends Pipeable<T> {
         @Override
         default ReferenceIndex<Object, ? extends T> pipe() {
-            return ReferenceIndex.of(fetchPipeContent());
+            return (ReferenceIndex<Object, ? extends T>) ReferenceIndex.of(fetchPipeContent());
         }
 
         @OverrideOnly

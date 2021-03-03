@@ -2,7 +2,6 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -104,7 +103,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
         return filter(type::isInstance).map(type::cast);
     }
 
-    default<R> Ref<R> map(Function<? super T, ? extends R> mapper) {
+    default <R> Ref<R> map(Function<? super T, ? extends R> mapper) {
         return map(mapper, null);
     }
 
