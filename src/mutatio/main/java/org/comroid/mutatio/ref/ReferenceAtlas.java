@@ -164,7 +164,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     public static abstract class ForList<InV, V>
-            extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, Reference<InV>, Reference<V>>
+            extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, KeyedReference<@NotNull Integer, InV>, KeyedReference<@NotNull Integer, V>>
             implements AbstractList<V> {
         protected ForList(
                 @Nullable ReferenceIndex<InV> parent,
@@ -182,7 +182,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         }
 
         @Override
-        protected Reference<V> createEmptyRef(@NotNull Integer key) {
+        protected KeyedReference<@NotNull Integer, V> createEmptyRef(@NotNull Integer key) {
             return KeyedReference.createKey(key);
         }
     }
