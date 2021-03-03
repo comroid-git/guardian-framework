@@ -34,8 +34,9 @@ public class ReferenceList<T>
         this(null);
     }
 
+    @SuppressWarnings("CopyConstructorMissesField") // false positive
     public ReferenceList(
-            @NotNull ReferenceList<T> parent
+            @Nullable ReferenceList<T> parent
     ) {
         this(uncheckedCast(parent), StageAdapter.identity());
     }
