@@ -14,7 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public abstract class AbstractCache<K, V> extends ValueCache.Underlying<Void> implements Cache<K, V> {
+public abstract class AbstractCache<K, V>
+        extends ReferenceMap<K, V>
+        implements Cache<K, V> {
     private final ReferenceMap<K, V> cache;
     private final ContextualProvider context;
 
@@ -24,7 +26,7 @@ public abstract class AbstractCache<K, V> extends ValueCache.Underlying<Void> im
     }
 
     protected AbstractCache(ContextualProvider context) {
-        this(context, ReferenceMap.create(new ConcurrentHashMap<>()));
+        this(context, new ReferenceMap<>());
     }
 
     protected AbstractCache(ContextualProvider context, ReferenceMap<K, V> cache) {
