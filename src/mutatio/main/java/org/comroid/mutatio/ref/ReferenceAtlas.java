@@ -35,9 +35,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer,
-            @NotNull Function<InK, K> keyAdvancer,
-            @Nullable Function<K, InK> keyReverser
+            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer
     ) {
         this(parent, advancer, null);
     }
@@ -193,7 +191,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @NotNull Function<K, InK> keyReverser
         ) {
-            super(parent, advancer, advancer::advanceKey, keyReverser);
+            super(parent, advancer);
         }
 
         protected ForMap(
