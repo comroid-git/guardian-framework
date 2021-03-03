@@ -7,7 +7,12 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 @Experimental
-public interface RefMap<K, V> extends ValueCache<Void>, AbstractMap<K, V>, Pipeable<V> {
+public interface RefMap<K, V> extends RefPipe<Object, Object, K, V>, ValueCache<Void>, AbstractMap<K, V>, Pipeable<V> {
+    @Override
+    default int size() {
+        return entrySet().size();
+    }
+    
     @Nullable
     KeyedReference<K, V> getReference(Object key);
 }

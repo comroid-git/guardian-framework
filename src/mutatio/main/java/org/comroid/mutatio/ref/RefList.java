@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @Experimental
-public interface RefList<T> extends ValueCache<Void>, AbstractList<T>, Pipeable<T> {
+public interface RefList<T> extends RefPipe<@Nullable Integer, Object, @NotNull Integer, T>, ValueCache<Void>, AbstractList<T>, Pipeable<T> {
     <R> ReferenceList<R> addStage(StageAdapter<T, R> stage);
 
     @Nullable Reference<T> getReference(int index);
