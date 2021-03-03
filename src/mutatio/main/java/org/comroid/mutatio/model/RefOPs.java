@@ -15,9 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 
@@ -47,6 +45,10 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
         return addStage(uncheckedCast(BiStageAdapter.filterKey(predicate)));
     }
 
+    default ReferencePipe<?, ?, K, V> filterBoth(BiPredicate<? super K, ? super V> predicate) {
+        return addStage(uncheckedCast(BiStageAdapter.filterBoth(predicate)));
+    }
+
     default ReferencePipe<?, ?, K, V> yield(Predicate<? super V> predicate, Consumer<? super V> elseConsume) {
         return filter(new Structure.YieldAction<>(predicate, elseConsume));
     }
@@ -63,6 +65,10 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
         return addStage(uncheckedCast(BiStageAdapter.mapKey(mapper)));
     }
 
+    default <R> ReferencePipe<?, ?, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
+        return addStage(uncheckedCast(BiStageAdapter.mapBoth(mapper)));
+    }
+
     default <R> ReferencePipe<?, ?, K, R> flatMap(final Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
@@ -72,7 +78,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
     }
 
     default <R> ReferencePipe<?, ?, K, R> flatMapOptional(Function<? super V, ? extends Optional<? extends R>> mapper) {
-        return addStage(uncheckedCast(StageAdapter.flatMap(mapper.andThen(Rewrapper::ofOptional))));
+        return flatMap(mapper.andThen(Rewrapper::ofOptional));
     }
 
     default <R> ReferencePipe<?, ?, R, V> flatMapKey(final Class<R> target) {
@@ -84,7 +90,15 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
     }
 
     default <R> ReferencePipe<?, ?, R, V> flatMapKeyOptional(Function<? super K, ? extends Optional<? extends R>> mapper) {
-        return addStage(uncheckedCast(BiStageAdapter.flatMapKey(mapper.andThen(Rewrapper::ofOptional))));
+        return flatMapKey(mapper.andThen(Rewrapper::ofOptional));
+    }
+
+    default <R> ReferencePipe<?, ?, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
+        return addStage(uncheckedCast(BiStageAdapter.flatMapBoth(mapper)));
+    }
+
+    default <R> ReferencePipe<?, ?, K, R> flatMapBothOptional(BiFunction<? super K, ? super V, ? extends Optional<? extends R>> mapper) {
+        return flatMapBoth(mapper.andThen(Rewrapper::ofOptional));
     }
 
     default ReferencePipe<?, ?, K, V> peek(Consumer<? super V> action) {
@@ -93,6 +107,13 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
 
     default ReferencePipe<?, ?, K, V> peekKey(Consumer<? super K> action) {
         return filterKey(new Structure.PeekAction<>(action));
+    }
+
+    default ReferencePipe<?, ?, K, V> peekBoth(BiConsumer<? super K, ? super V> action) {
+        return filterBoth((k, v) -> {
+            action.accept(k, v);
+            return true;
+        });
     }
 
     // todo: fix
