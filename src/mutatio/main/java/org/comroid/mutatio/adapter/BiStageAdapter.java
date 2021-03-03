@@ -27,48 +27,48 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         super(isIdentity, keyMapper, valueMapper);
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {
+    public static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {
         return filterBoth((k, unused) -> predicate.test(k));
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> filterValue(final Predicate<? super V> predicate) {
+    public static <K, V> BiStageAdapter<K, V, K, V> filterValue(final Predicate<? super V> predicate) {
         return filterBoth((unused, v) -> predicate.test(v));
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> filterBoth(final BiPredicate<? super K, ? super V> predicate) {
+    public static <K, V> BiStageAdapter<K, V, K, V> filterBoth(final BiPredicate<? super K, ? super V> predicate) {
         return new Filter<>(predicate);
     }
 
-    static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(Function<? super K, ? extends R> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(Function<? super K, ? extends R> mapper) {
         return new Map<>(mapper, Function.identity());
     }
 
-    static <K, V, R> BiStageAdapter<K, V, K, R> mapValue(Function<? super V, ? extends R> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, K, R> mapValue(Function<? super V, ? extends R> mapper) {
         return new Map<>(Function.identity(), mapper);
     }
 
-    static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
         return new Map<>(Function.identity(), mapper);
     }
 
-    static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
         return new Map<>(mapper.andThen(Rewrapper::get), Function.identity());
     }
 
-    static <K, V, R> BiStageAdapter<K, V, K, R> flatMapValue(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, K, R> flatMapValue(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
         return new Map<>(Function.identity(), mapper.andThen(Rewrapper::get));
     }
 
-    static <K, V, R> BiStageAdapter<K, V, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
+    public static <K, V, R> BiStageAdapter<K, V, K, R> flatMapBoth(BiFunction<? super K, ? super V, ? extends Rewrapper<? extends R>> mapper) {
         return mapBoth(mapper.andThen(Rewrapper::get));
     }
 
     @Deprecated // todo: fix
-    static <K, V> BiStageAdapter<K, V, K, V> distinctValue() {
+    public static <K, V> BiStageAdapter<K, V, K, V> distinctValue() {
         return filterValue(new HashSet<>()::add);
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> peek(BiConsumer<? super K, ? super V> action) {
+    public static <K, V> BiStageAdapter<K, V, K, V> peek(BiConsumer<? super K, ? super V> action) {
         return new Map<>(Function.identity(), (k, v) -> {
             action.accept(k, v);
             return v;
@@ -76,20 +76,20 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     @Deprecated // todo: fix
-    static <K, V> BiStageAdapter<K, V, K, V> limit(long limit) {
+    public static <K, V> BiStageAdapter<K, V, K, V> limit(long limit) {
         return filterValue(new StageAdapter.Structure.Limiter<>(limit));
     }
 
     @Deprecated // todo: fix
-    static <K, V> BiStageAdapter<K, V, K, V> skip(long skip) {
+    public static <K, V> BiStageAdapter<K, V, K, V> skip(long skip) {
         return filterValue(new StageAdapter.Structure.Skipper<>(skip));
     }
 
-    static <T, X> BiStageAdapter<T, T, X, T> source(final Function<T, X> source) {
+    public static <T, X> BiStageAdapter<T, T, X, T> source(final Function<T, X> source) {
         return new BiSource<>(source);
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> identity() {
+    public static <K, V> BiStageAdapter<K, V, K, V> identity() {
         return filterValue(any -> true);
     }
 

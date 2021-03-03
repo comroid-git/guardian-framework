@@ -17,38 +17,38 @@ public abstract class StageAdapter<In, Out>
         super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in));
     }
 
-    static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
+    public static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
         return new Filter<>(predicate);
     }
 
-    static <O, T> StageAdapter<O, T> map(Function<? super O, ? extends T> mapper) {
+    public static <O, T> StageAdapter<O, T> map(Function<? super O, ? extends T> mapper) {
         return new Map<>(mapper);
     }
 
-    static <O, T> StageAdapter<O, T> flatMap(Function<? super O, ? extends Rewrapper<? extends T>> mapper) {
+    public static <O, T> StageAdapter<O, T> flatMap(Function<? super O, ? extends Rewrapper<? extends T>> mapper) {
         return map(mapper.andThen(Rewrapper::get));
     }
 
     @Deprecated // todo: fix
-    static <T> StageAdapter<T, T> distinct() {
+    public static <T> StageAdapter<T, T> distinct() {
         return filter(new HashSet<>()::add);
     }
 
-    static <T> StageAdapter<T, T> peek(Consumer<? super T> action) {
+    public static <T> StageAdapter<T, T> peek(Consumer<? super T> action) {
         return filter(new Structure.ConsumingFilter<>(action));
     }
 
     @Deprecated // todo: fix
-    static <T> StageAdapter<T, T> limit(long limit) {
+    public static <T> StageAdapter<T, T> limit(long limit) {
         return filter(new Structure.Limiter<>(limit));
     }
 
     @Deprecated // todo: fix
-    static <T> StageAdapter<T, T> skip(long skip) {
+    public static <T> StageAdapter<T, T> skip(long skip) {
         return filter(new Structure.Skipper<>(skip));
     }
 
-    static <In, T> StageAdapter<In, T> identity() {
+    public static <In, T> StageAdapter<In, T> identity() {
         return map(Polyfill::uncheckedCast);
     }
 

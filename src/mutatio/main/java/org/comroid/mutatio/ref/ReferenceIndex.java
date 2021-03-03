@@ -307,9 +307,8 @@ public class ReferenceIndex<In, T>
         class OnceCompletingStage extends StageAdapter<T, T> {
             private final CompletableFuture<T> future = new CompletableFuture<>();
 
-            @Override
-            public boolean isIdentityValue() {
-                return false;
+            protected OnceCompletingStage() {
+                super(true, Function.identity());
             }
 
             @Override
@@ -317,11 +316,6 @@ public class ReferenceIndex<In, T>
                 if (!ref.isNull() && !future.isDone())
                     future.complete(ref.get());
                 return Reference.empty();
-            }
-
-            @Override
-            public T advanceValue(Void nil, T value) {
-                return value;
             }
         }
 

@@ -3,6 +3,7 @@ package org.comroid.mutatio.adapter;
 import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -13,7 +14,7 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
         implements ReferenceConverter<InRef, OutRef> {
     private final boolean isIdentity;
     private final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
-    private final BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper;
+    private final BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper;
 
     public final boolean isIdentityValue() {
         return isIdentity;
@@ -22,7 +23,7 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
     protected ReferenceStageAdapter(
             boolean isIdentity,
             Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
-            BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper
+            BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper
     ) {
         this.isIdentity = isIdentity;
         this.keyMapper = keyMapper;
@@ -36,7 +37,7 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
         return keyMapper.apply(key);
     }
 
-    public final OutV advanceValue(InK key, InV value) {
+    public final @Nullable OutV advanceValue(InK key, InV value) {
         return valueMapper.apply(key, value);
     }
 
