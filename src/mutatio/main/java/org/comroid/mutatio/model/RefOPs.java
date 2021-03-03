@@ -35,7 +35,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
 
     <X, Y> ReferencePipe<K, V, X, Y> addStage(
             ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter,
-            @Nullable Comparator<? super Y> comparator,
+            @Nullable Comparator<KeyedReference<X, Y>> comparator,
             @Nullable Executor executor
     );
 
@@ -43,12 +43,24 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
         return addStage(uncheckedCast(StageAdapter.filter(predicate)));
     }
 
+    default ReferencePipe<?, ?, K, V> filterKey(Predicate<? super K> predicate) {
+        return addStage(uncheckedCast(BiStageAdapter.filterKey(predicate)));
+    }
+
     default ReferencePipe<?, ?, K, V> yield(Predicate<? super V> predicate, Consumer<? super V> elseConsume) {
         return filter(new Structure.YieldAction<>(predicate, elseConsume));
     }
 
+    default ReferencePipe<?, ?, K, V> yieldKey(Predicate<? super K> predicate, Consumer<? super K> elseConsume) {
+        return filterKey(new Structure.YieldAction<>(predicate, elseConsume));
+    }
+
     default <R> ReferencePipe<?, ?, K, R> map(Function<? super V, ? extends R> mapper) {
         return addStage(uncheckedCast(StageAdapter.map(mapper)));
+    }
+
+    default <R> ReferencePipe<?, ?, R, V> mapKey(Function<? super K, ? extends R> mapper) {
+        return addStage(uncheckedCast(BiStageAdapter.mapKey(mapper)));
     }
 
     default <R> ReferencePipe<?, ?, K, R> flatMap(final Class<R> target) {
@@ -63,14 +75,36 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
         return addStage(uncheckedCast(StageAdapter.flatMap(mapper.andThen(Rewrapper::ofOptional))));
     }
 
+    default <R> ReferencePipe<?, ?, R, V> flatMapKey(final Class<R> target) {
+        return filterKey(target::isInstance).mapKey(target::cast);
+    }
+
+    default <R> ReferencePipe<?, ?, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
+        return addStage(uncheckedCast(BiStageAdapter.flatMapKey(mapper)));
+    }
+
+    default <R> ReferencePipe<?, ?, R, V> flatMapKeyOptional(Function<? super K, ? extends Optional<? extends R>> mapper) {
+        return addStage(uncheckedCast(BiStageAdapter.flatMapKey(mapper.andThen(Rewrapper::ofOptional))));
+    }
+
     default ReferencePipe<?, ?, K, V> peek(Consumer<? super V> action) {
         return filter(new Structure.PeekAction<>(action));
+    }
+
+    default ReferencePipe<?, ?, K, V> peekKey(Consumer<? super K> action) {
+        return filterKey(new Structure.PeekAction<>(action));
     }
 
     // todo: fix
     @Deprecated
     default ReferencePipe<?, ?, K, V> distinct() {
         return filter(new Structure.DistinctFilter<>());
+    }
+
+    // todo: fix
+    @Deprecated
+    default ReferencePipe<?, ?, K, V> distinctKey() {
+        return filterKey(new Structure.DistinctFilter<>());
     }
 
     // todo: fix
@@ -90,6 +124,10 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends Pipeable<V>, Unc
     }
 
     default ReferencePipe<?, ?, K, V> sorted(Comparator<? super V> comparator) {
+        return sortedRef(Structure.wrapComparator(comparator));
+    }
+
+    default ReferencePipe<?, ?, K, V> sortedRef(Comparator<KeyedReference<K, V>> comparator) {
         return addStage(uncheckedCast(BiStageAdapter.identity()), comparator, null);
     }
 

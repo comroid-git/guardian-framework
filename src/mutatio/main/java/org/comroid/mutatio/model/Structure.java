@@ -1,5 +1,8 @@
 package org.comroid.mutatio.model;
 
+import org.comroid.mutatio.ref.Reference;
+
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -8,6 +11,10 @@ import java.util.function.Predicate;
 public final class Structure {
     private Structure() {
         throw new UnsupportedOperationException();
+    }
+
+    public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
+        return (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare);
     }
 
     public static final class YieldAction<T> implements Predicate<T> {

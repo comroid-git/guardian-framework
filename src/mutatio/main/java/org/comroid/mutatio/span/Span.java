@@ -2,6 +2,7 @@ package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;
@@ -210,7 +211,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
 
     @Override
     public void sort(Comparator<? super T> comparator) {
-        super.comparator = wrapComparator(comparator);
+        super.comparator = Structure.wrapComparator(comparator);
     }
 
     @Contract("-> new")

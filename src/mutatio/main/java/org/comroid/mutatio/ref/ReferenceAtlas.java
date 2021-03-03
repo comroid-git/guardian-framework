@@ -62,14 +62,10 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
         this.accessors = new ConcurrentHashMap<>();
     }
 
-    public static <T, R extends Reference<T>> Comparator<R> wrapComparator(Comparator<? super T> comparator) {
-        return (ref1, ref2) -> ref1.accumulate(ref2, comparator::compare);
-    }
-
     @Override
     public <X, Y> ReferencePipe<K, V, X, Y> addStage(
             ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
-            @Nullable Comparator<? super Y> comparator,
+            @Nullable Comparator<KeyedReference<X, Y>> comparator,
             @Nullable Executor executor
     ) {
         if (executor == null && this instanceof RefPipe)
@@ -77,7 +73,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
         return new ReferencePipe<K, V, X, Y>(
                 Polyfill.uncheckedCast(this),
                 Polyfill.uncheckedCast(adapter),
-                ReferenceAtlas.wrapComparator(comparator),
+                comparator,
                 executor) {
         };
     }
