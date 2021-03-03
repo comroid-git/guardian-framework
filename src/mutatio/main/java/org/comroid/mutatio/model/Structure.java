@@ -27,7 +27,7 @@ public final class Structure {
     public static final class PeekAction<T> implements Predicate<T> {
         private final Consumer<? super T> action;
 
-        protected PeekAction(Consumer<? super T> action) {
+        public PeekAction(Consumer<? super T> action) {
             this.action = action;
         }
 
@@ -44,7 +44,7 @@ public final class Structure {
         private long c = 0;
 
         @Deprecated // todo: fix
-        protected Limiter(long limit) {
+        public Limiter(long limit) {
             this.limit = limit;
         }
 
@@ -59,7 +59,7 @@ public final class Structure {
         private long c = 0;
 
         @Deprecated // todo: fix
-        protected Skipper(long skip) {
+        public Skipper(long skip) {
             this.skip = skip;
         }
 
