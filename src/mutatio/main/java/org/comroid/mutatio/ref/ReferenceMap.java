@@ -1,10 +1,8 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.abstr.AbstractMap;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +14,7 @@ import static org.comroid.api.Polyfill.uncheckedCast;
 
 public class ReferenceMap<K, V>
         extends ReferencePipe.ForMap<Object, Object, K, V>
-        implements AbstractMap<K, V>, Pipeable<V>, UncheckedCloseable {
+        implements UncheckedCloseable, RefMap<K, V> {
     public ReferenceMap(
     ) {
         this(null);
@@ -35,6 +33,7 @@ public class ReferenceMap<K, V>
         super(uncheckedCast(parent), uncheckedCast(advancer));
     }
 
+    @Override
     public final @Nullable KeyedReference<K, V> getReference(Object k) {
         //noinspection unchecked
         return getReference((K) k, false);
