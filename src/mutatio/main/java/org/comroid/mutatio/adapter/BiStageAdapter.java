@@ -1,6 +1,7 @@
 package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,12 +78,12 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
 
     @Deprecated // todo: fix
     public static <K, V> BiStageAdapter<K, V, K, V> limit(long limit) {
-        return filterValue(new StageAdapter.Structure.Limiter<>(limit));
+        return filterValue(new Structure.Limiter<>(limit));
     }
 
     @Deprecated // todo: fix
     public static <K, V> BiStageAdapter<K, V, K, V> skip(long skip) {
-        return filterValue(new StageAdapter.Structure.Skipper<>(skip));
+        return filterValue(new Structure.Skipper<>(skip));
     }
 
     public static <T, X> BiStageAdapter<T, T, X, T> source(final Function<T, X> source) {

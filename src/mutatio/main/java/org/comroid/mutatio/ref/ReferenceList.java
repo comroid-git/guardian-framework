@@ -1,7 +1,5 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.api.Rewrapper;
-import org.comroid.api.ThrowingRunnable;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
@@ -13,9 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 

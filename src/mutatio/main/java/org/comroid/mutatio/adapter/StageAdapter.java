@@ -2,6 +2,7 @@ package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +37,7 @@ public abstract class StageAdapter<In, Out>
     }
 
     public static <T> StageAdapter<T, T> peek(Consumer<? super T> action) {
-        return filter(new Structure.ConsumingFilter<>(action));
+        return filter(new Structure.PeekAction<>(action));
     }
 
     @Deprecated // todo: fix

@@ -56,7 +56,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
-        this.storage = (ReferenceList<T>) data;
+        this.storage = data;
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }

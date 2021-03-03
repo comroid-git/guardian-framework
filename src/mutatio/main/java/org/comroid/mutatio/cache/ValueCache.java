@@ -2,8 +2,6 @@ package org.comroid.mutatio.cache;
 
 import org.comroid.annotations.inheritance.MustExtend;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceAtlas;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;

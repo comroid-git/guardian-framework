@@ -1,19 +1,5 @@
 package org.comroid.test.mutatio.pipe;
 
-import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.pump.Pump;
-import org.comroid.mutatio.ref.Reference;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 /*
 public class PumpTests {
     private List<String> controlGroup;
