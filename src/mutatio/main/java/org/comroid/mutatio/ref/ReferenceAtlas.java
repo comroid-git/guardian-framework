@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
-        extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
+        extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In, ?, InRef>>
         implements RefAtlas<InK, K, In, V, InRef, OutRef> {
     protected final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
@@ -34,14 +34,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     protected ReferenceAtlas(
-            @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
+            @Nullable RefAtlas<?, InK, ?, In, ?, InRef> parent,
             @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer
     ) {
         this(parent, advancer, null);
     }
 
     protected ReferenceAtlas(
-            @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
+            @Nullable RefAtlas<?, InK, ?, In, ?, InRef> parent,
             @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer,
             @Nullable Comparator<OutRef> comparator
     ) {

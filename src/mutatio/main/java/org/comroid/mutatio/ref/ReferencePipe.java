@@ -11,28 +11,28 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.concurrent.Executor;
-import java.util.function.BiConsumer;
 
 public abstract class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
-        implements BiConsumer<InK, InV> {
+        implements RefPipe<InK, InV, K, V> {
     @Nullable
     private final Executor stageExecutor;
 
+    @Override
     @Nullable
     public final Executor getStageExecutor() {
         return stageExecutor;
     }
 
     protected ReferencePipe(
-            @Nullable ReferenceAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
+            @Nullable RefAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer
     ) {
         this(parent, advancer, getExecutorFromAtlas(parent));
     }
 
     protected ReferencePipe(
-            @Nullable ReferenceAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
+            @Nullable RefAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Executor stageExecutor
     ) {
@@ -42,7 +42,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
     }
 
     protected ReferencePipe(
-            @Nullable ReferenceAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
+            @Nullable RefAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Comparator<KeyedReference<K, V>> comparator
     ) {
@@ -50,7 +50,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
     }
 
     protected ReferencePipe(
-            @Nullable ReferenceAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
+            @Nullable RefAtlas<?, InK, ?, InV, ?, KeyedReference<InK, InV>> parent,
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer,
             @Nullable Comparator<KeyedReference<K, V>> comparator,
             @Nullable Executor stageExecutor
@@ -61,9 +61,9 @@ public abstract class ReferencePipe<InK, InV, K, V>
     }
 
     @Nullable
-    private static Executor getExecutorFromAtlas(ReferenceAtlas<?, ?, ?, ?, ?, ?> parent) {
-        if (parent instanceof ReferencePipe)
-            return ((ReferencePipe) parent).getStageExecutor();
+    private static Executor getExecutorFromAtlas(RefAtlas<?, ?, ?, ?, ?, ?> parent) {
+        if (parent instanceof RefPipe)
+            return ((RefPipe) parent).getStageExecutor();
         return null;
     }
 
@@ -72,6 +72,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         callDependentStages(stageExecutor == null ? Runnable::run : stageExecutor, inK, inV);
     }
 
+    @Override
     public final void callDependentStages(Executor executor, InK inK, InV inV) {
         executor.execute(() -> {
             final K key = advancer.advanceKey(inK);
