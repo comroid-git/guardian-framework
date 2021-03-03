@@ -7,6 +7,7 @@ import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
+import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.RootBind;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,13 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> getAdvancer() {
         return adapter;
+    }
+
+    protected DataContainerBase(
+            ContextualProvider context,
+            Consumer<UniObjectNode> initialDataBuilder
+    ) {
+        this(context, context.requireFromContext(SerializationAdapter.class).createObjectNode(initialDataBuilder));
     }
 
     protected DataContainerBase(

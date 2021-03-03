@@ -14,6 +14,7 @@ import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> extends ContextualProvider.This<Object>, Serializer<UniNode> {
@@ -73,12 +74,24 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
         return createObjectNode(getObjectType().get());
     }
 
+    default UniObjectNode createObjectNode(Consumer<UniObjectNode> configurator) {
+        final UniObjectNode obj = createObjectNode();
+        configurator.accept(obj);
+        return obj;
+    }
+
+    UniObjectNode createObjectNode(OBJ node);
+
     @NonExtendable
     default UniArrayNode createArrayNode() {
         return createArrayNode(getArrayType().get());
     }
 
-    UniObjectNode createObjectNode(OBJ node);
+    default UniArrayNode createArrayNode(Consumer<UniArrayNode> configurator) {
+        final UniArrayNode arr = createArrayNode();
+        configurator.accept(arr);
+        return arr;
+    }
 
     UniArrayNode createArrayNode(ARR node);
 
