@@ -32,6 +32,4 @@ public interface RefList<T> extends RefAtlas<@Nullable Integer, @NotNull Integer
 
     @Deprecated
     Span<T> span();
-
-    CompletableFuture<T> next();
 }
