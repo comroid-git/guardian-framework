@@ -207,8 +207,8 @@ public interface ValueCache<T> {
         }
 
         @Override
-        public final boolean addDependent(ValueCache<?> dependency) {
-            return dependents.add(new WeakReference<>(dependency));
+        public final boolean addDependent(ValueCache<?> dependent) {
+            return dependents.add(new WeakReference<>(dependent));
         }
 
         @Override

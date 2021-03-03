@@ -2,13 +2,11 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
-import org.comroid.api.Polyfill;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefAtlas;
-import org.comroid.mutatio.model.RefPipe;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +16,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -177,15 +174,18 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
             if (inRef != null)
                 ref = advanceReference(inRef);
         } else ref = createEmptyRef(key);
-        if (accessors.containsKey(key))
-            accessors.get(key).rebind(ref);
-        else accessors.put(key, ref);
-        return ref;
+        if (putAccessor(key, ref))
+            return ref;
+        throw new AssertionError("Could not create Reference for key " + key);
     }
 
     protected final boolean putAccessor(K key, OutRef ref) {
         validateMutability();
-        return accessors.put(key, ref) != ref;
+        if (accessors.containsKey(key)) {
+            OutRef actual = accessors.get(key);
+            actual.rebind(ref);
+            return true;
+        } else return accessors.put(key, ref) != ref && ref.addDependent(this);
     }
 
     public static abstract class ForList<InV, V>
