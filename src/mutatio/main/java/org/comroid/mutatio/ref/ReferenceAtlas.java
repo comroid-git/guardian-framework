@@ -71,11 +71,11 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
             ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
             @Nullable Executor executor
     ) {
+        if (executor == null)
+            executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
         ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> yield;
 
-        if (executor != null || this instanceof RefPipe) {
-            if (executor == null)
-                executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
+        if (executor != null) {
             yield = new ReferencePipe<K, V, X, Y>(Polyfill.uncheckedCast(this), Polyfill.uncheckedCast(adapter), executor) {
             };
         } else yield = new ReferenceAtlas<K, X, V, Y, OutRef, KeyedReference<X, Y>>(this, adapter) {
