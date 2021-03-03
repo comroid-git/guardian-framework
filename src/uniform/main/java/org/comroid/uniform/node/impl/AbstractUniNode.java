@@ -3,6 +3,7 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.info.MessageSupplier;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
@@ -17,11 +18,15 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
+public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNode>, Bas> implements UniNode {
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
-    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap.Support.Basic<>(
-            new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
+    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap<AcK, UniNode>(){
+        @Override
+        protected KeyedReference<AcK, UniNode> createEmptyRef(AcK key) {
+            return generateAccessor(key);
+        }
+    };
     private final UniNode parent;
 
     @Override
