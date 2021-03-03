@@ -3,6 +3,7 @@ package org.comroid.varbind.bind.builder;
 import org.comroid.api.Builder;
 import org.comroid.api.Polyfill;
 import org.comroid.api.ValueType;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.span.Span;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -34,8 +35,8 @@ public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SEL
         this.resolver = resolver;
     }
 
-    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> reformatSpan(
-            Function<Span<REMAP>, C> spanResolver) {
+    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> reformatRefs(
+            Function<RefContainer<?, REMAP>, C> spanResolver) {
         return new BuilderStep4$Properties<>(
                 group,
                 fieldName,
@@ -53,19 +54,20 @@ public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SEL
                 valueType,
                 extractionMethod,
                 resolver,
-                Span::get
+                remapRefContainer -> remapRefContainer.findAny().get()
         );
     }
 
+    @Deprecated
     public BuilderStep4$Properties<SELF, EXTR, REMAP, Span<REMAP>> intoSpan() {
-        return reformatSpan(Function.identity());
+        return reformatRefs(refs -> new Span<>(refs, Span.DEFAULT_MODIFY_POLICY));
     }
 
     public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> intoCollection(
             Supplier<C> collectionSupplier) {
-        return reformatSpan(span -> {
+        return reformatRefs(refs -> {
             C col = collectionSupplier.get();
-            col.addAll(span);
+            refs.streamValues().forEach(col::add);
             return Polyfill.uncheckedCast(col);
         });
     }

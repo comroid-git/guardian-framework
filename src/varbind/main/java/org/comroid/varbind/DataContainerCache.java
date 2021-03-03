@@ -33,13 +33,13 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
     public boolean add(V value) {
         final K key = value.requireNonNull(Polyfill.uncheckedCast(idBind));
 
-        return set(key, value);
+        return put(key, value) != value;
     }
 
     public boolean remove(V value) {
         final K key = value.requireNonNull(Polyfill.uncheckedCast(idBind));
 
-        return containsKey(key) && set(key, null);
+        return containsKey(key) && put(key, null) != value;
     }
 
     public final <T extends V> Reference<T> autoUpdate(BiFunction<ContextualProvider, UniObjectNode, T> resolver, UniObjectNode data) {
@@ -48,7 +48,6 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
         if (containsKey(key))
             //noinspection unchecked
             return getReference(key, false)
-                    .process()
                     .peek(it -> it.updateFrom(data))
                     .map(it -> (T) it);
         else {

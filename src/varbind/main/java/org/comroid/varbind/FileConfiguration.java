@@ -1,6 +1,5 @@
 package org.comroid.varbind;
 
-import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.common.io.FileProcessor;
 import org.comroid.uniform.SerializationAdapter;
@@ -36,7 +35,7 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
             SerializationAdapter<?, ?, ?> serializationAdapter,
             FileHandle file
     ) {
-        super(serializationAdapter, null);
+        super(serializationAdapter);
 
         this.serializationAdapter = serializationAdapter;
         this.file = file;

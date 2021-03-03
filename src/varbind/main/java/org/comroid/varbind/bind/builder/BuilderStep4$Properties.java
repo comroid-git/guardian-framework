@@ -1,6 +1,7 @@
 package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.ValueType;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.span.Span;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -15,7 +16,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> resolver;
-    private final Function<Span<REMAP>, FINAL> finisher;
+    private final Function<RefContainer<?, REMAP>, FINAL> finisher;
     private final Set<VarBind<? extends SELF,?,?,?>> dependencies = new HashSet<>();
     private boolean required = false;
 
@@ -25,7 +26,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
             ValueType<EXTR> valueType,
             VarBind.ExtractionMethod extractionMethod,
             BiFunction<? super SELF,? super EXTR,? extends REMAP> resolver,
-            Function<Span<REMAP>, FINAL> finisher
+            Function<RefContainer<?, REMAP>, FINAL> finisher
     ) {
         super(group, fieldName);
 
@@ -76,7 +77,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
         if (finisher == null)
             throw new IllegalArgumentException("No Finishing method defined");
         Binding<SELF, EXTR, REMAP, FINAL> binding
-                = new Binding<>(group, fieldName, required, valueType, extractionMethod, resolver, finisher, dependencies);
+                = new Binding<SELF, EXTR, REMAP, FINAL>(group, fieldName, required, valueType, extractionMethod, resolver, finisher, dependencies);
         group.addChild(binding);
         return binding;
     }
