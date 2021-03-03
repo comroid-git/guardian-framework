@@ -120,23 +120,29 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
 
         public static final class Filtered<K, V> extends Support.Base<K, V> {
             private final KeyedReference<K, V> parent;
-            private final Predicate<? super K> keyFilter;
-            private final Predicate<? super V> valueFilter;
+            private final BiPredicate<? super K, ? super V> filter;
+
+            @Deprecated
+            public Filtered(
+                    KeyedReference<K, V> parent,
+                    final Predicate<? super K> keyFilter,
+                    final Predicate<? super V> valueFilter
+            ) {
+                this(parent, (k, v) -> keyFilter.test(k) && valueFilter.test(v));
+            }
 
             public Filtered(
                     KeyedReference<K, V> parent,
-                    Predicate<? super K> keyFilter,
-                    Predicate<? super V> valueFilter
+                    BiPredicate<? super K, ? super V> filter
             ) {
                 super(parent.getKey(), parent);
                 this.parent = parent;
-                this.keyFilter = keyFilter;
-                this.valueFilter = valueFilter;
+                this.filter = filter;
             }
 
             @Override
             protected V doGet() {
-                if (keyFilter.test(getKey()) && valueFilter.test(parent.getValue()))
+                if (filter.test(getKey(), getFromParent()))
                     return parent.getValue();
                 return null;
             }

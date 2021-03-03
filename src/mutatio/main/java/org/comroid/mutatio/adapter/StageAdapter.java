@@ -3,7 +3,6 @@ package org.comroid.mutatio.adapter;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.Reference;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -54,12 +53,6 @@ public abstract class StageAdapter<In, Out>
     }
 
     public final Out advanceValue(In value) {
-        return advanceValue(null, value);
-    }
-
-    @OverrideOnly
-    @Deprecated
-    public Out convertValue(In value) {
         return advanceValue(null, value);
     }
 

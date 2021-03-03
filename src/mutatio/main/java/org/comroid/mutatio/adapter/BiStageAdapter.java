@@ -1,9 +1,7 @@
 package org.comroid.mutatio.adapter;
 
-import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,16 +27,16 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         super(isIdentity, keyMapper, valueMapper);
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
-        return new Filter<>(predicate, any -> true);
+    static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {
+        return filterBoth((k, unused) -> predicate.test(k));
     }
 
-    static <K, V> BiStageAdapter<K, V, K, V> filterValue(Predicate<? super V> predicate) {
-        return new Filter<>(any -> true, predicate);
+    static <K, V> BiStageAdapter<K, V, K, V> filterValue(final Predicate<? super V> predicate) {
+        return filterBoth((unused, v) -> predicate.test(v));
     }
 
     static <K, V> BiStageAdapter<K, V, K, V> filterBoth(final BiPredicate<? super K, ? super V> predicate) {
-        return ref -> KeyedReference.conditional(() -> predicate.test(ref.getKey(), ref.getValue()), ref::getKey, ref);
+        return new Filter<>(predicate);
     }
 
     static <K, V, R> BiStageAdapter<K, V, R, V> mapKey(Function<? super K, ? extends R> mapper) {
@@ -50,7 +48,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     static <K, V, R> BiStageAdapter<K, V, K, R> mapBoth(BiFunction<? super K, ? super V, ? extends R> mapper) {
-        return ref -> new KeyedReference.Support.Base<>(ref.getKey(), ref.map(v -> mapper.apply(ref.getKey(), v)));
+        return new Map<>(Function.identity(), mapper);
     }
 
     static <K, V, R> BiStageAdapter<K, V, R, V> flatMapKey(Function<? super K, ? extends Rewrapper<? extends R>> mapper) {
@@ -71,10 +69,10 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     static <K, V> BiStageAdapter<K, V, K, V> peek(BiConsumer<? super K, ? super V> action) {
-        return ref -> {
-            action.accept(ref.getKey(), ref.getValue());
-            return ref;
-        };
+        return new Map<>(Function.identity(), (k, v) -> {
+            action.accept(k, v);
+            return v;
+        });
     }
 
     @Deprecated // todo: fix
@@ -95,28 +93,17 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         return filterValue(any -> true);
     }
 
-    @Override
-    public abstract KeyedReference<OutK, OutV> advance(KeyedReference<InK, InV> ref);
-
-    @OverrideOnly
-    @Deprecated
-    public final OutK convertKey(InK key) {
-        return Polyfill.uncheckedCast(key);
-    }
-
     private final static class Filter<X, Y> extends BiStageAdapter<X, Y, X, Y> {
-        private final Predicate<@NotNull ? super X> keyFilter;
-        private final Predicate<@Nullable ? super Y> valueFilter;
+        private final BiPredicate<@NotNull ? super X, @Nullable ? super Y> filter;
 
-        private Filter(Predicate<@NotNull ? super X> keyFilter, Predicate<@Nullable ? super Y> valueFilter) {
-            super(true, Function.identity(), (k, v) -> v);
-            this.keyFilter = keyFilter;
-            this.valueFilter = valueFilter;
+        private Filter(final BiPredicate<@NotNull ? super X, @Nullable ? super Y> filter) {
+            super(true, Function.identity(), (k, v) -> filter.test(k, v) ? v : null);
+            this.filter = filter;
         }
 
         @Override
         public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
-            return new KeyedReference.Support.Filtered<>(ref, keyFilter, valueFilter);
+            return new KeyedReference.Support.Filtered<>(ref, filter);
         }
     }
 
