@@ -104,7 +104,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
             if (pRef != null)
                 parent.removeRef(revK);
         }
-        return accessors.remove(key) != null;
+        if (!accessors.containsKey(key))
+            return false;
+        OutRef ref = accessors.remove(key);
+        if (ref != null && ref.removeDependent(this))
+            return true;
+        throw new IllegalStateException("A Reference was removed from Atlas which the Atlas was not depending on");
     }
 
     private void validateMutability() {
