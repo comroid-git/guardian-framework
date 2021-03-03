@@ -114,6 +114,11 @@ public final class UniValueNodeImpl
     }
 
     @Override
+    public boolean removeDependent(ValueCache<?> dependent) {
+        return baseNode.removeDependent(dependent);
+    }
+
+    @Override
     public boolean attach(ValueUpdateListener listener) {
         return baseNode.attach(listener);
     }
