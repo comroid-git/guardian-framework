@@ -84,7 +84,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
     }
 
     @Override
-    protected final KeyedReference<K, V> createEmptyRef(K key) {
+    protected KeyedReference<K, V> createEmptyRef(K key) {
         return KeyedReference.createKey(key);
     }
 
