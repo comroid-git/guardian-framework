@@ -31,7 +31,7 @@ public class ReferenceIndex<T>
     private final int toIndex;
 
     public ReferenceIndex() {
-        this(null, StageAdapter.identity());
+        this(null);
     }
 
     public ReferenceIndex(
