@@ -15,7 +15,7 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
 
     public abstract OutV advanceValue(InK key, InV value);
 
-    public static final class Structure {
+    protected static final class Structure {
         public static final class ConsumingFilter<T> implements Predicate<T> {
             private final Consumer<? super T> action;
 

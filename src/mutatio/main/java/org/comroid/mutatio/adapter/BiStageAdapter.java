@@ -13,9 +13,6 @@ import java.util.function.*;
 public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         extends ReferenceStageAdapter<InK, OutK, InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>
         implements KeyedReference.Advancer<InK, InV, OutK, OutV> {
-    private BiStageAdapter() {
-    }
-
     static <K, V> BiStageAdapter<K, V, K, V> filterKey(Predicate<? super K> predicate) {
         return new Filter<>(predicate, any -> true);
     }

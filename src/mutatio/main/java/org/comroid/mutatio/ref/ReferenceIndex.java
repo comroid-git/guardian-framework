@@ -304,7 +304,7 @@ public class ReferenceIndex<In, T>
     }
 
     public CompletableFuture<T> next() {
-        class OnceCompletingStage implements StageAdapter<T, T> {
+        class OnceCompletingStage extends StageAdapter<T, T> {
             private final CompletableFuture<T> future = new CompletableFuture<>();
 
             @Override
@@ -320,7 +320,7 @@ public class ReferenceIndex<In, T>
             }
 
             @Override
-            public T advanceValue(T value) {
+            public T advanceValue(Void nil, T value) {
                 return value;
             }
         }

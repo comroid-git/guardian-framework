@@ -14,9 +14,6 @@ import java.util.function.Predicate;
 public abstract class StageAdapter<In, Out>
         extends ReferenceStageAdapter<@Nullable("always") Void, @Nullable("always") Void, In, Out, Reference<In>, Reference<Out>>
         implements Reference.Advancer<In, Out> {
-    private StageAdapter() {
-    }
-
     static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
         return new Filter<>(predicate);
     }
