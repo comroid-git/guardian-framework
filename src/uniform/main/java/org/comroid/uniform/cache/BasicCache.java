@@ -62,9 +62,4 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
     public Iterator<CacheReference<K, V>> iterator() {
         return cache.values().iterator();
     }
-
-    @Override
-    public void clear() {
-        cache.clear();
-    }
 }

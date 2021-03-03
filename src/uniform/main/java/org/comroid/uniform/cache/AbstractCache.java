@@ -35,39 +35,4 @@ public abstract class AbstractCache<K, V>
     }
 
     protected abstract CacheReference<K, V> advanceIntoCacheRef(Reference<V> reference);
-
-    @Override
-    public boolean containsKey(K key) {
-        return cache.containsKey(key);
-    }
-
-    @Override
-    public boolean containsValue(V value) {
-        return stream().anyMatch(value::equals);
-    }
-
-    @Override
-    public int size() {
-        return cache.size();
-    }
-
-    @Override
-    public Stream<? extends KeyedReference<K, V>> streamRefs() {
-        return cache.streamRefs();
-    }
-
-    @Override
-    public Pipe<? extends KeyedReference<K, V>> pipe(Predicate<K> filter) {
-        return cache.pipe(filter);
-    }
-
-    @Override
-    public @NotNull KeyedReference<K, V> getReference(K key, boolean createIfAbsent) { // todo lol why is this suggestion here
-        return Objects.requireNonNull(cache.getReference(key, createIfAbsent), "please contact the developer");
-    }
-
-    @Override
-    public ReferenceList<? extends KeyedReference<K, V>> entryIndex() {
-        return cache.entryIndex();
-    }
 }
