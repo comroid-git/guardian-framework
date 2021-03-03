@@ -77,8 +77,8 @@ public abstract class ReferencePipe<InK, InV, K, V>
     @Override
     public final void callDependentStages(Executor executor, InK inK, InV inV) {
         executor.execute(() -> {
-            final K key = advancer.advanceKey(inK);
-            final V value = advancer.advanceValue(inK, inV);
+            final K key = getAdvancer().advanceKey(inK);
+            final V value = getAdvancer().advanceValue(inK, inV);
             getDependents().stream()
                     .filter(ReferencePipe.class::isInstance)
                     .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)

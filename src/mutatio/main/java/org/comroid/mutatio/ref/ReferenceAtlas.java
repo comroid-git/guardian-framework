@@ -23,10 +23,15 @@ import java.util.stream.Stream;
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In, ?, InRef>>
         implements RefAtlas<InK, K, In, V, InRef, OutRef> {
-    protected final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
+    private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
     protected Comparator<OutRef> comparator;
+
+    @Override
+    public ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> getAdvancer() {
+        return advancer;
+    }
 
     @Override
     public final boolean isMutable() {
@@ -59,9 +64,9 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     protected OutRef advanceReference(InRef inputRef) {
-        if (advancer == null)
+        if (getAdvancer() == null)
             throw new AbstractMethodError("Advancer not defined");
-        return advancer.advance(inputRef);
+        return getAdvancer().advance(inputRef);
     }
 
     @Override
@@ -90,7 +95,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     @Override
     public final boolean removeRef(K key) {
         validateMutability();
-        InK revK = advancer.revertKey(key).orElse(null);
+        InK revK = getAdvancer().revertKey(key).orElse(null);
         if (revK != null) {
             InRef pRef = parent == null ? null
                     : parent.getReference(revK, false);
@@ -119,7 +124,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     public final Stream<K> streamKeys() {
         return Stream.concat(
                 parent == null ? Stream.empty()
-                        : parent.streamKeys().map(advancer::advanceKey),
+                        : parent.streamKeys().map(getAdvancer()::advanceKey),
                 accessors.keySet().stream()
         ).distinct();
     }
@@ -152,7 +157,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         if (ref != null | !createIfAbsent)
             return ref;
         validateMutability();
-        InK fabK = advancer.revertKey(key)
+        InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
                 .orElse(null);
         if (parent != null && fabK != null) {

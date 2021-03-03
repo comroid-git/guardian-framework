@@ -246,4 +246,11 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     public Iterator<GroupBind<? extends T>> iterator() {
         return subgroups.iterator();
     }
+
+    public VarBind<? super T, ?, ?, ?> findChildByName(String name) {
+        return streamAllChildren()
+                .filter(bind -> bind.getFieldName().equals(name))
+                .findAny()
+                .orElse(null);
+    }
 }

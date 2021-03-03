@@ -3,11 +3,10 @@ package org.comroid.varbind.container;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.common.info.MessageSupplier;
+import org.comroid.mutatio.adapter.BiStageAdapter;
+import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
-import org.comroid.mutatio.span.Span;
-import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.util.StringBasedComparator;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +20,7 @@ import java.util.stream.Collectors;
 public class DataContainerBase<S extends DataContainer<? super S>>
         extends ReferenceAtlas.ForMap<String, ReferenceList, VarBind, Object>
         implements DataContainer<S> {
+    private final ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> adapter;
     private final ContextualProvider context;
     private final GroupBind<S> group;
     private final Set<VarBind<? extends S, Object, ?, Object>> initialValues;
@@ -36,6 +36,11 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return context;
     }
 
+    @Override
+    public ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> getAdvancer() {
+        return adapter;
+    }
+
     protected DataContainerBase(
             ContextualProvider context,
             final GroupBind<S> group,
@@ -44,16 +49,28 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         super(
                 new ReferenceMap<>(),
                 null,
-                name -> group.streamAllChildren()
-                        .filter(vb -> vb.getFieldName().equals(name))
-                        .findFirst()
-                        .orElse(null),
-                VarBind::getFieldName,
-                new StringBasedComparator<>(ref -> ref.getKey().getFieldName())
+                VarBind::getFieldName
         );
+        this.adapter = new BiStageAdapter<String, ReferenceList, VarBind, Object>(
+                false,
+                group::findChildByName,
+                (fname, referenceList) -> {
+                    VarBind<? super S, ?, ?, ?> bind = group.findChildByName(fname);
+                    if (bind == null)
+                        return null;
+                    //noinspection unchecked
+                    return bind.process(Polyfill.uncheckedCast(this), referenceList);
+                }
+        ) {
+            @Override
+            public KeyedReference<VarBind, Object> advance(KeyedReference<String, ReferenceList> reference) {
+                return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
+            }
+        };
         this.context = context;
         this.group = group;
         this.initialValues = updateFrom(initialData);
+        this.parser = null;
     }
 
     @Override
@@ -70,12 +87,10 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 refs.add(value);
                 return refs;
             });
-            if (bind != null) {
-                KeyedReference<VarBind, Object> cRef = getComputedReference(bind);
-                Object prev = cRef.get();
-                if (cRef != null && cRef.get() != prev)
-                    initialized.add(Polyfill.uncheckedCast(bind));
-            }
+            KeyedReference<VarBind, Object> cRef = getComputedReference(bind);
+            Object prev = cRef.get();
+            if (cRef.get() != prev)
+                initialized.add(Polyfill.uncheckedCast(bind));
         });
         return Collections.unmodifiableSet(initialized);
     }
@@ -87,21 +102,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
     @Override
     public final UniObjectNode toObjectNode(final UniObjectNode node) {
-        parent.streamRefs()
-                .forEach(ref -> {
-                    String field = ref.getKey();
-                    ReferenceList values = ref.orElseGet(Span::empty);
-
-                    if (values.size() == 1)
-                        node.put(field, values.get(0));
-                    else if (values.size() == 0)
-                        node.putNull(field);
-                    else {
-                        UniArrayNode arr = node.putArray(field);
-                        values.forEach(arr::addValue);
-                    }
-                });
-        return node;
+        return parser.apply(node);
     }
 
     @Override
@@ -117,7 +118,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public final VarBind<? extends S, ?, ?, Object> getBindByName(String name) {
         //noinspection unchecked
-        return keyAdvancer.apply(name);
+        return getAdvancer().advanceKey(name);
     }
 
     @Override

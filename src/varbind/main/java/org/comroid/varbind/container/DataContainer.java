@@ -4,6 +4,7 @@ import org.comroid.abstr.AbstractMap;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.ValueBox;
+import org.comroid.mutatio.model.RefAtlas;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;
@@ -22,7 +23,13 @@ import java.util.Set;
 import java.util.function.Function;
 
 public interface DataContainer<S extends DataContainer<? super S>>
-        extends AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
+        extends RefAtlas<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>>,
+        AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
+    @Override
+    default int size() {
+        return entrySet().size();
+    }
+
     @Override
     default ContextualProvider getUnderlyingContextualProvider() {
         return null;
@@ -39,7 +46,6 @@ public interface DataContainer<S extends DataContainer<? super S>>
     }
 
     @Nullable
-    @Override
     default Object put(String key, Object value) {
         KeyedReference<String, ReferenceList<Object>> ref = getExtractionReference(key);
         ReferenceList<Object> prev = ref.get();
