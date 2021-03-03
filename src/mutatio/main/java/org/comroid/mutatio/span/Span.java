@@ -2,6 +2,7 @@ package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -45,7 +46,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
         this(ReferenceList.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceList<T> referenceList, ModifyPolicy modifyPolicy) {
+    public Span(RefContainer<?, T> referenceList, ModifyPolicy modifyPolicy) {
         this(referenceList, UNFIXED_SIZE, modifyPolicy);
     }
 
@@ -53,11 +54,11 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceList<T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(RefContainer<?, T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
-        this.storage = data;
+        this.storage = new ReferenceList<>(data);
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }
@@ -113,11 +114,8 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
 
             for (i = 0; i < storage.size(); i++) {
                 final T oldV = valueAt(i);
-                if (modifyPolicy.canOverwrite(oldV, it)) {
-                    storage.remove(oldV);
-                    storage.add(it);
-                    return true;
-                }
+                if (modifyPolicy.canOverwrite(oldV, it))
+                    return storage.getReference(i, true).set(it);
             }
 
             if (isFixedSize()) {
@@ -130,7 +128,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
                 ));
             }
 
-            return modifyPolicy.canInitialize(it) && storage.add(it);
+            return modifyPolicy.canInitialize(it) && storage.getReference(storage.size(), true).set(it);
         }
     }
 

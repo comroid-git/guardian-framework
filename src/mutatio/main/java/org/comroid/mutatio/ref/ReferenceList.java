@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.model.RefOPs;
 import org.comroid.mutatio.span.Span;
@@ -32,20 +33,20 @@ public class ReferenceList<T>
 
     @SuppressWarnings("CopyConstructorMissesField") // false positive
     public ReferenceList(
-            @Nullable ReferenceList<T> parent
+            @Nullable RefContainer<?, T> parent
     ) {
         this(uncheckedCast(parent), StageAdapter.identity());
     }
 
     public <In> ReferenceList(
-            @Nullable ReferenceList<In> parent,
+            @Nullable RefContainer<?, In> parent,
             @NotNull StageAdapter<In, T> advancer
     ) {
         this(parent, advancer, null);
     }
 
     public <In> ReferenceList(
-            @Nullable ReferenceList<In> parent,
+            @Nullable RefContainer<?, In> parent,
             @NotNull StageAdapter<In, T> advancer,
             @Nullable Comparator<KeyedReference<@NotNull Integer, T>> comparator
     ) {
