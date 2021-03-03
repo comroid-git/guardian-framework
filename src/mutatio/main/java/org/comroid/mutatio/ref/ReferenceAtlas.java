@@ -7,6 +7,7 @@ import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefAtlas;
+import org.comroid.mutatio.model.RefOPs;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In, ?, InRef>>
-        implements RefAtlas<InK, K, In, V, InRef, OutRef> {
+        implements RefAtlas<InK, K, In, V, InRef, OutRef>, RefOPs<K, V, OutRef> {
     private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;

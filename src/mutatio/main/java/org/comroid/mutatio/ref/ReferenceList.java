@@ -6,6 +6,7 @@ import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefList;
+import org.comroid.mutatio.model.RefOPs;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -170,6 +171,11 @@ public class ReferenceList<T>
     @Override
     public final <R> ReferenceList<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
+    }
+
+    @Override
+    public <R> ReferenceList<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return null;
     }
 
     @Override
