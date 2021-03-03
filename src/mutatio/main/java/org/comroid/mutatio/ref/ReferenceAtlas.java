@@ -20,16 +20,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference<InK, In>, OutRef extends KeyedReference<K, V>>
-        extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In, ?, InRef>>
-        implements RefAtlas<InK, K, In, V, InRef, OutRef> {
-    private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
+public abstract class ReferenceAtlas<InK, K, In, V>
+        extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In>>
+        implements RefAtlas<InK, K, In, V> {
+    private final ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> advancer;
     private final AtomicBoolean mutable;
-    private final Map<K, OutRef> accessors;
-    protected Comparator<OutRef> comparator;
+    private final Map<K, KeyedReference<K, V>> accessors;
+    protected Comparator<KeyedReference<K, V>> comparator;
 
     @Override
-    public ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> getAdvancer() {
+    public ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> getAdvancer() {
         return advancer;
     }
 
@@ -39,16 +39,16 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     protected ReferenceAtlas(
-            @Nullable RefAtlas<?, InK, ?, In, ?, InRef> parent,
-            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer
+            @Nullable RefAtlas<?, InK, ?, In> parent,
+            @NotNull ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> advancer
     ) {
         this(parent, advancer, null);
     }
 
     protected ReferenceAtlas(
-            @Nullable RefAtlas<?, InK, ?, In, ?, InRef> parent,
-            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer,
-            @Nullable Comparator<OutRef> comparator
+            @Nullable RefAtlas<?, InK, ?, In> parent,
+            @NotNull ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> advancer,
+            @Nullable Comparator<KeyedReference<K, V>> comparator
     ) {
         super(parent);
 
@@ -65,7 +65,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
             throw new IllegalStateException("Could not remove from parent");
     }
 
-    protected OutRef advanceReference(InRef inputRef) {
+    protected KeyedReference<K, V> advanceReference(KeyedReference<InK, In> inputRef) {
         if (getAdvancer() == null)
             throw new AbstractMethodError("Advancer not defined");
         return getAdvancer().advance(inputRef);
@@ -76,7 +76,9 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
         return mutable.compareAndSet(!state, state);
     }
 
-    protected abstract OutRef createEmptyRef(K key);
+    protected KeyedReference<K, V> createEmptyRef(K key) {
+        return KeyedReference.createKey(key);
+    }
 
     /**
      * Reformats the key used for receiving parent using base access when creating a cascade reference.
@@ -99,14 +101,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
         validateMutability();
         InK revK = getAdvancer().revertKey(key).orElse(null);
         if (revK != null) {
-            InRef pRef = parent == null ? null
+            KeyedReference<InK, In> pRef = parent == null ? null
                     : parent.getReference(revK, false);
             if (pRef != null)
                 parent.removeRef(revK);
         }
         if (!accessors.containsKey(key))
             return false;
-        OutRef ref = accessors.remove(key);
+        KeyedReference<K, V> ref = accessors.remove(key);
         if (ref != null && ref.removeDependent(this))
             return true;
         throw new IllegalStateException("A Reference was removed from Atlas which the Atlas was not depending on");
@@ -137,8 +139,8 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     @Override
-    public final Stream<OutRef> streamRefs() {
-        Stream<OutRef> stream = streamKeys().map(key -> getReference(key, true));
+    public final Stream<KeyedReference<K, V>> streamRefs() {
+        Stream<KeyedReference<K, V>> stream = streamKeys().map(key -> getReference(key, true));
         if (comparator != null)
             stream = stream.sorted(comparator);
         return stream;
@@ -150,14 +152,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     @Override
-    public final Stream<InRef> streamInputRefs() {
+    public final Stream<KeyedReference<InK, In>> streamInputRefs() {
         if (parent == null)
             return Stream.empty();
         return parent.streamRefs();
     }
 
     @Override
-    public final @Nullable InRef getInputReference(InK key, boolean createIfAbsent) {
+    public final KeyedReference<InK, In> getInputReference(InK key, boolean createIfAbsent) {
         if (parent == null)
             return null;
         return parent.getReference(key, createIfAbsent);
@@ -165,9 +167,9 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
 
     @Override
     @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
-    public final OutRef getReference(K key, boolean createIfAbsent) {
+    public final KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
         Objects.requireNonNull(key, "key");
-        OutRef ref = accessors.get(key);
+        KeyedReference<K, V> ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
             return ref;
         validateMutability();
@@ -175,7 +177,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
                 .map(this::prefabBaseKey)
                 .orElse(null);
         if (parent != null && fabK != null) {
-            InRef inRef = getInputReference(fabK, true);
+            KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             if (inRef != null)
                 ref = advanceReference(inRef);
         } else ref = createEmptyRef(key);
@@ -184,17 +186,17 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
         throw new AssertionError("Could not create Reference for key " + key);
     }
 
-    protected final boolean putAccessor(K key, OutRef ref) {
+    protected final boolean putAccessor(K key, KeyedReference<K, V> ref) {
         validateMutability();
         if (accessors.containsKey(key)) {
-            OutRef actual = accessors.get(key);
+            KeyedReference<K, V> actual = accessors.get(key);
             actual.rebind(ref);
             return true;
         } else return accessors.put(key, ref) != ref && ref.addDependent(this);
     }
 
     public static abstract class ForList<InV, V>
-            extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, KeyedReference<@NotNull Integer, InV>, KeyedReference<@NotNull Integer, V>>
+            extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V>
             implements AbstractList<V> {
         protected ForList(
                 @Nullable ReferenceList<InV> parent,
@@ -218,7 +220,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference
     }
 
     public static abstract class ForMap<InK, InV, K, V>
-            extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
+            extends ReferenceAtlas<InK, K, InV, V>
             implements AbstractMap<K, V> {
         protected ForMap(
                 @Nullable ReferenceMap<InK, InV> parent,

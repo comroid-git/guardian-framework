@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 public interface DataContainer<S extends DataContainer<? super S>>
-        extends RefAtlas<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>>,
+        extends RefAtlas<String, VarBind, ReferenceList, Object>,
         AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
     @Override
     default int size() {

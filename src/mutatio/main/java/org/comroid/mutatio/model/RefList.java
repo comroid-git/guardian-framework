@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Experimental
-public interface RefList<T> extends RefAtlas<@Nullable Integer, @NotNull Integer, Object, T, KeyedReference<@Nullable Integer, Object>, KeyedReference<@NotNull Integer, T>>, ValueCache<Void>, AbstractList<T> {
+public interface RefList<T> extends RefAtlas<@Nullable Integer, @NotNull Integer, Object, T>, ValueCache<Void>, AbstractList<T> {
     @Nullable Reference<T> getReference(int index);
 
     void close();

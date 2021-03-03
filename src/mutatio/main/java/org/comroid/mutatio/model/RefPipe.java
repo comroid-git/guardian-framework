@@ -1,12 +1,11 @@
 package org.comroid.mutatio.model;
 
-import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 
-public interface RefPipe<InK, InV, K, V> extends RefAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>, BiConsumer<InK, InV> {
+public interface RefPipe<InK, InV, K, V> extends RefAtlas<InK, K, InV, V>, BiConsumer<InK, InV> {
     @Nullable Executor getStageExecutor();
 
     @Override
