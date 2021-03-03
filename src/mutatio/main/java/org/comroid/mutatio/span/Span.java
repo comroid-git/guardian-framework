@@ -2,6 +2,7 @@ package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.jetbrains.annotations.Contract;
@@ -133,8 +134,8 @@ public final class Span<T> extends ReferenceIndex<T> implements Rewrapper<T> {
     }
 
     @Override
-    public boolean addReference(int index, Reference<T> ref) {
-        return storage.addReference(index, ref);
+    public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
+        return storage.addReference(ref);
     }
 
     @Deprecated
