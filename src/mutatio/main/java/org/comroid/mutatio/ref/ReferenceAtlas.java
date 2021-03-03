@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
-        implements MutableState {
+        implements RefAtlas<InK, K, In, V, InRef, OutRef> {
     protected final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
@@ -82,10 +82,12 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return key;
     }
 
+    @Override
     public final int size() {
         return (int) streamKeys().count();
     }
 
+    @Override
     public final boolean removeRef(K key) {
         validateMutability();
         InK revK = advancer.revertKey(key).orElse(null);
@@ -103,6 +105,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
             throw new UnsupportedOperationException("Atlas is immutable");
     }
 
+    @Override
     public final void clear() {
         validateMutability();
         /*
@@ -112,6 +115,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         accessors.clear();
     }
 
+    @Override
     public final Stream<K> streamKeys() {
         return Stream.concat(
                 parent == null ? Stream.empty()
@@ -120,6 +124,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         ).distinct();
     }
 
+    @Override
     public final Stream<OutRef> streamRefs() {
         Stream<OutRef> stream = streamKeys().map(key -> getReference(key, true));
         if (comparator != null)
@@ -127,16 +132,19 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         return stream;
     }
 
+    @Override
     public final Stream<V> streamValues() {
         return streamRefs().flatMap(Reference::stream);
     }
 
+    @Override
     public final @Nullable InRef getInputReference(InK key, boolean createIfAbsent) {
         if (parent == null)
             return null;
         return parent.getReference(key, createIfAbsent);
     }
 
+    @Override
     @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     public final OutRef getReference(K key, boolean createIfAbsent) {
         Objects.requireNonNull(key, "key");
