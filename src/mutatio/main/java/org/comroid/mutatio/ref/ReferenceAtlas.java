@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
+public abstract class ReferenceAtlas<InK, K, In, V, InRef extends KeyedReference<InK, In>, OutRef extends KeyedReference<K, V>>
         extends ValueCache.Abstract<Void, RefAtlas<?, InK, ?, In, ?, InRef>>
         implements RefAtlas<InK, K, In, V, InRef, OutRef> {
     private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
@@ -67,25 +67,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     }
 
     @Override
-    public <X, Y> ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> addStage(
+    public <X, Y> ReferencePipe<K, V, X, Y> addStage(
             ReferenceStageAdapter<K, X, V, Y, OutRef, KeyedReference<X, Y>> adapter,
             @Nullable Executor executor
     ) {
-        if (executor == null)
+        if (executor == null && this instanceof RefPipe)
             executor = ((RefPipe<?, ?, ?, ?>) this).getStageExecutor();
-        ReferenceAtlas<K, X, V, Y, ?, KeyedReference<X, Y>> yield;
-
-        if (executor != null) {
-            yield = new ReferencePipe<K, V, X, Y>(Polyfill.uncheckedCast(this), Polyfill.uncheckedCast(adapter), executor) {
-            };
-        } else yield = new ReferenceAtlas<K, X, V, Y, OutRef, KeyedReference<X, Y>>(this, adapter) {
-            @Override
-            protected KeyedReference<X, Y> createEmptyRef(X key) {
-                return KeyedReference.createKey(key);
-            }
+        return new ReferencePipe<K, V, X, Y>(Polyfill.uncheckedCast(this), Polyfill.uncheckedCast(adapter), executor) {
         };
-        addDependent(yield);
-        return yield;
     }
 
     @Override
