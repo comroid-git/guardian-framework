@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
+import org.comroid.mutatio.model.RefMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

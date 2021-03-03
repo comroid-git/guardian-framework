@@ -5,6 +5,7 @@ import org.comroid.api.ThrowingRunnable;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
+import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

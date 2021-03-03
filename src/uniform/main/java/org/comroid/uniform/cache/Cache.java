@@ -2,7 +2,7 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
-import org.comroid.mutatio.ref.RefMap;
+import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.ref.Reference;
 
 import java.util.concurrent.CompletableFuture;

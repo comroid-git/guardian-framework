@@ -1,7 +1,8 @@
-package org.comroid.mutatio.ref;
+package org.comroid.mutatio.model;
 
 import org.comroid.api.MutableState;
 import org.comroid.mutatio.cache.ValueCache;
+import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.Contract;
 
 import java.util.stream.Stream;

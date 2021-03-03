@@ -1,5 +1,6 @@
-package org.comroid.mutatio.ref;
+package org.comroid.mutatio.model;
 
+import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.Executor;

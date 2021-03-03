@@ -6,6 +6,8 @@ import org.comroid.api.Polyfill;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
+import org.comroid.mutatio.model.RefAtlas;
+import org.comroid.mutatio.model.RefPipe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

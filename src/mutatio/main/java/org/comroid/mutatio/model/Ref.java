@@ -1,7 +1,9 @@
-package org.comroid.mutatio.ref;
+package org.comroid.mutatio.model;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.ref.ParameterizedReference;
+import org.comroid.mutatio.ref.Reference;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

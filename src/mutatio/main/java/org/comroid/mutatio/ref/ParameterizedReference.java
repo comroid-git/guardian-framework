@@ -2,6 +2,7 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.model.Ref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

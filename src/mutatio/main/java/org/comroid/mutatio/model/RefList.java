@@ -1,10 +1,13 @@
-package org.comroid.mutatio.ref;
+package org.comroid.mutatio.model;
 
 import org.comroid.abstr.AbstractList;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipeable;
+import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
