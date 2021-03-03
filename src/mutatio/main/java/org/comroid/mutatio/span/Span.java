@@ -4,7 +4,7 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,12 +15,12 @@ import java.util.stream.Collector;
 
 import static java.util.Objects.nonNull;
 
-public final class Span<T> extends ReferenceIndex<T> implements Rewrapper<T> {
+public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
-    private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
+    private static final Span<?> EMPTY = new Span<>(ReferenceList.empty(), DefaultModifyPolicy.IMMUTABLE);
     private final Object dataLock = Polyfill.selfawareObject();
-    private final ReferenceIndex<T> storage;
+    private final ReferenceList<T> storage;
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
 
@@ -37,26 +37,26 @@ public final class Span<T> extends ReferenceIndex<T> implements Rewrapper<T> {
     }
 
     public Span() {
-        this(ReferenceIndex.create(), UNFIXED_SIZE, DEFAULT_MODIFY_POLICY);
+        this(ReferenceList.create(), UNFIXED_SIZE, DEFAULT_MODIFY_POLICY);
     }
 
     public Span(int fixedCapacity) {
-        this(ReferenceIndex.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
+        this(ReferenceList.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceIndex<T> referenceIndex, ModifyPolicy modifyPolicy) {
-        this(referenceIndex, UNFIXED_SIZE, modifyPolicy);
+    public Span(ReferenceList<T> referenceList, ModifyPolicy modifyPolicy) {
+        this(referenceList, UNFIXED_SIZE, modifyPolicy);
     }
 
-    public Span(ReferenceIndex<T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
+    public Span(ReferenceList<T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceIndex<T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(ReferenceList<T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
-        this.storage = (ReferenceIndex<T>) data;
+        this.storage = (ReferenceList<T>) data;
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }
@@ -311,15 +311,15 @@ public final class Span<T> extends ReferenceIndex<T> implements Rewrapper<T> {
     //region API Class
     public static final class API<T> {
         private static final int RESULT_FIXED_SIZE = -2;
-        private final ReferenceIndex<T> storage;
+        private final ReferenceList<T> storage;
         private ModifyPolicy modifyPolicy = Span.DEFAULT_MODIFY_POLICY;
         private int fixedSize;
 
         public API() {
-            this(ReferenceIndex.create());
+            this(ReferenceList.create());
         }
 
-        private API(ReferenceIndex<T> storage) {
+        private API(ReferenceList<T> storage) {
             this.storage = storage;
         }
 

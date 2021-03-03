@@ -2,7 +2,7 @@ package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.ValueType;
 import org.comroid.api.Polyfill;
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
 import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniNode;
@@ -24,7 +24,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final ValueType<EXTR> valueType;
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
-    private final Function<? super ReferenceIndex<REMAP>, ? extends FINAL> finisher;
+    private final Function<? super ReferenceList<REMAP>, ? extends FINAL> finisher;
     private final Set<VarBind<? extends SELF, ?, ?, ?>> dependencies;
 
     @Override
@@ -59,7 +59,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             ValueType<EXTR> valueType,
             ExtractionMethod extractionMethod,
             BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
-            Function<? super ReferenceIndex<REMAP>, ? extends FINAL> finisher,
+            Function<? super ReferenceList<REMAP>, ? extends FINAL> finisher,
             Set<VarBind<? extends SELF,?,?,?>> dependencies
     ) {
         this.group = group;
@@ -91,7 +91,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
-    public ReferenceIndex<EXTR> extract(UniNode from) {
+    public ReferenceList<EXTR> extract(UniNode from) {
         final UniNode target = getTargetNode(from);
 
         switch (extractionMethod) {
@@ -150,7 +150,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
-    public FINAL finish(ReferenceIndex<REMAP> parts) {
+    public FINAL finish(ReferenceList<REMAP> parts) {
         return finisher.apply(parts);
     }
 }

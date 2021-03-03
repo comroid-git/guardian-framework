@@ -92,14 +92,14 @@ public abstract class ReferencePipe<InK, InV, K, V>
             extends ReferencePipe<@NotNull Integer, InV, @NotNull Integer, V>
             implements AbstractList<V> {
         protected ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer
         ) {
             super(parent, advancer, getExecutorFromAtlas(parent));
         }
 
         public ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Executor stageExecutor
         ) {
@@ -107,7 +107,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         protected ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator
         ) {
@@ -115,7 +115,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         public ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator,
                 @Nullable Executor stageExecutor

@@ -21,34 +21,34 @@ import java.util.stream.Stream;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 
-public class ReferenceIndex<T>
+public class ReferenceList<T>
         extends ReferencePipe.ForList<Object, T>
         implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
-    private static final ReferenceIndex<Void> EMPTY = new ReferenceIndex<Void>() {{
+    private static final ReferenceList<Void> EMPTY = new ReferenceList<Void>() {{
         setImmutable();
     }};
     private final int fromIndex;
     private final int toIndex;
 
-    public ReferenceIndex() {
+    public ReferenceList() {
         this(null);
     }
 
-    public ReferenceIndex(
-            @NotNull ReferenceIndex<T> parent
+    public ReferenceList(
+            @NotNull ReferenceList<T> parent
     ) {
         this(uncheckedCast(parent), StageAdapter.identity());
     }
 
-    public <In> ReferenceIndex(
-            @Nullable ReferenceIndex<In> parent,
+    public <In> ReferenceList(
+            @Nullable ReferenceList<In> parent,
             @NotNull StageAdapter<In, T> advancer
     ) {
         this(parent, advancer, null);
     }
 
-    public <In> ReferenceIndex(
-            @Nullable ReferenceIndex<In> parent,
+    public <In> ReferenceList(
+            @Nullable ReferenceList<In> parent,
             @NotNull StageAdapter<In, T> advancer,
             @Nullable Comparator<KeyedReference<@NotNull Integer, T>> comparator
     ) {
@@ -58,8 +58,8 @@ public class ReferenceIndex<T>
         this.toIndex = -1;
     }
 
-    private ReferenceIndex(
-            @NotNull ReferenceIndex<T> parent,
+    private ReferenceList(
+            @NotNull ReferenceList<T> parent,
             int fromIndex,
             int toIndex
     ) {
@@ -69,30 +69,30 @@ public class ReferenceIndex<T>
         this.toIndex = toIndex;
     }
 
-    private ReferenceIndex(
-            @NotNull ReferenceIndex<T> parent,
+    private ReferenceList(
+            @NotNull ReferenceList<T> parent,
             @NotNull Comparator<KeyedReference<@NotNull Integer, T>> comparator
     ) {
         this(uncheckedCast(parent), StageAdapter.identity(), comparator);
     }
 
-    public static <T> ReferenceIndex<T> create() {
-        return new ReferenceIndex<>();
+    public static <T> ReferenceList<T> create() {
+        return new ReferenceList<>();
     }
 
-    public static <T> ReferenceIndex<T> of(Collection<T> list) {
-        ReferenceIndex<T> refs = create();
+    public static <T> ReferenceList<T> of(Collection<T> list) {
+        ReferenceList<T> refs = create();
         refs.addAll(list);
         return refs;
     }
 
-    public static <T> ReferenceIndex<T> empty() {
+    public static <T> ReferenceList<T> empty() {
         //noinspection unchecked
-        return (ReferenceIndex<T>) EMPTY;
+        return (ReferenceList<T>) EMPTY;
     }
 
     @SafeVarargs
-    public static <T> ReferenceIndex<T> of(T... values) {
+    public static <T> ReferenceList<T> of(T... values) {
         return of(Arrays.asList(values));
     }
 
@@ -112,8 +112,8 @@ public class ReferenceIndex<T>
         }
     */
 
-    public final <R> ReferenceIndex<R> addStage(StageAdapter<T, R> stage) {
-        ReferenceIndex<R> sub = new ReferenceIndex<>(this, stage);
+    public final <R> ReferenceList<R> addStage(StageAdapter<T, R> stage) {
+        ReferenceList<R> sub = new ReferenceList<>(this, stage);
         addDependent(sub);
         return sub;
     }
@@ -131,19 +131,19 @@ public class ReferenceIndex<T>
 
     @NotNull
     @Override
-    public final ReferenceIndex<T> subList(int fromIndex, int toIndex) {
-        return new ReferenceIndex<>(this, fromIndex, toIndex);
+    public final ReferenceList<T> subList(int fromIndex, int toIndex) {
+        return new ReferenceList<>(this, fromIndex, toIndex);
     }
 
     public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
         return putAccessor(ref.getKey(), ref);
     }
 
-    public final ReferenceIndex<T> filter(Predicate<? super T> predicate) {
+    public final ReferenceList<T> filter(Predicate<? super T> predicate) {
         return addStage(StageAdapter.filter(predicate));
     }
 
-    public final ReferenceIndex<T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
+    public final ReferenceList<T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
                 return true;
@@ -152,19 +152,19 @@ public class ReferenceIndex<T>
         });
     }
 
-    public final <R> ReferenceIndex<R> map(Function<? super T, ? extends R> mapper) {
+    public final <R> ReferenceList<R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
-    public final <R> ReferenceIndex<R> flatMap(Class<R> target) {
+    public final <R> ReferenceList<R> flatMap(Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
 
-    public final <R> ReferenceIndex<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    public final <R> ReferenceList<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
-    public final ReferenceIndex<T> peek(Consumer<? super T> action) {
+    public final ReferenceList<T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
@@ -174,26 +174,26 @@ public class ReferenceIndex<T>
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> distinct() {
+    public final ReferenceList<T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> limit(long maxSize) {
+    public final ReferenceList<T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
     @Deprecated // todo: fix
-    public final ReferenceIndex<T> skip(long skip) {
+    public final ReferenceList<T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
-    public final ReferenceIndex<T> sorted() {
+    public final ReferenceList<T> sorted() {
         return sorted(uncheckedCast(Comparator.naturalOrder()));
     }
 
-    public final ReferenceIndex<T> sorted(Comparator<? super T> comparator) {
-        return new ReferenceIndex<>(this, ReferenceAtlas.wrapComparator(comparator));
+    public final ReferenceList<T> sorted(Comparator<? super T> comparator) {
+        return new ReferenceList<>(this, ReferenceAtlas.wrapComparator(comparator));
     }
 
     @NotNull
@@ -321,7 +321,7 @@ public class ReferenceIndex<T>
         }
 
         final OnceCompletingStage stage = new OnceCompletingStage();
-        final ReferenceIndex<T> resulting = addStage(stage);
+        final ReferenceList<T> resulting = addStage(stage);
         stage.future.thenRun(ThrowingRunnable.handling(resulting::close, null));
 
         return stage.future;
@@ -390,18 +390,18 @@ public class ReferenceIndex<T>
 
         @Override
         public void remove() {
-            index.consume(ReferenceIndex.this::remove);
+            index.consume(ReferenceList.this::remove);
         }
 
         @Override
         public void set(T t) {
-            if (!index.test(i -> ReferenceIndex.this.getReference(i).set(t)))
+            if (!index.test(i -> ReferenceList.this.getReference(i).set(t)))
                 throw new UnsupportedOperationException("Unable to set");
         }
 
         @Override
         public void add(T t) {
-            index.ifPresent(i -> ReferenceIndex.this.add(i, t));
+            index.ifPresent(i -> ReferenceList.this.add(i, t));
         }
     }
 }
