@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DataContainerBase<S extends DataContainer<? super S>>
-        extends ReferenceAtlas.ForMap<String, ReferenceIndex, VarBind, Object>
+        extends ReferenceAtlas.ForMap<String, ReferenceList, VarBind, Object>
         implements DataContainer<S> {
     private final ContextualProvider context;
     private final GroupBind<S> group;
@@ -60,12 +60,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     public final Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node) {
         final Set<VarBind<? extends S, Object, ?, Object>> initialized = new HashSet<>();
         node.forEach((key, value) -> {
-            KeyedReference<String, ReferenceIndex<Object>> eRef = getExtractionReference(key);
+            KeyedReference<String, ReferenceList<Object>> eRef = getExtractionReference(key);
             VarBind<? extends S, ?, ?, Object> bind = getBindByName(key);
 
             eRef.compute(refs -> {
                 if (refs == null)
-                    refs = new ReferenceIndex<>();
+                    refs = new ReferenceList<>();
                 else refs.clear();
                 refs.add(value);
                 return refs;
@@ -90,7 +90,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         parent.streamRefs()
                 .forEach(ref -> {
                     String field = ref.getKey();
-                    ReferenceIndex values = ref.orElseGet(Span::empty);
+                    ReferenceList values = ref.orElseGet(Span::empty);
 
                     if (values.size() == 1)
                         node.put(field, values.get(0));
@@ -105,7 +105,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public final <E> KeyedReference<String, ReferenceIndex<Object>> getExtractionReference(String name) {
+    public final <E> KeyedReference<String, ReferenceList<Object>> getExtractionReference(String name) {
         return Polyfill.uncheckedCast(getInputReference(name, true));
     }
 
@@ -123,14 +123,14 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     protected final KeyedReference<VarBind, Object> createEmptyRef(VarBind bind) {
         //noinspection unchecked
-        KeyedReference<String, ReferenceIndex> base = getExtractionReference(bind);
+        KeyedReference<String, ReferenceList> base = getExtractionReference(bind);
         if (base == null)
             throw new NullPointerException("Could not create base reference");
         return advanceReference(base);
     }
 
     @Override
-    protected final KeyedReference<VarBind, Object> advanceReference(KeyedReference<String, ReferenceIndex> inputRef) {
+    protected final KeyedReference<VarBind, Object> advanceReference(KeyedReference<String, ReferenceList> inputRef) {
         class OutputReference extends KeyedReference.Support.Base<VarBind, Object> {
             private OutputReference(final VarBind bind) {
                 //noinspection unchecked
@@ -143,7 +143,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return new OutputReference(bind);
     }
 
-    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<T> fromBase) {
+    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceList<T> fromBase) {
         for (VarBind<?, ?, ?, ?> dependency : bind.getDependencies())
             getExtractionReference(dependency).requireNonNull(MessageSupplier
                     .format("Could not compute dependency %s of bind %s", dependency, bind));

@@ -167,14 +167,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
             extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, KeyedReference<@NotNull Integer, InV>, KeyedReference<@NotNull Integer, V>>
             implements AbstractList<V> {
         protected ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer
         ) {
             super(parent, advancer);
         }
 
         protected ForList(
-                @Nullable ReferenceIndex<InV> parent,
+                @Nullable ReferenceList<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator
         ) {

@@ -1,6 +1,6 @@
 package org.comroid.mutatio.pipe;
 
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
 
 import java.util.Collection;
 
@@ -9,14 +9,14 @@ import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
 @Deprecated
 public interface Pipeable<T> {
     @Deprecated
-    default ReferenceIndex<? extends T> pipe() {
+    default ReferenceList<? extends T> pipe() {
         throw new AbstractMethodError("deprecated");
     }
 
     interface From<T> extends Pipeable<T> {
         @Override
-        default ReferenceIndex<? extends T> pipe() {
-            return (ReferenceIndex<? extends T>) ReferenceIndex.of(fetchPipeContent());
+        default ReferenceList<? extends T> pipe() {
+            return (ReferenceList<? extends T>) ReferenceList.of(fetchPipeContent());
         }
 
         @OverrideOnly

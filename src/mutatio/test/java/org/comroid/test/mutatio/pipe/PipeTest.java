@@ -1,7 +1,7 @@
 package org.comroid.test.mutatio.pipe;
 
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,7 +25,7 @@ public class PipeTest {
 
     @Test
     public void testBasicOperations() {
-        final ReferenceIndex<String> strings = ReferenceIndex.of(controlGroup);
+        final ReferenceList<String> strings = ReferenceList.of(controlGroup);
 
         final Pipe<String> remapOp = strings.pipe()
                 .map(String::toLowerCase);
