@@ -3,18 +3,12 @@ package org.comroid.mutatio.ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class KeyedReference<K, V> extends Reference<V> implements Map.Entry<K, V> {
+public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
     private final K key;
     private final Reference<V> valueHolder;
-
-    @Override
-    public V getValue() {
-        return get();
-    }
 
     @Override
     public K getKey() {
@@ -78,13 +72,6 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements Map.E
             Supplier<V> valueSupplier
     ) {
         return new Support.Conditional<>(condition, keySupplier, valueSupplier);
-    }
-
-    @Override
-    public V setValue(V value) {
-        V prev = get();
-
-        return set(value) ? prev : null;
     }
 
     @Override
