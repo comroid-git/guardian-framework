@@ -2,18 +2,23 @@ package org.comroid.varbind.container;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
+import org.comroid.api.ThrowingFunction;
 import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.ReflectionHelper;
+import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,32 +49,31 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
     protected DataContainerBase(
             ContextualProvider context,
-            final GroupBind<S> group,
             UniObjectNode initialData
     ) {
+        this(null, context, initialData);
+    }
+
+    protected DataContainerBase(
+            @Nullable GroupBind<S> group,
+            ContextualProvider context,
+            UniObjectNode initialData
+    ) {
+        //noinspection ConstantConditions allowed here because we overwrite getAdvancer()
         super(
                 new ReferenceMap<>(),
                 null,
                 VarBind::getFieldName
         );
-        this.adapter = new BiStageAdapter<String, ReferenceList, VarBind, Object>(
-                false,
-                group::findChildByName,
-                (fname, referenceList) -> {
-                    VarBind<? super S, ?, ?, ?> bind = group.findChildByName(fname);
-                    if (bind == null)
-                        return null;
-                    //noinspection unchecked
-                    return bind.process(Polyfill.uncheckedCast(this), referenceList);
-                }
-        ) {
-            @Override
-            public KeyedReference<VarBind, Object> advance(KeyedReference<String, ReferenceList> reference) {
-                return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
-            }
-        };
         this.context = context;
-        this.group = group;
+        this.group = group != null ? group : ReflectionHelper.fieldWithAnnotation(getClass(), RootBind.class)
+                .stream()
+                .filter(field -> Modifier.isStatic(field.getModifiers()))
+                .findAny()
+                .map(ThrowingFunction.rethrowing(field -> field.get(null), null))
+                .map(Polyfill::<GroupBind<S>>uncheckedCast)
+                .orElseThrow(() -> new NoSuchElementException("No RootBind found in class " + getClass()));
+        this.adapter = new BindBasedAdapter();
         this.initialValues = updateFrom(initialData);
         this.parser = new ParameterizedReference<UniObjectNode, UniObjectNode>(this, null) {
             @Override
@@ -168,5 +172,22 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     @Override
     public final Set<Entry<VarBind, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs().collect(Collectors.toSet()));
+    }
+
+    private class BindBasedAdapter extends BiStageAdapter<String, ReferenceList, VarBind, Object> {
+        public BindBasedAdapter() {
+            super(false, group::findChildByName, (fname, referenceList) -> {
+                VarBind<? super S, ?, ?, ?> bind = group.findChildByName(fname);
+                if (bind == null)
+                    return null;
+                //noinspection unchecked
+                return bind.process(Polyfill.uncheckedCast(DataContainerBase.this), referenceList);
+            });
+        }
+
+        @Override
+        public KeyedReference<VarBind, Object> advance(KeyedReference<String, ReferenceList> reference) {
+            return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
+        }
     }
 }
