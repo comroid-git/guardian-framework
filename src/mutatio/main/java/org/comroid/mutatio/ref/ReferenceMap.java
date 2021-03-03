@@ -1,21 +1,21 @@
 package org.comroid.mutatio.ref;
 
 import org.comroid.abstr.AbstractMap;
-import org.comroid.api.Polyfill;
 import org.comroid.api.UncheckedCloseable;
-import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.adapter.BiStageAdapter;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ReferenceMap<InK, InV, K, V>
-        extends ReferencePipe.ForMap<InK, InV, K, V>
+import static org.comroid.api.Polyfill.uncheckedCast;
+
+public class ReferenceMap<K, V>
+        extends ReferencePipe.ForMap<Object, Object, K, V>
         implements AbstractMap<K, V>, Pipeable<V>, UncheckedCloseable {
     public ReferenceMap(
     ) {
@@ -23,17 +23,16 @@ public class ReferenceMap<InK, InV, K, V>
     }
 
     public ReferenceMap(
-            @Nullable ReferenceMap<?, ?, K, V> parent
+            @Nullable ReferenceMap<K, V> parent
     ) {
-        this(Polyfill.uncheckedCast(parent), Polyfill.uncheckedCast(BiStageAdapter.identity()), Polyfill.uncheckedCast(Function.identity()));
+        this(uncheckedCast(parent), uncheckedCast(BiStageAdapter.identity()));
     }
 
-    public ReferenceMap(
-            @Nullable ReferenceMap<?, ?, InK, InV> parent,
-            @NotNull BiStageAdapter<InK, InV, K, V> advancer,
-            @NotNull Function<K, InK> keyReverser
+    public <InK, InV> ReferenceMap(
+            @Nullable ReferenceMap<InK, InV> parent,
+            @NotNull BiStageAdapter<InK, InV, K, V> advancer
     ) {
-        super(parent, advancer, keyReverser);
+        super(uncheckedCast(parent), uncheckedCast(advancer));
     }
 
     public final @Nullable KeyedReference<K, V> getReference(Object k) {

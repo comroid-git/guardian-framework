@@ -14,12 +14,12 @@ import java.util.stream.Collector;
 
 import static java.util.Objects.nonNull;
 
-public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrapper<T> {
+public final class Span<T> extends ReferenceIndex<T> implements Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
     private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
     private final Object dataLock = Polyfill.selfawareObject();
-    private final ReferenceIndex<Object, T> storage;
+    private final ReferenceIndex<T> storage;
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
 
@@ -43,19 +43,19 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
         this(ReferenceIndex.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceIndex<?, T> referenceIndex, ModifyPolicy modifyPolicy) {
+    public Span(ReferenceIndex<T> referenceIndex, ModifyPolicy modifyPolicy) {
         this(referenceIndex, UNFIXED_SIZE, modifyPolicy);
     }
 
-    public Span(ReferenceIndex<?, T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
+    public Span(ReferenceIndex<T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceIndex<?, T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(ReferenceIndex<T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
         //noinspection unchecked
-        this.storage = (ReferenceIndex<Object, T>) data;
+        this.storage = (ReferenceIndex<T>) data;
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }
@@ -310,7 +310,7 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
     //region API Class
     public static final class API<T> {
         private static final int RESULT_FIXED_SIZE = -2;
-        private final ReferenceIndex<?, T> storage;
+        private final ReferenceIndex<T> storage;
         private ModifyPolicy modifyPolicy = Span.DEFAULT_MODIFY_POLICY;
         private int fixedSize;
 
@@ -318,7 +318,7 @@ public final class Span<T> extends ReferenceIndex<Object, T> implements Rewrappe
             this(ReferenceIndex.create());
         }
 
-        private API(ReferenceIndex<?, T> storage) {
+        private API(ReferenceIndex<T> storage) {
             this.storage = storage;
         }
 

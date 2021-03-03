@@ -34,13 +34,13 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
         return process(dependencyObject, extract(node));
     }
 
-    default Span<REMAP> remapAll(final SELF context, ReferenceIndex<?, EXTR> from) {
+    default Span<REMAP> remapAll(final SELF context, ReferenceIndex<EXTR> from) {
         return from.pipe()
                 .map(each -> remap(context, each))
                 .span();
     }
 
-    default FINAL process(final SELF context, ReferenceIndex<?, EXTR> from) {
+    default FINAL process(final SELF context, ReferenceIndex<EXTR> from) {
         return finish(remapAll(context, from));
     }
 
@@ -48,13 +48,13 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
 
     GroupBind<SELF> getGroup();
 
-    ReferenceIndex<?, EXTR> extract(UniNode data);
+    ReferenceIndex<EXTR> extract(UniNode data);
 
     REMAP remap(SELF context, EXTR data);
 
     boolean isListing();
 
-    FINAL finish(ReferenceIndex<?, REMAP> parts);
+    FINAL finish(ReferenceIndex<REMAP> parts);
 
     enum ExtractionMethod {
         VALUE, OBJECT, ARRAY

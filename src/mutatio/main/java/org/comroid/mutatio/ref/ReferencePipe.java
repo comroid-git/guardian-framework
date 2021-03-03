@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 public abstract class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
@@ -93,14 +92,14 @@ public abstract class ReferencePipe<InK, InV, K, V>
             extends ReferencePipe<@NotNull Integer, InV, @NotNull Integer, V>
             implements AbstractList<V> {
         protected ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer
         ) {
             super(parent, advancer, getExecutorFromAtlas(parent));
         }
 
         public ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Executor stageExecutor
         ) {
@@ -108,7 +107,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         protected ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator
         ) {
@@ -116,7 +115,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         public ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator,
                 @Nullable Executor stageExecutor
@@ -129,15 +128,14 @@ public abstract class ReferencePipe<InK, InV, K, V>
             extends ReferencePipe<InK, InV, K, V>
             implements AbstractMap<K, V> {
         protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
-                @NotNull BiStageAdapter<InK, InV, K, V> advancer,
-                @NotNull Function<K, InK> keyReverser
+                @Nullable ReferenceMap<InK, InV> parent,
+                @NotNull BiStageAdapter<InK, InV, K, V> advancer
         ) {
             super(parent, advancer, getExecutorFromAtlas(parent));
         }
 
         public ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @Nullable ReferenceMap<InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @Nullable Executor stageExecutor
         ) {
@@ -145,7 +143,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @Nullable ReferenceMap<InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @Nullable Comparator<KeyedReference<K, V>> comparator
         ) {
@@ -153,7 +151,7 @@ public abstract class ReferencePipe<InK, InV, K, V>
         }
 
         public ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @Nullable ReferenceMap<InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @Nullable Comparator<KeyedReference<K, V>> comparator,
                 @Nullable Executor stageExecutor

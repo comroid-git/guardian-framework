@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,7 +60,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     public final Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node) {
         final Set<VarBind<? extends S, Object, ?, Object>> initialized = new HashSet<>();
         node.forEach((key, value) -> {
-            KeyedReference<String, ReferenceIndex<?, Object>> eRef = getExtractionReference(key);
+            KeyedReference<String, ReferenceIndex<Object>> eRef = getExtractionReference(key);
             VarBind<? extends S, ?, ?, Object> bind = getBindByName(key);
 
             eRef.compute(refs -> {
@@ -106,7 +105,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    public final <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String name) {
+    public final <E> KeyedReference<String, ReferenceIndex<Object>> getExtractionReference(String name) {
         return Polyfill.uncheckedCast(getInputReference(name, true));
     }
 
@@ -144,7 +143,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         return new OutputReference(bind);
     }
 
-    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<?, T> fromBase) {
+    private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceIndex<T> fromBase) {
         for (VarBind<?, ?, ?, ?> dependency : bind.getDependencies())
             getExtractionReference(dependency).requireNonNull(MessageSupplier
                     .format("Could not compute dependency %s of bind %s", dependency, bind));

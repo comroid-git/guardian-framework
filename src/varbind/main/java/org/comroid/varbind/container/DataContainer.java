@@ -9,7 +9,6 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceIndex;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
-import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
@@ -42,8 +41,8 @@ public interface DataContainer<S extends DataContainer<? super S>>
     @Nullable
     @Override
     default Object put(String key, Object value) {
-        KeyedReference<String, ReferenceIndex<?, Object>> ref = getExtractionReference(key);
-        ReferenceIndex<?, Object> prev = ref.get();
+        KeyedReference<String, ReferenceIndex<Object>> ref = getExtractionReference(key);
+        ReferenceIndex<Object> prev = ref.get();
         if (ref.isNull())
             ref.set(ReferenceIndex.of(value));
         else ref.computeIfPresent(refs -> {
@@ -121,11 +120,11 @@ public interface DataContainer<S extends DataContainer<? super S>>
         return (T) put(bind, parser.apply(value));
     }
 
-    default <E> KeyedReference<String, ReferenceIndex<?, E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
+    default <E> KeyedReference<String, ReferenceIndex<E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
         return Polyfill.uncheckedCast(getExtractionReference(bind.getFieldName()));
     }
 
-    <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String name);
+    <E> KeyedReference<String, ReferenceIndex<Object>> getExtractionReference(String name);
 
     <T> KeyedReference<VarBind, T> getComputedReference(VarBind<?, ?, ?, T> bind);
 
@@ -165,7 +164,7 @@ public interface DataContainer<S extends DataContainer<? super S>>
         }
 
         @Override
-        default <E> KeyedReference<String, ReferenceIndex<?, Object>> getExtractionReference(String fieldName) {
+        default <E> KeyedReference<String, ReferenceIndex<Object>> getExtractionReference(String fieldName) {
             return getUnderlyingVarCarrier().getExtractionReference(fieldName);
         }
 

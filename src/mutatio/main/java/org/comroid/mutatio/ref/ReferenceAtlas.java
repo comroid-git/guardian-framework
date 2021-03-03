@@ -167,14 +167,14 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
             extends ReferenceAtlas<@NotNull Integer, @NotNull Integer, InV, V, Reference<InV>, Reference<V>>
             implements AbstractList<V> {
         protected ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer
         ) {
             super(parent, advancer);
         }
 
         protected ForList(
-                @Nullable ReferenceIndex<?, InV> parent,
+                @Nullable ReferenceIndex<InV> parent,
                 @NotNull StageAdapter<InV, V> advancer,
                 @Nullable Comparator<KeyedReference<@NotNull Integer, V>> comparator
         ) {
@@ -191,7 +191,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
             extends ReferenceAtlas<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>>
             implements AbstractMap<K, V> {
         protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @Nullable ReferenceMap<InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @NotNull Function<K, InK> keyReverser
         ) {
@@ -199,7 +199,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         }
 
         protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
+                @Nullable ReferenceMap<InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
                 @Nullable Comparator<KeyedReference<K, V>> comparator
         ) {
