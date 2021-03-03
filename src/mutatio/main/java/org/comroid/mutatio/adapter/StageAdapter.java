@@ -3,6 +3,7 @@ package org.comroid.mutatio.adapter;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -11,7 +12,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class StageAdapter<In, Out>
-        extends ReferenceStageAdapter<@Nullable("always") Void, @Nullable("always") Void, In, Out, Reference<In>, Reference<Out>>
+        extends ReferenceStageAdapter<@Nullable Integer, @NotNull Integer, In, Out, Reference<In>, Reference<Out>>
         implements Reference.Advancer<In, Out> {
     protected StageAdapter(boolean isIdentity, final Function<? super In, ? extends Out> valueMapper) {
         super(isIdentity, Function.identity(), (nil, in) -> valueMapper.apply(in));
