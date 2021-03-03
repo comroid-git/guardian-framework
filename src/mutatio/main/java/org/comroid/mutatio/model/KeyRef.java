@@ -1,6 +1,4 @@
-package org.comroid.mutatio.ref;
-
-import org.comroid.mutatio.model.Ref;
+package org.comroid.mutatio.model;
 
 import java.util.Map;
 

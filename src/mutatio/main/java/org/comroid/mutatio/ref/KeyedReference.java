@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.mutatio.model.KeyRef;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.Nullable;
 
