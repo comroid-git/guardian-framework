@@ -50,6 +50,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     protected DataContainerBase(
+            ContextualProvider context
+    ) {
+        this(context, (UniObjectNode) null);
+    }
+
+    protected DataContainerBase(
             ContextualProvider context,
             Consumer<UniObjectNode> initialDataBuilder
     ) {
@@ -58,7 +64,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
     protected DataContainerBase(
             ContextualProvider context,
-            UniObjectNode initialData
+            @Nullable UniObjectNode initialData
     ) {
         this(null, context, initialData);
     }
