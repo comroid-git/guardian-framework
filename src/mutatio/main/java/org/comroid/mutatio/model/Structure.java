@@ -6,6 +6,10 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public final class Structure {
+    private Structure() {
+        throw new UnsupportedOperationException();
+    }
+
     public static final class YieldAction<T> implements Predicate<T> {
         private final Predicate<? super T> predicate;
         private final Consumer<? super T> elseConsume;
