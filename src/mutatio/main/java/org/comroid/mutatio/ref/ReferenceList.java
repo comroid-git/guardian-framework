@@ -1,12 +1,10 @@
 package org.comroid.mutatio.ref;
 
-import org.comroid.abstr.AbstractList;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.span.Span;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +21,7 @@ import static org.comroid.api.Polyfill.uncheckedCast;
 
 public class ReferenceList<T>
         extends ReferencePipe.ForList<Object, T>
-        implements AbstractList<T>, Pipeable<T>, UncheckedCloseable {
+        implements UncheckedCloseable, RefList<T> {
     private static final ReferenceList<Void> EMPTY = new ReferenceList<Void>() {{
         setImmutable();
     }};
@@ -113,12 +111,14 @@ public class ReferenceList<T>
         }
     */
 
+    @Override
     public final <R> ReferenceList<R> addStage(StageAdapter<T, R> stage) {
         ReferenceList<R> sub = new ReferenceList<>(this, stage);
         addDependent(sub);
         return sub;
     }
 
+    @Override
     public @Nullable Reference<T> getReference(int index) {
         return getReference(index, false);
     }
@@ -136,14 +136,17 @@ public class ReferenceList<T>
         return new ReferenceList<>(this, fromIndex, toIndex);
     }
 
+    @Override
     public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
         return putAccessor(ref.getKey(), ref);
     }
 
+    @Override
     public final ReferenceList<T> filter(Predicate<? super T> predicate) {
         return addStage(StageAdapter.filter(predicate));
     }
 
+    @Override
     public final ReferenceList<T> yield(Predicate<? super T> predicate, Consumer<? super T> elseConsume) {
         return filter(it -> {
             if (predicate.test(it))
@@ -153,60 +156,73 @@ public class ReferenceList<T>
         });
     }
 
+    @Override
     public final <R> ReferenceList<R> map(Function<? super T, ? extends R> mapper) {
         return addStage(StageAdapter.map(mapper));
     }
 
+    @Override
     public final <R> ReferenceList<R> flatMap(Class<R> target) {
         return filter(target::isInstance).map(target::cast);
     }
 
+    @Override
     public final <R> ReferenceList<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return addStage(StageAdapter.flatMap(mapper));
     }
 
+    @Override
     public final ReferenceList<T> peek(Consumer<? super T> action) {
         return addStage(StageAdapter.peek(action));
     }
 
+    @Override
     public final void forEach(Consumer<? super T> action) {
         //noinspection SimplifyStreamApiCallChains
         stream().forEach(action);
     }
 
+    @Override
     @Deprecated // todo: fix
     public final ReferenceList<T> distinct() {
         return addStage(StageAdapter.distinct());
     }
 
+    @Override
     @Deprecated // todo: fix
     public final ReferenceList<T> limit(long maxSize) {
         return addStage(StageAdapter.limit(maxSize));
     }
 
+    @Override
     @Deprecated // todo: fix
     public final ReferenceList<T> skip(long skip) {
         return addStage(StageAdapter.skip(skip));
     }
 
+    @Override
     public final ReferenceList<T> sorted() {
         return sorted(uncheckedCast(Comparator.naturalOrder()));
     }
 
+    @Override
     public final ReferenceList<T> sorted(Comparator<? super T> comparator) {
         return new ReferenceList<>(this, ReferenceAtlas.wrapComparator(comparator));
     }
 
+    @Override
     @NotNull
     public final Reference<T> findFirst() {
         return sorted().findAny();
     }
 
+    @Override
     @NotNull
     public final Reference<T> findAny() {
         return Reference.conditional(() -> size() > 0, () -> span().get(0));
     }
 
+    @Override
     public final boolean remove(Object item) {
         for (int i = 0; i < this.size(); i++) {
             Reference<T> ref = getReference(i);
@@ -218,27 +234,33 @@ public class ReferenceList<T>
         return false;
     }
 
+    @Override
     public final Stream<T> stream() {
         return streamValues();
     }
 
+    @Override
     @Nullable
     public final T get(int index) {
         return getReference(index).get();
     }
 
+    @Override
     public final Optional<T> wrap(int index) {
         return getReference(index).wrap();
     }
 
+    @Override
     public final @NotNull T requireNonNull(int index) throws NullPointerException {
         return getReference(index).requireNonNull();
     }
 
+    @Override
     public final @NotNull T requireNonNull(int index, String message) throws NullPointerException {
         return getReference(index).requireNonNull(message);
     }
 
+    @Override
     public final @NotNull T requireNonNull(int index, Supplier<String> message) throws NullPointerException {
         return getReference(index).requireNonNull(message);
     }
@@ -298,11 +320,13 @@ public class ReferenceList<T>
         return new RefIndIterator(index);
     }
 
+    @Override
     @Deprecated
     public Span<T> span() {
         return new Span<>(this, Span.DefaultModifyPolicy.SKIP_NULLS);
     }
 
+    @Override
     public CompletableFuture<T> next() {
         class OnceCompletingStage extends StageAdapter<T, T> {
             private final CompletableFuture<T> future = new CompletableFuture<>();
