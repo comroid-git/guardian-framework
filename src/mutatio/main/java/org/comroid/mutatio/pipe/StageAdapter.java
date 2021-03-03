@@ -10,13 +10,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
+public abstract class StageAdapter<In, Out> implements
+        ReferenceConverter<Reference<In>, Reference<Out>>,
+        Reference.Advancer<In, Out> {
+    private StageAdapter() {
+    }
+
     static <T> StageAdapter<T, T> filter(Predicate<? super T> predicate) {
-        return new Support.Filter<>(predicate);
+        return new Filter<>(predicate);
     }
 
     static <O, T> StageAdapter<O, T> map(Function<? super O, ? extends T> mapper) {
-        return new Support.Map<>(mapper);
+        return new Map<>(mapper);
     }
 
     static <O, T> StageAdapter<O, T> flatMap(Function<? super O, ? extends Rewrapper<? extends T>> mapper) {
@@ -46,13 +51,16 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
         return map(Polyfill::uncheckedCast);
     }
 
+    @Override
+    public abstract Reference<Out> advance(Reference<In> reference);
+
     @OverrideOnly
     @Deprecated
-    default Out convertValue(In value) {
+    public Out convertValue(In value) {
         return advanceValue(value);
     }
 
-    final class Structure {
+    public static final class Structure {
         public static final class ConsumingFilter<T> implements Predicate<T> {
             private final Consumer<? super T> action;
 
@@ -99,51 +107,49 @@ public interface StageAdapter<In, Out> extends Reference.Advancer<In, Out> {
         }
     }
 
-    final class Support {
-        public static final class Filter<T> implements StageAdapter<T, T> {
-            private final Predicate<? super T> predicate;
+    private static final class Filter<T> extends StageAdapter<T, T> {
+        private final Predicate<? super T> predicate;
 
-            @Override
-            public boolean isIdentityValue() {
-                return true;
-            }
-
-            public Filter(Predicate<? super T> predicate) {
-                this.predicate = predicate;
-            }
-
-            @Override
-            public Reference<T> advance(Reference<T> ref) {
-                return new Reference.Support.Filtered<>(ref, predicate);
-            }
-
-            @Override
-            public T advanceValue(T value) {
-                return value;
-            }
+        @Override
+        public boolean isIdentityValue() {
+            return true;
         }
 
-        public static final class Map<O, T> implements StageAdapter<O, T> {
-            private final Function<? super O, ? extends T> mapper;
+        public Filter(Predicate<? super T> predicate) {
+            this.predicate = predicate;
+        }
 
-            @Override
-            public boolean isIdentityValue() {
-                return false;
-            }
+        @Override
+        public Reference<T> advance(Reference<T> ref) {
+            return new Reference.Support.Filtered<>(ref, predicate);
+        }
 
-            public Map(Function<? super O, ? extends T> mapper) {
-                this.mapper = mapper;
-            }
+        @Override
+        public T advanceValue(T value) {
+            return value;
+        }
+    }
 
-            @Override
-            public Reference<T> advance(Reference<O> ref) {
-                return new Reference.Support.Remapped<>(ref, mapper, null);
-            }
+    private static final class Map<O, T> extends StageAdapter<O, T> {
+        private final Function<? super O, ? extends T> mapper;
 
-            @Override
-            public T advanceValue(O value) {
-                return mapper.apply(value);
-            }
+        @Override
+        public boolean isIdentityValue() {
+            return false;
+        }
+
+        public Map(Function<? super O, ? extends T> mapper) {
+            this.mapper = mapper;
+        }
+
+        @Override
+        public Reference<T> advance(Reference<O> ref) {
+            return new Reference.Support.Remapped<>(ref, mapper, null);
+        }
+
+        @Override
+        public T advanceValue(O value) {
+            return mapper.apply(value);
         }
     }
 }
