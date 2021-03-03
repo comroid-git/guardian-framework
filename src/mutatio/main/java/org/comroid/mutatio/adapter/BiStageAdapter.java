@@ -1,7 +1,8 @@
-package org.comroid.mutatio.pipe;
+package org.comroid.mutatio.adapter;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;

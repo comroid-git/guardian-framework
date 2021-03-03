@@ -4,7 +4,7 @@ import org.comroid.abstr.AbstractMap;
 import org.comroid.api.Polyfill;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.BiStageAdapter;
+import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
