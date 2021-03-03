@@ -3,10 +3,10 @@ package org.comroid.mutatio.ref;
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
 import org.comroid.api.MutableState;
-import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.adapter.BiStageAdapter;
-import org.comroid.mutatio.pipe.ReferenceConverter;
+import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.adapter.StageAdapter;
+import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -23,11 +23,9 @@ import java.util.stream.Stream;
 public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>, OutRef extends Reference<V>>
         extends ValueCache.Abstract<Void, ReferenceAtlas<?, InK, ?, In, ?, InRef>>
         implements MutableState {
-    protected final Function<InK, K> keyAdvancer;
-    protected final Function<K, InK> keyReverser;
+    private final ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer;
     private final AtomicBoolean mutable;
     private final Map<K, OutRef> accessors;
-    private final ReferenceConverter<InRef, OutRef> advancer;
     protected Comparator<OutRef> comparator;
 
     @Override
@@ -37,26 +35,22 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-            @Nullable ReferenceConverter<InRef, OutRef> advancer,
+            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer,
             @NotNull Function<InK, K> keyAdvancer,
             @Nullable Function<K, InK> keyReverser
     ) {
-        this(parent, advancer, null, keyAdvancer, keyReverser);
+        this(parent, advancer, null);
     }
 
     protected ReferenceAtlas(
             @Nullable ReferenceAtlas<?, InK, ?, In, ?, InRef> parent,
-            @Nullable ReferenceConverter<InRef, OutRef> advancer,
-            @Nullable Comparator<OutRef> comparator,
-            @NotNull Function<InK, K> keyAdvancer,
-            @Nullable Function<K, InK> keyReverser
+            @NotNull ReferenceStageAdapter<InK, K, In, V, InRef, OutRef> advancer,
+            @Nullable Comparator<OutRef> comparator
     ) {
         super(parent);
 
         this.advancer = advancer;
         this.comparator = comparator;
-        this.keyAdvancer = keyAdvancer;
-        this.keyReverser = keyReverser;
 
         this.mutable = new AtomicBoolean(parent != null);
         this.accessors = new ConcurrentHashMap<>();
@@ -96,7 +90,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
 
     public final boolean removeRef(K key) {
         validateMutability();
-        InK revK = keyReverser == null ? null : keyReverser.apply(key);
+        InK revK = advancer.revertKey(key).orElse(null);
         if (revK != null) {
             InRef pRef = parent == null ? null
                     : parent.getReference(revK, false);
@@ -123,7 +117,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
     public final Stream<K> streamKeys() {
         return Stream.concat(
                 parent == null ? Stream.empty()
-                        : parent.streamKeys().map(keyAdvancer),
+                        : parent.streamKeys().map(advancer::advanceKey),
                 accessors.keySet().stream()
         ).distinct();
     }
@@ -152,9 +146,10 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         if (ref != null | !createIfAbsent)
             return ref;
         validateMutability();
-        InK revK = keyReverser == null ? null : keyReverser.apply(key);
-        InK fabK = revK == null ? null : prefabBaseKey(revK);
-        if (parent != null && revK != null && fabK != null) {
+        InK fabK = advancer.revertKey(key)
+                .map(this::prefabBaseKey)
+                .orElse(null);
+        if (parent != null && fabK != null) {
             InRef inRef = getInputReference(fabK, true);
             if (inRef != null)
                 ref = advanceReference(inRef);
@@ -175,7 +170,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
                 @Nullable ReferenceIndex<?, In> parent,
                 @NotNull StageAdapter<In, T> advancer
         ) {
-            super(parent, advancer, Function.identity(), Function.identity());
+            this(parent, advancer, null);
         }
 
         protected ForList(
@@ -183,7 +178,7 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
                 @NotNull StageAdapter<In, T> advancer,
                 @Nullable Comparator<Reference<T>> comparator
         ) {
-            super(parent, advancer, comparator, Function.identity(), Function.identity());
+            super(parent, advancer, comparator);
         }
 
         @Override
@@ -204,20 +199,9 @@ public abstract class ReferenceAtlas<InK, K, In, V, InRef extends Reference<In>,
         protected ForMap(
                 @Nullable ReferenceMap<?, ?, InK, InV> parent,
                 @NotNull BiStageAdapter<InK, InV, K, V> advancer,
-                @NotNull Function<K, InK> keyReverser,
                 @Nullable Comparator<KeyedReference<K, V>> comparator
         ) {
-            super(parent, advancer, comparator, advancer::advanceKey, keyReverser);
-        }
-
-        protected ForMap(
-                @Nullable ReferenceMap<?, ?, InK, InV> parent,
-                @Nullable KeyedReference.Advancer<InK, InV, K, V> advancer,
-                @NotNull Function<InK, K> keyAdvancer,
-                @NotNull Function<K, InK> keyReverser,
-                @Nullable Comparator<KeyedReference<K, V>> comparator
-        ) {
-            super(parent, advancer, comparator, keyAdvancer, keyReverser);
+            super(parent, advancer, comparator);
         }
 
         @Override
