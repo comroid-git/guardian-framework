@@ -3,6 +3,8 @@ package org.comroid.mutatio.adapter;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -129,8 +131,10 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         }
     }
 
-    private static class BiSource<T, X> extends BiStageAdapter<Object, T, X, T> {
-        private final Function<@NotNull ? super T, @NotNull ? extends X> source;
+    @Internal
+    public static class BiSource<T, X> extends BiStageAdapter<Object, T, X, T> {
+        @Internal
+        public final Function<@NotNull ? super T, @NotNull ? extends X> source;
 
         private BiSource(Function<@NotNull ? super T, @NotNull ? extends X> source) {
             super(false, null, (BiFunction<? super Object, ? super T, ? extends T>) null);

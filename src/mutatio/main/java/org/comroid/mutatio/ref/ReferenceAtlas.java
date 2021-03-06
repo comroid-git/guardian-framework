@@ -8,7 +8,6 @@ import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefAtlas;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -176,7 +175,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         //noinspection unchecked
         InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
-                .orElseGet(() -> parent == null ? null : ((ReferenceAtlas<?,InK,?,In>) parent).findKeyForSubKey(this, key));
+                .orElseGet(() -> parent == null ? null : ((ReferenceAtlas<?, InK, ?, In>) parent).findKeyForSubKey(this, key));
         if (parent != null && fabK != null) {
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             if (inRef != null)
@@ -187,8 +186,17 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         throw new AssertionError("Could not create Reference for key " + key);
     }
 
-    private <RK> @Nullable K findKeyForSubKey(RefAtlas<K, RK, ?, ?> forStage, Object other) {
-        final ReferenceStageAdapter<K, RK, ?, ?, ? extends KeyedReference<K, ?>, ? extends KeyedReference<RK, ?>> advancer = forStage.getAdvancer();
+    private <RK> @Nullable K findKeyForSubKey(RefAtlas<K, RK, V, ?> forStage, RK other) {
+        final ReferenceStageAdapter<K, RK, V, ?, ? extends KeyedReference<K, V>, ? extends KeyedReference<RK, ?>> advancer = forStage.getAdvancer();
+        if (advancer instanceof BiStageAdapter.BiSource) {
+            //noinspection unchecked
+            final BiStageAdapter.BiSource<V, RK> source = (BiStageAdapter.BiSource<V, RK>) advancer;
+            return streamRefs()
+                    .filter(ref -> ref.into(source.source).equals(other))
+                    .findFirst()
+                    .map(KeyedReference::getKey)
+                    .orElse(null);
+        }
         return streamKeys()
                 .filter(key -> advancer.advanceKey(key).equals(other))
                 .findFirst()
