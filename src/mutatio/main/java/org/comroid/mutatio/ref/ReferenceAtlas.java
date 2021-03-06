@@ -173,9 +173,10 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         if (ref != null)
             return ref;
         validateMutability();
+        //noinspection unchecked
         InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
-                .orElse(null);
+                .orElseGet(() -> parent == null ? null : ((ReferenceAtlas<?,InK,?,In>) parent).findKeyForSubKey(this, key));
         if (parent != null && fabK != null) {
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             if (inRef != null)
@@ -184,6 +185,14 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         if (putAccessor(key, ref))
             return Objects.requireNonNull(ref, "assertion: ref is null");
         throw new AssertionError("Could not create Reference for key " + key);
+    }
+
+    private <RK> @Nullable K findKeyForSubKey(RefAtlas<K, RK, ?, ?> forStage, Object other) {
+        final ReferenceStageAdapter<K, RK, ?, ?, ? extends KeyedReference<K, ?>, ? extends KeyedReference<RK, ?>> advancer = forStage.getAdvancer();
+        return streamKeys()
+                .filter(key -> advancer.advanceKey(key).equals(other))
+                .findFirst()
+                .orElse(null);
     }
 
     protected final boolean putAccessor(K key, KeyedReference<K, V> ref) {
