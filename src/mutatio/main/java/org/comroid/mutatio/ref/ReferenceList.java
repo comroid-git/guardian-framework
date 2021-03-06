@@ -73,6 +73,7 @@ public class ReferenceList<T>
 
     public static <T> ReferenceList<T> of(Collection<T> list) {
         ReferenceList<T> refs = create();
+        refs.setMutable(true);
         refs.addAll(list);
         return refs;
     }
