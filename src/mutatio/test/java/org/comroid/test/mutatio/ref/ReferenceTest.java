@@ -25,7 +25,7 @@ public class ReferenceTest {
         emptyRef = Reference.empty();
         nullRef = Reference.constant(null);
         valueRef = Reference.create(testGroup);
-        hashRef = valueRef.process().map(s -> {
+        hashRef = valueRef.map(s -> {
             System.out.printf("Computation occurred; now %d\n", computationCounter.incrementAndGet());
             return s.hashCode();
         });
