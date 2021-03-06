@@ -167,6 +167,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
 
     @Override
     public final KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
+        // todo: does not work right
         Objects.requireNonNull(key, "key");
         KeyedReference<K, V> ref = accessors.get(key);
         if (ref != null | !createIfAbsent)
@@ -181,7 +182,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
                 ref = advanceReference(inRef);
         } else ref = createEmptyRef(key);
         if (putAccessor(key, ref))
-            return ref != null ? ref : KeyedReference.emptyValue(key);
+            return Objects.requireNonNull(ref, "assertion: ref is null");
         throw new AssertionError("Could not create Reference for key " + key);
     }
 
