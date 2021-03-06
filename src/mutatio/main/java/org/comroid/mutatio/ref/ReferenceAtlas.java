@@ -170,8 +170,8 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         // todo: does not work right
         Objects.requireNonNull(key, "key");
         KeyedReference<K, V> ref = accessors.get(key);
-        if (ref != null | !createIfAbsent)
-            return ref != null ? ref : KeyedReference.emptyValue(key);
+        if (ref != null)
+            return ref;
         validateMutability();
         InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
@@ -180,7 +180,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             if (inRef != null)
                 ref = advanceReference(inRef);
-        } else ref = createEmptyRef(key);
+        } else if (createIfAbsent) ref = createEmptyRef(key);
         if (putAccessor(key, ref))
             return Objects.requireNonNull(ref, "assertion: ref is null");
         throw new AssertionError("Could not create Reference for key " + key);
