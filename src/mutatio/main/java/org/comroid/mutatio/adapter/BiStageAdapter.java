@@ -86,7 +86,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         return filterValue(new Structure.Skipper<>(skip));
     }
 
-    public static <T, X> BiStageAdapter<T, T, X, T> source(final Function<T, X> source) {
+    public static <T, X> BiStageAdapter<?, T, X, T> source(final Function<? super T, ? extends X> source) {
         return new BiSource<>(source);
     }
 
@@ -129,14 +129,21 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         }
     }
 
-    private static class BiSource<T, X> extends BiStageAdapter<T, T, X, T> {
+    private static class BiSource<T, X> extends BiStageAdapter<Object, T, X, T> {
+        private final Function<@NotNull ? super T, @NotNull ? extends X> source;
+
         private BiSource(Function<@NotNull ? super T, @NotNull ? extends X> source) {
-            super(false, source, Function.identity());
+            super(false, null, (BiFunction<? super Object, ? super T, ? extends T>) null);
+            this.source = source;
         }
 
         @Override
-        public KeyedReference<X, T> advance(KeyedReference<T, T> ref) {
-            return new KeyedReference.Support.Base<>(advanceKey(ref.getValue()), ref);
+        public KeyedReference<X, T> advance(KeyedReference<Object, T> ref) {
+            return new KeyedReference.Support.Mapped<>(
+                    ref,
+                    unused -> ref.into(this.source),
+                    (unused, val) -> val
+            );
         }
     }
 }

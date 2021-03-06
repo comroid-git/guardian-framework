@@ -1,7 +1,9 @@
 package org.comroid.test.mutatio.pipe;
 
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.ref.ReferenceMap;
+import org.comroid.mutatio.ref.ReferencePipe;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,18 +29,17 @@ public class BiPipeTest {
     public void testSimple() {
         ReferenceList.of(controlGroup)
                 .bi(String::hashCode)
-                .forEach((hash, str) -> Assert.assertEquals("hash code", (long) hash, str.hashCode()));
+                .peekBoth((hash, str) -> Assert.assertEquals("hash code", (long) hash, str.hashCode()));
     }
 
     @Test
     public void testMap() {
-        final ReferenceMap<Integer, String> map = ReferenceList.of(controlGroup)
+        final RefContainer<Integer, Object> map = ReferenceList.of(controlGroup)
                 .bi(String::hashCode)
                 .mapKey(String::valueOf)
                 .map(String::toUpperCase)
                 .mapKey(Integer::parseInt)
-                .map(String::toLowerCase)
-                .distinctKeys();
-        controlGroup.forEach(uid -> Assert.assertEquals("map entry", uid, map.get(uid.hashCode())));
+                .map(String::toLowerCase);
+        controlGroup.forEach(uid -> Assert.assertEquals("map entry", uid, map.getReference(uid.hashCode()).get()));
     }
 }

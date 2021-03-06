@@ -39,6 +39,15 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
             @Nullable Executor executor
     );
 
+    @Deprecated
+    default <R> ReferencePipe<?, ?, R, V> bi(Function<? super V, ? extends R> source) {
+        return overwriteKey(source);
+    }
+
+    default <R> ReferencePipe<?, ?, R, V> overwriteKey(Function<? super V, ? extends R> source) {
+        return addStage(uncheckedCast(BiStageAdapter.source(source)));
+    }
+
     default ReferencePipe<?, ?, K, V> filter(Predicate<? super V> predicate) {
         return addStage(uncheckedCast(StageAdapter.filter(predicate)));
     }
