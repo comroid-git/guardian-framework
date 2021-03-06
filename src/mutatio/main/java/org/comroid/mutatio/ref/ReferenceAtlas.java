@@ -172,6 +172,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         if (ref != null)
             return ref;
         validateMutability();
+        // todo: Ensure each parent's refs are created here
         //noinspection unchecked
         InK fabK = getAdvancer().revertKey(key)
                 .map(this::prefabBaseKey)
