@@ -15,13 +15,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNode>, Bas> implements UniNode {
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
-    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap<AcK, UniNode>(){
+    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap<AcK, UniNode>() {
+        {
+            setMutable(true);
+        }
+
         @Override
         protected KeyedReference<AcK, UniNode> createEmptyRef(AcK key) {
             return generateAccessor(key);
