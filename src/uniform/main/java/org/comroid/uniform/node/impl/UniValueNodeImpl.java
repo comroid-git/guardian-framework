@@ -180,6 +180,7 @@ public final class UniValueNodeImpl
 
     @Override
     public Object asRaw() {
+        // todo Fucking dipshit only ever returns strings again
         return valueAdapter.asActualType();
     }
 

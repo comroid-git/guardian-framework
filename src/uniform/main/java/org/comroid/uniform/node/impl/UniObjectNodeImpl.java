@@ -122,7 +122,13 @@ public class UniObjectNodeImpl
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs()
-                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(uniNode -> uniNode.asRaw())))
+                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(uniNode -> {
+                    if (uniNode instanceof UniValueNode) {
+                        ValueType<?> type = ((UniValueNode) uniNode).getHeldType();
+                        return uniNode.as(type);
+                    }
+                    return uniNode;
+                })))
                 .collect(Collectors.toSet()));
     }
 

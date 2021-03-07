@@ -20,21 +20,9 @@ public abstract class ValueAdapter<B, T> {
             return ValueAdapter.this.doSet(value);
         }
     };
-    private final Reference<ValueType<T>> actualType = new Reference.Support.Base<ValueType<T>>(false) {
-/*
-        @Override
-        public boolean isOutdated() {
-            return atom.get() != null && actualValue.test(it -> atom.get().test(it));
-        }
-*/
-        @Override
-        protected ValueType<T> doGet() {
-            return actualValue.into(StandardValueType::typeOf);
-        }
-    };
 
     public ValueType<T> getValueType() {
-        return actualType.get();
+        return actualValue.into(StandardValueType::typeOf);
     }
 
     public B getBase() {
@@ -74,9 +62,7 @@ public abstract class ValueAdapter<B, T> {
     protected abstract boolean doSet(T newValue);
 
     public boolean set(T newValue) {
-        return !actualType.test(type -> type.test(newValue))
-                && actualValue.set(newValue)
-                && !actualType.test(type -> type.test(newValue));
+        return getValueType().test(newValue) && actualValue.set(newValue);
     }
 
     public final String asString() {
@@ -114,10 +100,10 @@ public abstract class ValueAdapter<B, T> {
     private <R> R returnAsType(ValueType<R> type) {
         if (type.equals(VOID))
             return null;
-        if (actualType.contentEquals(type))
+        if (getValueType().equals(type))
             return uncheckedCast(asActualType());
         // need conversion
-        final R result = actualType.assertion("Actual Type could not be computed").convert(asActualType(), type);
+        final R result = getValueType().convert(asActualType(), type);
         if (result == null)
             throw new IllegalArgumentException(String.format("Cannot convert data to type: %s to %s", asActualType(), type));
         return result;
