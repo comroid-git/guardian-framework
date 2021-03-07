@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V>
@@ -229,8 +228,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
             implements AbstractMap<K, V> {
         protected ForMap(
                 @Nullable ReferenceMap<InK, InV> parent,
-                @NotNull BiStageAdapter<InK, InV, K, V> advancer,
-                @NotNull Function<K, InK> keyReverser
+                @NotNull BiStageAdapter<InK, InV, K, V> advancer
         ) {
             super(parent, advancer);
         }

@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
+@Deprecated
 public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
@@ -305,7 +306,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
         private int fixedSize;
 
         public API() {
-            this(ReferenceList.create());
+            this(ReferenceList.create(true));
         }
 
         private API(ReferenceList<T> storage) {

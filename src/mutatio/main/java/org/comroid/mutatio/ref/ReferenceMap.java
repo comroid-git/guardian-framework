@@ -19,7 +19,12 @@ public class ReferenceMap<K, V>
         implements UncheckedCloseable, RefMap<K, V> {
     public ReferenceMap(
     ) {
+        this(true);
+    }
+
+    public ReferenceMap(boolean mutable) {
         this(null);
+        setMutable(mutable);
     }
 
     public ReferenceMap(

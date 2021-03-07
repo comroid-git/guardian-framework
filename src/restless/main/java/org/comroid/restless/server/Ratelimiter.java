@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("rawtypes")
@@ -60,16 +61,16 @@ public interface Ratelimiter extends BiFunction<RatelimitedEndpoint, REST.Reques
             private final int globalRatelimit;
 
             private OfPool(ScheduledExecutorService executor, RatelimitedEndpoint[] pool) {
-                Span<Integer> globalRatelimits = Stream.of(pool)
-                        .map(RatelimitedEndpoint::getGlobalRatelimit)
+                int[] globalRatelimits = Stream.of(pool)
+                        .mapToInt(RatelimitedEndpoint::getGlobalRatelimit)
                         .distinct()
-                        .collect(Span.collector());
-                if (!globalRatelimits.isSingle())
+                        .toArray();
+                if (globalRatelimits.length > 1)
                     throw new IllegalArgumentException("Global ratelimit is not unique");
 
                 this.executor = executor;
                 this.pool = pool;
-                this.globalRatelimit = globalRatelimits.requireNonNull();
+                this.globalRatelimit = globalRatelimits[0];
             }
 
             @Override

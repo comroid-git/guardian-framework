@@ -28,10 +28,15 @@ public class ReferenceList<T>
     private final int toIndex;
 
     public ReferenceList() {
-        this(null);
+        this(true);
     }
 
-    @SuppressWarnings("CopyConstructorMissesField") // false positive
+    public ReferenceList(boolean mutable) {
+        this(null);
+        setMutable(mutable);
+    }
+
+    // false positive
     public ReferenceList(
             @Nullable RefContainer<?, T> parent
     ) {
@@ -67,8 +72,14 @@ public class ReferenceList<T>
         this.toIndex = toIndex;
     }
 
+    @Deprecated
     public static <T> ReferenceList<T> create() {
-        return new ReferenceList<>();
+        return create(true);
+    }
+
+    @Deprecated
+    public static <T> ReferenceList<T> create(boolean mutable) {
+        return new ReferenceList<>(mutable);
     }
 
     public static <T> ReferenceList<T> of(Collection<T> list) {

@@ -76,11 +76,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             UniObjectNode initialData
     ) {
         //noinspection ConstantConditions allowed here because we overwrite getAdvancer()
-        super(
-                new ReferenceMap<>(),
-                null,
-                VarBind::getFieldName
-        );
+        super(new ReferenceMap<>(true), null);
+        setMutable();
         this.context = context;
         //noinspection unchecked
         this.group = group != null ? group : findRootBind(getClass());
@@ -167,7 +164,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         class OutputReference extends KeyedReference.Support.Base<VarBind, Object> {
             private OutputReference(final VarBind bind) {
                 //noinspection unchecked
-                super(bind, inputRef.map(refs -> bind.process((DataContainer) self(), refs)));
+                super(bind, inputRef.map(refs -> bind.process(self().into(Polyfill::<DataContainer>uncheckedCast), refs)));
             }
         }
 
