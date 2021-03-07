@@ -1,5 +1,6 @@
 package org.comroid.common.os;
 
+import org.comroid.api.os.OS;
 import org.comroid.common.io.FileGroup;
 import org.comroid.common.io.FileHandle;
 

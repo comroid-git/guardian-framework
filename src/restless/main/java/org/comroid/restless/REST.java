@@ -135,12 +135,12 @@ public final class REST implements ContextualProvider.Underlying {
         HEAD;
 
         @Override
-        public String toString() {
+        public String getName() {
             return name();
         }
 
         @Override
-        public String getName() {
+        public String toString() {
             return name();
         }
     }
@@ -209,7 +209,7 @@ public final class REST implements ContextualProvider.Underlying {
     public static class Response {
         private final int statusCode;
         private final String mimeType;
-        private final @Nullable UniNode body;
+        private final @Nullable Serializable body;
         private final @Nullable FileHandle file;
         private final Header.List headers;
 
@@ -221,7 +221,7 @@ public final class REST implements ContextualProvider.Underlying {
             return mimeType;
         }
 
-        public Reference<UniNode> getBody() {
+        public Reference<Serializable> getBody() {
             return Reference.constant(body);
         }
 
@@ -267,7 +267,7 @@ public final class REST implements ContextualProvider.Underlying {
          *
          * @param statusCode the status code
          * @param body       the response body
-         * @see Response#Response(int, UniNode, Header.List) superloaded
+         * @see Response#Response(int, Serializable, Header.List) superloaded
          */
         public Response(
                 int statusCode,
@@ -289,9 +289,8 @@ public final class REST implements ContextualProvider.Underlying {
                 Header.List headers
         ) {
             this.statusCode = statusCode;
-            UniNode uniNode = body.toUniNode();
-            this.body = Objects.requireNonNull(uniNode, "body");
-            this.mimeType = uniNode.getMimeType();
+            this.body = Objects.requireNonNull(body, "body");
+            this.mimeType = body.toUniNode().getMimeType();
             this.file = null;
             this.headers = Objects.requireNonNull(headers, "headers list");
         }
@@ -364,7 +363,7 @@ public final class REST implements ContextualProvider.Underlying {
         public Response(
                 int statusCode,
                 String mimeType,
-                @Nullable UniNode body,
+                @Nullable Serializable body,
                 @Nullable File file,
                 Header.List headers
         ) {
@@ -454,6 +453,10 @@ public final class REST implements ContextualProvider.Underlying {
             return this;
         }
 
+        public Request<T> body(Serializable body) {
+            return body(body.toSerializedString());
+        }
+
         public Request<T> body(String body) {
             this.body = body;
 
@@ -512,28 +515,29 @@ public final class REST implements ContextualProvider.Underlying {
             return execute().thenApply(Response::getStatusCode);
         }
 
-        public CompletableFuture<UniNode> execute$body() {
+        public CompletableFuture<Serializable> execute$body() {
             return execute()
                     .thenApply(Response::getBody)
                     .thenApply(Rewrapper::get);
         }
 
         public CompletableFuture<Span<T>> execute$deserialize() {
-            return execute$body().thenApply(node -> {
-                switch (node.getNodeType()) {
-                    case OBJECT:
-                        return Span.singleton(tProducer.apply(context, node.asObjectNode()));
-                    case ARRAY:
-                        return node.asArrayNode()
-                                .streamNodes()
-                                .map(data -> tProducer.apply(REST.this, data))
-                                .collect(Span.collector());
-                    case VALUE:
-                        throw new AssertionError("Cannot deserialize from UniValueNode");
-                }
+            return execute$body().thenApply(Serializable::toUniNode)
+                    .thenApply(node -> {
+                        switch (node.getNodeType()) {
+                            case OBJECT:
+                                return Span.singleton(tProducer.apply(context, node.asObjectNode()));
+                            case ARRAY:
+                                return node.asArrayNode()
+                                        .streamNodes()
+                                        .map(data -> tProducer.apply(REST.this, data))
+                                        .collect(Span.collector());
+                            case VALUE:
+                                throw new AssertionError("Cannot deserialize from UniValueNode");
+                        }
 
-                throw new AssertionError();
-            });
+                        throw new AssertionError();
+                    });
         }
 
         public CompletableFuture<T> execute$deserializeSingle() {
@@ -559,18 +563,19 @@ public final class REST implements ContextualProvider.Underlying {
         public <ID> CompletableFuture<Span<T>> execute$autoCache(
                 VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
         ) {
-            return execute$body().thenApply(node -> {
-                if (node.isObjectNode()) {
-                    return Span.singleton(cacheProduce(identifyBind, cache, node.asObjectNode()));
-                } else if (node.isArrayNode()) {
-                    return node.streamNodes()
-                            .map(UniNode::asObjectNode)
-                            .map(obj -> cacheProduce(identifyBind, cache, obj))
-                            .collect(Span.collector());
-                } else {
-                    throw new AssertionError();
-                }
-            });
+            return execute$body().thenApply(Serializable::toUniNode)
+                    .thenApply(node -> {
+                        if (node.isObjectNode()) {
+                            return Span.singleton(cacheProduce(identifyBind, cache, node.asObjectNode()));
+                        } else if (node.isArrayNode()) {
+                            return node.streamNodes()
+                                    .map(UniNode::asObjectNode)
+                                    .map(obj -> cacheProduce(identifyBind, cache, obj))
+                                    .collect(Span.collector());
+                        } else {
+                            throw new AssertionError();
+                        }
+                    });
         }
 
         private <ID> T cacheProduce(VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache, UniObjectNode obj) {

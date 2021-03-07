@@ -13,6 +13,7 @@ import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniObjectNode;
 
@@ -299,6 +300,7 @@ public class RestServer implements Closeable {
 
         private String unwrapData(ServerEndpoint sep, String requestURI, Response response) {
             return response.getBody()
+                    .map(Serializable::toUniNode)
                     .map(responseBody -> {
                         if (responseBody == null)
                             return "";
