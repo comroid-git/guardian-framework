@@ -40,6 +40,9 @@ public class BiPipeTest {
                 .map(String::toUpperCase)
                 .mapKey(Integer::parseInt)
                 .map(String::toLowerCase);
-        controlGroup.forEach(uid -> Assert.assertEquals("map entry", uid, map.getReference(uid.hashCode()).get()));
+        controlGroup.forEach(uid ->
+                Assert.assertEquals(
+                "map entry", uid,
+                        map.getReference(uid.hashCode()).get()));
     }
 }

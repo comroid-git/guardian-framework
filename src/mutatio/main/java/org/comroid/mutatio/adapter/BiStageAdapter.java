@@ -1,14 +1,16 @@
 package org.comroid.mutatio.adapter;
 
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 
 public abstract class BiStageAdapter<InK, InV, OutK, OutV>
@@ -96,6 +98,11 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         return filterValue(any -> true);
     }
 
+    @Override
+    public final String toString() {
+        return String.format("BiStageAdapter(%s)@%d", getClass().getSimpleName(), hashCode());
+    }
+
     private final static class Filter<X, Y> extends BiStageAdapter<X, Y, X, Y> {
         private final BiPredicate<@NotNull ? super X, @Nullable ? super Y> filter;
 
@@ -132,12 +139,13 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
     }
 
     @Internal
-    public static class BiSource<T, X> extends BiStageAdapter<Object, T, X, T> {
+    public static final class BiSource<T, X> extends BiStageAdapter<Object, T, X, T> {
         @Internal
         public final Function<@NotNull ? super T, @NotNull ? extends X> source;
+        private final ConcurrentHashMap<X, Object> reverseKeys = new ConcurrentHashMap<>();
 
         private BiSource(Function<@NotNull ? super T, @NotNull ? extends X> source) {
-            super(false, null, (BiFunction<? super Object, ? super T, ? extends T>) null);
+            super(false, Polyfill::uncheckedCast, (BiFunction<? super Object, ? super T, ? extends T>) (a, b) -> b);
             this.source = source;
         }
 
@@ -145,9 +153,18 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         public KeyedReference<X, T> advance(KeyedReference<Object, T> ref) {
             return new KeyedReference.Support.Mapped<>(
                     ref,
-                    unused -> ref.into(this.source),
+                    prevKey -> {
+                        X yieldKey = ref.into(this.source);
+                        reverseKeys.put(yieldKey, prevKey);
+                        return yieldKey;
+                    },
                     (unused, val) -> val
             );
+        }
+
+        @Override
+        public Optional<Object> revertKey(X key) {
+            return Optional.ofNullable(reverseKeys.getOrDefault(key, null));
         }
     }
 }

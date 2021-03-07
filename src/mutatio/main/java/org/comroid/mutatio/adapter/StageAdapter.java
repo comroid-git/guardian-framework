@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@Deprecated
 public abstract class StageAdapter<In, Out>
         extends ReferenceStageAdapter<@Nullable Integer, @NotNull Integer, In, Out, KeyedReference<@NotNull Integer, In>, KeyedReference<@NotNull Integer, Out>>
         implements KeyedReference.Advancer<@NotNull Integer, In, @NotNull Integer, Out> {
@@ -56,6 +57,11 @@ public abstract class StageAdapter<In, Out>
 
     public final Out advanceValue(In value) {
         return advanceValue(null, value);
+    }
+
+    @Override
+    public final String toString() {
+        return String.format("StageAdapter(%s)@%d", getClass().getSimpleName(), hashCode());
     }
 
     private static final class Filter<T> extends StageAdapter<T, T> {

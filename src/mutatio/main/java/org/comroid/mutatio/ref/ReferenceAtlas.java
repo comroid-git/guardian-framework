@@ -169,39 +169,26 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         // todo: does not work right
         Objects.requireNonNull(key, "key");
         KeyedReference<K, V> ref = accessors.get(key);
+        if (ref == null && !createIfAbsent)
+            ref = streamRefs().filter(it -> it.getKey().equals(key))
+                    .findFirst()
+                    .orElse(null);
         if (ref != null)
             return ref;
         validateMutability();
-        // todo: Ensure each parent's refs are created here
-        //noinspection unchecked
-        InK fabK = getAdvancer().revertKey(key)
+        ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> advancer = getAdvancer();
+        InK fabK = advancer.revertKey(key)
                 .map(this::prefabBaseKey)
-                .orElseGet(() -> parent == null ? null : ((ReferenceAtlas<?, InK, ?, In>) parent).findKeyForSubKey(this, key));
+                .orElseGet(() -> advancer.findParentKey(parent, key));
         if (parent != null && fabK != null) {
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             if (inRef != null)
                 ref = advanceReference(inRef);
         } else if (createIfAbsent) ref = createEmptyRef(key);
+        else return KeyedReference.emptyKey();
         if (putAccessor(key, ref))
             return Objects.requireNonNull(ref, "assertion: ref is null");
         throw new AssertionError("Could not create Reference for key " + key);
-    }
-
-    private <RK> @Nullable K findKeyForSubKey(RefAtlas<K, RK, V, ?> forStage, RK other) {
-        final ReferenceStageAdapter<K, RK, V, ?, ? extends KeyedReference<K, V>, ? extends KeyedReference<RK, ?>> advancer = forStage.getAdvancer();
-        if (advancer instanceof BiStageAdapter.BiSource) {
-            //noinspection unchecked
-            final BiStageAdapter.BiSource<V, RK> source = (BiStageAdapter.BiSource<V, RK>) advancer;
-            return streamRefs()
-                    .filter(ref -> ref.into(source.source).equals(other))
-                    .findFirst()
-                    .map(KeyedReference::getKey)
-                    .orElse(null);
-        }
-        return streamKeys()
-                .filter(key -> advancer.advanceKey(key).equals(other))
-                .findFirst()
-                .orElse(null);
     }
 
     protected final boolean putAccessor(K key, KeyedReference<K, V> ref) {

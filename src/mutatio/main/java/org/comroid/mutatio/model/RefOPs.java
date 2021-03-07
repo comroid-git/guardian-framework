@@ -5,7 +5,6 @@ import org.comroid.api.Rewrapper;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
-import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
@@ -49,7 +48,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
     }
 
     default ReferencePipe<?, ?, K, V> filter(Predicate<? super V> predicate) {
-        return addStage(uncheckedCast(StageAdapter.filter(predicate)));
+        return addStage(uncheckedCast(BiStageAdapter.filterValue(predicate)));
     }
 
     default ReferencePipe<?, ?, K, V> filterKey(Predicate<? super K> predicate) {
@@ -69,7 +68,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
     }
 
     default <R> ReferencePipe<?, ?, K, R> map(Function<? super V, ? extends R> mapper) {
-        return addStage(uncheckedCast(StageAdapter.map(mapper)));
+        return addStage(uncheckedCast(BiStageAdapter.mapValue(mapper)));
     }
 
     default <R> ReferencePipe<?, ?, R, V> mapKey(Function<? super K, ? extends R> mapper) {
@@ -85,7 +84,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
     }
 
     default <R> ReferencePipe<?, ?, K, R> flatMap(Function<? super V, ? extends Rewrapper<? extends R>> mapper) {
-        return addStage(uncheckedCast(StageAdapter.flatMap(mapper)));
+        return addStage(uncheckedCast(BiStageAdapter.flatMapValue(mapper)));
     }
 
     default <R> ReferencePipe<?, ?, K, R> flatMapOptional(Function<? super V, ? extends Optional<? extends R>> mapper) {

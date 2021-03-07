@@ -1,10 +1,15 @@
 package org.comroid.mutatio.adapter;
 
+import org.comroid.mutatio.model.RefAtlas;
 import org.comroid.mutatio.pipe.ReferenceConverter;
 import org.comroid.mutatio.ref.Reference;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -23,22 +28,22 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
 
     protected ReferenceStageAdapter(
             boolean isIdentity,
-            Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
-            BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper
+            @NotNull Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
+            @NotNull BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper
     ) {
         this(isIdentity, keyMapper, valueMapper, null, null);
     }
 
     protected ReferenceStageAdapter(
             boolean isIdentity,
-            Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
-            BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper,
+            @NotNull Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
+            @NotNull BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper,
             @Nullable Function<? super OutK, ? extends InK> keyReverser,
             @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
         this.isIdentity = isIdentity;
-        this.keyMapper = keyMapper;
-        this.valueMapper = valueMapper;
+        this.keyMapper = Objects.requireNonNull(keyMapper, "key mapper");
+        this.valueMapper = Objects.requireNonNull(valueMapper, "value mapper");
         this.keyReverser = keyReverser;
         this.valueReverser = valueReverser;
     }
@@ -54,16 +59,28 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
         return valueMapper.apply(key, value);
     }
 
-    public final Optional<InK> revertKey(OutK key) {
+    public Optional<InK> revertKey(OutK key) {
         if (keyReverser == null)
             return Optional.empty();
         return Optional.ofNullable(keyReverser.apply(key));
     }
 
-    public final Optional<InV> revertValue(OutV value) {
+    public Optional<InV> revertValue(OutV value) {
         if (valueReverser == null)
             return Optional.empty();
         return Optional.ofNullable(valueReverser.apply(value));
     }
 
+    @Internal
+    @Contract("null, _ -> null; !null, _ -> _")
+    public <DK, DV> InK findParentKey(@Nullable RefAtlas<DK, InK, DV, InV> parent, @NotNull OutK targetKey) {
+        if (parent == null)
+            return null;
+        return revertKey(targetKey)
+                .orElseGet(() -> parent.streamKeys()
+                        .filter(inK -> advanceKey(inK).equals(targetKey))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchElementException(String
+                                .format("Could not find matching key for %s in %s using %s", targetKey, parent, this))));
+    }
 }
