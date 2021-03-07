@@ -80,7 +80,6 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
                 .orElseGet(() -> parent.streamKeys()
                         .filter(inK -> advanceKey(inK).equals(targetKey))
                         .findFirst()
-                        .orElseThrow(() -> new NoSuchElementException(String
-                                .format("Could not find matching key for %s in %s using %s", targetKey, parent, this))));
+                        .orElse(null));
     }
 }
