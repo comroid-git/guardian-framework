@@ -117,7 +117,12 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 return refs;
             });
             KeyedReference<VarBind, Object> cRef = getComputedReference(bind);
-            Object prev = cRef.get();
+            Object prev;
+            try {
+                prev = cRef.get();
+            } catch (ClassCastException cce) {
+                throw new IllegalStateException("Data has invalid structure", cce);
+            }
             if (cRef.get() != prev)
                 initialized.add(Polyfill.uncheckedCast(bind));
         });
