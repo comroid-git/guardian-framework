@@ -116,6 +116,7 @@ public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNo
     }
 
     @Override
+    @Deprecated // because undone
     public UniNode copyFrom(@NotNull UniNode it) {
         return null; // todo
     }

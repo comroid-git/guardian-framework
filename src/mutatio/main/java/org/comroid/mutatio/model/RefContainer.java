@@ -4,6 +4,8 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public interface RefContainer<K, V> extends RefOPs<K, V, KeyedReference<K, V>> {
@@ -26,4 +28,8 @@ public interface RefContainer<K, V> extends RefOPs<K, V, KeyedReference<K, V>> {
 
     @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     KeyedReference<K, V> getReference(K key, boolean createIfAbsent);
+
+    void forEach(final Consumer<? super V> action);
+
+    void forEach(final BiConsumer<? super K, ? super V> action);
 }

@@ -9,6 +9,8 @@ import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.node.UniArrayNode;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.RootBind;
@@ -18,10 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -85,9 +84,21 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         this.initialValues = updateFrom(initialData);
         this.parser = new ParameterizedReference<UniObjectNode, UniObjectNode>(this, null) {
             @Override
-            protected UniObjectNode doGet(final UniObjectNode obj) {
-                streamInputRefs().forEach(ref -> ref.into(v -> obj.put(ref.getKey(), v)));
-                return obj;
+            protected UniObjectNode doGet(final UniObjectNode into) {
+                streamInputRefs().forEach(ref -> ref.consume(refs -> {
+                    if (refs.size() > 1) {
+                        UniArrayNode arr = into.putArray(ref.getKey());
+                        refs.forEach(arr::addValue);
+                    } else if (refs.size() == 0) {
+                    } else {
+                        Object v = refs.get(0);
+                        if (v instanceof Map) {
+                            UniObjectNode obj = into.putObject(ref.getKey());
+                            ((Map<String, Object>) v).forEach(obj::put);
+                        } else into.put(ref.getKey(), v);
+                    }
+                }));
+                return into;
             }
         };
     }

@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public abstract class ReferenceAtlas<InK, K, In, V>
@@ -197,6 +199,16 @@ public abstract class ReferenceAtlas<InK, K, In, V>
             actual.rebind(ref);
             return true;
         } else return accessors.put(key, ref) != ref && ref.addDependent(this);
+    }
+
+    @Override
+    public void forEach(Consumer<? super V> action) {
+        streamValues().forEach(action);
+    }
+
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        streamRefs().forEach(ref -> ref.consume(action));
     }
 
     public static abstract class ForList<InV, V>

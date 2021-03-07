@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Experimental
@@ -32,4 +34,6 @@ public interface RefList<T> extends RefAtlas<@Nullable Integer, @NotNull Integer
 
     @Deprecated
     Span<T> span();
+
+    void forEach(final Consumer<? super T> action);
 }

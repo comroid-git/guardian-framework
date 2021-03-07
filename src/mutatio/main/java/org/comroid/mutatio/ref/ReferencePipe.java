@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V>
@@ -100,6 +102,16 @@ public class ReferencePipe<InK, InV, K, V>
     @Override
     protected KeyedReference<K, V> createEmptyRef(K key) {
         return KeyedReference.createKey(key);
+    }
+
+    @Override
+    public void forEach(Consumer<? super V> action) {
+        streamValues().forEach(action);
+    }
+
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        streamRefs().forEach(ref -> ref.consume(action));
     }
 
     public static abstract class ForList<InV, V>

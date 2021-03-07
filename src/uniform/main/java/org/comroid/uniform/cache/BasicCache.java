@@ -41,10 +41,4 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
     public String toString() {
         return super.toString();
     }
-
-    @NotNull
-    @Override
-    public Iterator<CacheReference<K, V>> iterator() {
-        return streamRefs().map(Polyfill::<CacheReference<K, V>>uncheckedCast).iterator();
-    }
 }

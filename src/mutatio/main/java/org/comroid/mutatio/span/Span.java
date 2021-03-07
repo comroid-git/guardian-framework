@@ -324,7 +324,7 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
                 private final Function<Span<T>, Span<T>> finisher = new Function<Span<T>, Span<T>>() {
                     @Override
                     public Span<T> apply(Span<T> ts) {
-                        ts.forEach(storage::add);
+                        ts.forEach((Consumer<T>) storage::add);
                         return span();
                     }
                 };

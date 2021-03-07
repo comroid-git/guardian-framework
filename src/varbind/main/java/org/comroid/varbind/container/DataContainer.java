@@ -20,22 +20,30 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface DataContainer<S extends DataContainer<? super S>>
         extends RefAtlas<String, VarBind, ReferenceList, Object>,
         AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
     @Override
-    default int size() {
-        return entrySet().size();
-    }
-
-    @Override
     default ContextualProvider getUnderlyingContextualProvider() {
         return null;
     }
 
     GroupBind<S> getRootBind();
+
+    @Override
+    void forEach(final Consumer<? super Object> action);
+
+    @Override
+    void forEach(final BiConsumer<? super VarBind, ? super Object> action);
+
+    @Override
+    default int size() {
+        return entrySet().size();
+    }
 
     @Override
     default Object get(Object key) {
@@ -141,6 +149,15 @@ public interface DataContainer<S extends DataContainer<? super S>>
 
     VarBind<? extends S, ?, ?, Object> getBindByName(String name);
 
+    @Nullable
+    @Internal
+    @SuppressWarnings("unchecked")
+    default Object unwrapPrev(Object prev) {
+        if (prev != null && prev instanceof List && ((List) prev).size() == 1)
+            return ((List<Object>) prev).get(0);
+        return prev;
+    }
+
     interface Underlying<S extends DataContainer<? super S>> extends DataContainer<S> {
         DataContainer<S> getUnderlyingVarCarrier();
 
@@ -183,14 +200,5 @@ public interface DataContainer<S extends DataContainer<? super S>>
         default <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value) {
             return getUnderlyingVarCarrier().put(bind, value);
         }
-    }
-
-    @Nullable
-    @Internal
-    @SuppressWarnings("unchecked")
-    default Object unwrapPrev(Object prev) {
-        if (prev != null && prev instanceof List && ((List) prev).size() == 1)
-            return ((List<Object>) prev).get(0);
-        return prev;
     }
 }

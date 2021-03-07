@@ -85,6 +85,10 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRe
         return valueHolder.set(value);
     }
 
+    public void consume(BiConsumer<? super K, ? super V> consumer) {
+        consumer.accept(getKey(), getValue());
+    }
+
     public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
         @Override
         KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
