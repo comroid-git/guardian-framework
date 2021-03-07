@@ -19,17 +19,21 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
     protected BiStageAdapter(
             boolean isIdentity,
             Function<? super InK, ? extends OutK> keyMapper,
-            final Function<? super InV, ? extends OutV> valueMapper
+            final Function<? super InV, ? extends OutV> valueMapper,
+            @Nullable Function<? super OutK, ? extends InK> keyReverser,
+            @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
-        this(isIdentity, keyMapper, (unused, in) -> valueMapper.apply(in));
+        this(isIdentity, keyMapper, (unused, in) -> valueMapper.apply(in), keyReverser, valueReverser);
     }
 
     protected BiStageAdapter(
             boolean isIdentity,
             Function<? super InK, ? extends OutK> keyMapper,
-            BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper
+            BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper,
+            @Nullable Function<? super OutK, ? extends InK> keyReverser,
+            @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
-        super(isIdentity, keyMapper, valueMapper);
+        super(isIdentity, keyMapper, valueMapper, keyReverser, valueReverser);
     }
 
     public static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {
@@ -107,7 +111,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         private final BiPredicate<@NotNull ? super X, @Nullable ? super Y> filter;
 
         private Filter(final BiPredicate<@NotNull ? super X, @Nullable ? super Y> filter) {
-            super(true, Function.identity(), (k, v) -> filter.test(k, v) ? v : null);
+            super(true, Function.identity(), (k, v) -> filter.test(k, v) ? v : null, Function.identity(), Function.identity());
             this.filter = filter;
         }
 
@@ -122,14 +126,32 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
                 Function<? super IX, ? extends OX> keyMapper,
                 Function<? super IY, ? extends OY> valueMapper
         ) {
-            super(false, keyMapper, valueMapper);
+            this(keyMapper, valueMapper, null, null);
+        }
+
+        private Map(
+                Function<? super IX, ? extends OX> keyMapper,
+                Function<? super IY, ? extends OY> valueMapper,
+                @Nullable Function<? super OX, ? extends IX> keyReverser,
+                @Nullable Function<? super OY, ? extends IY> valueReverser
+        ) {
+            super(false, keyMapper, valueMapper, keyReverser, valueReverser);
         }
 
         private Map(
                 Function<? super IX, ? extends OX> keyMapper,
                 BiFunction<? super IX, ? super IY, ? extends OY> valueMapper
         ) {
-            super(false, keyMapper, valueMapper);
+            this(keyMapper, valueMapper, null, null);
+        }
+
+        private Map(
+                Function<? super IX, ? extends OX> keyMapper,
+                BiFunction<? super IX, ? super IY, ? extends OY> valueMapper,
+                @Nullable Function<? super OX, ? extends IX> keyReverser,
+                @Nullable Function<? super OY, ? extends IY> valueReverser
+        ) {
+            super(false, keyMapper, valueMapper, keyReverser, valueReverser);
         }
 
         @Override
@@ -145,7 +167,7 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         private final ConcurrentHashMap<X, Object> reverseKeys = new ConcurrentHashMap<>();
 
         private BiSource(Function<@NotNull ? super T, @NotNull ? extends X> source) {
-            super(false, Polyfill::uncheckedCast, (BiFunction<? super Object, ? super T, ? extends T>) (a, b) -> b);
+            super(false, Polyfill::uncheckedCast, (BiFunction<? super Object, ? super T, ? extends T>) (a, b) -> b, null, Function.identity());
             this.source = source;
         }
 

@@ -181,7 +181,7 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
             private final CompletableFuture<V> future = new CompletableFuture<>();
 
             protected OnceCompletingStage() {
-                super(true, Function.identity(), (v, v2) -> v);
+                super(true, Function.identity(), (v, v2) -> v, Function.identity(), Function.identity());
             }
 
             @Override

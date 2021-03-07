@@ -26,6 +26,7 @@ public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends 
         return isIdentity;
     }
 
+    @Deprecated
     protected ReferenceStageAdapter(
             boolean isIdentity,
             @NotNull Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,

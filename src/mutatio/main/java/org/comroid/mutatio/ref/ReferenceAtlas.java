@@ -8,6 +8,7 @@ import org.comroid.mutatio.adapter.StageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.RefAtlas;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,7 +131,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
     }
 
     @Override
-    public final Stream<K> streamKeys() {
+    public Stream<K> streamKeys() {
         return Stream.concat(
                 parent == null ? Stream.empty()
                         : parent.streamKeys().map(getAdvancer()::advanceKey),
@@ -166,6 +167,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
     }
 
     @Override
+    @Contract("!null, false -> _; !null, true -> !null; null, _ -> fail")
     public final KeyedReference<K, V> getReference(K key, boolean createIfAbsent) {
         // todo: does not work right
         Objects.requireNonNull(key, "key");

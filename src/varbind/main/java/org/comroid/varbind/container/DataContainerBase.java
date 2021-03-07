@@ -221,7 +221,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                     return null;
                 //noinspection unchecked
                 return bind.process(Polyfill.uncheckedCast(DataContainerBase.this), referenceList);
-            });
+            }, VarBind::getFieldName, null);
         }
 
         @Override
