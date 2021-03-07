@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 public abstract class AbstractCache<K, V>
         extends ReferenceMap<K, V>
         implements Cache<K, V> {
-    private final ReferenceMap<K, V> cache;
     private final ContextualProvider context;
 
     @Override
@@ -24,14 +23,9 @@ public abstract class AbstractCache<K, V>
     }
 
     protected AbstractCache(ContextualProvider context) {
-        this(context, new ReferenceMap<>());
-    }
-
-    protected AbstractCache(ContextualProvider context, ReferenceMap<K, V> cache) {
-        super(cache);
+        super(true);
 
         this.context = context;
-        this.cache = cache;
     }
 
     protected abstract CacheReference<K, V> advanceIntoCacheRef(Reference<V> reference);
