@@ -175,7 +175,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
                     .orElse(null);
         if (ref != null)
             return ref;
-        validateMutability();
+        if (!createIfAbsent) validateMutability();
         ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> advancer = getAdvancer();
         InK fabK = advancer.revertKey(key)
                 .map(this::prefabBaseKey)
