@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
@@ -222,6 +223,13 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
         coll.addAll(this);
 
         return coll;
+    }
+
+    public void cleanup() {
+        streamRefs().filter(Rewrapper::isNull)
+                .map(KeyedReference::getKey)
+                .collect(Collectors.toList())
+                .forEach(this::removeRef);
     }
 
     @SuppressWarnings("Convert2MethodRef")
