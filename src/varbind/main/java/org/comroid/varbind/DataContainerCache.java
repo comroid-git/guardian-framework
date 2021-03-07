@@ -22,10 +22,9 @@ public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
     public DataContainerCache(
             ContextualProvider context,
             int largeThreshold,
-            Map<K, CacheReference<K, V>> map,
             VarBind<? super V, ?, ?, K> idBind
     ) {
-        super(context, largeThreshold, map);
+        super(context, largeThreshold);
 
         this.idBind = Polyfill.uncheckedCast(idBind);
     }

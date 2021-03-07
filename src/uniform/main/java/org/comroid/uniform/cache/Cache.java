@@ -9,8 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 public interface Cache<K, V> extends Iterable<CacheReference<K, V>>, RefMap<K, V>, ContextualProvider.Underlying {
-    <R> Reference<R> accessor(K key, String name, Reference.Advancer<V, ? extends R> advancer);
-
     default boolean canProvide() {
         return false;
     }

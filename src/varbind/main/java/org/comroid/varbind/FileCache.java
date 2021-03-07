@@ -61,7 +61,7 @@ public class FileCache<K, V extends DataContainer<V>>
             int largeThreshold,
             boolean keyCaching
     ) {
-        super(context, largeThreshold, new ConcurrentHashMap<>(), idBind);
+        super(context, largeThreshold, idBind);
 
         this.seriLib = seriLib;
         this.resolver = resolver;

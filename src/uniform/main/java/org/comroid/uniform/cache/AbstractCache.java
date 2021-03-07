@@ -22,11 +22,12 @@ public abstract class AbstractCache<K, V>
         return context;
     }
 
+    @Override
+    protected abstract CacheReference<K, V> createEmptyRef(K key);
+
     protected AbstractCache(ContextualProvider context) {
         super(true);
 
         this.context = context;
     }
-
-    protected abstract CacheReference<K, V> advanceIntoCacheRef(Reference<V> reference);
 }
