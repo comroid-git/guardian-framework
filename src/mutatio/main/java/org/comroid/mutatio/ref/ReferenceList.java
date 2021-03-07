@@ -129,14 +129,11 @@ public class ReferenceList<T>
 
     @Override
     public final boolean remove(Object item) {
-        for (int i = 0; i < this.size(); i++) {
-            Reference<T> ref = getReference(i);
-            if (ref == null)
-                continue;
-            if (ref.contentEquals(item))
-                return removeRef(i);
-        }
-        return false;
+        return streamRefs().filter(ref -> ref.contentEquals(item))
+                .findAny()
+                .map(KeyedReference::getKey)
+                .map(this::removeRef)
+                .orElse(false);
     }
 
     @Override
