@@ -58,7 +58,6 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
     protected Span(RefContainer<?, T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
-        //noinspection unchecked
         this.storage = new ReferenceList<>(data);
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
@@ -111,25 +110,8 @@ public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
     @Override
     public final synchronized boolean add(T it) {
         synchronized (dataLock) {
-            int i;
-
-            for (i = 0; i < storage.size(); i++) {
-                final T oldV = valueAt(i);
-                if (modifyPolicy.canOverwrite(oldV, it))
-                    return storage.getReference(i, true).set(it);
-            }
-
-            if (isFixedSize()) {
-                throw new IndexOutOfBoundsException("Span cannot be resized");
-            }
-            if (i != storage.size()) {
-                throw new AssertionError(String.format(
-                        "Suspicious Span.add() call: index too large {expected: %d, actual: %d}%n",
-                        storage.size(), i
-                ));
-            }
-
-            return modifyPolicy.canInitialize(it) && storage.getReference(storage.size(), true).set(it);
+            cleanup();
+            return super.add(it);
         }
     }
 
