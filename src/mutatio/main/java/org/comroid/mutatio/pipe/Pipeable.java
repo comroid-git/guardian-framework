@@ -10,6 +10,8 @@ import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
 public interface Pipeable<T> {
     @Deprecated
     default ReferenceList<? extends T> pipe() {
+        if (this instanceof ReferenceList)
+            return (ReferenceList<? extends T>) this;
         throw new AbstractMethodError("deprecated");
     }
 
