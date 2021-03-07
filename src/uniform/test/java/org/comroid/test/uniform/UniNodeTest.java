@@ -6,6 +6,7 @@ import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
+import org.comroid.util.StandardValueType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,13 @@ public class UniNodeTest {
 
         System.out.println("object.toString() = " + object.toString());
         UniObjectNode reparsed = fastJsonLib.parse(object.toString()).asObjectNode();
-        reparsed.forEach((k, v) -> Assert.assertEquals("object reparsed value, key: " + k, object.get(k).asRaw(), v));
+        reparsed.forEach((k, v) -> {
+            UniValueNode expect = object.get(k).asValueNode();
+
+            Assert.assertEquals("expect node value type", StandardValueType.INTEGER, expect.getHeldType());
+            Assert.assertTrue("actual node value type; is " + v.getClass(), v instanceof Integer);
+            Assert.assertEquals("object reparsed value, key: " + k, expect.asRaw(), v);
+        });
         reparsed.streamNodes()
                 .map(UniNode::asRaw)
                 .forEach(raw -> Assert.assertTrue("value missing: " + raw, object.containsValue(raw)));
@@ -74,8 +81,14 @@ public class UniNodeTest {
 
         System.out.println("array.toString() = " + array.toString());
         UniArrayNode reparsed = fastJsonLib.parse(array.toString()).asArrayNode();
-        for (int k = 0; k < reparsed.size(); k++)
-            Assert.assertEquals("array reparsed value, key: " + k, array.get(k).asRaw(), reparsed.get(k).asRaw());
+        for (int k = 0; k < reparsed.size(); k++) {
+            UniValueNode expect = array.get(k).asValueNode();
+            UniValueNode actual = reparsed.get(k).asValueNode();
+
+            Assert.assertEquals("expect node value type", StandardValueType.INTEGER, expect.getHeldType());
+            Assert.assertEquals("actual node value type", StandardValueType.INTEGER, actual.getHeldType());
+            Assert.assertEquals("array reparsed value, key: " + k, expect.asRaw(), actual.asRaw());
+        }
         reparsed.streamNodes()
                 .map(UniNode::asRaw)
                 .forEach(raw -> Assert.assertTrue("value missing: " + raw, array.contains(raw)));
