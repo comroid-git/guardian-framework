@@ -21,7 +21,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     private final List<GroupBind<? extends T>> subgroups = new ArrayList<>();
     private final SerializationAdapter<?, ?, ?> serializationAdapter;
     private final String groupName;
-    private final Span<GroupBind<? super T>> parents;
+    private final List<GroupBind<? super T>> parents;
     private final @Nullable BiFunction<ContextualProvider, UniNode, T> resolver;
 
     public List<? extends VarBind<T, ?, ?, ?>> getDirectChildren() {
@@ -38,7 +38,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return String.format("GroupBind<%s>", nameStringRecursive(getParents(), getName()));
     }
 
-    public Span<GroupBind<? super T>> getParents() {
+    public List<GroupBind<? super T>> getParents() {
         return parents;
     }
 
@@ -85,7 +85,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
             @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
     ) {
         this(
-                Span.singleton(Objects.requireNonNull(parent, "parents")),
+                Collections.singletonList(Objects.requireNonNull(parent, "parents")),
                 context,
                 groupName,
                 resolver
@@ -93,7 +93,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     private GroupBind(
-            Span<GroupBind<? super T>> parents,
+            Collection<GroupBind<? super T>> parents,
             ContextualProvider context,
             String groupName
     ) {
@@ -101,12 +101,14 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     private GroupBind(
-            Span<GroupBind<? super T>> parents,
+            Collection<GroupBind<? super T>> parents,
             ContextualProvider context,
             String groupName,
             @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
     ) {
-        this.parents = parents;
+        this.parents = Collections.unmodifiableList(new ArrayList<>(new HashSet<GroupBind<? super T>>() {{
+            addAll(parents);
+        }}));
         this.serializationAdapter = context.requireFromContext(SerializationAdapter.class);
         this.groupName = groupName;
         this.resolver = resolver;
@@ -148,7 +150,7 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         final GroupBind<? super T> rootParent = (GroupBind<? super T>) findRootParent(Polyfill.uncheckedCast(Arrays.asList(parents)));
 
         return new GroupBind<>(
-                Span.immutable(parents),
+                Collections.unmodifiableList(Arrays.asList(parents)),
                 rootParent.serializationAdapter,
                 groupName,
                 resolver
@@ -161,10 +163,10 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     @SuppressWarnings({"unchecked", "InfiniteRecursion", "ConstantConditions"})
-    private static String nameStringRecursive(Span<? extends GroupBind<?>> parents, String ownName) {
+    private static String nameStringRecursive(List<? extends GroupBind<?>> parents, String ownName) {
         return (!parents.isEmpty()
                 ? nameStringRecursive(
-                parents.stream().flatMap(groupBind -> groupBind.getParents().stream()).collect(Span.collector()),
+                parents.stream().flatMap(groupBind -> groupBind.getParents().stream()).collect(Collectors.toList()),
                 parents.size() == 1
                         ? parents.get(0).getName()
                         : parents.stream()
@@ -245,5 +247,12 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     @Override
     public Iterator<GroupBind<? extends T>> iterator() {
         return subgroups.iterator();
+    }
+
+    public VarBind<? super T, ?, ?, ?> findChildByName(String name) {
+        return streamAllChildren()
+                .filter(bind -> bind.getFieldName().equals(name))
+                .findAny()
+                .orElse(null);
     }
 }

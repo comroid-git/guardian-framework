@@ -2,7 +2,7 @@ package org.comroid.varbind.bind;
 
 import org.comroid.api.Named;
 import org.comroid.api.ValuePointer;
-import org.comroid.mutatio.span.Span;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainer;
@@ -25,6 +25,12 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
 
     boolean isRequired();
 
+    Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies();
+
+    GroupBind<SELF> getGroup();
+
+    boolean isListing();
+
     default FINAL getFrom(UniObjectNode node) {
         return getFrom(null, node);
     }
@@ -33,27 +39,19 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
         return process(dependencyObject, extract(node));
     }
 
-    default Span<REMAP> remapAll(final SELF context, Span<EXTR> from) {
-        return from.pipe()
-                .map(each -> remap(context, each))
-                .span();
+    default RefContainer<?, REMAP> remapAll(final SELF context, RefContainer<?, EXTR> from) {
+        return from.map(each -> remap(context, each));
     }
 
-    default FINAL process(final SELF context, Span<EXTR> from) {
+    default FINAL process(final SELF context, RefContainer<?, EXTR> from) {
         return finish(remapAll(context, from));
     }
 
-    Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies();
-
-    GroupBind<SELF> getGroup();
-
-    Span<EXTR> extract(UniNode data);
+    RefContainer<?, EXTR> extract(UniNode data);
 
     REMAP remap(SELF context, EXTR data);
 
-    boolean isListing();
-
-    FINAL finish(Span<REMAP> parts);
+    FINAL finish(RefContainer<?, REMAP> parts);
 
     enum ExtractionMethod {
         VALUE, OBJECT, ARRAY

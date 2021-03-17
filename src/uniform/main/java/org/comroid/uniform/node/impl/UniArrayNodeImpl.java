@@ -101,7 +101,7 @@ public class UniArrayNodeImpl
 
     @Override
     public @NotNull <T> UniNode put(final int index, ValueType<T> type, T value) throws UnsupportedOperationException {
-        return Objects.requireNonNull(accessors.compute(index, ref -> {
+        return Objects.requireNonNull(accessors.compute(index, (k, v) -> {
             if (value == null)
                 return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)

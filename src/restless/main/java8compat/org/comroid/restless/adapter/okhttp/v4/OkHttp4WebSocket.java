@@ -6,9 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.Websocket;
@@ -26,12 +28,11 @@ public final class OkHttp4WebSocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
     private final Executor executor;
     private final URI uri;
-    private final Pump<? extends WebsocketPacket> pump;
-    private final Pipe<? extends WebsocketPacket> pipeline;
+    private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, ? extends WebsocketPacket> pipeline;
     private final WebSocket internalSocket;
 
     @Override
-    public Pipe<? extends WebsocketPacket> getPacketPipeline() {
+    public RefPipe<?, ?, WebsocketPacket.Type, ? extends WebsocketPacket> getPacketPipeline() {
         return pipeline;
     }
 
@@ -59,8 +60,7 @@ public final class OkHttp4WebSocket implements Websocket {
 
         this.executor = executor;
         this.uri = uri;
-        this.pump = Pump.create(executor, exceptionHandler);
-        this.pipeline = pump.peek(packet -> logger.trace("{} - Received packet: {}", getName(), packet));
+        this.pipeline = new ReferencePipe<>();
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }
 
@@ -85,14 +85,14 @@ public final class OkHttp4WebSocket implements Websocket {
         return CompletableFuture.completedFuture(this);
     }
 
+    private void feed(WebsocketPacket packet) {
+        pipeline.accept(packet.getType(), packet);
+    }
+
     @Override
     public void close() throws IOException {
         internalSocket.close(1000, String.format("%s - Shutting down", getName()));
-        pump.close();
-    }
-
-    private void feed(WebsocketPacket packet) {
-        pump.accept(Reference.constant(packet));
+        pipeline.close();
     }
 
     private class Listener extends WebSocketListener {

@@ -4,27 +4,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.cache.SingleValueCache;
-import org.comroid.mutatio.cache.ValueUpdateListener;
-import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.comroid.util.ReflectionHelper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class Reference<T> extends SingleValueCache.Abstract<T> implements SingleValueCache<T>, Rewrapper<T> {
+public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
-    private final Predicate<T> setter;
-    private Supplier<T> overriddenSupplier = null;
+    private Predicate<T> overriddenSetter;
 
     @Internal
     protected <X> X getFromParent() {
@@ -32,50 +29,61 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     @Override
-    public final Rewrapper<? extends Reference<?>> getParent() {
-        return () -> super.getParent().into(Reference.class);
-    }
-
-    @Override
     public boolean isMutable() {
         return mutable;
     }
 
-    @Deprecated
-    public boolean isPresent() {
-        return test(Objects::nonNull);
+    protected Reference(
+            boolean mutable
+    ) {
+        this(null, mutable, null);
     }
 
-    protected Reference(boolean mutable) {
-        this(null, mutable);
+    protected Reference(
+            @Nullable Reference<?> parent
+    ) {
+        this(parent, false, parent != null ? parent.getAutocomputor() : null);
     }
 
-    protected Reference(@Nullable Reference<?> parent) {
-        this(parent, false);
+    protected Reference(
+            @Nullable ValueProvider.NoParam<?> parent,
+            boolean mutable
+    ) {
+        this(parent, mutable, parent != null ? parent.getAutocomputor() : null);
+    }
+
+    protected Reference(
+            @Nullable ValueProvider.NoParam<?> parent,
+            boolean mutable,
+            Executor autoComputor
+    ) {
+        this(parent, null, mutable, autoComputor);
     }
 
     protected <X> Reference(
             final @Nullable Reference<X> parent,
             final @NotNull Function<T, X> backwardsConverter
     ) {
-        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null);
+        this(parent, backwardsConverter, parent != null ? parent.getAutocomputor() : null);
     }
 
-    protected Reference(
-            @Nullable SingleValueCache<?> parent,
-            boolean mutable
+    protected <X> Reference(
+            final @Nullable Reference<X> parent,
+            final @NotNull Function<T, X> backwardsConverter,
+            Executor autoComputor
     ) {
-        this(parent, null, mutable);
+        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, autoComputor);
     }
 
     private Reference(
-            @Nullable SingleValueCache<?> parent,
+            @Nullable ValueProvider.NoParam<?> parent,
             @Nullable Predicate<T> setter,
-            boolean mutable
+            boolean mutable,
+            Executor autoComputor
     ) {
-        super(parent);
+        super(parent, autoComputor);
 
-        this.setter = setter;
+        this.overriddenSetter = setter;
         this.mutable = mutable;
     }
 
@@ -120,7 +128,10 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return provided(() -> optional.orElse(null));
     }
 
-    protected abstract T doGet();
+    @Override
+    public final @Nullable T get() {
+        return super.get(null);
+    }
 
     @OverrideOnly
     protected boolean doSet(T value) {
@@ -129,19 +140,6 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     @Override
-    public synchronized final T get() {
-        T fromCache = getFromCache();
-        if (isUpToDate() && fromCache != null) {
-            //logger.trace("{} is up to date; does not need computing", toString());
-            return fromCache;
-        }
-        //logger.trace("{} is not up to date; recomputing", toString());
-        T value = overriddenSupplier != null ? overriddenSupplier.get() : doGet();
-        if (value == null)
-            return null;
-        return putIntoCache(value);
-    }
-
     public Reference<T> peek(Consumer<? super T> action) {
         return new Reference.Support.Remapped<>(this, it -> {
             action.accept(it);
@@ -149,16 +147,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         }, Function.identity());
     }
 
-    @Contract("-> this")
-    @Deprecated
-    public Reference<T> process() {
-        return this;
-    }
-
-    public Pipe<T> pipe() {
-        return Pipe.of(get());
-    }
-
+    @Override
     public boolean unset() {
         return set(null);
     }
@@ -169,65 +158,61 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
     }
 
     @Override
+    public final <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source) {
+        return new ParameterizedReference.Support.Source<>(this, source);
+    }
+
+    @Override
     public final boolean set(T value) {
         if (isImmutable())
             return false;
 
-        boolean doSet = setter == null ? doSet(value) : setter.test(value);
+        boolean doSet = overriddenSetter == null ? doSet(value) : overriddenSetter.test(value);
         if (!doSet)
             return false;
+        overriddenSupplier = null;
         putIntoCache(value);
         return true;
     }
 
-    public final void rebind(Supplier<T> behind) {
+    @Override
+    public final void rebind(final Supplier<T> behind) {
         if (behind == this || (behind instanceof Reference
-                && ((Reference<T>) behind).upstream().noneMatch(this::equals)))
+                && ((Reference<T>) behind).upstream().anyMatch(this::equals)))
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
-        this.overriddenSupplier = behind;
+        overriddenSupplier = nil -> behind.get();
+        if (behind instanceof Reference)
+            overriddenSetter = ((Reference<T>) behind)::set;
         outdateCache();
     }
 
-    /**
-     * Applies the provided consumer to the current value and attaches a ValueUpdateListener for future updates.
-     *
-     * @param action The action to apply
-     * @return The attached ValueUpdateListener
-     */
-    public ValueUpdateListener<T> apply(Consumer<T> action) {
-        ifPresent(action);
-        return onChange(action);
-    }
-
+    @Override
     public Reference<T> filter(Predicate<? super T> predicate) {
         return new Reference.Support.Filtered<>(this, predicate);
     }
 
-    public <R> Reference<R> flatMap(Class<R> type) {
-        return filter(type::isInstance).map(type::cast);
-    }
-
+    @Override
     public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
-        return new Reference.Support.Remapped<>(this, mapper, null);
+        return map(mapper, null);
     }
 
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper) {
-        return new Reference.Support.ReferenceFlatMapped<>(this, mapper, null);
+    @Override
+    public <R> Reference<R> map(Function<? super T, ? extends R> mapper, Function<R, T> backwardsConverter) {
+        return new Reference.Support.Remapped<>(this, mapper, backwardsConverter);
     }
 
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Reference<? extends R>> mapper, Function<R, T> backwardsConverter) {
+    @Override
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+        return flatMap(mapper, null);
+    }
+
+    @Override
+    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
     }
 
-    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return flatMap(mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty)));
-    }
-
-    public <R> Reference<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(mapper.andThen(Optional::get).andThen(Reference::constant), backwardsConverter);
-    }
-
+    @Override
     public Reference<T> or(Supplier<T> orElse) {
         return new Support.Or<>(this, orElse);
     }
@@ -243,7 +228,8 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
-    public interface Advancer<I, O> extends ReferenceAdvancer<I, O, Reference<I>, Reference<O>> {
+    public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
+        Reference<O> advance(Reference<I> ref);
     }
 
     @Internal
@@ -260,7 +246,7 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
             }
 
             @Deprecated
-            protected Base(@Nullable SingleValueCache<?> parent, boolean mutable) {
+            protected Base(@Nullable ValueProvider.NoParam<?> parent, boolean mutable) {
                 super(parent, mutable);
             }
         }
@@ -393,11 +379,11 @@ public abstract class Reference<T> extends SingleValueCache.Abstract<T> implemen
         }
 
         public static final class ReferenceFlatMapped<I, O> extends Reference<O> {
-            private final Function<? super I, ? extends Reference<? extends O>> remapper;
+            private final Function<? super I, ? extends Rewrapper<? extends O>> remapper;
 
             public ReferenceFlatMapped(
                     Reference<I> base,
-                    Function<? super I, ? extends Reference<? extends O>> remapper,
+                    Function<? super I, ? extends Rewrapper<? extends O>> remapper,
                     Function<O, I> backwardsConverter
             ) {
                 super(base, backwardsConverter);

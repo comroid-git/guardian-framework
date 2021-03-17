@@ -1,7 +1,6 @@
 package org.comroid.uniform.node;
 
 import org.comroid.api.*;
-import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.Serializable;
@@ -63,6 +62,10 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     boolean isEmpty();
 
+    default boolean isNonEmpty() {
+        return !isEmpty();
+    }
+
     int size();
 
     void clear();
@@ -116,8 +119,8 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     boolean has(String fieldName);
-
     // todo: add helper methods
+
     @NotNull
     default <T> UniNode add(ValueType<T> type, T value) throws UnsupportedOperationException {
         return put(size(), type, value);
@@ -340,4 +343,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
             return get(index).asArrayNode();
         return putArray(index);
     }
+
+    @Internal
+    Rewrapper<Object> getData(Object key);
 }

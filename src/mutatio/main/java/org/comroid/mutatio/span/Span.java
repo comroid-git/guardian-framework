@@ -2,11 +2,11 @@ package org.comroid.mutatio.span;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.cache.ValueCache;
-import org.comroid.mutatio.pipe.impl.BasicPipe;
-import org.comroid.mutatio.pipe.Pipe;
+import org.comroid.mutatio.model.RefContainer;
+import org.comroid.mutatio.model.Structure;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,24 +14,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
-public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T>, ReferenceIndex<T>, Rewrapper<T> {
+@Deprecated
+public final class Span<T> extends ReferenceList<T> implements Rewrapper<T> {
     public static final int UNFIXED_SIZE = -1;
     public static final DefaultModifyPolicy DEFAULT_MODIFY_POLICY = DefaultModifyPolicy.SKIP_NULLS;
-    private static final Span<?> EMPTY = new Span<>(ReferenceIndex.empty(), DefaultModifyPolicy.IMMUTABLE);
+    private static final Span<?> EMPTY = new Span<>(ReferenceList.empty(), DefaultModifyPolicy.IMMUTABLE);
     private final Object dataLock = Polyfill.selfawareObject();
-    private final ReferenceIndex<T> storage;
+    private final ReferenceList<T> storage;
     private final int fixedCapacity;
     private final ModifyPolicy modifyPolicy;
-
-
-    @Override
-    public boolean isEmpty() {
-        return size() == 0;
-    }
 
     public final boolean isSingle() {
         return size() == 1;
@@ -45,33 +40,26 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
         return fixedCapacity != UNFIXED_SIZE;
     }
 
-    public boolean isMutable() {
-        return fixedCapacity == UNFIXED_SIZE
-                && modifyPolicy.canOverwrite(new Object(), new Object())
-                && modifyPolicy.canOverwrite(null, new Object());
-    }
-
     public Span() {
-        this(ReferenceIndex.create(), UNFIXED_SIZE, DEFAULT_MODIFY_POLICY);
+        this(ReferenceList.create(), UNFIXED_SIZE, DEFAULT_MODIFY_POLICY);
     }
 
     public Span(int fixedCapacity) {
-        this(ReferenceIndex.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
+        this(ReferenceList.create(), fixedCapacity, DEFAULT_MODIFY_POLICY);
     }
 
-    public Span(ReferenceIndex<T> referenceIndex, ModifyPolicy modifyPolicy) {
-        this(referenceIndex, UNFIXED_SIZE, modifyPolicy);
+    public Span(RefContainer<?, T> referenceList, ModifyPolicy modifyPolicy) {
+        this(referenceList, UNFIXED_SIZE, modifyPolicy);
     }
 
-    public Span(ReferenceIndex<? extends T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
+    public Span(ReferenceList<T> data, ModifyPolicy modifyPolicy, boolean fixedSize) {
         this(data, fixedSize ? data.size() : UNFIXED_SIZE, modifyPolicy);
     }
 
-    protected Span(ReferenceIndex<? extends T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
+    protected Span(RefContainer<?, T> data, int fixedCapacity, ModifyPolicy modifyPolicy) {
         super(Objects.requireNonNull(data, "storage adapter is null"));
 
-        //noinspection unchecked
-        this.storage = (ReferenceIndex<T>) data;
+        this.storage = new ReferenceList<>(data);
         this.fixedCapacity = fixedCapacity;
         this.modifyPolicy = modifyPolicy;
     }
@@ -115,188 +103,27 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
                 .span();
     }
 
-    @Override
-    public boolean contains(Object o) {
-        for (T it : this) {
-            if (o.equals(it)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean containsAll(@NotNull Collection<?> objects) {
-        return objects.stream()
-                .allMatch(this::contains);
-    }
-
-    @Override
-    public boolean addAll(@NotNull Collection<? extends T> objects) {
-        boolean added = false;
-
-        for (T object : objects) {
-            if (add(object) && !added) {
-                added = true;
-            }
-        }
-
-        return added;
-    }
-
-    @Override
-    public boolean removeAll(@NotNull Collection<?> objects) {
-        boolean removed = false;
-
-        for (Object object : objects) {
-            if (remove(object) && !removed) {
-                removed = true;
-            }
-        }
-
-        return removed;
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> keep) {
-        boolean removed = false;
-
-        if (keep.size() > size()) {
-            for (Object k : keep) {
-                for (T each : this) {
-                    if (!k.equals(each) && remove(each)) {
-                        removed = true;
-                    }
-                }
-            }
-        } else {
-            for (T each : this) {
-                for (Object k : keep) {
-                    if (!k.equals(each) && remove(each)) {
-                        removed = true;
-                    }
-                }
-            }
-        }
-
-        return removed;
-    }
-
-    @Override
     public List<T> unwrap() {
         //noinspection unchecked
         return Arrays.asList((T[]) toArray());
     }
 
     @Override
-    @Contract
-    public final int size() {
-        return storage.size();
-    }
-
-    @NotNull
-    @Override
-    public final Iterator iterator() {
-        synchronized (dataLock) {
-            return new Iterator();
-        }
-    }
-
-    @NotNull
-    @Override
-    public final Object[] toArray() {
-        return toArray(new Object[0], Function.identity());
-    }
-
-    @Override
-    public final <R> @NotNull R[] toArray(@NotNull R[] dummy) {
-        //noinspection unchecked
-        return toArray(dummy, it -> (R) it);
-    }
-
-    @Override
     public final synchronized boolean add(T it) {
         synchronized (dataLock) {
-            int i;
-
-            for (i = 0; i < storage.size(); i++) {
-                final T oldV = valueAt(i);
-                if (modifyPolicy.canOverwrite(oldV, it)) {
-                    storage.remove(oldV);
-                    storage.add(it);
-                    return true;
-                }
-            }
-
-            if (isFixedSize()) {
-                throw new IndexOutOfBoundsException("Span cannot be resized");
-            }
-            if (i != storage.size()) {
-                throw new AssertionError(String.format(
-                        "Suspicious Span.add() call: index too large {expected: %d, actual: %d}%n",
-                        storage.size(), i
-                ));
-            }
-
-            return modifyPolicy.canInitialize(it) && storage.add(it);
+            cleanup();
+            return super.add(it);
         }
     }
 
     @Override
-    public boolean addReference(Reference<T> in) {
-        return storage.addReference(in);
+    public boolean addReference(KeyedReference<@NotNull Integer, T> ref) {
+        return storage.addReference(ref);
     }
 
     @Deprecated
     public Reference<T> process(int index) {
         return getReference(index);
-    }
-
-    @Override
-    public final synchronized boolean remove(Object other) {
-        synchronized (dataLock) {
-            if (isFixedSize())
-                throw new UnsupportedOperationException("Span has fixed size; cannot remove");
-
-            for (int i = 0; i < storage.size(); i++) {
-                final T valueAt = valueAt(i);
-
-                if (valueAt == null)
-                    throw new AssertionError();
-
-                if (valueAt.equals(other)) {
-                    if (!modifyPolicy.canRemove(other))
-                        modifyPolicy.fail("removing " + other);
-
-                    return storage.remove(valueAt);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    @Override
-    public final void clear() {
-        synchronized (dataLock) {
-            storage.clear();
-        }
-    }
-
-    @Override
-    public Stream<? extends Reference<T>> streamRefs() {
-        return storage.streamRefs();
-    }
-
-    @Override
-    public Stream<T> stream() {
-        return Stream.of(toArray()).map(Polyfill::uncheckedCast);
-    }
-
-    @Override
-    public Pipe<T> pipe() {
-        return new BasicPipe<>(this, 512);
     }
 
     @Override
@@ -364,43 +191,9 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
         return requireNonNull(() -> "No iterable value present");
     }
 
-    public Span<T> range(int startIncl, int endExcl) {
-        synchronized (dataLock) {
-            return new Span<>(storage.subset(startIncl, endExcl), DefaultModifyPolicy.IMMUTABLE);
-        }
-    }
-
-    @Contract(mutates = "this")
-    public void sort(Comparator<T> comparator) {
-        synchronized (dataLock) {
-            final List<T> list = new ArrayList<>(storage.unwrap());
-            list.sort(comparator);
-
-            storage.clear();
-            list.forEach(storage::add);
-        }
-
-        cleanup();
-    }
-
-    @Contract(mutates = "this")
-    public final synchronized void cleanup() {
-        synchronized (dataLock) {
-            if (isFixedSize()) {
-                final ArrayList<T> list = new ArrayList<>(storage.unwrap());
-
-                storage.clear();
-                list.stream()
-                        .filter(it -> !modifyPolicy.canCleanup(it))
-                        .forEachOrdered(storage::add);
-            } else {
-                final @NotNull Object[] array = toArray();
-
-                storage.clear();
-                for (Object it : array) //noinspection unchecked
-                    storage.add((T) it);
-            }
-        }
+    @Override
+    public void sort(Comparator<? super T> comparator) {
+        super.comparator = Structure.wrapComparator(comparator);
     }
 
     @Contract("-> new")
@@ -413,6 +206,13 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
         coll.addAll(this);
 
         return coll;
+    }
+
+    public void cleanup() {
+        streamRefs().filter(Rewrapper::isNull)
+                .map(KeyedReference::getKey)
+                .collect(Collectors.toList())
+                .forEach(this::removeRef);
     }
 
     @SuppressWarnings("Convert2MethodRef")
@@ -501,15 +301,15 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
     //region API Class
     public static final class API<T> {
         private static final int RESULT_FIXED_SIZE = -2;
-        private final ReferenceIndex<T> storage;
+        private final ReferenceList<T> storage;
         private ModifyPolicy modifyPolicy = Span.DEFAULT_MODIFY_POLICY;
         private int fixedSize;
 
         public API() {
-            this(ReferenceIndex.create());
+            this(ReferenceList.create(true));
         }
 
-        private API(ReferenceIndex<T> storage) {
+        private API(ReferenceList<T> storage) {
             this.storage = storage;
         }
 
@@ -524,7 +324,7 @@ public class Span<T> extends ValueCache.Underlying<Void> implements Collection<T
                 private final Function<Span<T>, Span<T>> finisher = new Function<Span<T>, Span<T>>() {
                     @Override
                     public Span<T> apply(Span<T> ts) {
-                        ts.forEach(storage::add);
+                        ts.forEach((Consumer<T>) storage::add);
                         return span();
                     }
                 };

@@ -14,7 +14,7 @@ public interface Disposable extends AutoCloseable, PropertyHolder {
     @NonExtendable
     default Set<? super AutoCloseable> getCloseables() {
         //noinspection unchecked
-        return ((Set<? super AutoCloseable>) getPropertyCache().computeIfAbsent("disposable-children", HashSet::new));
+        return ((Set<? super AutoCloseable>) getPropertyCache().computeIfAbsent("disposable-children", key -> new HashSet<>()));
     }
 
     @NonExtendable

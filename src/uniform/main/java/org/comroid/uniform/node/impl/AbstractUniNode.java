@@ -2,26 +2,37 @@ package org.comroid.uniform.node.impl;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.api.ValueType;
 import org.comroid.common.info.MessageSupplier;
+import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniValueNode;
+import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNode>, Bas> implements UniNode {
+public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNode>, Bas> implements UniNode {
     protected final Bas baseNode;
     protected final SerializationAdapter<Object, Object, Object> seriLib;
-    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap.Support.Basic<>(
-            new ConcurrentHashMap<>(), ack -> Polyfill.uncheckedCast(wrapKey(ack).ifPresentMap(this::generateAccessor)));
+    protected final ReferenceMap<AcK, UniNode> accessors = new ReferenceMap<AcK, UniNode>() {
+        {
+            setMutable(true);
+        }
+
+        @Override
+        protected KeyedReference<AcK, UniNode> createEmptyRef(AcK key) {
+            return generateAccessor(key);
+        }
+    };
     private final UniNode parent;
 
     @Override
@@ -58,6 +69,17 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
         this.seriLib = seriLib;
         this.parent = parent;
         this.baseNode = baseNode;
+    }
+
+    @Override
+    public final Rewrapper<Object> getData(final Object key) {
+        if (isObjectNode() && has((String) key))
+            return () -> get((String) key);
+        if (isArrayNode() && has((int) key))
+            return () -> get((int) key);
+        if (isValueNode())
+            return asValueNode();
+        return Rewrapper.empty();
     }
 
     protected Rewrapper<AcK> wrapKey(Object key) {
@@ -98,8 +120,8 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     private UniNode getAccessor(AcK key) {
-        return Polyfill.uncheckedCast(Objects.requireNonNull(accessors.get(key),
-                MessageSupplier.format("Missing accessor for key %s", key)));
+        return Polyfill.uncheckedCast(Objects.requireNonNull(accessors.getReference(key, true).getValue(),
+                MessageSupplier.format("Missing accessor for key %s; data = %s", key, toSerializedString())));
     }
 
     @Override
@@ -108,8 +130,31 @@ public abstract class AbstractUniNode<AcK, Ref extends Reference<? extends UniNo
     }
 
     @Override
-    public UniNode copyFrom(@NotNull UniNode it) {
-        return null; // todo
+    public final UniNode copyFrom(@NotNull UniNode it) {
+        NodeType myType = getNodeType();
+        NodeType otherType = it.getNodeType();
+        if (myType != otherType)
+            throw new IllegalArgumentException(String.format("Cannot copy from %s into %s", otherType, myType));
+        if (!(it instanceof AbstractUniNode))
+            throw new IllegalArgumentException("Data has Illegal type; does not extend AbstractUniNode");
+        //noinspection unchecked
+        ((AbstractUniNode) it).streamKeys()
+                .forEach(k -> {
+                    wrapKey(k).ifPresentOrElseThrow(
+                            key -> it.getData(key).ifPresent(data -> this.set(key, data)),
+                            () -> new AssertionError("Could not wrap key: " + k)
+                    );
+                });
+        return this;
+    }
+
+    private void set(AcK key, Object data) {
+        ValueType<Object> typeOf = StandardValueType.typeOf(data);
+        if (isObjectNode())
+            put((String) key, typeOf, data);
+        if (isArrayNode())
+            put((int) key, typeOf, data);
+        throw new UnsupportedOperationException("Invalid node type: " + getNodeType());
     }
 
     @NotNull

@@ -1,7 +1,10 @@
 package org.comroid.test.mutatio.pipe;
 
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.ref.ReferenceIndex;
+import org.comroid.mutatio.ref.ReferenceList;
+import org.comroid.mutatio.ref.ReferencePipe;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,15 +28,13 @@ public class PipeTest {
 
     @Test
     public void testBasicOperations() {
-        final ReferenceIndex<String> strings = ReferenceIndex.of(controlGroup);
+        final ReferenceList<String> strings = ReferenceList.of(controlGroup);
 
-        final Pipe<String> remapOp = strings.pipe()
-                .map(String::toLowerCase);
+        final RefContainer<@NotNull Integer, Object> remapOp = strings.map(String::toLowerCase);
         for (int i = 0; i < controlGroup.size(); i++)
-            Assert.assertEquals("index " + i, controlGroup.get(i).toLowerCase(), remapOp.get(i));
+            Assert.assertEquals("index " + i, controlGroup.get(i).toLowerCase(), remapOp.getReference(i).get());
 
-        final Pipe<String> filterOp = strings.pipe()
-                .filter(str -> str.chars()
+        final RefContainer<@NotNull Integer, String> filterOp = strings.filter(str -> str.chars()
                         .map(Character::toLowerCase)
                         .allMatch(c -> c != 'a'));
         for (int i = 0; i < filterOp.size(); i++)
@@ -42,7 +43,7 @@ public class PipeTest {
                     .map(String::toLowerCase)
                     .ifPresent(str -> Assert.assertFalse(str.contains("a")));
 
-        final Pipe<String> filterMapOp = strings.pipe()
+        final RefContainer<@NotNull Integer, String> filterMapOp = strings
                 .map(String::toLowerCase)
                 .filter(str -> str.chars()
                         .allMatch(c -> c != 'a'));

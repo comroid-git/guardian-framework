@@ -1,16 +1,24 @@
 package org.comroid.mutatio.pipe;
 
+import org.comroid.mutatio.ref.ReferenceList;
+
 import java.util.Collection;
 
 import static org.jetbrains.annotations.ApiStatus.OverrideOnly;
 
+@Deprecated
 public interface Pipeable<T> {
-    Pipe<? extends T> pipe();
+    @Deprecated
+    default ReferenceList<? extends T> pipe() {
+        if (this instanceof ReferenceList)
+            return (ReferenceList<? extends T>) this;
+        throw new AbstractMethodError("deprecated");
+    }
 
     interface From<T> extends Pipeable<T> {
         @Override
-        default Pipe<? extends T> pipe() {
-            return Pipe.of(fetchPipeContent());
+        default ReferenceList<? extends T> pipe() {
+            return ReferenceList.of(fetchPipeContent());
         }
 
         @OverrideOnly

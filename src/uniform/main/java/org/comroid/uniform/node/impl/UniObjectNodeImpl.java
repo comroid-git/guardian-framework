@@ -4,6 +4,7 @@ import org.comroid.api.*;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -58,7 +59,9 @@ public class UniObjectNodeImpl
                             ? seriLib.getObjectType()
                             : seriLib.getArrayType());
             return put(key, nodetype, (UniNode) value);
-        } else {
+        } else if (value instanceof Serializable)
+            return put(key, ((Serializable) value).toUniNode());
+        else {
             if (value instanceof ValueBox)
                 value = ((ValueBox<?>) value).getValue();
             return put(key, StandardValueType.typeOf(value), value);
@@ -80,7 +83,7 @@ public class UniObjectNodeImpl
     public @NotNull <T> UniNode put(final String key, final ValueType<? extends T> type, final T value)
             throws UnsupportedOperationException {
         //noinspection ConstantConditions
-        return accessors.compute(key, node -> {
+        return accessors.compute(key, (k, v) -> {
             if (value == null)
                 return null;
             else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
@@ -119,7 +122,13 @@ public class UniObjectNodeImpl
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return Collections.unmodifiableSet(streamRefs()
-                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(uniNode -> uniNode.asRaw())))
+                .map(ref -> new AbstractMap.SimpleImmutableEntry<>(ref.getKey(), ref.into(uniNode -> {
+                    if (uniNode instanceof UniValueNode) {
+                        ValueType<?> type = ((UniValueNode) uniNode).getHeldType();
+                        return uniNode.as(type);
+                    }
+                    return uniNode;
+                })))
                 .collect(Collectors.toSet()));
     }
 
@@ -167,7 +176,7 @@ public class UniObjectNodeImpl
     protected Stream<String> streamKeys() {
         return Stream.concat(
                 baseNode.keySet().stream().filter(key -> baseNode.get(key) != null),
-                accessors.stream(any -> true).map(Map.Entry::getKey)
+                accessors.streamRefs().map(Map.Entry::getKey)
         ).distinct();
     }
 }

@@ -18,7 +18,7 @@ public interface PropertyHolder extends UUIDContainer {
         private static final Map<UUID, ReferenceMap<String, Object>> cache = new ConcurrentHashMap<>();
 
         private static ReferenceMap<String, Object> getCache(PropertyHolder holder) {
-            return cache.computeIfAbsent(holder.getUUID(), k -> ReferenceMap.create());
+            return cache.computeIfAbsent(holder.getUUID(), k -> new ReferenceMap<>());
         }
     }
 }
