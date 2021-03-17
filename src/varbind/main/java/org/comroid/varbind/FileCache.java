@@ -112,6 +112,7 @@ public class FileCache<K, V extends DataContainer<V>>
 
         data = uniNode.asArrayNode();
         data.streamNodes()
+                .filter(UniNode::isNonEmpty)
                 .filter(UniNode::isObjectNode)
                 .map(UniNode::asObjectNode)
                 .forEach(node -> {

@@ -62,6 +62,10 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     boolean isEmpty();
 
+    default boolean isNonEmpty() {
+        return !isEmpty();
+    }
+
     int size();
 
     void clear();
@@ -115,8 +119,8 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     boolean has(String fieldName);
-
     // todo: add helper methods
+
     @NotNull
     default <T> UniNode add(ValueType<T> type, T value) throws UnsupportedOperationException {
         return put(size(), type, value);
