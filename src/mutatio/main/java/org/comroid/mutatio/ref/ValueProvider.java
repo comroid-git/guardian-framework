@@ -5,11 +5,13 @@ import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
     protected Function<I, O> overriddenSupplier = null;
+    private WeakReference<I> lastParam;
 
     @Override
     public final Rewrapper<? extends Reference<?>> getParent() {
@@ -23,6 +25,13 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
     protected abstract O doGet(I param);
 
     public synchronized final O get(I param) {
+        if (param != null && lastParam != null) { // todo Inspect
+            I lastParam = this.lastParam.get();
+            if (lastParam != null && lastParam.equals(param))
+                return getFromCache();
+            outdateCache();
+        }
+
         O fromCache = getFromCache();
         if (isUpToDate() && fromCache != null) {
             //logger.trace("{} is up to date; does not need computing", toString());
@@ -31,6 +40,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
         //logger.trace("{} is not up to date; recomputing", toString());
         O value = overriddenSupplier != null ? overriddenSupplier.apply(param) : doGet(param);
 
+        this.lastParam = new WeakReference<>(param);
         return putIntoCache(value);
     }
 

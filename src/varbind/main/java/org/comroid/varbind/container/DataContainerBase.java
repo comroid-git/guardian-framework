@@ -85,7 +85,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         this.parser = new ParameterizedReference<UniObjectNode, UniObjectNode>(this, null) {
             @Override
             protected UniObjectNode doGet(final UniObjectNode into) {
-                streamInputRefs().forEach(ref -> ref.consume(refs -> {
+                streamInputRefs().forEach(ref -> ref
+                        .consume(refs -> {
                     if (refs.size() > 1) {
                         UniArrayNode arr = into.putArray(ref.getKey());
                         refs.forEach(arr::addValue);
