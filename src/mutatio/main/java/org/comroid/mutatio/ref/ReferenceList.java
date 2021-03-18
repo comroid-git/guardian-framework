@@ -27,12 +27,21 @@ public class ReferenceList<T>
     private final int fromIndex;
     private final int toIndex;
 
+    public ReferenceList(T... initialValues) {
+        this(Arrays.asList(initialValues));
+    }
+
+    public ReferenceList(Collection<? extends T> initialValues) {
+        this();
+        addAll(initialValues);
+    }
+
     public ReferenceList() {
         this(true);
     }
 
     public ReferenceList(boolean mutable) {
-        this(null);
+        this((RefContainer<?, T>) null);
         setMutable(mutable);
     }
 
