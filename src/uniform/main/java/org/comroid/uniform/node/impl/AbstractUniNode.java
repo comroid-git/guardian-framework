@@ -150,11 +150,9 @@ public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNo
 
     private void set(AcK key, Object data) {
         ValueType<Object> typeOf = StandardValueType.typeOf(data);
-        if (isObjectNode())
+        if (key instanceof String)
             put((String) key, typeOf, data);
-        if (isArrayNode())
-            put((int) key, typeOf, data);
-        throw new UnsupportedOperationException("Invalid node type: " + getNodeType());
+        else put((int) key, typeOf, data);
     }
 
     @NotNull

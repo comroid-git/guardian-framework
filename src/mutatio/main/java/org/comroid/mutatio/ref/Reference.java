@@ -218,8 +218,8 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Override
     public final String toString() {
-        return String.format("Ref#%s<%s; mutable=%s; outdated=%s>",
-                Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated());
+        return String.format("Ref#%s<%s; mutable=%s; outdated=%s; value=%s>",
+                Integer.toHexString(hashCode()), ReflectionHelper.simpleClassName(getClass()), mutable, isOutdated(), get());
     }
 
     @Override

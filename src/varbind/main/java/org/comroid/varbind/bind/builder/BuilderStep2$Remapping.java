@@ -2,6 +2,7 @@ package org.comroid.varbind.bind.builder;
 
 import org.comroid.api.*;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
@@ -36,7 +37,11 @@ public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SEL
 
     public <R> BuilderStep3$Finishing<SELF, EXTR, R> andRemap(
             final Function<? super EXTR, ? extends R> remapper) {
-        return andResolve((self, extr) -> remapper.apply(extr));
+        return andResolve((self, extr) -> {
+            if (extr instanceof UniValueNode)
+                return remapper.apply(((UniValueNode) extr).as(valueType));
+            else return remapper.apply(extr);
+        });
     }
 
     public <R> BuilderStep3$Finishing<SELF, EXTR, R> andResolve(
