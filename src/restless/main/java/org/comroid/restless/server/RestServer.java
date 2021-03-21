@@ -7,7 +7,6 @@ import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
-import org.comroid.common.io.FileHandle;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
@@ -15,8 +14,8 @@ import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
-import org.comroid.util.StandardValueType;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.StandardValueType;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -333,7 +332,17 @@ public class RestServer implements Closeable {
 
                         return responseBody.toString();
                     })
-                    .or(() -> response.getFile().map(FileHandle::getContent).get())
+                    .or(() -> response.getData()
+                            .map(r -> {
+                                try (
+                                        BufferedReader br = new BufferedReader(r)
+                                ) {
+                                    return br.lines().collect(Collectors.joining("\r"));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .get())
                     .orElse("");
         }
     }

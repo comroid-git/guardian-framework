@@ -30,7 +30,7 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
+import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -212,7 +212,7 @@ public final class REST implements ContextualProvider.Underlying {
         private final int statusCode;
         private final String mimeType;
         private final @Nullable Serializable body;
-        private final @Nullable FileHandle file;
+        private final @Nullable Reader data;
         private final Header.List headers;
 
         public int getStatusCode() {
@@ -227,8 +227,8 @@ public final class REST implements ContextualProvider.Underlying {
             return Reference.constant(body);
         }
 
-        public Reference<FileHandle> getFile() {
-            return Reference.constant(file);
+        public Reference<Reader> getData() {
+            return Reference.constant(data);
         }
 
         public Header.List getHeaders() {
@@ -247,18 +247,17 @@ public final class REST implements ContextualProvider.Underlying {
             this(statusCode, new Header.List());
         }
 
-        public Response(URI uri) {
+        public Response(
+                URI uri
+        ) {
             this(uri, true);
         }
 
-        public Response(URI uri, boolean isPermanent) {
+        public Response(
+                URI uri,
+                boolean isPermanent
+        ) {
             this(isPermanent ? HTTPStatusCodes.PERMANENT_REDIRECT : HTTPStatusCodes.TEMPORARY_REDIRECT, redirectHeaderList(uri));
-        }
-
-        private static Header.List redirectHeaderList(URI uri) {
-            Header.List headers = new Header.List();
-            headers.add(CommonHeaderNames.REDIRECT_TARGET, uri.toString());
-            return headers;
         }
 
         /**
@@ -271,11 +270,7 @@ public final class REST implements ContextualProvider.Underlying {
                 int statusCode,
                 Header.List headers
         ) {
-            this.statusCode = statusCode;
-            this.mimeType = "*/*";
-            this.body = null;
-            this.file = null;
-            this.headers = headers;
+            this(statusCode, "*/*", null, null, headers);
         }
 
         /**
@@ -304,11 +299,7 @@ public final class REST implements ContextualProvider.Underlying {
                 Serializable body,
                 Header.List headers
         ) {
-            this.statusCode = statusCode;
-            this.body = Objects.requireNonNull(body, "body");
-            this.mimeType = body.toUniNode().getMimeType();
-            this.file = null;
-            this.headers = Objects.requireNonNull(headers, "headers list");
+            this(statusCode, body.toUniNode().getMimeType(), body, null, headers);
         }
 
         /**
@@ -324,7 +315,7 @@ public final class REST implements ContextualProvider.Underlying {
                 int statusCode,
                 String mimeType,
                 File file
-        ) {
+        ) throws FileNotFoundException {
             this(statusCode, mimeType, file, new Header.List());
         }
 
@@ -341,7 +332,7 @@ public final class REST implements ContextualProvider.Underlying {
                 int statusCode,
                 File file,
                 Header.List headers
-        ) {
+        ) throws FileNotFoundException {
             this(statusCode, FileHandle.guessMimeTypeFromName(file.getName()), file, headers);
         }
 
@@ -359,40 +350,37 @@ public final class REST implements ContextualProvider.Underlying {
                 String mimeType,
                 File file,
                 Header.List headers
-        ) {
-            this.statusCode = statusCode;
-            this.mimeType = Objects.requireNonNull(mimeType, "mimeType");
-            this.body = null;
-            this.file = FileHandle.of(Objects.requireNonNull(file, "file"));
-            this.headers = Objects.requireNonNull(headers, "headers list");
+        ) throws FileNotFoundException {
+            this(statusCode, mimeType, new InputStreamReader(new FileInputStream(file)), headers);
         }
 
-        /**
-         * Creates any kind of response.
-         *
-         * @param statusCode the status code
-         * @param mimeType   the mimeType of the response file
-         * @param file       the file to send in response
-         * @param headers    the response headers
-         */
-        @Internal
         public Response(
                 int statusCode,
                 String mimeType,
+                @Nullable Reader data,
+                Header.List headers
+        ) {
+            this(statusCode, mimeType, null, data, headers);
+        }
+
+        private Response(
+                int statusCode,
+                String mimeType,
                 @Nullable Serializable body,
-                @Nullable File file,
+                @Nullable Reader data,
                 Header.List headers
         ) {
             this.statusCode = statusCode;
             this.mimeType = mimeType;
             this.body = body;
-            this.file = Rewrapper.of(file).into(FileHandle::of);
+            this.data = data;
             this.headers = headers;
         }
 
-        @Deprecated
-        public Response(REST rest, int statusCode, String body) {
-            this(statusCode, rest.requireFromContext(SerializationAdapter.class).createUniNode(body));
+        private static Header.List redirectHeaderList(URI uri) {
+            Header.List headers = new Header.List();
+            headers.add(CommonHeaderNames.REDIRECT_TARGET, uri.toString());
+            return headers;
         }
 
         @Deprecated
