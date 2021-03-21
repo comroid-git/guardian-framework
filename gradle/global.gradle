@@ -51,7 +51,7 @@ repositories {
 
 dependencies {
     if (isAutoDeploy) {
-        api 'org.comroid:api:0.11.+'
+        api 'org.comroid:api:0.+'
     } else {
         api project(':api')
     }
