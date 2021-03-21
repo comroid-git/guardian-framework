@@ -14,21 +14,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, Named, Serializable {
-    @Override
-    default UniNode toUniNode() {
-        return this;
-    }
-
     Rewrapper<? extends UniNode> getParentNode();
-
-    @Internal
-    static <T> T unsupported(UniNode it, String actionName, NodeType expected) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",
-                actionName,
-                it.getNodeType(),
-                expected
-        ));
-    }
 
     default String getSerializedString() {
         return toString();
@@ -64,6 +50,22 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     default boolean isNonEmpty() {
         return !isEmpty();
+    }
+
+    Object getBaseNode();
+
+    @Internal
+    static <T> T unsupported(UniNode it, String actionName, NodeType expected) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException(String.format("Cannot invoke %s on node type %s; " + "%s expected",
+                actionName,
+                it.getNodeType(),
+                expected
+        ));
+    }
+
+    @Override
+    default UniNode toUniNode() {
+        return this;
     }
 
     int size();
@@ -117,9 +119,9 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     default boolean has(Named idBox) {
         return has(idBox.getName());
     }
+    // todo: add helper methods
 
     boolean has(String fieldName);
-    // todo: add helper methods
 
     @NotNull
     default <T> UniNode add(ValueType<T> type, T value) throws UnsupportedOperationException {
@@ -318,8 +320,6 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
         throw new UnsupportedOperationException(String.format("Node is of %s type; expected %s", getNodeType(), NodeType.VALUE));
     }
 
-    Object getBaseNode();
-
     default UniObjectNode computeObject(String key) {
         if (has(key))
             return get(key).asObjectNode();
@@ -346,4 +346,18 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     @Internal
     Rewrapper<Object> getData(Object key);
+
+    default Reference<UniNode> use(final Object key) {
+        if (key instanceof String)
+            return Reference.conditional(
+                    () -> has((String) key),
+                    () -> get((String) key)
+            );
+        else if (key instanceof Named)
+            return use(((Named) key).getName());
+        else return Reference.conditional(
+                () -> has((int) key),
+                () -> get((int) key)
+        );
+    }
 }

@@ -33,20 +33,23 @@ public interface EndpointHandler {
         if (!supports(method))
             throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: " + method.name());
 
-        final UniNode data = body.isEmpty() ? null
-                : Rewrapper.of(server.getSerializationAdapter().createUniNode(body))
-                .orElseGet(() -> {
-                    // try to wrap http form data
-                    try {
-                        UniObjectNode node = server.getSerializationAdapter().createObjectNode();
-                        Stream.of(body.split("&"))
-                                .map(pair -> pair.split("="))
-                                .forEach(field -> node.put(field[0], field[1]));
-                        return node;
-                    } catch (Throwable ignored) {
-                        return null;
-                    }
-                });
+        UniNode data;
+        if (body.isEmpty()) data = null;
+        else {
+            try {
+                data = server.getSerializationAdapter().createUniNode(body);
+            } catch (Throwable ignored) {
+                try {
+                    UniObjectNode obj = server.getSerializationAdapter().createObjectNode();
+                    Stream.of(body.split("&"))
+                            .map(pair -> pair.split("="))
+                            .forEach(field -> obj.put(field[0], field[1]));
+                    data = obj;
+                } catch (Throwable sub) {
+                    return null;
+                }
+            }
+        }
 
         switch (method) {
             case GET:
