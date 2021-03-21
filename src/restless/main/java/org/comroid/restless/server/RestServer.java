@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
 
 public class RestServer implements Closeable {
@@ -154,7 +155,7 @@ public class RestServer implements Closeable {
                     final Headers requestHeaders = exchange.getRequestHeaders();
                     commonHeaders.forEach(responseHeaders::add);
                     responseHeaders.add(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, mimeType);
-                    responseHeaders.add(CommonHeaderNames.REQUEST_CONTENT_TYPE, mimeType);
+                    responseHeaders.add(REQUEST_CONTENT_TYPE, mimeType);
 
                     if (commonHeaders.stream().noneMatch(header -> header.getName().equals("Cookie"))
                             && requestHeaders.containsKey("Cookie"))
@@ -284,6 +285,8 @@ public class RestServer implements Closeable {
             }
 
             response.getHeaders().forEach(responseHeaders::add);
+            responseHeaders.remove(REQUEST_CONTENT_TYPE);
+            responseHeaders.add(REQUEST_CONTENT_TYPE, response.getMimeType());
             final String data = unwrapData(sep, requestURI, response);
 
             writeResponse(exchange, response.getStatusCode(), data);
