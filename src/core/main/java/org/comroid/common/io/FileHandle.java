@@ -147,6 +147,11 @@ public final class FileHandle extends File implements Named, ContentParser {
         else return getParentFile().mkdirs();
     }
 
+    @Override
+    public String getAlternateFormattedName() {
+        return super.getName();
+    }
+
     public CompletableFuture<FileHandle> move(FileHandle target) {
         return move(target, ForkJoinPool.commonPool());
     }
