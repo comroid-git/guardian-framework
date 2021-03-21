@@ -41,7 +41,7 @@ public interface EndpointHandler {
                         UniObjectNode node = server.getSerializationAdapter().createObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
-                                .forEach(field -> node.put(field[0], StandardValueType.STRING, field[1]));
+                                .forEach(field -> node.put(field[0], field[1]));
                         return node;
                     } catch (Throwable ignored) {
                         return null;
