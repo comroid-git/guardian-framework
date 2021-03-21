@@ -1,6 +1,7 @@
 package org.comroid.restless;
 
 import com.sun.net.httpserver.Headers;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
@@ -488,8 +489,8 @@ public final class REST implements ContextualProvider.Underlying {
         public synchronized CompletableFuture<REST.Response> execute() {
             if (!isExecuted()) {
                 //addHeader("Content-Length", String.valueOf(body == null ? 0 : body.length()));
-                logger.debug("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
-                logger.trace("Request has Headers: {}", headers.toString());
+                logger.trace("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
+                logger.log(Level.ALL, "Request has Headers: {}", headers.toString());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
                                 .call(request), executor)
