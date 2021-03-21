@@ -31,6 +31,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
@@ -244,6 +245,20 @@ public final class REST implements ContextualProvider.Underlying {
                 int statusCode
         ) {
             this(statusCode, new Header.List());
+        }
+
+        public Response(URI uri) {
+            this(uri, true);
+        }
+
+        public Response(URI uri, boolean isPermanent) {
+            this(isPermanent ? HTTPStatusCodes.PERMANENT_REDIRECT : HTTPStatusCodes.TEMPORARY_REDIRECT, redirectHeaderList(uri));
+        }
+
+        private static Header.List redirectHeaderList(URI uri) {
+            Header.List headers = new Header.List();
+            headers.add(CommonHeaderNames.REDIRECT_TARGET, uri.toString());
+            return headers;
         }
 
         /**
