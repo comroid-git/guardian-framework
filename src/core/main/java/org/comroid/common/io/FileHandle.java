@@ -18,8 +18,13 @@ public final class FileHandle extends File implements Named, ContentParser {
 
     @NotNull
     @Override
-    public String getName() {
+    public final String getName() {
         return getAbsolutePath();
+    }
+
+    @NotNull
+    public final String getShortName() {
+        return super.getName();
     }
 
     @Override
@@ -145,11 +150,6 @@ public final class FileHandle extends File implements Named, ContentParser {
         if (isDirectory())
             return super.mkdirs();
         else return getParentFile().mkdirs();
-    }
-
-    @Override
-    public String getAlternateFormattedName() {
-        return super.getName();
     }
 
     public CompletableFuture<FileHandle> move(FileHandle target) {
