@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.CommonHeaderNames;
@@ -62,7 +63,7 @@ public class RestServer implements Closeable {
     }
 
     public RestServer(
-            SerializationAdapter seriLib,
+            ContextualProvider context,
             Executor executor,
             String baseUrl,
             InetAddress address,
@@ -70,7 +71,7 @@ public class RestServer implements Closeable {
             ServerEndpoint... endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.length);
-        this.seriLib = seriLib;
+        this.seriLib = context.requireFromContext(SerializationAdapter.class);
         this.mimeType = seriLib.getMimeType();
         this.baseUrl = baseUrl;
         this.server = HttpServer.create(new InetSocketAddress(address, port), port);

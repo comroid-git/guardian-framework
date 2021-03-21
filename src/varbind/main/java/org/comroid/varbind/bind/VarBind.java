@@ -35,7 +35,7 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
         return getFrom(null, node);
     }
 
-    default FINAL getFrom(final SELF dependencyObject, UniObjectNode node) {
+    default FINAL getFrom() {
         return process(dependencyObject, extract(node));
     }
 

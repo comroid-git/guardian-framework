@@ -1,9 +1,12 @@
 package org.comroid.mutatio.model;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.api.ValueBox;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.ref.ParameterizedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +14,18 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.function.*;
 
-public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
+public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
+    @Override
+    default T getValue() {
+        return get();
+    }
+
+    @Override
+    @Nullable
+    default ValueType<? extends T> getHeldType() {
+        return StandardValueType.typeOf(getValue());
+    }
+
     @Override
     boolean isMutable();
 
@@ -97,6 +111,10 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T> {
 
     default Ref<T> peek(Consumer<? super T> action) {
         return filter(wrapPeek(action));
+    }
+
+    default boolean dependsOn(Ref<?> other) {
+        return other.upstream().anyMatch(this::equals);
     }
 
     Ref<T> filter(Predicate<? super T> predicate);

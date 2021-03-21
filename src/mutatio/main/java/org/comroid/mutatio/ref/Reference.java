@@ -177,8 +177,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Override
     public final void rebind(final Supplier<T> behind) {
-        if (behind == this || (behind instanceof Reference
-                && ((Reference<T>) behind).upstream().anyMatch(this::equals)))
+        if (behind == this || (behind instanceof Reference && dependsOn((Reference<T>) behind)))
             throw new IllegalArgumentException("Cannot rebind behind itself");
 
         overriddenSupplier = nil -> behind.get();

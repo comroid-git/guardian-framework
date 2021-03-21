@@ -139,7 +139,7 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     }
 
     @NotNull
-    default <B extends Named & ValuePointer<T>, T> UniNode put(B idBox, T value) {
+    default <Key extends Named & ValuePointer<Value>, Value> UniNode put(Key idBox, Value value) {
         return put(idBox.getName(), idBox.getHeldType(), value);
     }
 

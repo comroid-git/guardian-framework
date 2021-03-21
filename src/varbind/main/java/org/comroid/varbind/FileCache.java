@@ -42,18 +42,16 @@ public class FileCache<K, V extends DataContainer<V>>
 
     public FileCache(
             ContextualProvider context,
-            SerializationAdapter<?, ?, ?> seriLib,
             BiFunction<ContextualProvider, UniObjectNode, V> resolver,
             VarBind<? super V, ?, ?, K> idBind,
             FileHandle file,
             int largeThreshold
     ) {
-        this(context, seriLib, resolver, idBind, null, file, largeThreshold, false);
+        this(context, resolver, idBind, null, file, largeThreshold, false);
     }
 
     public FileCache(
             ContextualProvider context,
-            SerializationAdapter<?, ?, ?> seriLib,
             BiFunction<ContextualProvider, UniObjectNode, V> resolver,
             VarBind<? super V, ?, ?, K> idBind,
             Junction<K, String> converter,
@@ -63,7 +61,7 @@ public class FileCache<K, V extends DataContainer<V>>
     ) {
         super(context, largeThreshold, idBind);
 
-        this.seriLib = seriLib;
+        this.seriLib = context.requireFromContext(SerializationAdapter.class);
         this.resolver = resolver;
         this.file = file;
     }

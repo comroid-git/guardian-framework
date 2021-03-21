@@ -3,6 +3,7 @@ package org.comroid.restless.server;
 import com.sun.net.httpserver.Headers;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
+import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -71,6 +72,26 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
             public REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
                 return handler.executeMethod(server, method, headers, urlParams, body);
             }
+        }
+    }
+
+    interface This extends ServerEndpoint {
+        @Override
+        String getUrlBase();
+
+        @Override
+        String getUrlExtension();
+
+        @Override
+        String[] getRegExpGroups();
+
+        @Override
+        Pattern getPattern();
+
+        @Override
+        @Contract("-> this")
+        default AccessibleEndpoint getEndpointBase() {
+            return this;
         }
     }
 }
