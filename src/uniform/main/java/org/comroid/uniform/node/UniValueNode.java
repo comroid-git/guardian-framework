@@ -1,15 +1,18 @@
 package org.comroid.uniform.node;
 
+import org.comroid.annotations.inheritance.MustExtend;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValuePointer;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
+import org.comroid.uniform.node.impl.UniValueNodeImpl;
 import org.comroid.util.StandardValueType;
 
 import java.util.stream.Stream;
 
+@MustExtend(UniValueNodeImpl.class)
 public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<Object> {
     UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
