@@ -27,7 +27,6 @@ import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.comroid.varbind.container.DataContainerBase;
 import org.intellij.lang.annotations.MagicConstant;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -352,6 +351,14 @@ public final class REST implements ContextualProvider.Underlying {
                 Header.List headers
         ) throws FileNotFoundException {
             this(statusCode, mimeType, new InputStreamReader(new FileInputStream(file)), headers);
+        }
+
+        public Response(
+                int statusCode,
+                String mimeType,
+                @Nullable Reader data
+        ) {
+            this(statusCode, mimeType, data, new Header.List());
         }
 
         public Response(
