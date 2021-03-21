@@ -2,6 +2,7 @@ package org.comroid.restless;
 
 //todo: Incomplete
 public final class CommonHeaderNames {
+    public static final String REFERER = "Referer";
     public static final String COOKIE = "Cookie";
     public static final String ACCEPTED_CHARSET = "Accept-Charset";
     // responses
