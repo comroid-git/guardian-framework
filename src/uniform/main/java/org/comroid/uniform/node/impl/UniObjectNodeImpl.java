@@ -86,7 +86,7 @@ public class UniObjectNodeImpl
         return accessors.compute(key, (k, v) -> {
             if (value == null)
                 return null;
-            else if (value instanceof UniObjectNode || value instanceof UniArrayNode)
+            else if (value instanceof UniNode)
                 return (UniNode) value;
             else {
                 UniValueNodeImpl valueNode = new UniValueNodeImpl(key, seriLib, this, seriLib

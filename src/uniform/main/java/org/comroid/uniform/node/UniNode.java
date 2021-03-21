@@ -347,17 +347,17 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     @Internal
     Rewrapper<Object> getData(Object key);
 
-    default Reference<UniNode> use(final Object key) {
+    default Reference<UniValueNode> use(final Object key) {
         if (key instanceof String)
             return Reference.conditional(
                     () -> has((String) key),
-                    () -> get((String) key)
+                    () -> get((String) key).asValueNode()
             );
         else if (key instanceof Named)
             return use(((Named) key).getName());
         else return Reference.conditional(
                 () -> has((int) key),
-                () -> get((int) key)
+                () -> get((int) key).asValueNode()
         );
     }
 }

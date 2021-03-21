@@ -21,7 +21,7 @@ public abstract class DataStructureType<BAS, TAR extends BAS, UNI extends UniNod
 
     @Override
     public final String getName() {
-        return typ.name();
+        return typ == null ? baseClass.getSimpleName() : typ.name();
     }
 
     public Primitive getTyp() {
