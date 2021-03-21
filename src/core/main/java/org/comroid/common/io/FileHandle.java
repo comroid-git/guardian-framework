@@ -28,6 +28,16 @@ public final class FileHandle extends File implements Named, ContentParser {
     }
 
     @Override
+    public final String getDefaultFormattedName() {
+        return getName();
+    }
+
+    @Override
+    public final String getAlternateFormattedName() {
+        return getShortName();
+    }
+
+    @Override
     public boolean isDirectory() {
         return dir || super.isDirectory();
     }
