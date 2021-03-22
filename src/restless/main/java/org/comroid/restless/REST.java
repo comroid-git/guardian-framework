@@ -522,7 +522,10 @@ public final class REST implements ContextualProvider.Underlying {
                             } catch (Throwable t) {
                                 throw new RuntimeException("A problem occurred while handling response " + response, t);
                             }
-                        }, executor);
+                        }, executor).exceptionally(t -> {
+                            logger.error("An error occurred during request", t);
+                            return null;
+                        });
             }
 
             return execution;
