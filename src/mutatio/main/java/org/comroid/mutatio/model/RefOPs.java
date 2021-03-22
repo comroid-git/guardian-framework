@@ -162,15 +162,27 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
         return addStage(uncheckedCast(BiStageAdapter.identity()), comparator, null);
     }
 
+    @Nullable
+    default V getFirst() {
+        return findFirst().get();
+    }
+
     @NotNull
     default KeyedReference<K, V> findFirst() {
+        // todo This is wrong
         return ((RefContainer<K, V>) this).streamRefs()
                 .findFirst()
                 .orElseGet(KeyedReference::emptyKey);
     }
 
+    @Nullable
+    default V getAny() {
+        return findAny().get();
+    }
+
     @NotNull
     default KeyedReference<K, V> findAny() {
+        // todo This is wrong
         return ((RefContainer<K, V>) this).streamRefs()
                 .findAny()
                 .orElseGet(KeyedReference::emptyKey);
