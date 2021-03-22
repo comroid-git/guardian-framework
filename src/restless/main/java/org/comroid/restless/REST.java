@@ -9,7 +9,9 @@ import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.common.io.FileHandle;
+import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
@@ -40,6 +42,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 public final class REST implements ContextualProvider.Underlying {
     private static final Logger logger = LogManager.getLogger();
@@ -571,18 +574,18 @@ public final class REST implements ContextualProvider.Underlying {
             });
         }
 
-        public <ID> CompletableFuture<Span<T>> execute$autoCache(
+        public <ID> CompletableFuture<RefList<T>> execute$autoCache(
                 VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
         ) {
             return execute$body().thenApply(Serializable::toUniNode)
                     .thenApply(node -> {
                         if (node.isObjectNode()) {
-                            return Span.singleton(cacheProduce(identifyBind, cache, node.asObjectNode()));
+                            return ReferenceList.of(cacheProduce(identifyBind, cache, node.asObjectNode()));
                         } else if (node.isArrayNode()) {
                             return node.streamNodes()
                                     .map(UniNode::asObjectNode)
                                     .map(obj -> cacheProduce(identifyBind, cache, obj))
-                                    .collect(Span.collector());
+                                    .collect(Collectors.toCollection(ReferenceList::new));
                         } else {
                             throw new AssertionError();
                         }
