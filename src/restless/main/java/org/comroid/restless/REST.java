@@ -508,8 +508,7 @@ public final class REST implements ContextualProvider.Underlying {
                 logger.trace("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
                 logger.log(Level.ALL, "Request has Headers: {}", headers.toString());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
-                        .thenComposeAsync(request -> requireFromContext(HttpAdapter.class)
-                                .call(request), executor)
+                        .thenComposeAsync(request -> requireFromContext(HttpAdapter.class).call(request), executor)
                         .thenAcceptAsync(response -> {
                             if (response.statusCode != expectedCode) {
                                 logger.warn("Unexpected Response status code {}; expected {}", response.statusCode, expectedCode);
