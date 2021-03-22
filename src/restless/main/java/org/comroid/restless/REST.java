@@ -99,7 +99,7 @@ public final class REST implements ContextualProvider.Underlying {
             Executor requestExecutor,
             Ratelimiter ratelimiter
     ) {
-        this.context = context.plus(this);
+        this.context = context;
         this.executor = Objects.requireNonNull(requestExecutor, "RequestExecutor");
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
     }
