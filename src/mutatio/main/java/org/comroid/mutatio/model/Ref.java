@@ -66,8 +66,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
     default T compute(Function<T, T> computor) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
-        if (!set(into(computor)))
-            throw new UnsupportedOperationException("Could not set value");
+        set(into(computor));
         return get();
     }
 
@@ -77,8 +76,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
     default T computeIfPresent(Function<T, T> computor) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
-        if (!isNull() && !set(into(computor)))
-            throw new UnsupportedOperationException("Could not set value");
+        if (!isNull()) set(into(computor));
         return get();
     }
 
@@ -88,8 +86,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
     default T computeIfAbsent(Supplier<T> supplier) {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
-        if (isNull() && !set(supplier.get()))
-            throw new UnsupportedOperationException("Could not set value");
+        if (isNull()) set(supplier.get());
         return get();
     }
 
@@ -97,8 +94,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
         if (isImmutable())
             throw new UnsupportedOperationException("Reference is immutable");
         final T old = get();
-        if (!set(into(computor)))
-            throw new UnsupportedOperationException("Could not set value");
+        set(into(computor));
         return old;
     }
 
