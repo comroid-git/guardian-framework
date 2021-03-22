@@ -442,7 +442,10 @@ public final class REST implements ContextualProvider.Underlying {
 
         @Override
         public String toString() {
-            return String.format("%s @ %s", method.name(), endpoint.getSpec());
+            return String.format("REST.Request<%s @ %s; executed=%s>",
+                    method,
+                    endpoint == null ? "undefined" : endpoint.getSpec(),
+                    execution.isDone());
         }
 
         public Request<T> expect(@MagicConstant(valuesFromClass = HTTPStatusCodes.class) int code) {
