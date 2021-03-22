@@ -504,7 +504,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public synchronized CompletableFuture<REST.Response> execute() {
             if (!isExecuted()) {
-                //addHeader("Content-Length", String.valueOf(body == null ? 0 : body.length()));
+                addHeader("Content-Length", String.valueOf(body == null ? 0 : body.length()));
                 logger.trace("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
                 logger.log(Level.ALL, "Request has Headers: {}", headers.toString());
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
