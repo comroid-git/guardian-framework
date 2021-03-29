@@ -110,7 +110,7 @@ public final class FileHandle extends File implements Named, ContentParser {
             }
         }
 
-        return String.join("", getLines());
+        return String.join("\n", getLines());
     }
 
     public FileHandle createSubFile(String name) {
