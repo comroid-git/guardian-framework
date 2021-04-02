@@ -332,17 +332,15 @@ public class RestServer implements Closeable {
 
                         return responseBody.toString();
                     })
-                    .or(() -> response.getData()
-                            .map(r -> {
-                                try (
-                                        BufferedReader br = new BufferedReader(r)
-                                ) {
-                                    return br.lines().collect(Collectors.joining("\r"));
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })
-                            .get())
+                    .or(() -> response.getData().map(r -> {
+                        try (
+                                BufferedReader br = new BufferedReader(r)
+                        ) {
+                            return br.lines().collect(Collectors.joining("\r"));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).get())
                     .orElse("");
         }
     }
