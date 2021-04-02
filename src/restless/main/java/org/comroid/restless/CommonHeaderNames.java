@@ -5,6 +5,7 @@ public final class CommonHeaderNames {
     public static final String REFERER = "Referer";
     public static final String COOKIE = "Cookie";
     public static final String ACCEPTED_CHARSET = "Accept-Charset";
+    public static final String CACHE_CONTROL = "Cache-Control";
     // responses
     public static final String ACCEPTED_CONTENT_TYPE = "Accept";
     public static final String ACCEPTED_ENCODING = "Accept-Encoding";
