@@ -16,7 +16,7 @@ import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
 import org.comroid.restless.endpoint.CompleteEndpoint;
-import org.comroid.restless.endpoint.RatelimitedEndpoint;
+import org.comroid.restless.endpoint.RatelimitDefinition;
 import org.comroid.restless.endpoint.TypeBoundEndpoint;
 import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
@@ -89,7 +89,7 @@ public final class REST implements ContextualProvider.Underlying {
     public REST(
             ContextualProvider context,
             ScheduledExecutorService scheduledExecutorService,
-            RatelimitedEndpoint... pool
+            RatelimitDefinition... pool
     ) {
         this(context, scheduledExecutorService, Ratelimiter.ofPool(scheduledExecutorService, pool));
     }

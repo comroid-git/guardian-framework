@@ -17,7 +17,9 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public interface AccessibleEndpoint extends RatelimitedEndpoint, CompleteEndpoint, WrappedFormattable, Predicate<String> {
+public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable, Predicate<String>, EndpointScope {
+    String getUrlBase();
+
     @Override
     default AccessibleEndpoint getEndpoint() {
         return this;
@@ -41,18 +43,6 @@ public interface AccessibleEndpoint extends RatelimitedEndpoint, CompleteEndpoin
         return getUrlExtension();
     }
 
-    String getUrlBase();
-
-    String getUrlExtension();
-
-    String[] getRegExpGroups();
-
-    Pattern getPattern();
-
-    default int getParameterCount() {
-        return getRegExpGroups().length;
-    }
-
     /**
      * @return The complete, unformatted URL.
      */
@@ -60,15 +50,7 @@ public interface AccessibleEndpoint extends RatelimitedEndpoint, CompleteEndpoin
         return getUrlBase() + getUrlExtension();
     }
 
-    @Override
-    default int getRatePerSecond() {
-        return -1;
-    }
-
-    @Override
-    default int getGlobalRatelimit() {
-        return -1;
-    }
+    Pattern getPattern();
 
     @NonExtendable
     default CompleteEndpoint complete(Object... args) throws IllegalArgumentException {

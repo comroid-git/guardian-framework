@@ -1,6 +1,6 @@
 package org.comroid.restless.endpoint;
 
-public interface RatelimitedEndpoint {
+public interface RatelimitDefinition {
     /**
      * @return The rate of how often this endpoint can be accessed per second.
      * Equals {@code -1}, if there is no ratelimit on this endpoint.
