@@ -16,6 +16,7 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -23,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
@@ -37,6 +39,15 @@ public class RestServer implements Closeable {
     private final String mimeType;
     private final String baseUrl;
     private final REST.Header.List commonHeaders = new REST.Header.List();
+    private @Nullable ServerEndpoint defaultEndpoint;
+
+    public @Nullable ServerEndpoint getDefaultEndpoint() {
+        return defaultEndpoint;
+    }
+
+    public void setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
+        this.defaultEndpoint = defaultEndpoint;
+    }
 
     public HttpServer getServer() {
         return server;
@@ -216,13 +227,15 @@ public class RestServer implements Closeable {
                 Headers responseHeaders,
                 Headers requestHeaders,
                 String requestBody) throws Throwable {
-            final Iterator<ServerEndpoint> iter = endpoints.pipe()
+            final Iterator<ServerEndpoint> iter = Stream.concat(
                     // endpoints that accept the request uri
-                    .filter(endpoint -> endpoint.test(requestURI))
-                    // handle member accessing endpoints with lower priority
-                    .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
-                    .flatMap(ServerEndpoint.class)
-                    .streamValues()
+                    endpoints.filter(endpoint -> endpoint.test(requestURI))
+                            // handle member accessing endpoints with lower priority
+                            .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
+                            .flatMap(ServerEndpoint.class)
+                            .streamValues(),
+                    // and concat to defaultEndpoint
+                    Stream.of(defaultEndpoint).filter(Objects::nonNull))
                     .iterator();
             Throwable lastException = null;
             Response response = dummyResponse;
