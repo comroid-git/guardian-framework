@@ -1,6 +1,7 @@
 package org.comroid.webkit.socket;
 
 import org.comroid.api.BitmaskEnum;
+import org.comroid.util.Bitmask;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,9 +9,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @SuppressWarnings("PointlessBitwiseExpression")
 public final class SocketFrame {
@@ -69,15 +67,7 @@ public final class SocketFrame {
         }
 
         System.out.println("Generated Header:");
-        for (int i = 0; i < bytes.length; i++) {
-            byte each = bytes[i];
-            String binaryString = Integer.toBinaryString(each);
-            while (binaryString.length() < 8)
-                binaryString = '0' + binaryString;
-            System.out.printf("0x%2x [0b%s]\t", each, binaryString);
-            if (i % 2 == 1)
-                System.out.println();
-        }
+        Bitmask.printByteDump(bytes);
 
         return bytes;
     }
