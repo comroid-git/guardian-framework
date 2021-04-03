@@ -62,7 +62,6 @@ public class WebsocketServer implements Closeable {
         executor.execute(listener);
         System.out.println("socket.isBound() = " + socket.isBound());
         System.out.println("socket.getLocalSocketAddress() = " + socket.getLocalSocketAddress());
-        System.out.println("socket.getInetAddress() = " + socket.getInetAddress());
     }
 
     @Override

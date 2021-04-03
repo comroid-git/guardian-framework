@@ -87,22 +87,25 @@ public class WebSocketConnection implements Closeable {
             logger.debug("Starting Reader");
             while (true) {
                 try {
-                    byte[] buffer = new byte[5120];
-                    int read = in.read(buffer);
-                    byte[] frame = Arrays.copyOf(buffer, read);
-                    String data = new String(frame);
+                    boolean isLast = false;
+                    StringBuilder data = new StringBuilder();
 
-                    System.out.printf("Received Data Frame (len=%d;str='%s'):\n", read, data);
-                    Bitmask.printByteArrayDump(frame);
-                    System.out.println();
-                    byte[] decoded = new byte[frame.length];
-                    for (int i = 0; i < frame.length; i++) {
-                        decoded[i] = frame[i] ^ mask[i % 4];
+                    while (!isLast) {
+                        SocketFrame frame = SocketFrame.readFrame(in);
+                        isLast = frame.isLast();
+
+                        byte[] payload = frame.decodeData();
+                        String str = new String(payload, StandardCharsets.UTF_8);
+
+                        System.out.printf("Received Payload (len=%d;str='%s'):\n", frame.length(), str);
+                        Bitmask.printByteArrayDump(payload);
+
+                        data.append(str);
                     }
 
-                    logger.debug("Data received: {}", data);
-                    dataPipeline.accept(true, data);
-                } catch (IOException e) {
+                    logger.debug("Data received: {}", data.toString());
+                    dataPipeline.accept(true, data.toString());
+                } catch (Throwable e) {
                     logger.fatal("Error ocurred in connection reader; closing connection", e);
                     try {
                         socket.close();

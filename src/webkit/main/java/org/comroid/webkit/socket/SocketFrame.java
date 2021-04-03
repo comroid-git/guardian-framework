@@ -1,13 +1,9 @@
 package org.comroid.webkit.socket;
 
-import org.comroid.api.BitmaskEnum;
-import org.comroid.restless.socket.Websocket;
-import org.comroid.restless.socket.WebsocketPacket;
 import org.intellij.lang.annotations.MagicConstant;
-import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
@@ -15,8 +11,67 @@ import java.nio.ByteBuffer;
 import static org.comroid.util.Bitmask.*;
 
 public final class SocketFrame {
-    private SocketFrame() {
-        throw new UnsupportedOperationException();
+    private final boolean last;
+    private final boolean rsv1;
+    private final boolean rsv2;
+    private final boolean rsv3;
+    private final boolean isMasked;
+    private final byte[] mask;
+    private final byte[] encoded;
+    private final long len;
+
+    public boolean isLast() {
+        return last;
+    }
+
+    public boolean isRsv1() {
+        return rsv1;
+    }
+
+    public boolean isRsv2() {
+        return rsv2;
+    }
+
+    public boolean isRsv3() {
+        return rsv3;
+    }
+
+    public boolean isMasked() {
+        return isMasked;
+    }
+
+    public long length() {
+        return len;
+    }
+
+    public byte[] decodeData() {
+        byte[] decoded = new byte[encoded.length];
+        if (isMasked) {
+            for (int i = 0; i < encoded.length; i++) {
+                decoded[i] = (byte) (encoded[i] ^ mask[i % 4]);
+            }
+        }
+        return decoded;
+    }
+
+    private SocketFrame(
+            boolean last,
+            boolean rsv1,
+            boolean rsv2,
+            boolean rsv3,
+            boolean isMasked,
+            byte[] mask,
+            byte[] encoded,
+            long len
+    ) {
+        this.last = last;
+        this.rsv1 = rsv1;
+        this.rsv2 = rsv2;
+        this.rsv3 = rsv3;
+        this.isMasked = isMasked;
+        this.mask = mask;
+        this.encoded = encoded;
+        this.len = len;
     }
 
     public static byte[] create(
@@ -174,6 +229,57 @@ public final class SocketFrame {
         printByteArrayDump(bytes);
 
         return bytes;
+    }
+
+    public static SocketFrame readFrame(InputStream in) {
+        try {
+            byte headerA = (byte) in.read();
+            boolean isLast = (headerA & 1 << 7) != 0;
+            boolean rsv1 = (headerA & 1 << 6) != 0;
+            boolean rsv2 = (headerA & 1 << 6) != 0;
+            boolean rsv3 = (headerA & 1 << 6) != 0;
+            System.out.printf("last = %b; rsv1 = %b; rsv2 = %b; rsv3 = %b\n", isLast, rsv1, rsv2, rsv3);
+            System.out.println("Header A:");
+            printByteDump(headerA);
+            System.out.println();
+
+            byte headerB = (byte) in.read();
+            boolean isMasked = (headerB & 1 << 7) != 0;
+
+            int payLen = (headerB & 0b0111_1111);
+            long len;
+            switch (payLen) {
+                default:
+                    len = payLen;
+                    break;
+                case 126:
+                    len = readNextN(in, 2).getLong();
+                    break;
+                case 127:
+                    len = readNextN(in, 8).getLong();
+                    break;
+            }
+            System.out.printf("isMasked = %b; payLen = %d; len = %d\n", isMasked, payLen, len);
+            System.out.println("Header B:");
+            printByteDump(headerB);
+            System.out.println();
+
+            byte[] mask = isMasked ? readNextN(in, 4).array() : new byte[0];
+
+            byte[] encoded = readNextN(in, (int) len).array();
+
+            return new SocketFrame(isLast, rsv1, rsv2, rsv3, isMasked, mask, encoded, len);
+        } catch (Throwable t) {
+            throw new RuntimeException("Could not read frame from " + in, t);
+        }
+    }
+
+    private static ByteBuffer readNextN(InputStream in, int lenLen) throws IOException {
+        byte[] lenBytesB = new byte[lenLen];
+        int readB = in.read(lenBytesB);
+        if (readB != lenBytesB.length)
+            throw new IllegalStateException("Could not read desired length");
+        return ByteBuffer.wrap(lenBytesB);
     }
 
     public static class OpCode {
