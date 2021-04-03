@@ -6,11 +6,12 @@ import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.server.WebsocketServer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class WebkitServer implements ContextualProvider.Underlying, UncheckedCloseable {
+public class WebkitServer implements ContextualProvider.Underlying, Closeable {
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
     private final ServerEndpoint[] additionalEndpoints;
@@ -28,6 +29,7 @@ public class WebkitServer implements ContextualProvider.Underlying, UncheckedClo
             String urlBase,
             InetAddress inetAddress,
             int port,
+            int socketPort,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
         this.context = context.plus("Webkit Server", this);
@@ -35,11 +37,12 @@ public class WebkitServer implements ContextualProvider.Underlying, UncheckedClo
         this.additionalEndpoints = additionalEndpoints;
         WebkitEndpoints endpoints = new WebkitEndpoints();
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
-        this.socket = new WebsocketServer(this.context, executor, urlBase + "/websocket", inetAddress, port);
+        this.socket = new WebsocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort);
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        socket.close();
     }
 
     private final class WebkitEndpoints {
