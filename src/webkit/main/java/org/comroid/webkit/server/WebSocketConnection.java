@@ -4,13 +4,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.ref.ReferencePipe;
+import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
+import org.graalvm.compiler.nodes.EncodedGraph;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
 import java.util.concurrent.Executor;
@@ -70,9 +73,8 @@ public class WebSocketConnection implements Closeable {
 
     public void sendText(final String payload) {
         try {
-            SocketFrame frame = SocketFrame.create(payload);
-            byte[] bytes = frame.getBytes();
-            out.write(bytes);
+            byte[] frame = SocketFrame.create(payload);
+            out.write(frame);
             out.flush();
         } catch (IOException e) {
             throw new RuntimeException("Could not send data frame", e);
@@ -80,14 +82,26 @@ public class WebSocketConnection implements Closeable {
     }
 
     private final class ReaderThread implements Runnable {
-        private final BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
-
         @Override
         public void run() {
+            logger.debug("Starting Reader");
             while (true) {
                 try {
-                    String line = buffer.readLine();
-                    dataPipeline.accept(true, line);
+                    byte[] buffer = new byte[5120];
+                    int read = in.read(buffer);
+                    byte[] frame = Arrays.copyOf(buffer, read);
+                    String data = new String(frame);
+
+                    System.out.printf("Received Data Frame (len=%d;str='%s'):\n", read, data);
+                    Bitmask.printByteArrayDump(frame);
+                    System.out.println();
+                    byte[] decoded = new byte[frame.length];
+                    for (int i = 0; i < frame.length; i++) {
+                        decoded[i] = frame[i] ^ mask[i % 4];
+                    }
+
+                    logger.debug("Data received: {}", data);
+                    dataPipeline.accept(true, data);
                 } catch (IOException e) {
                     logger.fatal("Error ocurred in connection reader; closing connection", e);
                     try {
