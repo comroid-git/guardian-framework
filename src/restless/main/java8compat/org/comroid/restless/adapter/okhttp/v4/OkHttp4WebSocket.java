@@ -60,7 +60,7 @@ public final class OkHttp4WebSocket implements Websocket {
 
         this.executor = executor;
         this.uri = uri;
-        this.pipeline = new ReferencePipe<>();
+        this.pipeline = new ReferencePipe<>(executor);
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
     }
 

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import static org.comroid.util.Bitmask.*;
 
@@ -19,6 +20,7 @@ public final class SocketFrame {
     private final boolean rsv2;
     private final boolean rsv3;
     private final boolean isMasked;
+    private final int opCode;
     private final byte[] mask;
     private final byte[] encoded;
     private final long len;
@@ -43,18 +45,8 @@ public final class SocketFrame {
         return isMasked;
     }
 
-    public long length() {
-        return len;
-    }
-
-    public byte[] decodeData() {
-        byte[] decoded = new byte[encoded.length];
-        if (isMasked) {
-            for (int i = 0; i < encoded.length; i++) {
-                decoded[i] = (byte) (encoded[i] ^ mask[i % 4]);
-            }
-        }
-        return decoded;
+    private int getOpCode() {
+        return opCode;
     }
 
     private SocketFrame(
@@ -63,7 +55,7 @@ public final class SocketFrame {
             boolean rsv2,
             boolean rsv3,
             boolean isMasked,
-            byte[] mask,
+            int opCode, byte[] mask,
             byte[] encoded,
             long len
     ) {
@@ -72,6 +64,7 @@ public final class SocketFrame {
         this.rsv2 = rsv2;
         this.rsv3 = rsv3;
         this.isMasked = isMasked;
+        this.opCode = opCode;
         this.mask = mask;
         this.encoded = encoded;
         this.len = len;
@@ -203,12 +196,13 @@ public final class SocketFrame {
         printByteArrayDump(logger, "Bytes Now:", bytes);
 
         // insert payload
+        byte[] payloadBytes;
         try {
             char[] payloadChars = new char[(int) len];
             int read = payload.read(payloadChars);
             if (read != len)
                 throw new AssertionError("read was not equal to len");
-            byte[] payloadBytes = new byte[payloadChars.length];
+            payloadBytes = new byte[payloadChars.length];
             for (int i = 0; i < payloadChars.length; i++)
                 payloadBytes[i] = (byte) payloadChars[i];
             int destPos = 2 + (masked ? 4 : 0) + (longPayload ? longerPayload ? 8 : 2 : 0);
@@ -221,7 +215,39 @@ public final class SocketFrame {
 
         printByteArrayDump(logger, "Generated Frame:", bytes);
 
+        // validate frame
+        InputStream validator = new InputStream() {
+            private int index;
+
+            @Override
+            public int read() {
+                return bytes[index++];
+            }
+        };
+        SocketFrame frame = readFrame(validator);
+        if (frame.isLast() != fin)
+            generatedFrameInvalid("frame", "last");
+        if (frame.isRsv1() != rsv1)
+            generatedFrameInvalid("rsv1", rsv1);
+        if (frame.isRsv2() != rsv2)
+            generatedFrameInvalid("rsv2", rsv2);
+        if (frame.isRsv3() != rsv3)
+            generatedFrameInvalid("rsv3", rsv3);
+        //noinspection MagicConstant
+        if (frame.getOpCode() != opCode)
+            generatedFrameInvalid("opCode", 'x' + Integer.toHexString(opCode));
+        if (frame.isMasked() != masked)
+            generatedFrameInvalid("masked", masked);
+        if (frame.length() != len)
+            generatedFrameInvalid("length", len);
+        if (!Arrays.equals(frame.decodeData(), payloadBytes))
+            generatedFrameInvalid("payload", "equals");
+
         return bytes;
+    }
+
+    private static void generatedFrameInvalid(String what, Object expect) throws AssertionError {
+        throw new AssertionError(String.format("Generated Frame is invalid: %s is not %s", what, expect));
     }
 
     public static SocketFrame readFrame(InputStream in) {
@@ -231,7 +257,8 @@ public final class SocketFrame {
             boolean rsv1 = (headerA & 1 << 6) != 0;
             boolean rsv2 = (headerA & 1 << 6) != 0;
             boolean rsv3 = (headerA & 1 << 6) != 0;
-            logger.trace("last = {}; rsv1 = {}; rsv2 = {}; rsv3 = {}", isLast, rsv1, rsv2, rsv3);
+            int opCode = (headerA & 0b0000_1111);
+            logger.trace("last = {}; rsv1 = {}; rsv2 = {}; rsv3 = {}; op = x{}", isLast, rsv1, rsv2, rsv3, Integer.toHexString(opCode));
             logger.trace(createByteDump("Header A", headerA));
 
             byte headerB = (byte) in.read();
@@ -257,7 +284,7 @@ public final class SocketFrame {
 
             byte[] encoded = readNextN(in, (int) len).array();
 
-            return new SocketFrame(isLast, rsv1, rsv2, rsv3, isMasked, mask, encoded, len);
+            return new SocketFrame(isLast, rsv1, rsv2, rsv3, isMasked, opCode, mask, encoded, len);
         } catch (Throwable t) {
             throw new RuntimeException("Could not read frame from " + in, t);
         }
@@ -269,6 +296,20 @@ public final class SocketFrame {
         if (readB != lenBytesB.length)
             throw new IllegalStateException("Could not read desired length");
         return ByteBuffer.wrap(lenBytesB);
+    }
+
+    public long length() {
+        return len;
+    }
+
+    public byte[] decodeData() {
+        if (!isMasked)
+            return encoded;
+        byte[] decoded = new byte[encoded.length];
+        for (int i = 0; i < encoded.length; i++) {
+            decoded[i] = (byte) (encoded[i] ^ mask[i % 4]);
+        }
+        return decoded;
     }
 
     public static class OpCode {

@@ -61,7 +61,7 @@ public final class JavaWebsocket implements Websocket {
     JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
-        this.pipeline = new ReferencePipe<>();
+        this.pipeline = new ReferencePipe<>(executor);
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);

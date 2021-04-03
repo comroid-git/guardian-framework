@@ -56,7 +56,7 @@ public class WebsocketServer implements Closeable {
         this.inetAddress = inetAddress;
         this.port = port;
         this.connectionFactory = connectionFactory;
-        this.connectionPipeline = new ReferencePipe<>();
+        this.connectionPipeline = new ReferencePipe<>(executor);
         this.listener = new ListenerThread();
         this.socket = new ServerSocket(port, 50, inetAddress);
         executor.execute(listener);

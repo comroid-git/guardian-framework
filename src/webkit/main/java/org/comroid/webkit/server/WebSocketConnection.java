@@ -42,7 +42,7 @@ public class WebSocketConnection implements Closeable {
         this.in = socket.getInputStream();
         this.out = socket.getOutputStream();
         this.reader = new ReaderThread();
-        this.dataPipeline = new ReferencePipe<>();
+        this.dataPipeline = new ReferencePipe<>(executor);
 
         // read
         Scanner s = new Scanner(in, "UTF-8");
