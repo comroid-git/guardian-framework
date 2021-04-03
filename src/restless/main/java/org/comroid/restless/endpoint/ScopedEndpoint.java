@@ -1,18 +1,15 @@
 package org.comroid.restless.endpoint;
 
-import org.comroid.mutatio.ref.Reference;
-
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public class ScopedEndpoint implements AccessibleEndpoint {
     private final EndpointScope scope;
-    private final Reference<String> urlBase;
+    private final String urlBase;
     private final Pattern pattern;
 
     @Override
-    public final String getUrlBase() {
-        return urlBase.assertion("URL Base not found");
+    public String getUrlBase() {
+        return urlBase;
     }
 
     @Override
@@ -30,9 +27,9 @@ public class ScopedEndpoint implements AccessibleEndpoint {
         return pattern;
     }
 
-    public ScopedEndpoint(EndpointScope scope, Supplier<String> urlBaseSupplier) {
+    public ScopedEndpoint(EndpointScope scope, String urlBase) {
         this.scope = scope;
-        this.urlBase = Reference.provided(urlBaseSupplier);
+        this.urlBase = urlBase;
         this.pattern = buildUrlPattern();
     }
 }
