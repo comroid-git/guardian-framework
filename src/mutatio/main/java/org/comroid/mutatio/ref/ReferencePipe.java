@@ -92,10 +92,11 @@ public class ReferencePipe<InK, InV, K, V>
         executor.execute(() -> {
             final K key = getAdvancer().advanceKey(inK);
             final V value = getAdvancer().advanceValue(inK, inV);
-            getDependents().stream()
-                    .filter(ReferencePipe.class::isInstance)
-                    .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)
-                    .forEach(next -> next.accept(key, value));
+            if (value != null)
+                getDependents().stream()
+                        .filter(ReferencePipe.class::isInstance)
+                        .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)
+                        .forEach(next -> next.accept(key, value));
         });
     }
 

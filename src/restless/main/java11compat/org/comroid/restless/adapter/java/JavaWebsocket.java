@@ -2,6 +2,7 @@ package org.comroid.restless.adapter.java;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.pipe.Pipe;
@@ -67,12 +68,10 @@ public final class JavaWebsocket implements Websocket {
         if (preferredProtocol != null)
             socketBuilder.subprotocols(preferredProtocol);
 
+        logger.debug("Building WebSocket");
         socketBuilder.buildAsync(uri, new Listener())
                 .thenAccept(jSocket.future::complete)
-                .exceptionally(t -> {
-                    t.printStackTrace();
-                    return null;
-                });
+                .exceptionally(Polyfill.exceptionLogger(logger, "Error while building WebSocket"));
     }
 
     private void feed(WebsocketPacket packet) {

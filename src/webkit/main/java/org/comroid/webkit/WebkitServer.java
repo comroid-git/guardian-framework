@@ -4,6 +4,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.UncheckedCloseable;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
+import org.comroid.webkit.server.WebsocketServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,6 +15,7 @@ public class WebkitServer implements ContextualProvider.Underlying, UncheckedClo
     private final ScheduledExecutorService executor;
     private final ServerEndpoint[] additionalEndpoints;
     private final RestServer rest;
+    private final WebsocketServer socket;
 
     @Override
     public final ContextualProvider getUnderlyingContextualProvider() {
@@ -33,6 +35,7 @@ public class WebkitServer implements ContextualProvider.Underlying, UncheckedClo
         this.additionalEndpoints = additionalEndpoints;
         WebkitEndpoints endpoints = new WebkitEndpoints();
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
+        this.socket = new WebsocketServer(this.context, executor, urlBase + "/websocket", inetAddress, port);
     }
 
     @Override
