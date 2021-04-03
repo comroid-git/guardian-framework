@@ -1,4 +1,4 @@
-package org.comroid.webkit;
+package org.comroid.webkit.server;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.UncheckedCloseable;
