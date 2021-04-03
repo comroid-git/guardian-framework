@@ -2,18 +2,21 @@ package org.comroid.webkit.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.StringSerializable;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
-import org.graalvm.compiler.nodes.EncodedGraph;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
 import java.util.concurrent.Executor;
@@ -22,12 +25,16 @@ import java.util.regex.Pattern;
 
 public class WebSocketConnection implements Closeable {
     private static final Logger logger = LogManager.getLogger();
-    protected final RefPipe<Boolean, String, ?, ?> dataPipeline;
+    protected final RefPipe<?, String, ?, String> dataPipeline;
     private final Socket socket;
     private final Executor executor;
     private final ReaderThread reader;
     private final InputStream in;
     private final OutputStream out;
+
+    public final RefContainer<?, String> getDataPipeline() {
+        return dataPipeline;
+    }
 
     public WebSocketConnection(Socket socket, Executor executor) throws IOException, NoSuchAlgorithmException {
         this.socket = socket;
@@ -71,8 +78,13 @@ public class WebSocketConnection implements Closeable {
         socket.close();
     }
 
+    public void sendText(StringSerializable serializable) {
+        sendText(serializable.toSerializedString());
+    }
+
     public void sendText(final String payload) {
         try {
+            logger.debug("Sending Text frame with payload: {}", payload);
             byte[] frame = SocketFrame.create(payload);
             out.write(frame);
             out.flush();
@@ -97,14 +109,13 @@ public class WebSocketConnection implements Closeable {
                         byte[] payload = frame.decodeData();
                         String str = new String(payload, StandardCharsets.UTF_8);
 
-                        System.out.printf("Received Payload (len=%d;str='%s'):\n", frame.length(), str);
-                        Bitmask.printByteArrayDump(payload);
+                        Bitmask.printByteArrayDump(logger, String.format("Received Payload (len=%d;str='%s'):\n", frame.length(), str), payload);
 
                         data.append(str);
                     }
 
                     logger.debug("Data received: {}", data.toString());
-                    dataPipeline.accept(true, data.toString());
+                    dataPipeline.accept(null, data.toString());
                 } catch (Throwable e) {
                     logger.fatal("Error ocurred in connection reader; closing connection", e);
                     try {
