@@ -67,7 +67,7 @@ public final class SocketFrame {
         }
 
         System.out.println("Generated Header:");
-        Bitmask.printByteDump(bytes);
+        Bitmask.printByteArrayDump(bytes);
 
         return bytes;
     }
