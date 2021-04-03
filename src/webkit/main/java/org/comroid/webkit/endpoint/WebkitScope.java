@@ -16,6 +16,12 @@ import static org.comroid.restless.HTTPStatusCodes.INTERNAL_SERVER_ERROR;
 import static org.comroid.restless.HTTPStatusCodes.OK;
 
 public enum WebkitScope implements EndpointScope, EndpointHandler {
+    DEFAULT("webkit/default-endpoint") {
+        @Override
+        public REST.Response executeGET(Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {
+            return null;
+        }
+    },
     WEBKIT_API("webkit/api") {
         @Override
         public REST.Response executeGET(Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {

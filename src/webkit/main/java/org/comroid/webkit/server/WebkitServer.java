@@ -1,23 +1,23 @@
 package org.comroid.webkit.server;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.UncheckedCloseable;
-import org.comroid.restless.endpoint.AccessibleEndpoint;
-import org.comroid.restless.endpoint.EndpointScope;
+import org.comroid.api.Rewrapper;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
-import org.comroid.webkit.server.WebsocketServer;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class WebkitServer implements ContextualProvider.Underlying, Closeable {
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
@@ -28,6 +28,26 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
     private final WebkitEndpoints endpoints;
     private final RestServer rest;
     private final WebsocketServer socket;
+
+    public ScheduledExecutorService getExecutor() {
+        return executor;
+    }
+
+    public String getUrlBase() {
+        return urlBase;
+    }
+
+    public WebkitEndpoints getEndpoints() {
+        return endpoints;
+    }
+
+    public RestServer getRest() {
+        return rest;
+    }
+
+    public WebsocketServer getSocket() {
+        return socket;
+    }
 
     @Override
     public final ContextualProvider getUnderlyingContextualProvider() {
@@ -48,40 +68,50 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         this.urlBase = urlBase;
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
+        rest.setDefaultEndpoint(endpoints.defaultEndpoint);
         this.socket = new WebsocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort);
     }
 
     @Override
     public void close() throws IOException {
+        rest.close();
         socket.close();
     }
 
     private final class WebkitEndpoints {
-        private final HashSet<ServerEndpoint> endpoints;
+        private final Map<WebkitScope, WebkitEndpoint> endpointCache = new ConcurrentHashMap<>();
+        private final WebkitEndpoint defaultEndpoint = new WebkitEndpoint(WebkitScope.DEFAULT);
+        private final Collection<ServerEndpoint> additionalEndpoints;
 
         public ServerEndpoint[] getEndpoints() {
-            return endpoints.toArray(new ServerEndpoint[0]);
+            return Stream.concat(
+                    endpointCache.values().stream(),
+                    additionalEndpoints.stream()
+            ).toArray(ServerEndpoint[]::new);
         }
 
         public WebkitEndpoints(ServerEndpoint[] additionalEndpoints) {
-            this.endpoints = new HashSet<>();
+            this.additionalEndpoints = Arrays.asList(additionalEndpoints);
 
-            endpoints.add(new WebkitEndpoint(WebkitScope.WEBKIT_API));
-            endpoints.addAll(Arrays.asList(additionalEndpoints));
+            forScope(WebkitScope.WEBKIT_API).assertion("API Endpoint");
+        }
+
+        public Rewrapper<WebkitEndpoint> forScope(WebkitScope scope) {
+            return () -> endpointCache.computeIfAbsent(scope, WebkitEndpoint::new);
         }
 
         private class WebkitEndpoint extends ScopedEndpoint implements ServerEndpoint.This {
             private final WebkitScope scope;
 
-            public WebkitEndpoint(WebkitScope scope) {
-                super(scope, urlBase);
-
-                this.scope = scope;
-            }
-
             @Override
             public EndpointHandler getEndpointHandler() {
                 return scope;
+            }
+
+            private WebkitEndpoint(WebkitScope scope) {
+                super(scope, urlBase);
+
+                this.scope = scope;
             }
         }
     }
