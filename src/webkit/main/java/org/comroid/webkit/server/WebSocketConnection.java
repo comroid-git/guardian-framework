@@ -114,7 +114,7 @@ public class WebSocketConnection implements Closeable {
                         data.append(str);
                     }
 
-                    logger.debug("Data received: {}", data.toString());
+                    logger.debug("Server received: {}", data.toString());
                     dataPipeline.accept(null, data.toString());
                 } catch (Throwable e) {
                     logger.fatal("Error ocurred in connection reader; closing connection", e);
