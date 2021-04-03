@@ -1,5 +1,7 @@
 package org.comroid.mutatio.ref;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
 import org.comroid.api.Polyfill;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
 public class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V>
         implements RefPipe<InK, InV, K, V> {
+    private static final Logger logger = LogManager.getLogger();
     @Nullable
     private final Executor stageExecutor;
 
@@ -110,7 +113,13 @@ public class ReferencePipe<InK, InV, K, V>
             getDependents().stream()
                     .filter(ReferencePipe.class::isInstance)
                     .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)
-                    .forEach(next -> next.accept(key, value));
+                    .forEach(next -> {
+                        try {
+                            next.accept(key, value);
+                        } catch (Throwable t) {
+                            logger.error("An error ocurred during forwarding to pipe " + next, t);
+                        }
+                    });
         });
     }
 
