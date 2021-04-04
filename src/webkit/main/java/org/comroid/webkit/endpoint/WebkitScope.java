@@ -19,9 +19,9 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("webkit/frame") {
         @Override
         public REST.Response executeGET(Headers headers, String[] requestPath, UniNode body) throws RestEndpointException {
-            return new REST.Response(OK, "text/html", new FrameBuilder()
-
-                    .toReader());
+            FrameBuilder frameBuilder = new FrameBuilder();
+            if (requestPath.length == 0)
+                return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
     },
     WEBKIT_API("webkit/api") {
