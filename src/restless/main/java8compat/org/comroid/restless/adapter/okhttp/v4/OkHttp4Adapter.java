@@ -8,7 +8,6 @@ import org.comroid.uniform.SerializationAdapter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -30,10 +29,10 @@ public final class OkHttp4Adapter implements HttpAdapter {
 
                 final Request.Builder builder = new Request.Builder().url(request.getEndpoint().getURL());
 
-                final MediaType mediaType = MediaType.parse(request.getHeaders().get(CommonHeaderNames.REQUEST_CONTENT_TYPE));
+                final MediaType mediaType = MediaType.parse(request.getHeaders().getFirst(CommonHeaderNames.REQUEST_CONTENT_TYPE));
                 builder.method(requestMethod.name(), requestBody == null ? null : RequestBody.create(mediaType, requestBody));
 
-                request.getHeaders().forEach(header -> builder.addHeader(header.getName(), header.getValue()));
+                request.getHeaders().forEach(header -> builder.addHeader(header.getName(), header.combineValues()));
 
                 final Request kRequest = builder.build();
                 final Call call = httpClient.newCall(kRequest);

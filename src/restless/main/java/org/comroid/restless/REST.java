@@ -33,10 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -151,56 +148,67 @@ public final class REST implements ContextualProvider.Underlying {
 
     public static final class Header {
         private final String name;
-        private final String value;
+        private final Set<String> values;
 
         public String getName() {
             return name;
         }
 
-        public String getValue() {
-            return value;
+        public Set<String> getValues() {
+            return Collections.unmodifiableSet(values);
         }
 
-        public Header(String name, String value) {
+        public String getFirstValue() {
+            return values.iterator().next();
+        }
+
+        public Header(String name, String... values) {
             this.name = name;
-            this.value = value;
+            this.values = new HashSet<>(Arrays.asList(values));
+        }
+
+        public String combineValues() {
+            return String.join("; ", values);
         }
 
         @Override
         public String toString() {
-            return String.format("{%s=%s}", name, value);
+            return String.format("{%s=%s}", name, values);
         }
 
         public static final class List extends ArrayList<Header> {
             public static List of(Headers headers) {
                 final List list = new List();
-
-                headers.forEach((name, values) -> list
-                        .add(name, values.size() == 1
-                                ? values.get(0)
-                                : Arrays.toString(values.toArray())));
+                headers.forEach((name, values) -> list.add(name, values.toArray(new String[0])));
 
                 return list;
             }
 
-            public boolean add(String name, String value) {
-                return super.add(new Header(name, value));
+            public boolean add(String name, String... values) {
+                return super.add(new Header(name, values));
             }
 
             public boolean contains(String name) {
                 return stream().anyMatch(it -> it.name.equals(name));
             }
 
-            public String get(String key) {
+            public String getFirst(String key) {
                 return stream()
                         .filter(it -> it.name.equals(key))
                         .findAny()
-                        .map(Header::getValue)
+                        .map(Header::getFirstValue)
+                        .orElse(null);
+            }
+
+            public Header getHeader(String key) {
+                return stream()
+                        .filter(it -> it.name.equals(key))
+                        .findAny()
                         .orElse(null);
             }
 
             public void forEach(BiConsumer<String, String> action) {
-                forEach(header -> action.accept(header.getName(), header.getValue()));
+                forEach(header -> action.accept(header.getName(), header.combineValues()));
             }
 
             @Override
@@ -522,10 +530,10 @@ public final class REST implements ContextualProvider.Underlying {
                                 throw new RuntimeException("A problem occurred while handling response " + response, t);
                             }
                         }, executor).exceptionally(t -> {
-                            logger.trace("An error occurred during request", t);
-                            execution.completeExceptionally(t);
-                            return null;
-                        });
+                    logger.trace("An error occurred during request", t);
+                    execution.completeExceptionally(t);
+                    return null;
+                });
             }
 
             return execution;

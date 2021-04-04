@@ -6,13 +6,11 @@ import org.comroid.api.StringSerializable;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.ref.ReferencePipe;
+import org.comroid.restless.REST;
 import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -45,6 +43,25 @@ public class WebSocketConnection implements Closeable {
         this.dataPipeline = new ReferencePipe<>(executor);
 
         // read
+        InputStreamReader isr = new InputStreamReader(in);
+        BufferedReader handshakeReader = new BufferedReader(isr);
+        String requestHead = handshakeReader.readLine();
+
+        final REST.Header.List headers = new REST.Header.List();
+        String headerLine;
+        Pattern headerPattern = Pattern.compile("/([\\w-]+): (.*)/g");
+        while (true) {
+            headerLine = handshakeReader.readLine();
+            Matcher matcher = headerPattern.matcher(headerLine);
+
+            if (!matcher.matches())
+                break;
+            String headerName = matcher.group(1);
+            String headerValues = matcher.group(2);
+
+            headers.add(headerName, headerValues);
+        }
+
         Scanner s = new Scanner(in, "UTF-8");
         String data = s.useDelimiter("\\r\\n\\r\\n").next();
         Matcher get = Pattern.compile("^GET").matcher(data);
