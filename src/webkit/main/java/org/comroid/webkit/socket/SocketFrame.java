@@ -151,10 +151,7 @@ public final class SocketFrame {
         if (masked)
             headerB |= 1 << 7;
         logger.trace(createByteDump("Header B with Mask", headerB));
-
-        headerA = (byte) 0b1000_0001;
-        headerB = (byte) 0b0000_1100;
-
+        
         int arrLen = 2;
 
         // find target array size
