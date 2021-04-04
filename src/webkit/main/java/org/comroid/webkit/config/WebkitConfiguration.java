@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,21 +33,10 @@ public final class WebkitConfiguration extends DataContainerBase<WebkitConfigura
     private final Ref<UniObjectNode> parts;
     private final Ref<UniObjectNode> panels;
 
-    {
-        if (Type == null)
-            throw new IllegalStateException("Initialization Process incorrect");
-        PARTS = Type.createBind("parts")
-                .extractAsObject()
-                .build();
-        PANELS = Type.createBind("panels")
-                .extractAsObject()
-                .build();
-        this.parts = getComputedReference(PARTS);
-        this.panels = getComputedReference(PANELS);
-    }
-
     private WebkitConfiguration(ContextualProvider context, UniObjectNode data) {
         super(context, data);
+        this.parts = getComputedReference(PARTS);
+        this.panels = getComputedReference(PANELS);
     }
 
     public static WebkitConfiguration get() {
@@ -68,6 +58,14 @@ public final class WebkitConfiguration extends DataContainerBase<WebkitConfigura
         } catch (IOException e) {
             throw new RuntimeException("Could not find config.xml resource (" + FrameBuilder.RESOURCE_PREFIX + "config.xml)", e);
         }
+        if (Type == null)
+            throw new IllegalStateException("Initialization Process incorrect");
+        PARTS = Type.createBind("parts")
+                .extractAsObject()
+                .build();
+        PANELS = Type.createBind("panels")
+                .extractAsObject()
+                .build();
         UniObjectNode initialData = JsoupXmlParser.instance.parse(data);
         if (!instance.future.complete(new WebkitConfiguration(context, initialData)))
             throw new RuntimeException("Could not initialize Webkit Configuration");
