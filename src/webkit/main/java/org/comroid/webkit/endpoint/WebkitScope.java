@@ -1,11 +1,13 @@
 package org.comroid.webkit.endpoint;
 
 import com.sun.net.httpserver.Headers;
+import org.comroid.api.os.OS;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestEndpointException;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.intellij.lang.annotations.Language;
 
@@ -36,7 +38,9 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             InputStream resource = ClassLoader.getSystemResourceAsStream(FrameBuilder.INTERNAL_RESOURCE_PREFIX + "api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
-            return new REST.Response(OK, "application/javascript", new InputStreamReader(resource));
+            return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
+                    String.format("isDebug = %s;%n", OS.current == OS.WINDOWS),
+                    resource));
         }
     };
 
