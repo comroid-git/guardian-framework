@@ -223,28 +223,28 @@ public final class SocketFrame {
         };
         SocketFrame frame = readFrame(validator);
         if (frame.isLast() != fin)
-            generatedFrameInvalid("frame", "last");
+            generatedFrameInvalid("frame", frame.isLast(), "last");
         if (frame.isRsv1() != rsv1)
-            generatedFrameInvalid("rsv1", rsv1);
+            generatedFrameInvalid("rsv1", frame.isRsv1(), rsv1);
         if (frame.isRsv2() != rsv2)
-            generatedFrameInvalid("rsv2", rsv2);
+            generatedFrameInvalid("rsv2", frame.isRsv2(), rsv2);
         if (frame.isRsv3() != rsv3)
-            generatedFrameInvalid("rsv3", rsv3);
+            generatedFrameInvalid("rsv3", frame.isRsv3(), rsv3);
         //noinspection MagicConstant
         if (frame.getOpCode() != opCode)
-            generatedFrameInvalid("opCode", 'x' + Integer.toHexString(opCode));
+            generatedFrameInvalid("opCode", 'x' + Integer.toHexString(frame.getOpCode()), 'x' + Integer.toHexString(opCode));
         if (frame.isMasked() != masked)
-            generatedFrameInvalid("masked", masked);
-        if (frame.length() != len)
-            generatedFrameInvalid("length", len);
+            generatedFrameInvalid("masked", frame.isMasked(), masked);
+        if (frame.length() != arrLen)
+            generatedFrameInvalid("length", frame.length(), arrLen);
         if (!Arrays.equals(frame.decodeData(), payloadBytes))
-            generatedFrameInvalid("payload", "equals");
+            generatedFrameInvalid("payload", "different", "equals");
 
         return bytes;
     }
 
-    private static void generatedFrameInvalid(String what, Object expect) throws AssertionError {
-        throw new AssertionError(String.format("Generated Frame is invalid: %s is not %s", what, expect));
+    private static void generatedFrameInvalid(String what, Object actual, Object expect) throws AssertionError {
+        throw new AssertionError(String.format("Validation Frame is invalid: %s is %s; should be %s", what, actual, expect));
     }
 
     public static SocketFrame readFrame(InputStream in) {
