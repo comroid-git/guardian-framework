@@ -12,10 +12,6 @@ import java.util.stream.Stream;
 public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
     AccessibleEndpoint getEndpointBase();
 
-    default EndpointHandler getEndpointHandler() {
-        return this;
-    }
-
     @Override
     default Pattern getPattern() {
         return getEndpointBase().getPattern();
@@ -58,18 +54,8 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
                 .count() > 1;
     }
 
-    @Override
-    default boolean supports(REST.Method method) {
-        return getEndpointHandler().supports(method);
-    }
-
-    @Override
-    default REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
-        return getEndpointHandler().executeMethod(server, method, headers, urlParams, body);
-    }
-
     final class Support {
-        private static final class Combined implements ServerEndpoint {
+        private static final class Combined implements ServerEndpoint, EndpointHandler.Underlying {
             private final AccessibleEndpoint accessibleEndpoint;
             private final EndpointHandler handler;
 

@@ -1,12 +1,10 @@
 package org.comroid.restless.server;
 
 import com.sun.net.httpserver.Headers;
-import org.comroid.api.Rewrapper;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.util.StandardValueType;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -115,5 +113,21 @@ public interface EndpointHandler {
             UniNode body
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: HEAD");
+    }
+
+    interface Underlying extends EndpointHandler {
+        default EndpointHandler getEndpointHandler() {
+            return this;
+        }
+
+        @Override
+        default boolean supports(REST.Method method) {
+            return getEndpointHandler().supports(method);
+        }
+
+        @Override
+        default REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
+            return getEndpointHandler().executeMethod(server, method, headers, urlParams, body);
+        }
     }
 }

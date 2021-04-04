@@ -98,7 +98,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
             return () -> endpointCache.computeIfAbsent(scope, WebkitEndpoint::new);
         }
 
-        private class WebkitEndpoint extends ScopedEndpoint implements ServerEndpoint.This {
+        private class WebkitEndpoint extends ScopedEndpoint implements ServerEndpoint.This, EndpointHandler.Underlying {
             private final WebkitScope scope;
 
             @Override

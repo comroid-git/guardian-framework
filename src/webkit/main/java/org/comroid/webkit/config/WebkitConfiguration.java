@@ -74,7 +74,7 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         if (!parts.containsKey(name))
             throw new NoSuchElementException("Could not find part with name " + name);
         String resource = parts.get(name);
-        return FrameBuilder.getResource("part/" + resource);
+        return FrameBuilder.getResource(resource);
     }
 
     public Stream<String> streamPanelNames() {
@@ -85,6 +85,6 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         if (!panels.containsKey(name))
             throw new NoSuchElementException("Could not find panel with name " + name);
         String resource = panels.get(name);
-        return FrameBuilder.getResource("panel/" + resource);
+        return FrameBuilder.getResource(resource);
     }
 }
