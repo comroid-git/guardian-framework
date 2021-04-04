@@ -4,21 +4,34 @@ import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
 import org.comroid.webkit.config.WebkitConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.*;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class FrameBuilder implements Builder<Document>, StringSerializable {
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
     private static final Map<String, String> partCache = new ConcurrentHashMap<>();
+    private static final Map<String, String> panelCache = new ConcurrentHashMap<>();
     public static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
     private final Document frame;
+    private @Nullable String panel = "home";
+
+    public @Nullable String getPanel() {
+        return panel;
+    }
+
+    public void setPanel(@Nullable String panel) {
+        this.panel = panel;
+    }
 
     public FrameBuilder() {
         try {
@@ -66,23 +79,35 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return resource;
     }
 
-    private String findPartData(String part) {
-        return partCache.computeIfAbsent(part, k -> {
-            String partData;
+    private static String findAndCacheResourceData(String key, Map<String, String> cache, Supplier<InputStream> resource) {
+        return cache.computeIfAbsent(key, k -> {
+            String data;
             try (
-                    InputStream in = WebkitConfiguration.get().getPart(part);
+                    InputStream in = resource.get();
                     InputStreamReader isr = new InputStreamReader(in);
                     BufferedReader br = new BufferedReader(isr)
             ) {
-                partData = br.lines().collect(Collectors.joining("\n"));
+                data = br.lines().collect(Collectors.joining("\n"));
             } catch (IOException e) {
-                throw new RuntimeException("Could not read part data");
+                throw new RuntimeException("Could not read resource data for member resource: " + key);
             }
-            return partData;
+            return data;
         });
     }
 
+    private String findPartData(String part) {
+        return findAndCacheResourceData(part, partCache, () -> WebkitConfiguration.get().getPart(part));
+    }
+
+    private String findPanelData(String panel) {
+        return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
+    }
+
     public Document build() {
+        Objects.requireNonNull(panel, "No Panel defined");
+
+        frame.getElementById("content").html(findPanelData(panel));
+
         return frame;
     }
 
