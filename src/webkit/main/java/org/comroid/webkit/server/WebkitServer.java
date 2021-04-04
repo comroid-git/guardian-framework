@@ -20,8 +20,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 public class WebkitServer implements ContextualProvider.Underlying, Closeable {
-    public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
-    public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
     private final String urlBase;

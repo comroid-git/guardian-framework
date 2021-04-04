@@ -9,14 +9,13 @@ import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainerBase;
-import org.comroid.webkit.server.WebkitServer;
+import org.comroid.webkit.frame.FrameBuilder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("ClassInitializerMayBeStatic")
@@ -48,9 +47,7 @@ public final class WebkitConfiguration extends DataContainerBase<WebkitConfigura
             throw new IllegalStateException("Configuration is already initialized");
         Type = new GroupBind<>(context, "webkit-configuration");
 
-        InputStream config = ClassLoader.getSystemResourceAsStream(WebkitServer.RESOURCE_PREFIX + "config.xml");
-        if (config == null)
-            throw new NoSuchElementException("Could not find config.xml resource (" + WebkitServer.RESOURCE_PREFIX + "config.xml)");
+        InputStream config = FrameBuilder.getResource("config.xml");
         String data;
         try (
                 InputStreamReader isr = new InputStreamReader(config);
@@ -58,7 +55,7 @@ public final class WebkitConfiguration extends DataContainerBase<WebkitConfigura
         ) {
             data = br.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
-            throw new RuntimeException("Could not find config.xml resource (" + WebkitServer.RESOURCE_PREFIX + "config.xml)", e);
+            throw new RuntimeException("Could not find config.xml resource (" + FrameBuilder.RESOURCE_PREFIX + "config.xml)", e);
         }
         UniObjectNode initialData = JsoupXmlParser.instance.parse(data);
         if (!instance.future.complete(new WebkitConfiguration(context, initialData)))
