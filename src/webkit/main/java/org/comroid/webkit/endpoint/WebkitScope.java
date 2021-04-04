@@ -6,6 +6,7 @@ import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestEndpointException;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.server.WebkitServer;
 import org.intellij.lang.annotations.Language;
 
@@ -18,8 +19,8 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     DEFAULT("webkit/default-endpoint") {
         @Override
-        public REST.Response executeGET(Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            return null;
+        public REST.Response executeGET(Headers headers, String[] requestPath, UniNode body) throws RestEndpointException {
+            new FrameBuilder()
         }
     },
     WEBKIT_API("webkit/api") {

@@ -113,6 +113,15 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
 
                 this.scope = scope;
             }
+
+            @Override
+            public String[] extractArgs(String requestUrl) {
+                if (scope != WebkitScope.DEFAULT || requestUrl.indexOf(urlBase) != 0)
+                    return super.extractArgs(requestUrl);
+                // is Default Endpoint
+                requestUrl = requestUrl.substring(urlBase.length());
+                return requestUrl.split("/");
+            }
         }
     }
 }
