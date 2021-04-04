@@ -18,4 +18,8 @@ public interface EndpointScope extends RatelimitDefinition {
     default int getGlobalRatelimit() {
         return -1;
     }
+
+    default boolean ignoreArgumentCount() {
+        return false;
+    }
 }

@@ -32,4 +32,9 @@ public class ScopedEndpoint implements AccessibleEndpoint {
         this.urlBase = urlBase;
         this.pattern = buildUrlPattern();
     }
+
+    @Override
+    public boolean ignoreArgumentCount() {
+        return scope.ignoreArgumentCount();
+    }
 }

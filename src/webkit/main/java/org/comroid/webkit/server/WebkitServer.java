@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
@@ -114,7 +113,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
 
             @Override
             public String[] extractArgs(String requestUrl) {
-                if (this == defaultEndpoint)
+                if (this != defaultEndpoint)
                     return super.extractArgs(requestUrl);
                 // is Default Endpoint
                 requestUrl = requestUrl.substring(urlBase.length());

@@ -255,7 +255,9 @@ public class RestServer implements Closeable {
                     final String[] args = endpoint.extractArgs(requestURI);
                     logger.info("Extracted parameters: {}", Arrays.toString(args));
 
-                    if (args.length != endpoint.getParameterCount() && !endpoint.allowMemberAccess())
+                    if (!endpoint.ignoreArgumentCount()
+                            && args.length != endpoint.getParameterCount()
+                            && !endpoint.allowMemberAccess())
                         throw new RestEndpointException(BAD_REQUEST, "Invalid argument Count");
 
                     try {
