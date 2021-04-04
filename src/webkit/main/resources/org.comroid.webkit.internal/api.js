@@ -1,5 +1,6 @@
 if (isDebug === undefined)
     isDebug = false;
+var ws;
 
 function initAPI() {
     console.debug('loading socket')
@@ -16,6 +17,10 @@ function initAPI() {
         document.getElementById(id).innerHTML = data.substr(idEnd + 1)
     }
 
-    var ws = new WebSocket(isDebug ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
+    ws = new WebSocket(isDebug ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
     ws.onmessage = (msg) => handleMessage(msg.data);
+}
+
+function disconnectAPI() {
+    ws?.close(1000)
 }

@@ -75,7 +75,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         try {
             WebSocketConnection connection = new WebSocketConnection(socket, executor);
 
-            connection.sendText("hello client");
+            connection.sendText("id:content;<p>this is my body</p>");
             return connection;
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException("Could not initialize connection", e);

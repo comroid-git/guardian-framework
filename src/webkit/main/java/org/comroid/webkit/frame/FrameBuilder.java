@@ -46,6 +46,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                 .attr("type", "application/javascript")
                 .attr("src", "webkit/api");
         frame.body().attr("onload", "initAPI()");
+        frame.body().attr("onclose", "disconnectAPI()");
 
         WebkitConfiguration config = WebkitConfiguration.get();
         // read parts

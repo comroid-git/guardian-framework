@@ -151,7 +151,7 @@ public final class SocketFrame {
         if (masked)
             headerB |= 1 << 7;
         logger.trace(createByteDump("Header B with Mask", headerB));
-        
+
         int arrLen = 2;
 
         // find target array size
@@ -235,8 +235,8 @@ public final class SocketFrame {
             generatedFrameInvalid("opCode", 'x' + Integer.toHexString(frame.getOpCode()), 'x' + Integer.toHexString(opCode));
         if (frame.isMasked() != masked)
             generatedFrameInvalid("masked", frame.isMasked(), masked);
-        if (frame.length() != arrLen)
-            generatedFrameInvalid("length", frame.length(), arrLen);
+        if (frame.length() != len)
+            generatedFrameInvalid("length", frame.length(), len);
         if (!Arrays.equals(frame.decodeData(), payloadBytes))
             generatedFrameInvalid("payload", "different", "equals");
 
