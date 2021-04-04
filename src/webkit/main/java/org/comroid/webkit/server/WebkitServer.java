@@ -78,7 +78,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
 
     private final class WebkitEndpoints {
         private final Map<WebkitScope, WebkitEndpoint> endpointCache = new ConcurrentHashMap<>();
-        private final WebkitEndpoint defaultEndpoint = new WebkitEndpoint(WebkitScope.DEFAULT);
+        private final WebkitEndpoint defaultEndpoint = new WebkitEndpoint(WebkitScope.FRAME);
         private final Collection<ServerEndpoint> additionalEndpoints;
 
         public ServerEndpoint[] getEndpoints() {
@@ -114,7 +114,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
 
             @Override
             public String[] extractArgs(String requestUrl) {
-                if (scope != WebkitScope.DEFAULT || requestUrl.indexOf(urlBase) != 0)
+                if (this == defaultEndpoint)
                     return super.extractArgs(requestUrl);
                 // is Default Endpoint
                 requestUrl = requestUrl.substring(urlBase.length());
