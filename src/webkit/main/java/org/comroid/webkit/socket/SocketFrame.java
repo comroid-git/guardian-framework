@@ -316,5 +316,8 @@ public final class SocketFrame {
         public static final int CONTINUATION = 0x0;
         public static final int TEXT = 0x1;
         public static final int BINARY = 0x2;
+        public static final int CLOSE = 0x8;
+        public static final int PING = 0x9;
+        public static final int PONG = 0xA;
     }
 }
