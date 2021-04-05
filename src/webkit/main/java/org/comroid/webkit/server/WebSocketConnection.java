@@ -86,8 +86,6 @@ public class WebSocketConnection implements Closeable {
         out.flush();
 
         executor.execute(this.reader);
-
-        sendText("hello world");
     }
 
     public static String encodeSocketKey(String key) throws NoSuchAlgorithmException {
