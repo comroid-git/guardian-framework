@@ -52,7 +52,7 @@ public class WebSocketConnection implements Closeable {
         this.dataPipeline = new ReferencePipe<>(executor);
 
         // read
-        Scanner handshakeReader = new Scanner(in).useDelimiter("\\r\\n\\r\\n");
+        Scanner handshakeReader = new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n");
         String requestString = handshakeReader.next();
         //System.out.println("requestString = " + requestString);
 
