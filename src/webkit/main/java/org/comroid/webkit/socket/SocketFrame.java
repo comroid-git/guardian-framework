@@ -307,8 +307,6 @@ public final class SocketFrame {
             throw new IllegalStateException("Could not read desired length");
 
          */
-        if (readB == -1)
-            return ByteBuffer.allocateDirect(0);
         return ByteBuffer.wrap(lenBytesB, 0, readB);
     }
 
