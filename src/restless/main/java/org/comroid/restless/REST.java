@@ -419,11 +419,11 @@ public final class REST implements ContextualProvider.Underlying {
             String methodHead = String.format("HTTP/1.1 %d %s", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()));
             String headerString = headers.stream()
                     .map(Header::toString)
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\r\n"));
             Reader dataReader = getDataReader();
             if (dataReader == null)
-                return ReaderUtil.combine('\n', methodHead, headerString, "");
-            return ReaderUtil.combine('\n', methodHead, headerString, dataReader, "");
+                return ReaderUtil.combine("\r\n", methodHead, headerString, "");
+            return ReaderUtil.combine("\r\n", methodHead, headerString, dataReader, "");
         }
     }
 
