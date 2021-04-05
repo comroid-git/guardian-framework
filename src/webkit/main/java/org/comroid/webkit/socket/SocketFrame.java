@@ -290,9 +290,12 @@ public final class SocketFrame {
     private static ByteBuffer readNextN(InputStream in, int lenLen) throws IOException {
         byte[] lenBytesB = new byte[lenLen];
         int readB = in.read(lenBytesB);
+        /*
         if (readB != lenBytesB.length)
             throw new IllegalStateException("Could not read desired length");
-        return ByteBuffer.wrap(lenBytesB);
+
+         */
+        return ByteBuffer.wrap(lenBytesB, 0, readB);
     }
 
     public long length() {

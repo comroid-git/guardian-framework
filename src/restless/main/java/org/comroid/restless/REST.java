@@ -416,7 +416,7 @@ public final class REST implements ContextualProvider.Underlying {
                 body = new BufferedReader(data).lines().collect(Collectors.joining("\r\n"));
             else if (this.body != null)
                 body = this.body.toSerializedString();
-            return head + ((body == null ? "" : body) + "\r\n");
+            return head + ((body == null ? "" : "\r\n" + body) + "\r\n");
         }
     }
 

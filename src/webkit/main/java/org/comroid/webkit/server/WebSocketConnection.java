@@ -11,12 +11,16 @@ import org.comroid.restless.REST;
 import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,16 +52,18 @@ public class WebSocketConnection implements Closeable {
         this.dataPipeline = new ReferencePipe<>(executor);
 
         // read
-        InputStreamReader isr = new InputStreamReader(in);
-        BufferedReader handshakeReader = new BufferedReader(isr);
-        String requestHead = handshakeReader.readLine();
+        Scanner handshakeReader = new Scanner(in).useDelimiter("\\r\\n\\r\\n");
+        String requestString = handshakeReader.next();
+        //System.out.println("requestString = " + requestString);
+
+        if (!requestString.startsWith("GET"))
+            throw new IllegalArgumentException("Illegal request method: " + requestString.substring(requestString.indexOf(' ')));
 
         this.headers = new REST.Header.List();
-        String headerLine;
+        String[] lines = requestString.split("\n");
         Pattern headerPattern = Pattern.compile("/([\\w-]+): (.*)/g");
-        while (true) {
-            headerLine = handshakeReader.readLine();
-            Matcher matcher = headerPattern.matcher(headerLine);
+        for (int i = 1; i < lines.length; i++) {
+            Matcher matcher = headerPattern.matcher(lines[i]);
 
             if (!matcher.matches())
                 break;
@@ -80,6 +86,8 @@ public class WebSocketConnection implements Closeable {
         out.flush();
 
         executor.execute(this.reader);
+
+        sendText("hello world");
     }
 
     public static String encodeSocketKey(String key) throws NoSuchAlgorithmException {
