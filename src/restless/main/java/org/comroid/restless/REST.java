@@ -24,7 +24,6 @@ import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.util.ReaderUtil;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
@@ -246,14 +245,6 @@ public final class REST implements ContextualProvider.Underlying {
             return headers;
         }
 
-        private Reader getDataReader() {
-            if (data != null)
-                return data;
-            if (body != null)
-                return new StringReader(body.toSerializedString());
-            return null;
-        }
-
         /**
          * Creates an empty response and no extra headers.
          *
@@ -415,15 +406,17 @@ public final class REST implements ContextualProvider.Underlying {
             return new Response(code, seriLib.createUniNode(null));
         }
 
-        public Reader toReader() {
-            String methodHead = String.format("HTTP/1.1 %d %s", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()));
-            String headerString = headers.stream()
+        public String toHttpString() {
+            String head = String.format("HTTP/1.1 %d %s\r\n", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()))
+                    + headers.stream()
                     .map(Header::toString)
                     .collect(Collectors.joining("\r\n"));
-            Reader dataReader = getDataReader();
-            if (dataReader == null)
-                return ReaderUtil.combine("\r\n", methodHead, headerString, "");
-            return ReaderUtil.combine("\r\n", methodHead, headerString, dataReader, "");
+            String body = null;
+            if (data != null)
+                body = new BufferedReader(data).lines().collect(Collectors.joining("\r\n"));
+            else if (this.body != null)
+                body = this.body.toSerializedString();
+            return head + ((body == null ? "" : body) + "\r\n");
         }
     }
 

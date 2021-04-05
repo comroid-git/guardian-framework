@@ -16,7 +16,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
@@ -75,18 +74,10 @@ public class WebSocketConnection implements Closeable {
         responseHeaders.add("Upgrade", "websocket");
         responseHeaders.add("Sec-WebSocket-Accept", encodeSocketKey(websocketKey));
 
-        Reader reader = new REST.Response(HTTPStatusCodes.SWITCH_PROTOCOL, responseHeaders).toReader();
-        OutputStreamWriter osw = new OutputStreamWriter(out);
-        char[] buf = new char[512];
-        int r, c = 0;
-        while ((r = reader.read(buf)) >= 512) {
-            System.out.println("Writing response part:\n" + new String(buf));
-            osw.write(buf, c, r);
-            c += r;
-        }
-        System.out.println("Writing response end:\n" + new String(Arrays.copyOf(buf, r)));
-        osw.write(buf, c, r);
-        osw.flush();
+        String httpString = new REST.Response(HTTPStatusCodes.SWITCH_PROTOCOL, responseHeaders).toHttpString();
+        logger.trace("Handshaking with HTTP Response:\n{}", httpString);
+        out.write(httpString.getBytes(StandardCharsets.UTF_8));
+        out.flush();
 
         executor.execute(this.reader);
     }
