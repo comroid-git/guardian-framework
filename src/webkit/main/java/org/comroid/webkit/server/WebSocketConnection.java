@@ -6,6 +6,7 @@ import org.comroid.api.StringSerializable;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.ref.ReferencePipe;
+import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
@@ -15,8 +16,8 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,9 +30,14 @@ public class WebSocketConnection implements Closeable {
     private final ReaderThread reader;
     private final InputStream in;
     private final OutputStream out;
+    private final REST.Header.List headers;
 
     public final RefContainer<?, String> getDataPipeline() {
         return dataPipeline;
+    }
+
+    public REST.Header.List getHeaders() {
+        return headers;
     }
 
     public WebSocketConnection(Socket socket, Executor executor) throws IOException, NoSuchAlgorithmException {
@@ -47,7 +53,7 @@ public class WebSocketConnection implements Closeable {
         BufferedReader handshakeReader = new BufferedReader(isr);
         String requestHead = handshakeReader.readLine();
 
-        final REST.Header.List headers = new REST.Header.List();
+        this.headers = new REST.Header.List();
         String headerLine;
         Pattern headerPattern = Pattern.compile("/([\\w-]+): (.*)/g");
         while (true) {
@@ -59,28 +65,37 @@ public class WebSocketConnection implements Closeable {
             String headerName = matcher.group(1);
             String headerValues = matcher.group(2);
 
-            headers.add(headerName, headerValues);
+            headers.add(headerName, headerValues.split("; "));
         }
 
-        Scanner s = new Scanner(in, "UTF-8");
-        String data = s.useDelimiter("\\r\\n\\r\\n").next();
-        Matcher get = Pattern.compile("^GET").matcher(data);
+        REST.Header.List responseHeaders = new REST.Header.List();
 
-        // handshake
-        if (get.find()) {
-            Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(data);
-            match.find();
-            byte[] response = ("HTTP/1.1 101 Switching Protocols\r\n"
-                    + "Connection: Upgrade\r\n"
-                    + "Upgrade: websocket\r\n"
-                    + "Sec-WebSocket-Accept: "
-                    + Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-1").digest((match.group(1) + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes(StandardCharsets.UTF_8)))
-                    + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
-            out.write(response, 0, response.length);
-            out.flush();
+        String websocketKey = headers.getFirst("Sec-WebSocket-Key");
+        responseHeaders.add("Connection", "Upgrade");
+        responseHeaders.add("Upgrade", "websocket");
+        responseHeaders.add("Sec-WebSocket-Accept", encodeSocketKey(websocketKey));
+
+        Reader reader = new REST.Response(HTTPStatusCodes.SWITCH_PROTOCOL, responseHeaders).toReader();
+        OutputStreamWriter osw = new OutputStreamWriter(out);
+        char[] buf = new char[512];
+        int r, c = 0;
+        while ((r = reader.read(buf)) >= 512) {
+            System.out.println("Writing response part:\n" + new String(buf));
+            osw.write(buf, c, r);
+            c += r;
         }
+        System.out.println("Writing response end:\n" + new String(Arrays.copyOf(buf, r)));
+        osw.write(buf, c, r);
+        osw.flush();
 
-        executor.execute(reader);
+        executor.execute(this.reader);
+    }
+
+    public static String encodeSocketKey(String key) throws NoSuchAlgorithmException {
+        return Base64.getEncoder()
+                .encodeToString(MessageDigest.getInstance("SHA-1")
+                        .digest((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+                                .getBytes(StandardCharsets.UTF_8)));
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.ReaderUtil;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
@@ -173,7 +174,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         @Override
         public String toString() {
-            return String.format("{%s=%s}", name, values);
+            return String.format("%s: %s", getName(), combineValues());
         }
 
         public static final class List extends ArrayList<Header> {
@@ -243,6 +244,14 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Header.List getHeaders() {
             return headers;
+        }
+
+        private Reader getDataReader() {
+            if (data != null)
+                return data;
+            if (body != null)
+                return new StringReader(body.toSerializedString());
+            return null;
         }
 
         /**
@@ -404,6 +413,17 @@ public final class REST implements ContextualProvider.Underlying {
         @Deprecated
         public static Response empty(SerializationAdapter seriLib, @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int code) {
             return new Response(code, seriLib.createUniNode(null));
+        }
+
+        public Reader toReader() {
+            String methodHead = String.format("HTTP/1.1 %d %s", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()));
+            String headerString = headers.stream()
+                    .map(Header::toString)
+                    .collect(Collectors.joining("\n"));
+            Reader dataReader = getDataReader();
+            if (dataReader == null)
+                return ReaderUtil.combine('\n', methodHead, headerString, "");
+            return ReaderUtil.combine('\n', methodHead, headerString, dataReader, "");
         }
     }
 
