@@ -128,14 +128,26 @@ public class WebSocketConnection implements Closeable {
 
                     while (!isLast) {
                         SocketFrame frame = SocketFrame.readFrame(in);
-                        isLast = frame.isLast();
 
-                        byte[] payload = frame.decodeData();
-                        String str = new String(payload, StandardCharsets.UTF_8);
+                        switch (frame.getOpCode()) {
+                            case SocketFrame.OpCode.CLOSE:
+                                logger.debug("Connection closed by Socket");
+                                close();
+                                break;
+                            case SocketFrame.OpCode.PING:
+                                // todo Respond to ping
+                                break;
+                            default:
+                                isLast = frame.isLast();
 
-                        Bitmask.printByteArrayDump(logger, String.format("Received Payload (len=%d;str='%s'):\n", frame.length(), str), payload);
+                                byte[] payload = frame.decodeData();
+                                String str = new String(payload, StandardCharsets.UTF_8);
 
-                        data.append(str);
+                                Bitmask.printByteArrayDump(logger, String.format("Received Payload (len=%d;str='%s'):\n", frame.length(), str), payload);
+
+                                data.append(str);
+                                break;
+                        }
                     }
 
                     logger.debug("Server received: {}", data.toString());
