@@ -45,7 +45,7 @@ public final class SocketFrame {
         return isMasked;
     }
 
-    private int getOpCode() {
+    public int getOpCode() {
         return opCode;
     }
 
