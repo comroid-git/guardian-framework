@@ -302,13 +302,13 @@ public final class SocketFrame {
     private static ByteBuffer readNextN(InputStream in, int lenLen) throws IOException {
         byte[] lenBytesB = new byte[lenLen];
         int readB = in.read(lenBytesB);
-
+        /*
         if (readB != lenBytesB.length)
             throw new IllegalStateException("Could not read desired length");
 
-      /*
+         */
         if (readB == -1)
-            return ByteBuffer.allocateDirect(0);*/
+            return ByteBuffer.allocateDirect(0);
         return ByteBuffer.wrap(lenBytesB, 0, readB);
     }
 
