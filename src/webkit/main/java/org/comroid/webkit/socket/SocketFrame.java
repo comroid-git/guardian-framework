@@ -4,10 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.intellij.lang.annotations.MagicConstant;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -93,6 +90,21 @@ public final class SocketFrame {
             String payload
     ) {
         return create(true, rsv1, rsv2, rsv3, OpCode.TEXT, masked, maskingKey, new StringReader(payload), payload.length());
+    }
+
+    public static byte[] create(
+            boolean fin,
+            @MagicConstant(valuesFromClass = OpCode.class) int opCode
+    ) {
+        return create(fin, opCode, new StringReader(""), 0);
+    }
+
+    public static byte[] create(
+            boolean fin,
+            @MagicConstant(valuesFromClass = OpCode.class) int opCode,
+            byte[] data
+    ) {
+        return create(fin, opCode, new InputStreamReader(new ByteArrayInputStream(data)), data.length);
     }
 
     public static byte[] create(

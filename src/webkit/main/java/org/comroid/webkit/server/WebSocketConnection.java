@@ -107,10 +107,23 @@ public class WebSocketConnection implements Closeable {
     }
 
     public void sendText(final String payload) {
+        logger.debug("Sending Text frame with payload: {}", payload);
+        sendFrameData(SocketFrame.create(payload));
+    }
+
+    public void sendPing() {
+        logger.debug("Sending Ping");
+        sendFrameData(SocketFrame.create(true, SocketFrame.OpCode.PING));
+    }
+
+    public void sendPong(byte[] pingData) {
+        logger.debug("Sending Pong");
+        sendFrameData(SocketFrame.create(true, SocketFrame.OpCode.PONG, pingData));
+    }
+
+    private void sendFrameData(byte[] frameData) {
         try {
-            logger.debug("Sending Text frame with payload: {}", payload);
-            byte[] frame = SocketFrame.create(payload);
-            out.write(frame);
+            out.write(frameData);
             out.flush();
         } catch (IOException e) {
             throw new RuntimeException("Could not send data frame", e);
@@ -135,7 +148,7 @@ public class WebSocketConnection implements Closeable {
                                 close();
                                 break;
                             case SocketFrame.OpCode.PING:
-                                // todo Respond to ping
+                                sendPong(frame.decodeData());
                                 break;
                             default:
                                 isLast = frame.isLast();
