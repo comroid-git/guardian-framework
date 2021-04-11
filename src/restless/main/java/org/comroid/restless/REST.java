@@ -407,6 +407,35 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public String toHttpString() {
+            StringBuilder sb = new StringBuilder();
+
+            // reponse head
+            sb.append(String.format("HTTP/1.1 %d %s", getStatusCode(), HTTPStatusCodes.toString(getStatusCode())));
+            // \r\n delimiter
+            sb.append((char) 0x0D).append((char) 0x0A);
+
+            // headers
+            headers.stream()
+                    .map(Header::toString)
+                    .forEach(headerStr -> sb
+                            .append(headerStr)
+                            .append((char) 0x0D).append((char) 0x0A));
+            assert headers.size() > 0 : "headers missing";
+            sb.append((char) 0x0D).append((char) 0x0A);
+
+            if (data != null)
+                sb.append(new BufferedReader(data)
+                        .lines()
+                        .collect(Collectors.joining("\n")))
+                        .append((char) 0x0D).append((char) 0x0A);
+            else if (this.body != null)
+                sb.append(body.toSerializedString())
+                        .append((char) 0x0D).append((char) 0x0A);
+
+            return sb.toString();
+
+            /*
+
             String head = String.format("HTTP/1.1 %d %s\r\n", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()))
                     + headers.stream()
                     .map(Header::toString)
@@ -416,7 +445,8 @@ public final class REST implements ContextualProvider.Underlying {
                 body = new BufferedReader(data).lines().collect(Collectors.joining("\r\n"));
             else if (this.body != null)
                 body = this.body.toSerializedString();
-            return head + ((body == null ? "" : "\r\n" + body) + "\r\n");
+            return head + ((body == null ? "" : "\r\n" + body) + "");
+                       */
         }
     }
 

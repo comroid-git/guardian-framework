@@ -11,6 +11,7 @@ import org.comroid.restless.REST;
 import org.comroid.util.Bitmask;
 import org.comroid.webkit.socket.SocketFrame;
 
+import javax.net.SocketFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,10 +81,23 @@ public class WebSocketConnection implements Closeable {
         responseHeaders.add("Upgrade", "websocket");
         responseHeaders.add("Sec-WebSocket-Accept", encodeSocketKey(websocketKey));
 
+        /*
+        String httpString = "HTTP/1.1 101 Switching Protocol\r\n" +
+                "Connection: Upgrade\r\n" +
+                "Upgrade: websocket\r\n" +
+                "Sec-WebSocket-Accept: "+encodeSocketKey(websocketKey)+"\r\n\r\n";// new REST.Response(HTTPStatusCodes.SWITCH_PROTOCOL, responseHeaders).toHttpString();
+                */
         String httpString = new REST.Response(HTTPStatusCodes.SWITCH_PROTOCOL, responseHeaders).toHttpString();
+
         logger.trace("Handshaking with HTTP Response:\n{}", httpString);
         out.write(httpString.getBytes(StandardCharsets.UTF_8));
         out.flush();
+
+        /*
+        byte[] ping = SocketFrame.create(true, SocketFrame.OpCode.PING);
+        out.write(ping);
+        out.flush();
+         */
 
         executor.execute(this.reader);
     }
