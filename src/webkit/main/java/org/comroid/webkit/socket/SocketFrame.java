@@ -233,6 +233,7 @@ public final class SocketFrame {
                 return bytes[index++];
             }
         };
+        logger.trace("Validating generated frame");
         SocketFrame frame = readFrame(validator);
         if (frame.isLast() != fin)
             generatedFrameInvalid("frame", frame.isLast(), "last");

@@ -154,6 +154,8 @@ public class WebSocketConnection implements Closeable {
                     while (!isLast) {
                         SocketFrame frame = SocketFrame.readFrame(in);
 
+                        logger.trace("Received Frame: {}", frame);
+
                         switch (frame.getOpCode()) {
                             case SocketFrame.OpCode.CLOSE:
                                 logger.debug("Connection closed by Socket");
