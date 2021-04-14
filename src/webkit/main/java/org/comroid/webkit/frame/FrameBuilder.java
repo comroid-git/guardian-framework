@@ -1,5 +1,7 @@
 package org.comroid.webkit.frame;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
 import org.comroid.webkit.config.WebkitConfiguration;
@@ -8,7 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -19,6 +24,7 @@ import java.util.stream.Collectors;
 public final class FrameBuilder implements Builder<Document>, StringSerializable {
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
+    private static final Logger logger = LogManager.getLogger();
     private static final Map<String, String> partCache = new ConcurrentHashMap<>();
     private static final Map<String, String> panelCache = new ConcurrentHashMap<>();
     public static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
@@ -108,6 +114,8 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public Document build() {
         Objects.requireNonNull(panel, "No Panel defined");
 
+        logger.debug("Building Frame with panel {}", panel);
+
         frame.getElementById("content").html(findPanelData(panel));
 
         return frame;
@@ -116,9 +124,5 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     @Override
     public String toSerializedString() {
         return build().toString();
-    }
-
-    public StringReader toReader() {
-        return new StringReader(toSerializedString());
     }
 }
