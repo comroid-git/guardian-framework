@@ -18,7 +18,11 @@ function initAPI() {
     }
 
     ws = new WebSocket(isDebug ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
-    ws.send("hello server")
+    ws.onopen = (msg) => {
+        console.debug("open ", msg)
+
+        ws.send("hello server")
+    }
     ws.onmessage = (msg) => handleMessage(msg.data);
 }
 
