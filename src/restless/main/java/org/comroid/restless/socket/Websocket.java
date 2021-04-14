@@ -4,6 +4,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.model.RefPipe;
+import org.comroid.mutatio.pipe.EventPipeline;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 
@@ -12,9 +13,7 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public interface Websocket extends Named, Closeable {
-    RefPipe<?, ?, WebsocketPacket.Type, ? extends WebsocketPacket> getPacketPipeline();
-
+public interface Websocket extends Named, Closeable, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
     URI getURI();
 
     @Override
@@ -26,8 +25,7 @@ public interface Websocket extends Named, Closeable {
 
     default RefPipe<?, ?, ?, UniNode> createDataPipeline(ContextualProvider context) {
         SerializationAdapter<?, ?, ?> seriLib = context.requireFromContext(SerializationAdapter.class);
-        return getPacketPipeline()
-                .filterKey(type -> type == WebsocketPacket.Type.DATA)
+        return on(WebsocketPacket.Type.DATA)
                 .flatMap(WebsocketPacket::getData)
                 .map(seriLib::parse);
     }
