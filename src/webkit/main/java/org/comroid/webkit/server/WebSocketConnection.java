@@ -10,8 +10,6 @@ import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.webkit.model.ConnectionClientSpec;
 import org.java_websocket.WebSocket;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executor;
 
 public class WebSocketConnection implements ConnectionClientSpec.Complete {
@@ -38,8 +36,7 @@ public class WebSocketConnection implements ConnectionClientSpec.Complete {
         return !(socketBase.isClosed() || socketBase.isClosing());
     }
 
-    public WebSocketConnection(WebSocket socketBase, REST.Header.List headers, Executor executor)
-            throws IOException, NoSuchAlgorithmException {
+    public WebSocketConnection(WebSocket socketBase, REST.Header.List headers, Executor executor) {
         this.socketBase = socketBase;
         this.headers = headers;
         this.executor = executor;

@@ -5,8 +5,6 @@ import org.comroid.restless.REST;
 import org.comroid.webkit.server.WebSocketConnection;
 import org.java_websocket.WebSocket;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 
@@ -34,9 +32,7 @@ public final class ConnectionFactory<T extends WebSocketConnection> implements B
         public WebSocketConnection apply(WebSocket conn, REST.Header.List headers, Executor executor) {
             try {
                 return new WebSocketConnection(conn, headers, executor);
-            } catch (NoSuchAlgorithmException e) {
-                throw new AssertionError("Connection is not set up correctly", e);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 throw new RuntimeException("Could not initiate Connection", e);
             }
         }
