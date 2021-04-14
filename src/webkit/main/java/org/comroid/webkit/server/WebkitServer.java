@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -100,7 +99,8 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             PagePropertiesProvider pagePropertiesProvider,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
-        this.context = context.plus("Webkit Server", this);
+        context.addToContext(this);
+        this.context = context;
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
