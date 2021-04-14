@@ -1,13 +1,18 @@
 package org.comroid.webkit.server;
 
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.RefContainer;
+import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
+import org.comroid.webkit.socket.ConnectionFactory;
+import org.comroid.webkit.socket.WebkitConnection;
+import org.java_websocket.WebSocket;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
@@ -63,6 +69,29 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             InetAddress inetAddress,
             int port,
             int socketPort,
+            NFunction.In3<WebSocket, REST.Header.List, Executor, ? extends WebkitConnection> connectionConstructor,
+            ServerEndpoint... additionalEndpoints
+    ) throws IOException {
+        this(
+                context,
+                executor,
+                urlBase,
+                inetAddress,
+                port,
+                socketPort,
+                new ConnectionFactory<>(connectionConstructor, executor),
+                additionalEndpoints
+        );
+    }
+
+    public WebkitServer(
+            ContextualProvider context,
+            ScheduledExecutorService executor,
+            String urlBase,
+            InetAddress inetAddress,
+            int port,
+            int socketPort,
+            ConnectionFactory<? extends WebkitConnection> connectionFactory,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
         this.context = context.plus("Webkit Server", this);
@@ -77,7 +106,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 urlBase + "/websocket",
                 inetAddress,
                 socketPort,
-                WebkitConnection::new
+                connectionFactory
         );
     }
 
