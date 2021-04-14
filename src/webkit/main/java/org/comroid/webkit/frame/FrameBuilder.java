@@ -171,6 +171,16 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     }
                 });
 
+        // overwrite links
+        frame.getElementsByTag("a")
+                .forEach(dom -> {
+                    String href = dom.attr("href");
+                    if (href.startsWith("http") || href.startsWith("~/"))
+                        return;
+                    dom.removeAttr("href");
+                    dom.attr("onclick", String.format("actionChangePanel('%s')", href));
+                });
+
         return frame;
     }
 
