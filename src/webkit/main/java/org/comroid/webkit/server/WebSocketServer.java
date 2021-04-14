@@ -4,6 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
+import org.comroid.mutatio.model.RefContainer;
+import org.comroid.mutatio.model.RefMap;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.webkit.socket.ConnectionFactory;
@@ -16,8 +19,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -28,7 +33,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
     private final Executor executor;
     private final String baseUrl;
     private final ConnectionFactory<? extends WebSocketConnection> connectionFactory;
-    private final Map<WebSocket, WebSocketConnection> activeConnections;
+    private final RefMap<WebSocket, WebSocketConnection> activeConnections;
     private final Set<Consumer<WebSocketConnection>> connectionListeners;
 
     @Override
@@ -42,6 +47,10 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
 
     public String getBaseUrl() {
         return baseUrl;
+    }
+
+    public RefContainer<?, WebSocketConnection> getActiveConnections() {
+        return activeConnections.immutable();
     }
 
     public WebSocketServer(
@@ -79,7 +88,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
         this.executor = executor;
         this.baseUrl = baseUrl;
         this.connectionFactory = connectionFactory;
-        this.activeConnections = new ConcurrentHashMap<>();
+        this.activeConnections = new ReferenceMap<>();
         this.connectionListeners = new HashSet<>();
 
         super.start();

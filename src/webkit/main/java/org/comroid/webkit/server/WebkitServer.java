@@ -2,6 +2,7 @@ package org.comroid.webkit.server;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
@@ -14,12 +15,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
-public class WebkitServer implements ContextualProvider.Underlying, Closeable {
+public final class WebkitServer implements ContextualProvider.Underlying, Closeable {
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
     private final String urlBase;
@@ -52,6 +54,10 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         return context;
     }
 
+    public RefContainer<?, WebkitConnection> getActiveConnections() {
+        return socket.getActiveConnections().flatMap(WebkitConnection.class);
+    }
+
     public WebkitServer(
             ContextualProvider context,
             ScheduledExecutorService executor,
@@ -67,7 +73,14 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
-        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort, WebkitConnection::new);
+        this.socket = new WebSocketServer(
+                this.context,
+                executor,
+                urlBase + "/websocket",
+                inetAddress,
+                socketPort,
+                WebkitConnection::new
+        );
     }
 
     @Override

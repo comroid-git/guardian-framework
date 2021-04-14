@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface RefContainer<K, V> extends RefOPs<K, V, KeyedReference<K, V>> {
@@ -32,4 +33,8 @@ public interface RefContainer<K, V> extends RefOPs<K, V, KeyedReference<K, V>> {
     void forEach(final Consumer<? super V> action);
 
     void forEach(final BiConsumer<? super K, ? super V> action);
+
+    default RefContainer<K, V> immutable() {
+        return map(Function.identity()); // adds map stage without backwards converter => immutable stage
+    }
 }
