@@ -3,31 +3,19 @@ package org.comroid.webkit.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
-import org.comroid.mutatio.adapter.BiStageAdapter;
-import org.comroid.mutatio.adapter.StageAdapter;
-import org.comroid.mutatio.model.Ref;
-import org.comroid.mutatio.model.RefContainer;
-import org.comroid.mutatio.model.RefList;
-import org.comroid.mutatio.model.RefPipe;
-import org.comroid.mutatio.ref.ReferenceAtlas;
-import org.comroid.mutatio.ref.ReferenceList;
-import org.comroid.mutatio.ref.ReferenceMap;
-import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.webkit.socket.ConnectionFactory;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
-public class WebsocketServer extends WebSocketServer implements Closeable {
+public class WebSocketServer extends org.java_websocket.server.WebSocketServer implements Closeable {
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
@@ -37,7 +25,7 @@ public class WebsocketServer extends WebSocketServer implements Closeable {
     private final Function<Socket, ? extends WebSocketConnection> connectionFactory;
   //  private final ListenerThread listener;
 
-    public WebsocketServer(
+    public WebSocketServer(
             ContextualProvider context,
             ScheduledExecutorService executor,
             String baseUrl,
@@ -47,7 +35,7 @@ public class WebsocketServer extends WebSocketServer implements Closeable {
         this(context, executor, baseUrl, inetAddress, port, ConnectionFactory.standard(executor));
     }
 
-    public WebsocketServer(
+    public WebSocketServer(
             ContextualProvider context,
             ScheduledExecutorService executor,
             String baseUrl,
@@ -56,6 +44,7 @@ public class WebsocketServer extends WebSocketServer implements Closeable {
             Function<Socket, ? extends WebSocketConnection> connectionFactory
     ) throws IOException {
         super(new InetSocketAddress(inetAddress, port));
+
         this.context = context;
         this.executor = executor;
         this.baseUrl = baseUrl;

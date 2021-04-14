@@ -26,7 +26,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
     private final String urlBase;
     private final WebkitEndpoints endpoints;
     private final RestServer rest;
-    private final WebsocketServer socket;
+    private final WebSocketServer socket;
 
     public ScheduledExecutorService getExecutor() {
         return executor;
@@ -44,7 +44,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         return rest;
     }
 
-    public WebsocketServer getSocket() {
+    public WebSocketServer getSocket() {
         return socket;
     }
 
@@ -68,7 +68,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
-        this.socket = new WebsocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort, this::initializeConnection);
+        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort, this::initializeConnection);
     }
 
     private WebSocketConnection initializeConnection(Socket socket) {
