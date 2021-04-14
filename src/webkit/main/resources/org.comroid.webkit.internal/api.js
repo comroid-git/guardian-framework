@@ -34,13 +34,13 @@ function handleMessage(json) {
 }
 
 function actionChangePanel(target) {
-    window.history.pushState("", "", '/' + target);
     ws.send(JSON.stringify({
         'type': 'action/changePanel',
         'data': {
             'target': target
         }
     }));
+    window.history.pushState("", "", '/' + target);
 }
 
 function initAPI() {
