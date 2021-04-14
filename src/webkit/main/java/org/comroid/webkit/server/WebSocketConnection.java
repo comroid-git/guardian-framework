@@ -2,8 +2,12 @@ package org.comroid.webkit.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.Polyfill;
 import org.comroid.mutatio.model.RefContainer;
+import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.model.RefPipe;
+import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
@@ -14,6 +18,7 @@ import java.util.concurrent.Executor;
 
 public class WebSocketConnection implements ConnectionClientSpec.Complete {
     private static final Logger logger = LogManager.getLogger();
+    public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
     private final WebSocket socketBase;
     private final REST.Header.List headers;
@@ -41,6 +46,17 @@ public class WebSocketConnection implements ConnectionClientSpec.Complete {
         this.headers = headers;
         this.executor = executor;
         this.packetPipeline = new ReferencePipe<>(executor);
+    }
+
+    public final <T> Reference<T> getProperty(String name) {
+        if (properties.containsKey(name))
+            return properties.getReference(name, false)
+                    .map(Polyfill::uncheckedCast);
+        return Reference.empty();
+    }
+
+    public final boolean setProperty(String name, Object value) {
+        return properties.getReference(name, true).set(value);
     }
 
     @Override
