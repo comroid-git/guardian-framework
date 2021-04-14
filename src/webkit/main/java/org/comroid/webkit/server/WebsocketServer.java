@@ -3,20 +3,31 @@ package org.comroid.webkit.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
+import org.comroid.mutatio.adapter.BiStageAdapter;
+import org.comroid.mutatio.adapter.StageAdapter;
+import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.RefContainer;
+import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.model.RefPipe;
+import org.comroid.mutatio.ref.ReferenceAtlas;
+import org.comroid.mutatio.ref.ReferenceList;
+import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.webkit.socket.ConnectionFactory;
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
-public class WebsocketServer implements Closeable {
+public class WebsocketServer extends WebSocketServer implements Closeable {
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
@@ -24,13 +35,7 @@ public class WebsocketServer implements Closeable {
     private final InetAddress inetAddress;
     private final int port;
     private final Function<Socket, ? extends WebSocketConnection> connectionFactory;
-    private final RefPipe<?, WebSocketConnection, ?, WebSocketConnection> connectionPipeline;
-    private final ListenerThread listener;
-    private final ServerSocket socket;
-
-    public final RefContainer<?, WebSocketConnection> getConnectionPipeline() {
-        return connectionPipeline;
-    }
+  //  private final ListenerThread listener;
 
     public WebsocketServer(
             ContextualProvider context,
@@ -50,26 +55,53 @@ public class WebsocketServer implements Closeable {
             int port,
             Function<Socket, ? extends WebSocketConnection> connectionFactory
     ) throws IOException {
+        super(new InetSocketAddress(inetAddress, port));
         this.context = context;
         this.executor = executor;
         this.baseUrl = baseUrl;
         this.inetAddress = inetAddress;
         this.port = port;
         this.connectionFactory = connectionFactory;
-        this.connectionPipeline = new ReferencePipe<>(executor);
-        this.listener = new ListenerThread();
-        this.socket = new ServerSocket(port, 50, inetAddress);
-        executor.execute(listener);
-        System.out.println("socket.isBound() = " + socket.isBound());
-        System.out.println("socket.getLocalSocketAddress() = " + socket.getLocalSocketAddress());
+     //   this.listener = new ListenerThread();
+   //     executor.execute(listener);
+        start();
     }
 
     @Override
     public final void close() throws IOException {
         logger.debug("Closing Server Socket");
-        socket.close();
+        try {
+            super.stop();
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
     }
 
+    @Override
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
+
+    }
+
+    @Override
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, String message) {
+
+    }
+
+    @Override
+    public void onError(WebSocket conn, Exception ex) {
+
+    }
+
+    @Override
+    public void onStart() {
+
+    }
+/*
     private final class ListenerThread implements Runnable {
         @Override
         public void run() {
@@ -102,4 +134,6 @@ public class WebsocketServer implements Closeable {
             }
         }
     }
+
+ */
 }
