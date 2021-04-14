@@ -1,28 +1,21 @@
 package org.comroid.webkit.socket;
 
+import org.comroid.api.NFunction;
+import org.comroid.restless.REST;
 import org.comroid.webkit.server.WebSocketConnection;
+import org.java_websocket.WebSocket;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
-public final class ConnectionFactory<T extends WebSocketConnection> implements Function<Socket, T> {
-    private static final BiFunction<Socket, Executor, WebSocketConnection> DEFAULT_FACTORY = (socket, executor) -> {
-        try {
-            return new WebSocketConnection(socket, executor);
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError("Connection is not set up correctly", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not initiate Connection", e);
-        }
-    };
-    private final BiFunction<Socket, Executor, T> function;
+public final class ConnectionFactory<T extends WebSocketConnection> implements BiFunction<WebSocket, REST.Header.List, T> {
+    private static final NFunction.In3<WebSocket, REST.Header.List, Executor, WebSocketConnection> DEFAULT_FACTORY = new Default();
+    private final NFunction.In3<WebSocket, REST.Header.List, Executor, T> function;
     private final Executor executor;
 
-    public ConnectionFactory(BiFunction<Socket, Executor, T> function, Executor executor) {
+    public ConnectionFactory(NFunction.In3<WebSocket, REST.Header.List, Executor, T> function, Executor executor) {
         this.function = function;
         this.executor = executor;
     }
@@ -32,7 +25,20 @@ public final class ConnectionFactory<T extends WebSocketConnection> implements F
     }
 
     @Override
-    public T apply(Socket socket) {
-        return function.apply(socket, executor);
+    public T apply(WebSocket webSocket, REST.Header.List headers) {
+        return function.apply(webSocket, headers, executor);
+    }
+
+    public static class Default implements NFunction.In3<WebSocket, REST.Header.List, Executor, WebSocketConnection> {
+        @Override
+        public WebSocketConnection apply(WebSocket conn, REST.Header.List headers, Executor executor) {
+            try {
+                return new WebSocketConnection(conn, headers, executor);
+            } catch (NoSuchAlgorithmException e) {
+                throw new AssertionError("Connection is not set up correctly", e);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not initiate Connection", e);
+            }
+        }
     }
 }
