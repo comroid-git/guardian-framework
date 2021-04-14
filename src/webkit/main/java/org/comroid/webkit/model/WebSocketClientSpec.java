@@ -3,8 +3,8 @@ package org.comroid.webkit.model;
 import org.comroid.api.StringSerializable;
 import org.comroid.api.UncheckedCloseable;
 
-public final class ConnectionClientSpec {
-    private ConnectionClientSpec() {
+public final class WebSocketClientSpec {
+    private WebSocketClientSpec() {
         throw new UnsupportedOperationException();
     }
 

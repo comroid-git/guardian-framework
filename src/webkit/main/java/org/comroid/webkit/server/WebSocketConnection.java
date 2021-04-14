@@ -13,12 +13,12 @@ import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
-import org.comroid.webkit.model.ConnectionClientSpec;
+import org.comroid.webkit.model.WebSocketClientSpec;
 import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
 
-public class WebSocketConnection implements ConnectionClientSpec.Complete, Specifiable<WebSocketConnection>, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
+public class WebSocketConnection implements WebSocketClientSpec.Complete, Specifiable<WebSocketConnection>, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
     private static final Logger logger = LogManager.getLogger();
     public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
