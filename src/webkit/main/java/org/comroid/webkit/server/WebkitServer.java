@@ -2,18 +2,15 @@ package org.comroid.webkit.server;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
-import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
-import org.java_websocket.WebSocket;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -69,18 +66,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
-        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort, this::initializeConnection);
-    }
-
-    private WebSocketConnection initializeConnection(WebSocket conn, REST.Header.List headers) {
-        try {
-            WebSocketConnection connection = new WebSocketConnection(conn, headers, executor);
-
-            connection.sendText("id:content;<p>this is my body</p>");
-            return connection;
-        } catch (NoSuchAlgorithmException | IOException e) {
-            throw new RuntimeException("Could not initialize connection", e);
-        }
+        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort);
     }
 
     @Override
