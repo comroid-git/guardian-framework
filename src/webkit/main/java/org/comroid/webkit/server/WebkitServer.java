@@ -8,7 +8,6 @@ import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
-import org.comroid.webkit.socket.WebkitConnection;
 
 import java.io.Closeable;
 import java.io.IOException;
