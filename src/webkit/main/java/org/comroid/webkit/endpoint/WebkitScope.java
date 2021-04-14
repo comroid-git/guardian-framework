@@ -12,7 +12,6 @@ import org.comroid.webkit.frame.FrameBuilder;
 import org.intellij.lang.annotations.Language;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import static org.comroid.restless.HTTPStatusCodes.INTERNAL_SERVER_ERROR;
 import static org.comroid.restless.HTTPStatusCodes.OK;
