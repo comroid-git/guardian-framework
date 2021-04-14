@@ -36,15 +36,15 @@ public interface EndpointHandler {
         else {
             try {
                 data = server.getSerializationAdapter().createUniNode(body);
-            } catch (Throwable ignored) {
+            } catch (Throwable initial) {
                 try {
                     UniObjectNode obj = server.getSerializationAdapter().createObjectNode();
                     Stream.of(body.split("&"))
                             .map(pair -> pair.split("="))
                             .forEach(field -> obj.put(field[0], field[1]));
                     data = obj;
-                } catch (Throwable sub) {
-                    return null;
+                } catch (Throwable ignored) {
+                    throw new RuntimeException("Could not handle endpoint; failed to parse form data", initial);
                 }
             }
         }
