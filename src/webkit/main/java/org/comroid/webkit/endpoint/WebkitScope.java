@@ -46,7 +46,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
-                    String.format("isDebug = %s;%n", OS.current == OS.WINDOWS),
+                    String.format("isWindows = %s;\nsocketToken = '%s';\n", OS.isWindows, ""),
                     resource));
         }
     };
