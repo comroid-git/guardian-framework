@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -13,9 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +38,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         partCache = new ConcurrentHashMap<>();
         panelCache = new ConcurrentHashMap<>();
         classLoader = Reference.create(ClassLoader.getSystemClassLoader());
-        jsEngine = classLoader.map(loader -> new ScriptEngineManager(loader).getEngineByExtension(".js"));
+        jsEngine = classLoader.map(loader -> new ScriptEngineManager(loader).getEngineByExtension("js"));
     }
 
     public final String host;
@@ -85,20 +82,21 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     frame.getElementsByTag(part).html(partData);
                 });
 
-        // apply if-attributes
-        ReferenceList.of(frame.getElementsByAttribute("if"))
+        // apply when-attributes
+        frame.getElementsByAttribute("when")
                 .forEach(dom -> {
-                    String script = dom.attr("if");
-                    boolean keep = jsEngine.peek(engine -> engine.createBindings().putAll(pageProperties))
-                            .map(engine -> {
-                                try {
-                                    return engine.eval(script);
-                                } catch (ScriptException e) {
-                                    throw new RuntimeException("Error in attribute evaluation", e);
-                                }
-                            })
-                            .flatMap(Boolean.class)
-                            .orElse(false);
+                    String script = dom.attr("when");
+                    boolean keep = jsEngine.peek(engine -> {
+                        Bindings bindings = engine.createBindings();
+                        bindings.putAll(pageProperties);
+                        engine.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
+                    }).map(engine -> {
+                        try {
+                            return engine.eval(script);
+                        } catch (ScriptException e) {
+                            throw new RuntimeException("Error in attribute evaluation", e);
+                        }
+                    }).flatMap(Boolean.class).orElse(false);
                     if (!keep)
                         dom.remove();
                 });
