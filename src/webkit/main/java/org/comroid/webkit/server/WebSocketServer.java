@@ -11,6 +11,7 @@ import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.webkit.socket.ConnectionFactory;
 import org.java_websocket.WebSocket;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ClientHandshake;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
@@ -128,9 +129,14 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             headers.add(name, values.split(","));
         }
 
-        WebSocketConnection connection = connectionFactory.apply(conn, headers);
-        activeConnections.put(conn, connection);
-        publishConnection(connection);
+        try {
+            WebSocketConnection connection = connectionFactory.apply(conn, headers);
+            activeConnections.put(conn, connection);
+            publishConnection(connection);
+        } catch (Throwable t) {
+            logger.fatal("Could not properly accept incoming connection; closing incomming connection", t);
+            conn.close(CloseFrame.ABNORMAL_CLOSE, t.getClass().getName() + ": " + t.getMessage());
+        }
     }
 
     @Override
@@ -154,6 +160,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
     @Override
     @Internal
     public void onError(WebSocket conn, Exception ex) {
+        logger.error("Error ocurred in WebSocketServer", ex);
         WebSocketConnection connection = findConnection(conn);
 
         connection.publishPacket(WebsocketPacket.error(ex));

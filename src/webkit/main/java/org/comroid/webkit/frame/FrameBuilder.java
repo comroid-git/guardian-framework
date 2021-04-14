@@ -156,7 +156,29 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     dom.removeAttr("when");
                 });
 
+        // try apply value injections
+        frame.getElementsByAttribute("inject")
+                .forEach(dom -> {
+                    try {
+                        String[] path = dom.attr("inject").split("\\.");
+                        String value = resolveValue(pageProperties, path, 0);
+
+                        dom.html(value);
+                    } catch (Throwable ignored) {
+                        dom.html("NULL");
+                    } finally {
+                        dom.removeAttr("inject");
+                    }
+                });
+
         return frame;
+    }
+
+    private String resolveValue(Map<String, Object> stage, String[] path, int index) {
+        if (index + 1 >= path.length)
+            return String.valueOf(stage.get(path[index]));
+        //noinspection unchecked
+        return resolveValue((Map<String, Object>) stage.get(path[index]), path, index + 1);
     }
 
     @Override

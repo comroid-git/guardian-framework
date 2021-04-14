@@ -5,6 +5,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.model.SerializationAdapterHolder;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -119,14 +120,27 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
     default boolean has(Named idBox) {
         return has(idBox.getName());
     }
-    // todo: add helper methods
 
+    // todo: add helper methods
     boolean has(String fieldName);
 
     @NotNull
     default <T> UniNode add(ValueType<T> type, T value) throws UnsupportedOperationException {
         return put(size(), type, value);
     }
+
+    @Experimental
+    default UniObjectNode surroundWithObject(String atFieldName) {
+        return surroundWith(NodeType.OBJECT, atFieldName).asObjectNode();
+    }
+
+    @Experimental
+    default UniArrayNode surroundWithArray() {
+        return surroundWith(NodeType.ARRAY, 0).asArrayNode();
+    }
+
+    @Internal
+    UniNode surroundWith(NodeType type, Object fname);
 
     @NotNull
     default <T> UniNode put(int index, ValueType<T> type, T value) throws UnsupportedOperationException {
@@ -356,8 +370,8 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
         else if (key instanceof Named)
             return use(((Named) key).getName());
         else return Reference.conditional(
-                () -> has((int) key),
-                () -> get((int) key).asValueNode()
-        );
+                    () -> has((int) key),
+                    () -> get((int) key).asValueNode()
+            );
     }
 }
