@@ -1,7 +1,8 @@
-if (isDebug === undefined)
-    isDebug = false;
+if (isWindows === undefined)
+    isWindows = false;
+if (socketToken === undefined)
+    socketToken = '';
 let ws = undefined;
-let cache = undefined;
 
 function populateTag(data, tag, names, index) {
     if (names.length - 1 > index)
@@ -14,7 +15,10 @@ function changePanel(dom) {
 }
 
 function handleMessage(json) {
-    console.debug('incoming event', json);
+    console.debug('incoming event:', json);
+
+    if (json.startsWith('hello'))
+        return;
 
     let event = JSON.parse(json);
     let data = event['data'];
@@ -46,10 +50,10 @@ function actionChangePanel(target) {
 function initAPI() {
     console.debug('loading socket');
 
-    ws = new WebSocket(isDebug ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
+    ws = new WebSocket(isWindows ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
     ws.onopen = (msg) => {
         console.debug("open ", msg);
-        ws.send("hello server");
+        ws.send("hello server; i'm " + (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken));
     }
     ws.onmessage = (msg) => handleMessage(msg.data);
     ws.onerror = (msg) => console.debug("error in websocket", msg);
