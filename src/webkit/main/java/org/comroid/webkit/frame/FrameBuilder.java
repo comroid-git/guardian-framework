@@ -81,25 +81,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     // and import to frame
                     frame.getElementsByTag(part).html(partData);
                 });
-
-        // apply when-attributes
-        frame.getElementsByAttribute("when")
-                .forEach(dom -> {
-                    String script = dom.attr("when");
-                    boolean keep = jsEngine.peek(engine -> {
-                        Bindings bindings = engine.createBindings();
-                        bindings.putAll(pageProperties);
-                        engine.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
-                    }).map(engine -> {
-                        try {
-                            return engine.eval(script);
-                        } catch (ScriptException e) {
-                            throw new RuntimeException("Error in attribute evaluation", e);
-                        }
-                    }).flatMap(Boolean.class).orElse(false);
-                    if (!keep)
-                        dom.remove();
-                });
     }
 
     public static @NotNull InputStream getInternalResource(String name) {
@@ -154,6 +135,25 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         logger.debug("Building Frame with panel {}", panel);
 
         frame.getElementById("content").html(findPanelData(panel));
+
+        // apply when-attributes
+        frame.getElementsByAttribute("when")
+                .forEach(dom -> {
+                    String script = dom.attr("when");
+                    boolean keep = jsEngine.peek(engine -> {
+                        Bindings bindings = engine.createBindings();
+                        bindings.putAll(pageProperties);
+                        engine.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
+                    }).map(engine -> {
+                        try {
+                            return engine.eval(script);
+                        } catch (ScriptException e) {
+                            throw new RuntimeException("Error in attribute evaluation", e);
+                        }
+                    }).flatMap(Boolean.class).orElse(false);
+                    if (!keep)
+                        dom.remove();
+                });
 
         return frame;
     }
