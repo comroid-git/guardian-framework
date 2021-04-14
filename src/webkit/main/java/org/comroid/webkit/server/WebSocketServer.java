@@ -61,7 +61,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             InetAddress inetAddress,
             int port
     ) {
-        this(context, executor, baseUrl, inetAddress, port, ConnectionFactory.standard(executor));
+        this(context, executor, baseUrl, inetAddress, port, ConnectionFactory.standard(context));
     }
 
     public <C extends WebSocketConnection> WebSocketServer(
@@ -70,9 +70,9 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             String baseUrl,
             InetAddress inetAddress,
             int port,
-            NFunction.In3<WebSocket, REST.Header.List, Executor, ? extends WebSocketConnection> connectionConstructor
+            NFunction.In3<WebSocket, REST.Header.List, ContextualProvider, ? extends WebSocketConnection> connectionConstructor
     ) {
-        this(context, executor, baseUrl, inetAddress, port, new ConnectionFactory<>(connectionConstructor, executor));
+        this(context, executor, baseUrl, inetAddress, port, new ConnectionFactory<>(connectionConstructor, context));
     }
 
     public <C extends WebSocketConnection> WebSocketServer(

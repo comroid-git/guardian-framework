@@ -72,7 +72,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             InetAddress inetAddress,
             int port,
             int socketPort,
-            NFunction.In3<WebSocket, REST.Header.List, Executor, ? extends WebkitConnection> connectionConstructor,
+            NFunction.In3<WebSocket, REST.Header.List, ContextualProvider, ? extends WebkitConnection> connectionConstructor,
             PagePropertiesProvider pagePropertiesProvider,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
@@ -83,7 +83,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 inetAddress,
                 port,
                 socketPort,
-                new ConnectionFactory<>(connectionConstructor, executor),
+                new ConnectionFactory<>(connectionConstructor, context),
                 pagePropertiesProvider,
                 additionalEndpoints
         );

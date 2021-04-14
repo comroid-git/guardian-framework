@@ -2,8 +2,8 @@ package org.comroid.webkit.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
-import org.comroid.api.Specifiable;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.model.RefPipe;
@@ -18,13 +18,13 @@ import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
 
-public class WebSocketConnection implements WebSocketClientSpec.Complete, Specifiable<WebSocketConnection>, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
+public class WebSocketConnection implements WebSocketClientSpec.Complete, ContextualProvider.Underlying, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
     private static final Logger logger = LogManager.getLogger();
     public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
     private final WebSocket socketBase;
     private final REST.Header.List headers;
-    private final Executor executor;
+    private final ContextualProvider context;
 
     @Override
     public final RefContainer<WebsocketPacket.Type, WebsocketPacket> getEventPipeline() {
@@ -35,20 +35,21 @@ public class WebSocketConnection implements WebSocketClientSpec.Complete, Specif
         return headers;
     }
 
-    public final Executor getExecutor() {
-        return executor;
-    }
-
     @Override
     public final boolean isOpen() {
         return !(socketBase.isClosed() || socketBase.isClosing());
     }
 
-    protected WebSocketConnection(WebSocket socketBase, REST.Header.List headers, Executor executor) {
+    @Override
+    public ContextualProvider getUnderlyingContextualProvider() {
+        return context;
+    }
+
+    protected WebSocketConnection(WebSocket socketBase, REST.Header.List headers, ContextualProvider context) {
         this.socketBase = socketBase;
         this.headers = headers;
-        this.executor = executor;
-        this.packetPipeline = new ReferencePipe<>(executor);
+        this.context = context;
+        this.packetPipeline = new ReferencePipe<>(context.<Executor>requireFromContext(Executor.class));
     }
 
     public final <T> Reference<T> getProperty(String name) {
