@@ -160,6 +160,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
     @Override
     public String toSerializedString() {
-        return build().toString();
+        // replace ~ with host
+        return build().toString().replace("~", "http://" + host);
     }
 }
