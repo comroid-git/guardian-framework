@@ -153,6 +153,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     }).flatMap(Boolean.class).orElse(false);
                     if (!keep)
                         dom.remove();
+                    dom.removeAttr("when");
                 });
 
         return frame;
