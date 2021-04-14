@@ -1,6 +1,6 @@
 if (isDebug === undefined)
     isDebug = false;
-var ws;
+let ws = undefined;
 
 function initAPI() {
     console.debug('loading socket')
