@@ -7,6 +7,7 @@ import org.comroid.api.Specifiable;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.model.RefPipe;
+import org.comroid.mutatio.pipe.EventPipeline;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.ref.ReferencePipe;
@@ -17,7 +18,7 @@ import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
 
-public class WebSocketConnection implements ConnectionClientSpec.Complete, Specifiable<WebSocketConnection> {
+public class WebSocketConnection implements ConnectionClientSpec.Complete, Specifiable<WebSocketConnection>, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
     private static final Logger logger = LogManager.getLogger();
     public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
@@ -25,7 +26,8 @@ public class WebSocketConnection implements ConnectionClientSpec.Complete, Speci
     private final REST.Header.List headers;
     private final Executor executor;
 
-    public final RefContainer<WebsocketPacket.Type, WebsocketPacket> getPacketPipeline() {
+    @Override
+    public final RefContainer<WebsocketPacket.Type, WebsocketPacket> getEventPipeline() {
         return packetPipeline;
     }
 
