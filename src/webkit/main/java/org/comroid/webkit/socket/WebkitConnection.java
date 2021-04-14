@@ -79,7 +79,7 @@ public class WebkitConnection extends WebSocketConnection {
                             response.put("type", StandardValueType.STRING, "changePanel");
                             response.put("data", StandardValueType.STRING, doc.toString());
                             break;
-                        } catch (IOException e) {
+                        } catch (Throwable e) {
                             logger.error("Could not read target panel " + target, e);
                         }
                     default:
