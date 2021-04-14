@@ -215,6 +215,12 @@ public final class REST implements ContextualProvider.Underlying {
             public String toString() {
                 return Arrays.toString(toArray());
             }
+
+            public Headers toJavaHeaders() {
+                Headers headers = new Headers();
+                forEach(headers::add);
+                return headers;
+            }
         }
     }
 
