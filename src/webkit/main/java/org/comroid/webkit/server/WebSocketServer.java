@@ -134,7 +134,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             activeConnections.put(conn, connection);
             publishConnection(connection);
         } catch (Throwable t) {
-            logger.fatal("Could not properly accept incoming connection; closing incomming connection", t);
+            logger.fatal("Could not properly accept incoming connection; closing incoming connection", t);
             conn.close(CloseFrame.ABNORMAL_CLOSE, t.getClass().getName() + ": " + t.getMessage());
         }
     }
