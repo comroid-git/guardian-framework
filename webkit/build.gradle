@@ -23,7 +23,7 @@ dependencies {
 
     // jsoup HTML parser library @ https://jsoup.org/
     implementation 'org.jsoup:jsoup:1.13.1'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.1'
+    api 'org.java-websocket:Java-WebSocket:1.5.1'
 
     testImplementation 'com.alibaba:fastjson:1.2.71'
 }
