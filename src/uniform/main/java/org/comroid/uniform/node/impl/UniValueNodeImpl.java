@@ -72,6 +72,11 @@ public final class UniValueNodeImpl
     }
 
     @Override
+    public void setOutdated(boolean state) {
+        baseNode.setOutdated(state);
+    }
+
+    @Override
     public Rewrapper<? extends Reference<?>> getParent() {
         return baseNode.getParent();
     }
