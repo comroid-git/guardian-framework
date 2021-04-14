@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
+import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     private static final Map<String, String> panelCache = new ConcurrentHashMap<>();
     public static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
     private final Document frame;
+    public final String host;
     private @Nullable String panel = "home";
 
     public @Nullable String getPanel() {
@@ -39,18 +41,20 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         this.panel = panel;
     }
 
-    public FrameBuilder() {
+    public FrameBuilder(REST.Header.List headers) {
         try {
-            InputStream frame = classLoader.getResourceAsStream(RESOURCE_PREFIX + "frame.html");
+            InputStream frame = getResource("frame.html");
             this.frame = Jsoup.parse(frame, "UTF-8", "");
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load frame resource", e);
+        } catch (Throwable e) {
+            throw new RuntimeException("Could not load page frame", e);
         }
+
+        host = headers.getFirst("Host");
 
         // add api script
         frame.head().appendElement("script")
                 .attr("type", "application/javascript")
-                .attr("src", "webkit/api");
+                .attr("src", String.format("http://%s/webkit/api", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
 
