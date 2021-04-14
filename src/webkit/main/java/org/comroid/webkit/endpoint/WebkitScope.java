@@ -1,6 +1,7 @@
 package org.comroid.webkit.endpoint;
 
 import com.sun.net.httpserver.Headers;
+import org.comroid.api.ContextualProvider;
 import org.comroid.api.os.OS;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
@@ -19,7 +20,8 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("webkit/frame") {
         @Override
-        public REST.Response executeGET(Headers headers, String[] requestPath, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(ContextualProvider context, Headers headers, String[] requestPath, UniNode body) throws RestEndpointException {
+            context.getFromContext()
             FrameBuilder frameBuilder = new FrameBuilder(REST.Header.List.of(headers));
             if (requestPath.length > 0 && !requestPath[0].isEmpty())
                 frameBuilder.setPanel(requestPath[0]);
@@ -33,7 +35,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     },
     WEBKIT_API("webkit/api") {
         @Override
-        public REST.Response executeGET(Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(ContextualProvider context, Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {
             InputStream resource = ClassLoader.getSystemResourceAsStream(FrameBuilder.INTERNAL_RESOURCE_PREFIX + "api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");

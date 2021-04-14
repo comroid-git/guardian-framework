@@ -98,7 +98,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         this.executor = executor;
         this.urlBase = urlBase;
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
-        this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
+        this.rest = new RestServer(this, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
         this.socket = new WebSocketServer(
                 this.context,

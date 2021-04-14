@@ -32,6 +32,7 @@ import static org.comroid.restless.HTTPStatusCodes.*;
 public class RestServer implements Closeable {
     private static final Response dummyResponse = new Response(0);
     private static final Logger logger = LogManager.getLogger();
+    private final ContextualProvider context;
     private final AutoContextHandler autoContextHandler = new AutoContextHandler();
     private final HttpServer server;
     private final Span<ServerEndpoint> endpoints;
@@ -40,6 +41,10 @@ public class RestServer implements Closeable {
     private final String baseUrl;
     private final REST.Header.List commonHeaders = new REST.Header.List();
     private @Nullable ServerEndpoint defaultEndpoint;
+
+    public ContextualProvider getContext() {
+        return context;
+    }
 
     public @Nullable ServerEndpoint getDefaultEndpoint() {
         return defaultEndpoint;
@@ -82,6 +87,7 @@ public class RestServer implements Closeable {
             ServerEndpoint... endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.length);
+        this.context = context;
         this.seriLib = context.requireFromContext(SerializationAdapter.class);
         this.mimeType = seriLib.getMimeType();
         this.baseUrl = baseUrl;
