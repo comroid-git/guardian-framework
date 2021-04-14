@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
+import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +13,9 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,12 +30,23 @@ import java.util.stream.Collectors;
 public final class FrameBuilder implements Builder<Document>, StringSerializable {
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
-    private static final Logger logger = LogManager.getLogger();
-    private static final Map<String, String> partCache = new ConcurrentHashMap<>();
-    private static final Map<String, String> panelCache = new ConcurrentHashMap<>();
-    public static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    private final Document frame;
+    public static final Reference<ClassLoader> classLoader;
+    private static final Logger logger;
+    private static final Map<String, String> partCache;
+    private static final Map<String, String> panelCache;
+    private static final Reference<ScriptEngine> jsEngine;
+
+    static {
+        logger = LogManager.getLogger();
+        partCache = new ConcurrentHashMap<>();
+        panelCache = new ConcurrentHashMap<>();
+        classLoader = Reference.create(ClassLoader.getSystemClassLoader());
+        jsEngine = classLoader.map(loader -> new ScriptEngineManager(loader).getEngineByExtension(".js"));
+    }
+
     public final String host;
+    private final Document frame;
+    private final Map<String, Object> pageProperties;
     private @Nullable String panel = "home";
 
     public @Nullable String getPanel() {
@@ -41,7 +57,8 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         this.panel = panel;
     }
 
-    public FrameBuilder(REST.Header.List headers) {
+    public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
+        this.pageProperties = pageProperties;
         try {
             InputStream frame = getResource("frame.html");
             this.frame = Jsoup.parse(frame, "UTF-8", "");
@@ -67,6 +84,24 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     // and import to frame
                     frame.getElementsByTag(part).html(partData);
                 });
+
+        // apply if-attributes
+        ReferenceList.of(frame.getElementsByAttribute("if"))
+                .forEach(dom -> {
+                    String script = dom.attr("if");
+                    boolean keep = jsEngine.peek(engine -> engine.createBindings().putAll(pageProperties))
+                            .map(engine -> {
+                                try {
+                                    return engine.eval(script);
+                                } catch (ScriptException e) {
+                                    throw new RuntimeException("Error in attribute evaluation", e);
+                                }
+                            })
+                            .flatMap(Boolean.class)
+                            .orElse(false);
+                    if (!keep)
+                        dom.remove();
+                });
     }
 
     public static @NotNull InputStream getInternalResource(String name) {
@@ -79,7 +114,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
     public static @NotNull InputStream getResource(boolean internal, String name) {
         String resourceName = internal ? INTERNAL_RESOURCE_PREFIX : RESOURCE_PREFIX + name;
-        InputStream resource = classLoader.getResourceAsStream(resourceName);
+        InputStream resource = classLoader.map(loader -> loader.getResourceAsStream(resourceName)).get();
         if (resource == null)
             if (internal) {
                 throw new AssertionError(

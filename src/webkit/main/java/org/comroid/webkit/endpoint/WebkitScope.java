@@ -10,9 +10,11 @@ import org.comroid.restless.server.RestEndpointException;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
+import org.comroid.webkit.model.PagePropertiesProvider;
 import org.intellij.lang.annotations.Language;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import static org.comroid.restless.HTTPStatusCodes.INTERNAL_SERVER_ERROR;
 import static org.comroid.restless.HTTPStatusCodes.OK;
@@ -20,9 +22,13 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("webkit/frame") {
         @Override
-        public REST.Response executeGET(ContextualProvider context, Headers headers, String[] requestPath, UniNode body) throws RestEndpointException {
-            context.getFromContext()
-            FrameBuilder frameBuilder = new FrameBuilder(REST.Header.List.of(headers));
+        public REST.Response executeGET(ContextualProvider context, Headers headersJ, String[] requestPath, UniNode body) throws RestEndpointException {
+            REST.Header.List headers = REST.Header.List.of(headersJ);
+            Map<String, Object> pageProperties = context
+                    .requireFromContext(PagePropertiesProvider.class)
+                    .findPageProperties(headers);
+
+            FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties);
             if (requestPath.length > 0 && !requestPath[0].isEmpty())
                 frameBuilder.setPanel(requestPath[0]);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
