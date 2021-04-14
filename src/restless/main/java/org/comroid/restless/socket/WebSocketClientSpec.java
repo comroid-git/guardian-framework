@@ -1,4 +1,4 @@
-package org.comroid.webkit.model;
+package org.comroid.restless.socket;
 
 import org.comroid.api.StringSerializable;
 import org.comroid.api.UncheckedCloseable;

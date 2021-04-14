@@ -12,8 +12,8 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.REST;
+import org.comroid.restless.socket.WebSocketClientSpec;
 import org.comroid.restless.socket.WebsocketPacket;
-import org.comroid.webkit.model.WebSocketClientSpec;
 import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
