@@ -121,21 +121,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         });
     }
 
-    private String findPartData(String part) {
-        return findAndCacheResourceData(part, partCache, () -> WebkitConfiguration.get().getPart(part));
-    }
-
-    private String findPanelData(String panel) {
-        return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
-    }
-
-    public Document build() {
-        Objects.requireNonNull(panel, "No Panel defined");
-
-        logger.debug("Building Frame with panel {}", panel);
-
-        frame.getElementById("content").html(findPanelData(panel));
-
+    public static void fabricateDocument(Document frame, String host, Map<String, Object> pageProperties) {
         // apply when-attributes
         frame.getElementsByAttribute("when")
                 .forEach(dom -> {
@@ -175,25 +161,46 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         frame.getElementsByTag("a")
                 .forEach(dom -> {
                     String href = dom.attr("href");
-                    if (href.startsWith("http") || href.startsWith("~/"))
+                    if (href.startsWith("http"))
                         return;
+                    if (href.startsWith("~")) {
+                        dom.attr("a", href.replace("~","http://" + host));
+                        return;
+                    }
                     dom.removeAttr("href");
                     dom.attr("onclick", String.format("actionChangePanel('%s')", href));
                 });
-
-        return frame;
     }
 
-    private String resolveValue(Map<String, Object> stage, String[] path, int index) {
+    private static String resolveValue(Map<String, Object> stage, String[] path, int index) {
         if (index + 1 >= path.length)
             return String.valueOf(stage.get(path[index]));
         //noinspection unchecked
         return resolveValue((Map<String, Object>) stage.get(path[index]), path, index + 1);
     }
 
+    private String findPartData(String part) {
+        return findAndCacheResourceData(part, partCache, () -> WebkitConfiguration.get().getPart(part));
+    }
+
+    private String findPanelData(String panel) {
+        return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
+    }
+
+    public Document build() {
+        Objects.requireNonNull(panel, "No Panel defined");
+
+        logger.debug("Building Frame with panel {}", panel);
+
+        frame.getElementById("content").html(findPanelData(panel));
+
+        fabricateDocument(frame, host, pageProperties);
+
+        return frame;
+    }
+
     @Override
     public String toSerializedString() {
-        // replace ~ with host
-        return build().toString().replace("~", "http://" + host);
+        return build().toString();
     }
 }
