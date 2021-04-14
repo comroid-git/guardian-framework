@@ -10,6 +10,7 @@ import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
+import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.socket.ConnectionFactory;
 import org.comroid.webkit.socket.WebkitConnection;
 import org.java_websocket.WebSocket;
@@ -19,16 +20,18 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
-public final class WebkitServer implements ContextualProvider.Underlying, Closeable {
+public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider {
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
     private final String urlBase;
+    private final PagePropertiesProvider pagePropertiesProvider;
     private final WebkitEndpoints endpoints;
     private final RestServer rest;
     private final WebSocketServer socket;
@@ -70,6 +73,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             int port,
             int socketPort,
             NFunction.In3<WebSocket, REST.Header.List, Executor, ? extends WebkitConnection> connectionConstructor,
+            PagePropertiesProvider pagePropertiesProvider,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
         this(
@@ -80,6 +84,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 port,
                 socketPort,
                 new ConnectionFactory<>(connectionConstructor, executor),
+                pagePropertiesProvider,
                 additionalEndpoints
         );
     }
@@ -92,11 +97,13 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             int port,
             int socketPort,
             ConnectionFactory<? extends WebkitConnection> connectionFactory,
+            PagePropertiesProvider pagePropertiesProvider,
             ServerEndpoint... additionalEndpoints
     ) throws IOException {
         this.context = context.plus("Webkit Server", this);
         this.executor = executor;
         this.urlBase = urlBase;
+        this.pagePropertiesProvider = pagePropertiesProvider;
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
@@ -108,6 +115,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 socketPort,
                 connectionFactory
         );
+    }
+
+    @Override
+    public Map<String, Object> findPageProperties(REST.Header.List headers) {
+        return Collections.unmodifiableMap(pagePropertiesProvider.findPageProperties(headers));
     }
 
     @Override
