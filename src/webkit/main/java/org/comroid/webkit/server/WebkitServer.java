@@ -7,6 +7,7 @@ import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.webkit.endpoint.WebkitScope;
+import org.comroid.webkit.socket.WebkitConnection;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class WebkitServer implements ContextualProvider.Underlying, Closeable {
         this.endpoints = new WebkitEndpoints(additionalEndpoints);
         this.rest = new RestServer(this.context, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
-        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort);
+        this.socket = new WebSocketServer(this.context, executor, urlBase + "/websocket", inetAddress, socketPort, WebkitConnection::new);
     }
 
     @Override

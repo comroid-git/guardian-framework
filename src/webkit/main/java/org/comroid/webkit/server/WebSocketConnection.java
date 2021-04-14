@@ -36,7 +36,7 @@ public class WebSocketConnection implements ConnectionClientSpec.Complete {
         return !(socketBase.isClosed() || socketBase.isClosing());
     }
 
-    public WebSocketConnection(WebSocket socketBase, REST.Header.List headers, Executor executor) {
+    protected WebSocketConnection(WebSocket socketBase, REST.Header.List headers, Executor executor) {
         this.socketBase = socketBase;
         this.headers = headers;
         this.executor = executor;

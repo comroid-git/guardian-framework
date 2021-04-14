@@ -31,7 +31,8 @@ public final class ConnectionFactory<T extends WebSocketConnection> implements B
         @Override
         public WebSocketConnection apply(WebSocket conn, REST.Header.List headers, Executor executor) {
             try {
-                return new WebSocketConnection(conn, headers, executor);
+                return new WebSocketConnection(conn, headers, executor) {
+                };
             } catch (Throwable e) {
                 throw new RuntimeException("Could not initiate Connection", e);
             }
