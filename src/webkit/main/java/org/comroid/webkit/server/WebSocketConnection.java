@@ -3,6 +3,7 @@ package org.comroid.webkit.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Specifiable;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.model.RefPipe;
@@ -16,7 +17,7 @@ import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
 
-public class WebSocketConnection implements ConnectionClientSpec.Complete {
+public class WebSocketConnection implements ConnectionClientSpec.Complete, Specifiable<WebSocketConnection> {
     private static final Logger logger = LogManager.getLogger();
     public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
