@@ -3,5 +3,5 @@
         inject="errorData.statusCode"/></h3>
 <div style="font-size: medium" when="errorData.exception != null">
     <p>A<span inject="errorData.exception"/>ocurred</p>
-    <p when="errorData.stackTrace != null">StackTrace:<span inject="errorData.stackTrace"/></p>
+    <p when="errorData.stackTrace != null">StackTrace:<textarea inject="errorData.stackTrace"/></p>
 </div>
