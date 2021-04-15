@@ -74,16 +74,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                 .attr("src", String.format("http%s://%s/webkit/api", isDebug ? "" : "s", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
-
-        WebkitConfiguration config = WebkitConfiguration.get();
-        // read parts
-        config.streamPartNames()
-                .forEach(part -> {
-                    String partData = findPartData(part);
-
-                    // and import to frame
-                    frame.getElementsByTag(part).html(partData);
-                });
     }
 
     public static @NotNull InputStream getInternalResource(String name) {
@@ -125,6 +115,34 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public static void fabricateDocument(Document frame, String host, Map<String, Object> pageProperties) {
+        WebkitConfiguration config = WebkitConfiguration.get();
+        // read parts
+        config.streamPartNames()
+                .forEach(part -> {
+                    String partData = findPartData(part);
+
+                    // and import to frame
+                    frame.getElementsByTag(part).html(partData);
+                });
+
+        // overwrite links
+        frame.getElementsByTag("a")
+                .forEach(dom -> {
+                    boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
+                    String href = dom.attr("href");
+                    if (href.startsWith("http")) {
+                        if (!isDebug)
+                            dom.attr(href, href.replace("http://", "https://"));
+                        return;
+                    }
+                    if (href.startsWith("~/")) {
+                        dom.attr("href", href.replace("~/", String.format("http%s://%s/", isDebug ? "" : "s", host)));
+                        return;
+                    }
+                    dom.removeAttr("href");
+                    dom.attr("onclick", String.format("actionChangePanel('%s')", href));
+                });
+
         // apply when-attributes
         frame.getElementsByAttribute("when")
                 .forEach(dom -> {
@@ -172,23 +190,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     }
                 });
 
-        // overwrite links
-        frame.getElementsByTag("a")
-                .forEach(dom -> {
-                    boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
-                    String href = dom.attr("href");
-                    if (href.startsWith("http")) {
-                        if (!isDebug)
-                            dom.attr(href, href.replace("http://", "https://"));
-                        return;
-                    }
-                    if (href.startsWith("~/")) {
-                        dom.attr("href", href.replace("~/", String.format("http%s://%s/", isDebug ? "" : "s", host)));
-                        return;
-                    }
-                    dom.removeAttr("href");
-                    dom.attr("onclick", String.format("actionChangePanel('%s')", href));
-                });
     }
 
     private static String resolveValue(Map<String, Object> stage, String[] path, int index) {
@@ -199,11 +200,11 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return resolveValue((Map<String, Object>) it, path, index + 1);
     }
 
-    private String findPartData(String part) {
+    private static String findPartData(String part) {
         return findAndCacheResourceData(part, partCache, () -> WebkitConfiguration.get().getPart(part));
     }
 
-    private String findPanelData(String panel) {
+    private static String findPanelData(String panel) {
         return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
     }
 
@@ -222,6 +223,11 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
     @Override
     public String toSerializedString() {
-        return build().toString();
+        boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
+        String untreated = build().toString();
+
+        untreated = untreated.replace("~/", isDebug ? "http://" : "https://");
+
+        return untreated;
     }
 }
