@@ -146,6 +146,8 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                 .forEach(dom -> {
                     boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
                     String href = dom.attr("href");
+                    if (href.isEmpty())
+                        return;
                     if (href.startsWith("http")) {
                         if (!isDebug)
                             dom.attr(href, href.replace("http://", "https://"));
