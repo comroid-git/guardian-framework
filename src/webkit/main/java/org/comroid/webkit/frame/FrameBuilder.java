@@ -207,6 +207,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
     }
 
+    @Override
     public Document build() {
         Objects.requireNonNull(panel, "No Panel defined");
 
