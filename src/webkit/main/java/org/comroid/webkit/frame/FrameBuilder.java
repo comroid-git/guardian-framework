@@ -69,7 +69,9 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
+        pageProperties.put("frame", frameName);
         this.pageProperties = pageProperties;
+
         try {
             this.frame = Jsoup.parse(findFrameData(frameName));
         } catch (Throwable e) {
