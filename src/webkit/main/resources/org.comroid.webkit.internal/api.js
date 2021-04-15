@@ -58,7 +58,7 @@ function actionChangePanel(target) {
 function initAPI() {
     console.debug('loading socket');
 
-    ws = new WebSocket(isWindows ? "ws://localhost:42001" : `ws://${window.location.host}/websocket`);
+    ws = new WebSocket(isWindows ? "ws://localhost:42001" : `wss://${window.location.host}/websocket`);
     ws.onopen = (msg) => {
         console.debug("open ", msg);
         ws.send("hello server; i'm " + (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken));
