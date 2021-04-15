@@ -285,7 +285,7 @@ public class RestServer implements Closeable {
                     handleResponse(exchange, requestURI, endpoint, responseHeaders, response);
                     lastException = null;
                     break;
-                }
+                } else logger.warn("Handler does not support method {}, attempting next handler...", requestMethod, lastException);
             }
 
             if (lastException != null)
