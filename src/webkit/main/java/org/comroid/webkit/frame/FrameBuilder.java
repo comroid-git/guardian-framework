@@ -66,6 +66,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         }
 
         host = headers.getFirst("Host");
+        logger.info("Initializing new FrameBuilder for Host {} with {} props", host, pageProperties);
 
         // add api script
         frame.head().appendElement("script")
