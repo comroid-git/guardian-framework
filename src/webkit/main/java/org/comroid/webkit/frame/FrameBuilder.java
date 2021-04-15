@@ -56,6 +56,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
+        boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.pageProperties = pageProperties;
         try {
             InputStream frame = getResource("frame.html");
@@ -70,7 +71,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         // add api script
         frame.head().appendElement("script")
                 .attr("type", "application/javascript")
-                .attr("src", String.format("http://%s/webkit/api", host));
+                .attr("src", String.format("http%s://%s/webkit/api", isDebug ? "" : "s", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
 
