@@ -23,9 +23,13 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class FrameBuilder implements Builder<Document>, StringSerializable {
+    public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\S.]+?)}");
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
     public static final Reference<ClassLoader> classLoader;
@@ -226,6 +230,16 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         String untreated = build().toString();
 
+        // fill in vars
+        Matcher matcher = VARIABLE_PATTERN.matcher(untreated);
+        while (matcher.find()) {
+            String vname = matcher.group(1);
+            String value = resolveValue(pageProperties, vname.split("\\."), 0);
+            MatchResult result = matcher.toMatchResult();
+            untreated = untreated.substring(0, result.start()) + value + untreated.substring(result.end());
+        }
+
+        // replace ~ with http
         untreated = untreated.replace("~/", isDebug ? "http://" : "https://");
 
         return untreated;
