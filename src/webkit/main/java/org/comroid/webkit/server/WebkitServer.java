@@ -1,5 +1,7 @@
 package org.comroid.webkit.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
@@ -27,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider {
+    private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final ScheduledExecutorService executor;
     private final String urlBase;
