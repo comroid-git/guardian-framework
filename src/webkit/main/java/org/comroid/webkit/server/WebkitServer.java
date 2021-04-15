@@ -131,7 +131,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     @Override
     public Map<String, Object> findPageProperties(REST.Header.List headers) {
-        return Collections.unmodifiableMap(pagePropertiesProvider.findPageProperties(headers));
+        return pagePropertiesProvider.findPageProperties(headers);
     }
 
     @Override
