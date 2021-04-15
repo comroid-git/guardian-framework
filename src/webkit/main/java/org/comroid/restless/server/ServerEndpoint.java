@@ -36,24 +36,6 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
         return new Support.Combined(accessibleEndpoint, handler);
     }
 
-    default boolean allowMemberAccess() {
-        return false;
-    }
-
-    @Override
-    default ServerEndpoint attachHandler(EndpointHandler handler) {
-        throw new UnsupportedOperationException("Cannot attach Handler to ServerEndpoint");
-    }
-
-    default boolean isMemberAccess(String url) {
-        return allowMemberAccess() && Stream.of(replacer(getRegExpGroups()), url)
-                .mapToLong(str -> str.chars()
-                        .filter(x -> x == '/')
-                        .count())
-                .distinct()
-                .count() > 1;
-    }
-
     default boolean attemptRecovery() {
         return false;
     }

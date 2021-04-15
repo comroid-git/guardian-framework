@@ -3,8 +3,6 @@ package org.comroid.restless.endpoint;
 import org.comroid.api.Polyfill;
 import org.comroid.api.WrappedFormattable;
 import org.comroid.common.ref.StaticCache;
-import org.comroid.restless.server.EndpointHandler;
-import org.comroid.restless.server.ServerEndpoint;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 
@@ -16,6 +14,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable, Predicate<String>, EndpointScope {
     String getUrlBase();
@@ -94,9 +93,7 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
     @Override
     @NonExtendable
     default boolean test(String url) {
-        if (this instanceof ServerEndpoint
-                && ((ServerEndpoint) this).allowMemberAccess()
-                && ((ServerEndpoint) this).isMemberAccess(url)) {
+        if (allowMemberAccess() && isMemberAccess(url)) {
             url = url.substring(0, url.lastIndexOf("/"));
         }
 
@@ -124,9 +121,7 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
 
     @NonExtendable
     default String[] extractArgs(String requestUrl) {
-        if (this instanceof ServerEndpoint
-                && ((ServerEndpoint) this).allowMemberAccess()
-                && ((ServerEndpoint) this).isMemberAccess(requestUrl)) {
+        if (allowMemberAccess() && isMemberAccess(requestUrl)) {
             requestUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/"));
         }
 
@@ -179,8 +174,16 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
         return Pattern.compile(getFullUrl().replace("%s", "(.*)"));
     }
 
-    @NonExtendable
-    default ServerEndpoint attachHandler(EndpointHandler handler) {
-        return ServerEndpoint.combined(this, handler);
+    default boolean allowMemberAccess() {
+        return false;
+    }
+
+    default boolean isMemberAccess(String url) {
+        return allowMemberAccess() && Stream.of(replacer(getRegExpGroups()), url)
+                .mapToLong(str -> str.chars()
+                        .filter(x -> x == '/')
+                        .count())
+                .distinct()
+                .count() > 1;
     }
 }
