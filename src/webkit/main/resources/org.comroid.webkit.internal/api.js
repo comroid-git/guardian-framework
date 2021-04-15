@@ -12,8 +12,16 @@ function populateTag(data, tag, names, index) {
     tag.innerText = data[names[index]]
 }
 
-function changePanel(dom) {
+function changePanelEvent(event, dom) {
     document.getElementById('content').innerHTML = dom
+}
+
+function injectionEvent(event, data) {
+    document.querySelectorAll('[inject]')
+        .forEach(dom => {
+            let path = dom.getAttribute('inject').split('.');
+            populateTag(data, dom, path, 0);
+        });
 }
 
 function handleMessage(json) {
@@ -27,15 +35,9 @@ function handleMessage(json) {
 
     switch (event['type']) {
         case 'inject':
-            document.querySelectorAll('[inject]')
-                .forEach(dom => {
-                    let path = dom.getAttribute('inject').split('.');
-                    populateTag(data, dom, path, 0);
-                });
-            break;
+            return injectionEvent(event, data);
         case 'changePanel':
-            changePanel(data);
-            break;
+            return changePanelEvent(event, data);
     }
 }
 
