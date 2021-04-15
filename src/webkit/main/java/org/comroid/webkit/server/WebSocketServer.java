@@ -170,6 +170,8 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
     }
 
     private @NotNull WebSocketConnection findConnection(WebSocket conn) throws NoSuchElementException {
+        if (conn == null)
+            throw new IllegalArgumentException("No connection base provided");
         WebSocketConnection found = activeConnections.getOrDefault(conn, null);
         if (found == null)
             throw new NoSuchElementException("No active connection available for " + conn);
