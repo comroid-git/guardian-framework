@@ -7,23 +7,10 @@ import org.comroid.api.Serializer;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.uniform.node.UniValueNode;
-import org.comroid.webkit.config.WebkitConfiguration;
-import org.comroid.webkit.frame.FrameBuilder;
-import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.server.WebSocketConnection;
 import org.java_websocket.WebSocket;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-public class WebkitConnection extends WebSocketConnection {
+public abstract class WebkitConnection extends WebSocketConnection {
     private static final Logger logger = LogManager.getLogger();
     public final String host;
 
@@ -48,54 +35,9 @@ public class WebkitConnection extends WebSocketConnection {
                 });
     }
 
-    private Serializer<UniNode> findSerializer() {
+    protected Serializer<UniNode> findSerializer() {
         return findSerializer("application/json");
     }
 
-    private void handleCommand(UniNode command) {
-        logger.trace("Incoming command: {}", command);
-        String commandName = command.get("type").asString();
-        String[] split = commandName.split("/");
-
-        UniNode data = command.wrap("data").orElse(UniValueNode.NULL);
-        UniObjectNode response = findSerializer().createObjectNode().asObjectNode();
-        Map<String, Object> pageProperties = requireFromContext(PagePropertiesProvider.class)
-                .findPageProperties(getHeaders());
-
-        switch (split[0]) {
-            case "action":
-                switch (split[1]) {
-                    case "changePanel":
-                        String target = data.get("target").asString();
-                        try (
-                                InputStream is = WebkitConfiguration.get().getPanel(target);
-                                InputStreamReader isr = new InputStreamReader(is);
-                                BufferedReader br = new BufferedReader(isr)
-                        ) {
-                            String panelData = br.lines().collect(Collectors.joining("\n"));
-                            Document doc = Jsoup.parse(panelData);
-                            FrameBuilder.fabricateDocument(doc, host, pageProperties);
-
-                            response.put("type", "changePanel");
-                            response.put("data", doc.toString());
-                            break;
-                        } catch (Throwable e) {
-                            logger.error("Could not read target panel " + target, e);
-                        }
-                    case "refresh":
-                        response.put("type", "inject");
-                        UniObjectNode eventData = response.putObject("data");
-                        eventData.putAll(pageProperties);
-                        break;
-                    default:
-                        logger.error("Unknown action: {}", split[1]);
-                }
-                break;
-            default:
-                logger.error("Unknown Command received: {}", commandName);
-                break;
-        }
-
-        sendText(response);
-    }
+    protected abstract void handleCommand(UniNode command);
 }
