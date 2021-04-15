@@ -4,7 +4,6 @@ import com.sun.net.httpserver.Headers;
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.intellij.lang.annotations.MagicConstant;
 
 public class RestEndpointException extends RuntimeException {
@@ -54,14 +53,17 @@ public class RestEndpointException extends RuntimeException {
     }
 
     public interface RecoverStage {
+        int DO_NOT_ATTEMPT = 0;
+        int EXCEPTIONS_ONLY = 1;
+        int ALL = 2;
+
         REST.Response tryRecover(
                 ContextualProvider context,
-                RestEndpointException exception,
-                CompleteEndpoint failedEndpoint,
-                int statusCode, REST.Method requestMethod,
-                Headers requestHeaders,
-                String[] args,
-                String requestBody
+                Throwable exception,
+                String requestURI,
+                int statusCode,
+                REST.Method requestMethod,
+                Headers requestHeaders
         );
     }
 }

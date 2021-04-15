@@ -8,7 +8,6 @@ import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.REST;
-import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestEndpointException;
@@ -30,7 +29,6 @@ import java.io.StringWriter;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -137,12 +135,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     @Override
     public REST.Response tryRecover(
             ContextualProvider context,
-            RestEndpointException exception,
-            CompleteEndpoint failedEndpoint,
-            int statusCode, REST.Method requestMethod,
-            Headers requestHeaders,
-            String[] args,
-            String requestBody
+            Throwable exception,
+            String requestURI,
+            int statusCode,
+            REST.Method requestMethod,
+            Headers requestHeaders
     ) {
         String exceptionStackTrace = null;
         if (exception != null) {
@@ -159,11 +156,10 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
         REST.Header.List headers = REST.Header.List.of(requestHeaders);
         Map<String, Object> pageProperties = findPageProperties(headers);
-        String requestUrl = failedEndpoint.getSpec();
 
         final UniObjectNode errorData = this.<UniNode>findSerializer("application/json").createObjectNode().asObjectNode();
         errorData.put("requestMethod", requestMethod);
-        errorData.put("requestUrl", requestUrl);
+        errorData.put("requestUrl", requestURI);
         errorData.put("statusCode", statusCode);
         errorData.put("exception", exception == null ? null
                 : String.format("%s: %s", exception.getClass().getName(), exception.getMessage()));

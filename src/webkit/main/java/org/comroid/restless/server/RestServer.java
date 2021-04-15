@@ -13,7 +13,6 @@ import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
-import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
@@ -161,25 +160,24 @@ public class RestServer implements Closeable {
     }
 
     private @Nullable Response tryRecoverFrom(
-            RestEndpointException lastException,
-            CompleteEndpoint failedEndpoint,
+            Throwable lastException,
+            String requestURI,
             int statusCode,
             REST.Method requestMethod,
-            Headers requestHeaders,
-            String[] args,
-            String requestBody
+            Headers requestHeaders
     ) {
-        logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, failedEndpoint);
+        logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, requestURI);
         Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class, true);
 
         if (recoverStageRef.isNull()) {
             if (lastException == null)
                 return null;
-            else throw lastException;
+            else if (lastException instanceof RestEndpointException)
+                throw (RestEndpointException) lastException;
         }
 
         RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
-        return recoverStage.tryRecover(context, lastException, failedEndpoint, statusCode, requestMethod, requestHeaders, args, requestBody);
+        return recoverStage.tryRecover(context, lastException, requestURI, statusCode, requestMethod, requestHeaders);
     }
 
     private class AutoContextHandler implements HttpHandler {
@@ -189,10 +187,11 @@ public class RestServer implements Closeable {
             final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
             final String requestString = String.format("%s @ %s", requestMethod, requestURI);
 
+            Headers requestHeaders = null;
             try {
                 try {
                     final Headers responseHeaders = exchange.getResponseHeaders();
-                    final Headers requestHeaders = exchange.getRequestHeaders();
+                    requestHeaders = exchange.getRequestHeaders();
                     commonHeaders.forEach(responseHeaders::add);
                     responseHeaders.add(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, mimeType);
                     responseHeaders.add(REQUEST_CONTENT_TYPE, mimeType);
@@ -231,6 +230,7 @@ public class RestServer implements Closeable {
                     logger.info("Looking for matching endpoint...");
                     forwardToEndpoint(exchange, requestURI, requestMethod, responseHeaders, requestHeaders, body);
                 } catch (Throwable t) {
+                    tryRecoverFrom(t, requestURI, 500, requestMethod, requestHeaders);
                     if (t instanceof RestEndpointException)
                         throw (RestEndpointException) t;
                     throw new RestEndpointException(INTERNAL_SERVER_ERROR, t);
@@ -297,28 +297,25 @@ public class RestServer implements Closeable {
                         lastException = reex;
                     }
 
-                    if ((lastException instanceof RestEndpointException
-                            || response.getStatusCode() != OK)
-                            && endpoint.attemptRecovery()) try {
-                        Response alternate = tryRecoverFrom(
-                                lastException instanceof RestEndpointException
-                                        ? (RestEndpointException) lastException
-                                        : null,
-                                endpoint.complete((Object[]) args),
-                                lastException instanceof RestEndpointException
-                                        ? ((RestEndpointException) lastException).getStatusCode()
-                                        : response.getStatusCode(),
-                                requestMethod,
-                                requestHeaders,
-                                args,
-                                requestBody);
-                        if (alternate == null) {
-                            logger.debug("Could not recover from {} with exception {}; handler returned {}", response, lastException, alternate);
-                        } else if (alternate.getStatusCode() == OK)
-                            response = alternate;
-                    } catch (Throwable recoveringException) {
-                        logger.error("An error ocurred during recovery", recoveringException);
-                    }
+                    if ((lastException != null && endpoint.attemptRecovery() != RestEndpointException.RecoverStage.DO_NOT_ATTEMPT)
+                            || (response.getStatusCode() != OK && endpoint.attemptRecovery() == RestEndpointException.RecoverStage.ALL))
+                        try {
+                            Response alternate = tryRecoverFrom(
+                                    lastException,
+                                    requestURI,
+                                    lastException instanceof RestEndpointException
+                                            ? ((RestEndpointException) lastException).getStatusCode()
+                                            : response.getStatusCode(),
+                                    requestMethod,
+                                    requestHeaders
+                            );
+                            if (alternate == null) {
+                                logger.debug("Could not recover from {} with exception {}; handler returned {}", response, lastException, alternate);
+                            } else if (alternate.getStatusCode() == OK)
+                                response = alternate;
+                        } catch (Throwable recoveringException) {
+                            logger.error("An error ocurred during recovery", recoveringException);
+                        }
 
                     if (response == dummyResponse) {
                         logger.warn("Handler could not complete normally, attempting next handler...", lastException);

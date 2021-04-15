@@ -1,13 +1,9 @@
 package org.comroid.restless.server;
 
-import com.sun.net.httpserver.Headers;
-import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
-import org.comroid.uniform.node.UniNode;
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
     AccessibleEndpoint getEndpointBase();
@@ -36,8 +32,8 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
         return new Support.Combined(accessibleEndpoint, handler);
     }
 
-    default boolean attemptRecovery() {
-        return false;
+    default int attemptRecovery() {
+        return RestEndpointException.RecoverStage.EXCEPTIONS_ONLY;
     }
 
     final class Support {

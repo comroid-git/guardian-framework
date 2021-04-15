@@ -1,5 +1,7 @@
 package org.comroid.varbind.container;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 public class DataContainerBase<S extends DataContainer<? super S>>
         extends ReferenceAtlas.ForMap<String, ReferenceList, VarBind, Object>
         implements DataContainer<S> {
+    private static final Logger logger = LogManager.getLogger();
     private final ReferenceStageAdapter<String, VarBind, ReferenceList, Object, KeyedReference<String, ReferenceList>, KeyedReference<VarBind, Object>> adapter;
     private final ContextualProvider context;
     private final GroupBind<S> group;
@@ -120,6 +123,11 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         node.forEach((key, value) -> {
             KeyedReference<String, ReferenceList<Object>> eRef = getExtractionReference(key);
             VarBind<? extends S, ?, ?, Object> bind = getBindByName(key);
+
+            if (bind == null) {
+                logger.warn("No bind found for key {}; skipping", key);
+                return;
+            }
 
             eRef.compute(refs -> {
                 if (refs == null)
