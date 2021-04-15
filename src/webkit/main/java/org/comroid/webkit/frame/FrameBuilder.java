@@ -118,7 +118,12 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         });
     }
 
-    public static void fabricateDocument(Document frame, String host, Map<String, Object> pageProperties) {
+    public static String fabricateDocumentToString(Document frame, String host, Map<String, Object> pageProperties) {
+        fabricateDocument(frame, host, pageProperties);
+        return postfabString(pageProperties, frame.toString());
+    }
+
+    private static void fabricateDocument(Document frame, String host, Map<String, Object> pageProperties) {
         WebkitConfiguration config = WebkitConfiguration.get();
         // read parts
         config.streamPartNames()
@@ -212,6 +217,24 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
     }
 
+    private static String postfabString(final Map<String, Object> pageProperties, String untreated) {
+        boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
+
+        // fill in vars
+        Matcher matcher = VARIABLE_PATTERN.matcher(untreated);
+        while (matcher.find()) {
+            String vname = matcher.group(1);
+            String value = resolveValue(pageProperties, vname.split("\\."), 0);
+            MatchResult result = matcher.toMatchResult();
+            untreated = untreated.substring(0, result.start()) + value + untreated.substring(result.end());
+        }
+
+        // replace ~ with http
+        untreated = untreated.replace("~/", isDebug ? "http://" : "https://");
+
+        return untreated;
+    }
+
     @Override
     public Document build() {
         Objects.requireNonNull(panel, "No Panel defined");
@@ -227,21 +250,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
     @Override
     public String toSerializedString() {
-        boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
-        String untreated = build().toString();
-
-        // fill in vars
-        Matcher matcher = VARIABLE_PATTERN.matcher(untreated);
-        while (matcher.find()) {
-            String vname = matcher.group(1);
-            String value = resolveValue(pageProperties, vname.split("\\."), 0);
-            MatchResult result = matcher.toMatchResult();
-            untreated = untreated.substring(0, result.start()) + value + untreated.substring(result.end());
-        }
-
-        // replace ~ with http
-        untreated = untreated.replace("~/", isDebug ? "http://" : "https://");
-
-        return untreated;
+        return postfabString(pageProperties, build().toString());
     }
 }
