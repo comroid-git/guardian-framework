@@ -16,6 +16,7 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -23,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
@@ -30,6 +32,7 @@ import static org.comroid.restless.HTTPStatusCodes.*;
 public class RestServer implements Closeable {
     private static final Response dummyResponse = new Response(0);
     private static final Logger logger = LogManager.getLogger();
+    private final ContextualProvider context;
     private final AutoContextHandler autoContextHandler = new AutoContextHandler();
     private final HttpServer server;
     private final Span<ServerEndpoint> endpoints;
@@ -37,6 +40,19 @@ public class RestServer implements Closeable {
     private final String mimeType;
     private final String baseUrl;
     private final REST.Header.List commonHeaders = new REST.Header.List();
+    private @Nullable ServerEndpoint defaultEndpoint;
+
+    public ContextualProvider getContext() {
+        return context;
+    }
+
+    public @Nullable ServerEndpoint getDefaultEndpoint() {
+        return defaultEndpoint;
+    }
+
+    public void setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
+        this.defaultEndpoint = defaultEndpoint;
+    }
 
     public HttpServer getServer() {
         return server;
@@ -71,6 +87,7 @@ public class RestServer implements Closeable {
             ServerEndpoint... endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.length);
+        this.context = context;
         this.seriLib = context.requireFromContext(SerializationAdapter.class);
         this.mimeType = seriLib.getMimeType();
         this.baseUrl = baseUrl;
@@ -216,13 +233,15 @@ public class RestServer implements Closeable {
                 Headers responseHeaders,
                 Headers requestHeaders,
                 String requestBody) throws Throwable {
-            final Iterator<ServerEndpoint> iter = endpoints.pipe()
+            final Iterator<ServerEndpoint> iter = Stream.concat(
                     // endpoints that accept the request uri
-                    .filter(endpoint -> endpoint.test(requestURI))
-                    // handle member accessing endpoints with lower priority
-                    .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
-                    .flatMap(ServerEndpoint.class)
-                    .streamValues()
+                    endpoints.filter(endpoint -> endpoint.test(requestURI))
+                            // handle member accessing endpoints with lower priority
+                            .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
+                            .flatMap(ServerEndpoint.class)
+                            .streamValues(),
+                    // and concat to defaultEndpoint
+                    Stream.of(defaultEndpoint).filter(Objects::nonNull))
                     .iterator();
             Throwable lastException = null;
             Response response = dummyResponse;
@@ -242,7 +261,9 @@ public class RestServer implements Closeable {
                     final String[] args = endpoint.extractArgs(requestURI);
                     logger.info("Extracted parameters: {}", Arrays.toString(args));
 
-                    if (args.length != endpoint.getParameterCount() && !endpoint.allowMemberAccess())
+                    if (!endpoint.ignoreArgumentCount()
+                            && args.length != endpoint.getParameterCount()
+                            && !endpoint.allowMemberAccess())
                         throw new RestEndpointException(BAD_REQUEST, "Invalid argument Count");
 
                     try {

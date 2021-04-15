@@ -28,20 +28,20 @@ public class ReferenceMap<K, V>
     }
 
     public ReferenceMap(
-            @Nullable ReferenceMap<K, V> parent
+            @Nullable RefMap<K, V> parent
     ) {
         this(uncheckedCast(parent), uncheckedCast(BiStageAdapter.identity()));
     }
 
     public <InK, InV> ReferenceMap(
-            @Nullable ReferenceMap<InK, InV> parent,
+            @Nullable RefMap<InK, InV> parent,
             @NotNull BiStageAdapter<InK, InV, K, V> advancer
     ) {
         this(parent, advancer, null);
     }
 
     public <InK, InV> ReferenceMap(
-            @Nullable ReferenceMap<InK, InV> parent,
+            @Nullable RefMap<InK, InV> parent,
             @NotNull BiStageAdapter<InK, InV, K, V> advancer,
             @Nullable Comparator<KeyedReference<K, V>> comparator
     ) {

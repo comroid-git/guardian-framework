@@ -90,6 +90,7 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
 
     @Override
     public ValueAdapter<Object, Object> createValueAdapter(Object nodeBase, final Predicate<Object> setter) {
+        /*
         return Polyfill.uncheckedCast(new ValueAdapter<ValueNode, Object>((ValueNode) nodeBase) {
             @Override
             public Object asActualType() {
@@ -132,6 +133,18 @@ public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNo
                 return setter.test(newValue);
             }
         });
+         */
+        return new ValueAdapter<Object, Object>(nodeBase) {
+            @Override
+            public Object asActualType() {
+                return base;
+            }
+
+            @Override
+            protected boolean doSet(Object newValue) {
+                return setter.test(newValue);
+            }
+        };
     }
 
     public final JsonNode wrapAsNode(Object element) {

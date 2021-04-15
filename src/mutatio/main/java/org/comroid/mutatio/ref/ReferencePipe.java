@@ -1,5 +1,7 @@
 package org.comroid.mutatio.ref;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.abstr.AbstractList;
 import org.comroid.abstr.AbstractMap;
 import org.comroid.api.Polyfill;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
 public class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V>
         implements RefPipe<InK, InV, K, V> {
+    private static final Logger logger = LogManager.getLogger();
     @Nullable
     private final Executor stageExecutor;
 
@@ -28,9 +31,13 @@ public class ReferencePipe<InK, InV, K, V>
         return stageExecutor;
     }
 
+    /**
+     * @deprecated Use {@link ReferencePipe#ReferencePipe(Executor)}
+     */
+    @Deprecated
     public ReferencePipe(
     ) {
-        this(null);
+        this((RefAtlas<?, K, ?, V>) null);
     }
 
     public ReferencePipe(
@@ -44,6 +51,12 @@ public class ReferencePipe<InK, InV, K, V>
             @NotNull ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer
     ) {
         this(parent, advancer, getExecutorFromAtlas(parent));
+    }
+
+    public ReferencePipe(
+            @Nullable Executor stageExecutor
+    ) {
+        this(null, Polyfill.uncheckedCast(BiStageAdapter.identity()), stageExecutor);
     }
 
     public ReferencePipe(
@@ -90,12 +103,23 @@ public class ReferencePipe<InK, InV, K, V>
     @Override
     public final void callDependentStages(Executor executor, InK inK, InV inV) {
         executor.execute(() -> {
-            final K key = getAdvancer().advanceKey(inK);
-            final V value = getAdvancer().advanceValue(inK, inV);
+            ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer = getAdvancer();
+            final K key = advancer.advanceKey(inK);
+            final V value = advancer.advanceValue(inK, inV);
+            if (advancer.isFiltering()
+                    && ((inK != null && key == null)
+                    || (inV != null && value == null)))
+                return;
             getDependents().stream()
                     .filter(ReferencePipe.class::isInstance)
                     .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)
-                    .forEach(next -> next.accept(key, value));
+                    .forEach(next -> {
+                        try {
+                            next.accept(key, value);
+                        } catch (Throwable t) {
+                            logger.error("An error ocurred during forwarding to pipe " + next, t);
+                        }
+                    });
         });
     }
 

@@ -17,23 +17,23 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         extends ReferenceStageAdapter<InK, OutK, InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>
         implements KeyedReference.Advancer<InK, InV, OutK, OutV> {
     protected BiStageAdapter(
-            boolean isIdentity,
+            boolean isFiltering,
             Function<? super InK, ? extends OutK> keyMapper,
             final Function<? super InV, ? extends OutV> valueMapper,
             @Nullable Function<? super OutK, ? extends InK> keyReverser,
             @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
-        this(isIdentity, keyMapper, (unused, in) -> valueMapper.apply(in), keyReverser, valueReverser);
+        this(isFiltering, keyMapper, (unused, in) -> valueMapper.apply(in), keyReverser, valueReverser);
     }
 
     protected BiStageAdapter(
-            boolean isIdentity,
+            boolean isFiltering,
             Function<? super InK, ? extends OutK> keyMapper,
             BiFunction<? super InK, ? super InV, ? extends OutV> valueMapper,
             @Nullable Function<? super OutK, ? extends InK> keyReverser,
             @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
-        super(isIdentity, keyMapper, valueMapper, keyReverser, valueReverser);
+        super(isFiltering, keyMapper, valueMapper, keyReverser, valueReverser);
     }
 
     public static <K, V> BiStageAdapter<K, V, K, V> filterKey(final Predicate<? super K> predicate) {

@@ -1,12 +1,11 @@
 package org.comroid.restless.server;
 
 import com.sun.net.httpserver.Headers;
-import org.comroid.api.Rewrapper;
+import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
-import org.comroid.util.StandardValueType;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -53,23 +52,24 @@ public interface EndpointHandler {
 
         switch (method) {
             case GET:
-                return executeGET(headers, urlParams, data);
+                return executeGET(server.getContext(), headers, urlParams, data);
             case PUT:
-                return executePUT(headers, urlParams, data);
+                return executePUT(server.getContext(), headers, urlParams, data);
             case POST:
-                return executePOST(headers, urlParams, data);
+                return executePOST(server.getContext(), headers, urlParams, data);
             case PATCH:
-                return executePATCH(headers, urlParams, data);
+                return executePATCH(server.getContext(), headers, urlParams, data);
             case DELETE:
-                return executeDELETE(headers, urlParams, data);
+                return executeDELETE(server.getContext(), headers, urlParams, data);
             case HEAD:
-                return executeHEAD(headers, urlParams, data);
+                return executeHEAD(server.getContext(), headers, urlParams, data);
         }
 
         throw new AssertionError("No such method: " + method);
     }
 
     default REST.Response executeGET(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
@@ -78,6 +78,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePUT(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
@@ -86,6 +87,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePOST(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
@@ -94,6 +96,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePATCH(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
@@ -102,6 +105,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeDELETE(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
@@ -110,10 +114,27 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeHEAD(
+            ContextualProvider context,
             Headers headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: HEAD");
+    }
+
+    interface Underlying extends EndpointHandler {
+        default EndpointHandler getEndpointHandler() {
+            return this;
+        }
+
+        @Override
+        default boolean supports(REST.Method method) {
+            return getEndpointHandler().supports(method);
+        }
+
+        @Override
+        default REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
+            return getEndpointHandler().executeMethod(server, method, headers, urlParams, body);
+        }
     }
 }

@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -16,33 +15,33 @@ import java.util.function.Function;
 
 public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends Reference<InV>, OutRef extends Reference<OutV>>
         implements ReferenceConverter<InRef, OutRef> {
-    private final boolean isIdentity;
+    private final boolean isFiltering;
     private final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
     private final BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper;
     private final @Nullable Function<? super OutK, ? extends InK> keyReverser;
     private final @Nullable Function<? super OutV, ? extends InV> valueReverser;
 
-    public final boolean isIdentityValue() {
-        return isIdentity;
+    public final boolean isFiltering() {
+        return isFiltering;
     }
 
     @Deprecated
     protected ReferenceStageAdapter(
-            boolean isIdentity,
+            boolean isFiltering,
             @NotNull Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
             @NotNull BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper
     ) {
-        this(isIdentity, keyMapper, valueMapper, null, null);
+        this(isFiltering, keyMapper, valueMapper, null, null);
     }
 
     protected ReferenceStageAdapter(
-            boolean isIdentity,
+            boolean isFiltering,
             @NotNull Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper,
             @NotNull BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper,
             @Nullable Function<? super OutK, ? extends InK> keyReverser,
             @Nullable Function<? super OutV, ? extends InV> valueReverser
     ) {
-        this.isIdentity = isIdentity;
+        this.isFiltering = isFiltering;
         this.keyMapper = Objects.requireNonNull(keyMapper, "key mapper");
         this.valueMapper = Objects.requireNonNull(valueMapper, "value mapper");
         this.keyReverser = keyReverser;

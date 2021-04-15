@@ -15,9 +15,7 @@ import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNode>, Bas> implements UniNode {
@@ -127,6 +125,24 @@ public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNo
     @Override
     public boolean has(String fieldName) {
         return UniNode.unsupported(this, "HAS_KEY", NodeType.OBJECT);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public UniNode surroundWith(NodeType type, Object fname) {
+        switch (type) {
+            case OBJECT:
+                AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>> newObj = (AbstractUniNode<String, KeyedReference<String, UniNode>, Map<String, Object>>) seriLib.createObjectNode();
+                newObj.accessors.put((String) fname, this);
+                return newObj;
+            case ARRAY:
+                AbstractUniNode<Integer, KeyedReference<Integer, UniNode>, List<Object>> newArr = (AbstractUniNode<Integer, KeyedReference<Integer, UniNode>, List<Object>>) seriLib.createArrayNode();
+                newArr.accessors.put(0, this);
+                return newArr;
+            case VALUE:
+                throw new UnsupportedOperationException("Cannot surround with ValueNode");
+        }
+        throw new AssertionError("unreachable");
     }
 
     @Override

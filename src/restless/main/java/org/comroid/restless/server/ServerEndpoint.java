@@ -3,6 +3,7 @@ package org.comroid.restless.server;
 import com.sun.net.httpserver.Headers;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
+import org.comroid.uniform.node.UniNode;
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Pattern;
@@ -54,7 +55,7 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
     }
 
     final class Support {
-        private static final class Combined implements ServerEndpoint {
+        private static final class Combined implements ServerEndpoint, EndpointHandler.Underlying {
             private final AccessibleEndpoint accessibleEndpoint;
             private final EndpointHandler handler;
 
@@ -63,14 +64,14 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
                 return accessibleEndpoint;
             }
 
+            @Override
+            public EndpointHandler getEndpointHandler() {
+                return handler;
+            }
+
             public Combined(AccessibleEndpoint accessibleEndpoint, EndpointHandler handler) {
                 this.accessibleEndpoint = accessibleEndpoint;
                 this.handler = handler;
-            }
-
-            @Override
-            public REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
-                return handler.executeMethod(server, method, headers, urlParams, body);
             }
         }
     }

@@ -16,7 +16,7 @@ import org.comroid.mutatio.span.Span;
 import org.comroid.restless.body.BodyBuilderType;
 import org.comroid.restless.endpoint.AccessibleEndpoint;
 import org.comroid.restless.endpoint.CompleteEndpoint;
-import org.comroid.restless.endpoint.RatelimitedEndpoint;
+import org.comroid.restless.endpoint.RatelimitDefinition;
 import org.comroid.restless.endpoint.TypeBoundEndpoint;
 import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
@@ -33,10 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -89,7 +86,7 @@ public final class REST implements ContextualProvider.Underlying {
     public REST(
             ContextualProvider context,
             ScheduledExecutorService scheduledExecutorService,
-            RatelimitedEndpoint... pool
+            RatelimitDefinition... pool
     ) {
         this(context, scheduledExecutorService, Ratelimiter.ofPool(scheduledExecutorService, pool));
     }
@@ -151,61 +148,79 @@ public final class REST implements ContextualProvider.Underlying {
 
     public static final class Header {
         private final String name;
-        private final String value;
+        private final Set<String> values;
 
         public String getName() {
             return name;
         }
 
-        public String getValue() {
-            return value;
+        public Set<String> getValues() {
+            return Collections.unmodifiableSet(values);
         }
 
-        public Header(String name, String value) {
+        public String getFirstValue() {
+            return values.iterator().next();
+        }
+
+        public Header(String name, String... values) {
             this.name = name;
-            this.value = value;
+            this.values = new HashSet<>(Arrays.asList(values));
+            this.values.removeIf(String::isEmpty);
+        }
+
+        public String combineValues() {
+            return String.join(", ", values);
         }
 
         @Override
         public String toString() {
-            return String.format("{%s=%s}", name, value);
+            return String.format("%s: %s", getName(), combineValues());
         }
 
         public static final class List extends ArrayList<Header> {
             public static List of(Headers headers) {
                 final List list = new List();
-
-                headers.forEach((name, values) -> list
-                        .add(name, values.size() == 1
-                                ? values.get(0)
-                                : Arrays.toString(values.toArray())));
+                headers.forEach((name, values) -> list.add(name, values.toArray(new String[0])));
 
                 return list;
             }
 
-            public boolean add(String name, String value) {
-                return super.add(new Header(name, value));
+            public boolean add(String name, String... values) {
+                return super.add(new Header(name, values));
             }
 
             public boolean contains(String name) {
                 return stream().anyMatch(it -> it.name.equals(name));
             }
 
-            public String get(String key) {
+            public String getFirst(String key) {
                 return stream()
                         .filter(it -> it.name.equals(key))
                         .findAny()
-                        .map(Header::getValue)
+                        .map(Header::getFirstValue)
+                        .orElse(null);
+            }
+
+            public Header getHeader(String key) {
+                return stream()
+                        .filter(it -> it.name.equals(key))
+                        .findAny()
                         .orElse(null);
             }
 
             public void forEach(BiConsumer<String, String> action) {
-                forEach(header -> action.accept(header.getName(), header.getValue()));
+                forEach(header -> action.accept(header.getName(), header.combineValues()));
             }
 
             @Override
             public String toString() {
                 return Arrays.toString(toArray());
+            }
+
+            public Headers toJavaHeaders() {
+                Headers headers = new Headers();
+                forEach(headers::add);
+                return headers;
             }
         }
     }
@@ -397,6 +412,49 @@ public final class REST implements ContextualProvider.Underlying {
         public static Response empty(SerializationAdapter seriLib, @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int code) {
             return new Response(code, seriLib.createUniNode(null));
         }
+
+        public String toHttpString() {
+            StringBuilder sb = new StringBuilder();
+
+            // reponse head
+            sb.append(String.format("HTTP/1.1 %d %s", getStatusCode(), HTTPStatusCodes.toString(getStatusCode())));
+            // \r\n delimiter
+            sb.append((char) 0x0D).append((char) 0x0A);
+
+            // headers
+            headers.stream()
+                    .map(Header::toString)
+                    .forEach(headerStr -> sb
+                            .append(headerStr)
+                            .append((char) 0x0D).append((char) 0x0A));
+            assert headers.size() > 0 : "headers missing";
+            sb.append((char) 0x0D).append((char) 0x0A);
+
+            if (data != null)
+                sb.append(new BufferedReader(data)
+                        .lines()
+                        .collect(Collectors.joining("\n")))
+                        .append((char) 0x0D).append((char) 0x0A);
+            else if (this.body != null)
+                sb.append(body.toSerializedString())
+                        .append((char) 0x0D).append((char) 0x0A);
+
+            return sb.toString();
+
+            /*
+
+            String head = String.format("HTTP/1.1 %d %s\r\n", getStatusCode(), HTTPStatusCodes.toString(getStatusCode()))
+                    + headers.stream()
+                    .map(Header::toString)
+                    .collect(Collectors.joining("\r\n"));
+            String body = null;
+            if (data != null)
+                body = new BufferedReader(data).lines().collect(Collectors.joining("\r\n"));
+            else if (this.body != null)
+                body = this.body.toSerializedString();
+            return head + ((body == null ? "" : "\r\n" + body) + "");
+                       */
+        }
     }
 
     public final class Request<T> {
@@ -522,10 +580,10 @@ public final class REST implements ContextualProvider.Underlying {
                                 throw new RuntimeException("A problem occurred while handling response " + response, t);
                             }
                         }, executor).exceptionally(t -> {
-                            logger.trace("An error occurred during request", t);
-                            execution.completeExceptionally(t);
-                            return null;
-                        });
+                    logger.trace("An error occurred during request", t);
+                    execution.completeExceptionally(t);
+                    return null;
+                });
             }
 
             return execution;

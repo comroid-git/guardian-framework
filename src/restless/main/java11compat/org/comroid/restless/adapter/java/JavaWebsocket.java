@@ -2,10 +2,10 @@ package org.comroid.restless.adapter.java;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefPipe;
-import org.comroid.mutatio.pipe.Pipe;
-import org.comroid.mutatio.pump.Pump;
 import org.comroid.mutatio.ref.FutureReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferencePipe;
@@ -28,11 +28,11 @@ public final class JavaWebsocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
     private final Executor executor;
     private final URI uri;
-    private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, ? extends WebsocketPacket> pipeline;
+    private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> pipeline;
     private final FutureReference<WebSocket> jSocket = new FutureReference<>();
 
     @Override
-    public RefPipe<?, ?, WebsocketPacket.Type, ? extends WebsocketPacket> getPacketPipeline() {
+    public RefContainer<WebsocketPacket.Type, WebsocketPacket> getEventPipeline() {
         return pipeline;
     }
 
@@ -60,19 +60,17 @@ public final class JavaWebsocket implements Websocket {
     JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
-        this.pipeline = new ReferencePipe<>();
+        this.pipeline = new ReferencePipe<>(executor);
 
         WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
         headers.forEach(socketBuilder::header);
         if (preferredProtocol != null)
             socketBuilder.subprotocols(preferredProtocol);
 
+        logger.debug("Building WebSocket");
         socketBuilder.buildAsync(uri, new Listener())
                 .thenAccept(jSocket.future::complete)
-                .exceptionally(t -> {
-                    t.printStackTrace();
-                    return null;
-                });
+                .exceptionally(Polyfill.exceptionLogger(logger, "Error while building WebSocket"));
     }
 
     private void feed(WebsocketPacket packet) {
