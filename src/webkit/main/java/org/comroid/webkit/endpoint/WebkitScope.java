@@ -42,7 +42,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     WEBKIT_API("webkit/api") {
         @Override
         public REST.Response executeGET(ContextualProvider context, Headers headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            InputStream resource = ClassLoader.getSystemResourceAsStream(FrameBuilder.INTERNAL_RESOURCE_PREFIX + "api.js");
+            InputStream resource = FrameBuilder.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
