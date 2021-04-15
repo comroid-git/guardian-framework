@@ -163,8 +163,8 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     String href = dom.attr("href");
                     if (href.startsWith("http"))
                         return;
-                    if (href.startsWith("~")) {
-                        dom.attr("a", href.replace("~","http://" + host));
+                    if (href.startsWith("~/")) {
+                        dom.attr("a", href.replace("~/","http://" + host));
                         return;
                     }
                     dom.removeAttr("href");
