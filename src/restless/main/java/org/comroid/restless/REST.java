@@ -165,10 +165,11 @@ public final class REST implements ContextualProvider.Underlying {
         public Header(String name, String... values) {
             this.name = name;
             this.values = new HashSet<>(Arrays.asList(values));
+            this.values.removeIf(String::isEmpty);
         }
 
         public String combineValues() {
-            return String.join("; ", values);
+            return String.join(", ", values);
         }
 
         @Override

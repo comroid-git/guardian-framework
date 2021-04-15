@@ -123,10 +123,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
 
         while (headerIter.hasNext()) {
             String name = headerIter.next();
-            assert headerIter.hasNext() : "Headers incomplete";
-            String values = headerIter.next();
-
-            headers.add(name, values.split(","));
+            headers.add(name, handshake.getFieldValue(name).split("[,;\\s]"));
         }
 
         try {
