@@ -13,6 +13,7 @@ import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
+import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
@@ -159,6 +160,28 @@ public class RestServer implements Closeable {
                 .anyMatch(type -> type.contains(mimeType) || type.contains("*/*"));
     }
 
+    private @Nullable Response tryRecoverFrom(
+            RestEndpointException lastException,
+            CompleteEndpoint failedEndpoint,
+            int statusCode,
+            REST.Method requestMethod,
+            Headers requestHeaders,
+            String[] args,
+            String requestBody
+    ) {
+        logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, failedEndpoint);
+        Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class, true);
+
+        if (recoverStageRef.isNull()) {
+            if (lastException == null)
+                return null;
+            else throw lastException;
+        }
+
+        RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
+        return recoverStage.tryRecover(context, lastException, failedEndpoint, statusCode, requestMethod, requestHeaders, args, requestBody);
+    }
+
     private class AutoContextHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) {
@@ -274,15 +297,28 @@ public class RestServer implements Closeable {
                         lastException = reex;
                     }
 
-                    if (lastException instanceof RestEndpointException)
-                        response = tryRecoverFrom(
-                                (RestEndpointException) lastException,
-                                endpoint,
+                    if ((lastException instanceof RestEndpointException
+                            || response.getStatusCode() != OK)
+                            && endpoint.attemptRecovery()) try {
+                        Response alternate = tryRecoverFrom(
+                                lastException instanceof RestEndpointException
+                                        ? (RestEndpointException) lastException
+                                        : null,
+                                endpoint.complete((Object[]) args),
+                                lastException instanceof RestEndpointException
+                                        ? ((RestEndpointException) lastException).getStatusCode()
+                                        : response.getStatusCode(),
                                 requestMethod,
                                 requestHeaders,
                                 args,
-                                requestBody
-                        );
+                                requestBody);
+                        if (alternate == null) {
+                            logger.debug("Could not recover from {} with exception {}; handler returned {}", response, lastException, alternate);
+                        } else if (alternate.getStatusCode() == OK)
+                            response = alternate;
+                    } catch (Throwable recoveringException) {
+                        logger.error("An error ocurred during recovery", recoveringException);
+                    }
 
                     if (response == dummyResponse) {
                         logger.warn("Handler could not complete normally, attempting next handler...", lastException);
@@ -293,7 +329,8 @@ public class RestServer implements Closeable {
                     handleResponse(exchange, requestURI, endpoint, responseHeaders, response);
                     lastException = null;
                     break;
-                } else logger.warn("Handler does not support method {}, attempting next handler...", requestMethod, lastException);
+                } else
+                    logger.warn("Handler does not support method {}, attempting next handler...", requestMethod, lastException);
             }
 
             if (lastException != null)
@@ -372,22 +409,5 @@ public class RestServer implements Closeable {
                     }).get())
                     .orElse("");
         }
-    }
-
-    private @Nullable Response tryRecoverFrom(
-            RestEndpointException lastException,
-            ServerEndpoint failedEndpoint,
-            REST.Method requestMethod,
-            Headers requestHeaders,
-            String[] args,
-            String requestBody
-    ) {
-        Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class);
-
-        if (recoverStageRef.isNull())
-            throw lastException;
-
-        RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
-        return recoverStage.tryRecover(context, lastException, failedEndpoint, requestMethod, requestHeaders, args, requestBody);
     }
 }

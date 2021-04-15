@@ -49,6 +49,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public final String host;
     private final Document frame;
     private final Map<String, Object> pageProperties;
+    private final boolean isError;
     private @Nullable String panel = "home";
 
     public @Nullable String getPanel() {
@@ -60,7 +61,12 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
+        this(headers, pageProperties, false);
+    }
+
+    public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
+        this.isError = isError;
         this.pageProperties = pageProperties;
         try {
             InputStream frame = getResource("frame.html");
@@ -239,9 +245,14 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public Document build() {
         Objects.requireNonNull(panel, "No Panel defined");
 
-        logger.debug("Building Frame with panel {}", panel);
-
-        frame.getElementById("content").html(findPanelData(panel));
+        if (isError) {
+            logger.debug("Building Error Frame with PageProperties {}", pageProperties);
+            String errorPanel = findAndCacheResourceData("error", panelCache, () -> getInternalResource("error.html"));
+            frame.getElementById("content").html(errorPanel);
+        } else {
+            logger.debug("Building Frame with panel {}", panel);
+            frame.getElementById("content").html(findPanelData(panel));
+        }
 
         fabricateDocument(frame, host, pageProperties);
 

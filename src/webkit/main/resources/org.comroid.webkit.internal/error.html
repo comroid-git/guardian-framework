@@ -1,0 +1,7 @@
+<h2>Something went wrong!</h2>
+<h3>Your <span inject="errorData.requestMethod"/> request to <span inject="errorData.requestUrl"/> returned <span
+        inject="errorData.statusCode"/></h3>
+<div style="font-size: medium" when="errorData.exception != null">
+    <p>A<span inject="errorData.exception"/>ocurred</p>
+    <p when="errorData.stackTrace != null">StackTrace:<span inject="errorData.stackTrace"/></p>
+</div>

@@ -54,6 +54,10 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
                 .count() > 1;
     }
 
+    default boolean attemptRecovery() {
+        return false;
+    }
+
     final class Support {
         private static final class Combined implements ServerEndpoint, EndpointHandler.Underlying {
             private final AccessibleEndpoint accessibleEndpoint;

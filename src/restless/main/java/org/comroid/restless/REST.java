@@ -455,6 +455,11 @@ public final class REST implements ContextualProvider.Underlying {
             return head + ((body == null ? "" : "\r\n" + body) + "");
                        */
         }
+
+        @Override
+        public String toString() {
+            return String.format("Response{statusCode=%d, mimeType='%s', headers=%s}", statusCode, mimeType, headers);
+        }
     }
 
     public final class Request<T> {

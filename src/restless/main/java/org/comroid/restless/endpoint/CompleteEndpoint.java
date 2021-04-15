@@ -52,6 +52,21 @@ public interface CompleteEndpoint extends WrappedFormattable {
                 this.endpoint = endpoint;
                 this.spec = spec;
             }
+
+            @Override
+            public String toString() {
+                return String.format("[%s / %#s]", this, this);
+            }
+
+            @Override
+            public String getDefaultFormattedName() {
+                return spec;
+            }
+
+            @Override
+            public String getAlternateFormattedName() {
+                return endpoint.getDefaultFormattedName();
+            }
         }
     }
 }
