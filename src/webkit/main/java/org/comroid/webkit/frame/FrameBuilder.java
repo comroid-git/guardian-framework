@@ -179,6 +179,15 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     dom.removeAttr("when");
                 });
 
+        // apply panel attributes
+        frame.getElementsByAttribute("panel")
+                .forEach(dom -> {
+                    String panelName = dom.attr("panel");
+                    String panelData = findPanelData(panelName);
+
+                    dom.html(panelData);
+                });
+
         // apply action declarations
         frame.getElementsByAttribute("command")
                 .forEach(dom -> {
@@ -254,7 +263,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
             logger.debug("Building Error Frame with PageProperties {}", pageProperties);
             String errorPanel = findAndCacheResourceData("error", panelCache, () -> getInternalResource("error.html"));
             frame.getElementById("content").html(errorPanel);
-        } else {
+        } else if (!frame.select("[id='content']").isEmpty()) {
             logger.debug("Building Frame with panel {}", panel);
             frame.getElementById("content").html(findPanelData(panel));
         }
