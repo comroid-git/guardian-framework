@@ -35,7 +35,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
                 });
     }
 
-    protected Serializer<UniNode> findSerializer() {
+    protected final Serializer<UniNode> findSerializer() {
         return findSerializer("application/json");
     }
 
