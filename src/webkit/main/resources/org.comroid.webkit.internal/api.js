@@ -46,13 +46,21 @@ function sendCommand(command) {
 }
 
 function actionChangePanel(target) {
-    ws.send(JSON.stringify({
-        'type': 'action/changePanel',
-        'data': {
-            'target': target
-        }
-    }));
-    window.history.pushState("", "", '/' + target);
+    const isWsReady = ws.readyState === WebSocket.OPEN;
+    let url = '/' + target;
+    if (isWsReady) {
+        console.debug('socket is ready; changing content via socket;', url)
+        ws.send(JSON.stringify({
+            'type': 'action/changePanel',
+            'data': {
+                'target': target
+            }
+        }));
+        window.history.pushState("", "", url);
+    } else {
+        console.debug('socket is not ready; changing content via location;', url)
+        window.location.href = url;
+    }
 }
 
 function initAPI() {
