@@ -5,6 +5,8 @@ if (socketToken === undefined)
 let ws = undefined;
 
 function populateTag(data, tag, names, index) {
+    if (data === undefined)
+        tag.innerText = 'undefined';
     if (names.length - 1 > index)
         return populateTag(data[names[index]], tag, names, index + 1)
     tag.innerText = data[names[index]]
@@ -27,7 +29,7 @@ function handleMessage(json) {
         case 'inject':
             document.querySelectorAll('[inject]')
                 .forEach(dom => {
-                    let path = dom.attributes['inject'].split('.');
+                    let path = dom.getAttribute('inject').split('.');
                     populateTag(data, dom, path, 0);
                 });
             break;
@@ -35,6 +37,12 @@ function handleMessage(json) {
             changePanel(data);
             break;
     }
+}
+
+function sendCommand(command) {
+    ws.send(JSON.stringify({
+        'type': command
+    }));
 }
 
 function actionChangePanel(target) {

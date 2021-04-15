@@ -142,6 +142,16 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     dom.removeAttr("when");
                 });
 
+        // apply action declarations
+        frame.getElementsByAttribute("command")
+                .forEach(dom -> {
+                    String command = dom.attr("command");
+
+                    dom.attr("onclick", String.format("sendCommand('%s')", command));
+                    String style = dom.attr("style");
+                    dom.attr("style", style + "\ncursor: pointer !important;");
+                });
+
         // try apply value injections
         frame.getElementsByAttribute("inject")
                 .forEach(dom -> {
@@ -154,8 +164,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     } catch (Throwable t) {
                         logger.error("Error when injecting value " + fname, t);
                         dom.html("NULL");
-                    } finally {
-                        dom.removeAttr("inject");
                     }
                 });
 

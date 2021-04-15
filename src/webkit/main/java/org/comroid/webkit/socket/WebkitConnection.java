@@ -7,7 +7,8 @@ import org.comroid.api.Serializer;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.util.StandardValueType;
+import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.uniform.node.UniValueNode;
 import org.comroid.webkit.config.WebkitConfiguration;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
@@ -17,7 +18,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
@@ -57,8 +57,10 @@ public class WebkitConnection extends WebSocketConnection {
         String commandName = command.get("type").asString();
         String[] split = commandName.split("/");
 
-        UniNode data = command.get("data");
-        UniNode response = findSerializer().createObjectNode();
+        UniNode data = command.wrap("data").orElse(UniValueNode.NULL);
+        UniObjectNode response = findSerializer().createObjectNode().asObjectNode();
+        Map<String, Object> pageProperties = requireFromContext(PagePropertiesProvider.class)
+                .findPageProperties(getHeaders());
 
         switch (split[0]) {
             case "action":
@@ -72,16 +74,19 @@ public class WebkitConnection extends WebSocketConnection {
                         ) {
                             String panelData = br.lines().collect(Collectors.joining("\n"));
                             Document doc = Jsoup.parse(panelData);
-                            Map<String, Object> pageProps = requireFromContext(PagePropertiesProvider.class)
-                                    .findPageProperties(getHeaders());
-                            FrameBuilder.fabricateDocument(doc, host, pageProps);
+                            FrameBuilder.fabricateDocument(doc, host, pageProperties);
 
-                            response.put("type", StandardValueType.STRING, "changePanel");
-                            response.put("data", StandardValueType.STRING, doc.toString());
+                            response.put("type", "changePanel");
+                            response.put("data", doc.toString());
                             break;
                         } catch (Throwable e) {
                             logger.error("Could not read target panel " + target, e);
                         }
+                    case "refresh":
+                        response.put("type", "inject");
+                        UniObjectNode eventData = response.putObject("data");
+                        eventData.putAll(pageProperties);
+                        break;
                     default:
                         logger.error("Unknown action: {}", split[1]);
                 }
