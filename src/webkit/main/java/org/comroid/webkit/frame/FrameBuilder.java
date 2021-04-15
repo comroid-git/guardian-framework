@@ -95,7 +95,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public static @NotNull InputStream getResource(boolean internal, String name) {
-        String resourceName = internal ? INTERNAL_RESOURCE_PREFIX : RESOURCE_PREFIX + name;
+        String resourceName = (internal ? INTERNAL_RESOURCE_PREFIX : RESOURCE_PREFIX) + name;
         InputStream resource = classLoader.map(loader -> loader.getResourceAsStream(resourceName)).get();
         if (resource == null)
             if (internal) {
