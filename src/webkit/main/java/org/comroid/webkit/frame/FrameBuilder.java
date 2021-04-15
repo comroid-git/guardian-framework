@@ -145,12 +145,14 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         // try apply value injections
         frame.getElementsByAttribute("inject")
                 .forEach(dom -> {
+                    String fname = dom.attr("inject");
                     try {
-                        String[] path = dom.attr("inject").split("\\.");
+                        String[] path = fname.split("\\.");
                         String value = resolveValue(pageProperties, path, 0);
 
                         dom.html(value);
-                    } catch (Throwable ignored) {
+                    } catch (Throwable t) {
+                        logger.error("Error when injecting value " + fname, t);
                         dom.html("NULL");
                     } finally {
                         dom.removeAttr("inject");
@@ -173,10 +175,11 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     private static String resolveValue(Map<String, Object> stage, String[] path, int index) {
-        if (index + 1 >= path.length)
-            return String.valueOf(stage.get(path[index]));
+        Object it = stage.get(path[index]);
+        if (index + 1 >= path.length || it instanceof String)
+            return String.valueOf(it);
         //noinspection unchecked
-        return resolveValue((Map<String, Object>) stage.get(path[index]), path, index + 1);
+        return resolveValue((Map<String, Object>) it, path, index + 1);
     }
 
     private String findPartData(String part) {
