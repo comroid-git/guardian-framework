@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
 import org.comroid.api.StringSerializable;
+import org.comroid.api.os.OS;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
@@ -11,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import javax.script.*;
 import java.io.BufferedReader;
@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -173,11 +172,15 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         // overwrite links
         frame.getElementsByTag("a")
                 .forEach(dom -> {
+                    boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
                     String href = dom.attr("href");
-                    if (href.startsWith("http"))
+                    if (href.startsWith("http")) {
+                        if (!isDebug)
+                            dom.attr(href, href.replace("http://", "https://"));
                         return;
+                    }
                     if (href.startsWith("~/")) {
-                        dom.attr("href", href.replace("~/", String.format("http://%s/", host)));
+                        dom.attr("href", href.replace("~/", String.format("http%s://%s/", isDebug ? "" : "s", host)));
                         return;
                     }
                     dom.removeAttr("href");
