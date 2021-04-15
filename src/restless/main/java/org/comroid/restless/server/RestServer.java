@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.span.Span;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
@@ -274,7 +275,14 @@ public class RestServer implements Closeable {
                     }
 
                     if (lastException instanceof RestEndpointException)
-                        throw lastException;
+                        response = tryRecoverFrom(
+                                (RestEndpointException) lastException,
+                                endpoint,
+                                requestMethod,
+                                requestHeaders,
+                                args,
+                                requestBody
+                        );
 
                     if (response == dummyResponse) {
                         logger.warn("Handler could not complete normally, attempting next handler...", lastException);
@@ -364,5 +372,22 @@ public class RestServer implements Closeable {
                     }).get())
                     .orElse("");
         }
+    }
+
+    private @Nullable Response tryRecoverFrom(
+            RestEndpointException lastException,
+            ServerEndpoint failedEndpoint,
+            REST.Method requestMethod,
+            Headers requestHeaders,
+            String[] args,
+            String requestBody
+    ) {
+        Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class);
+
+        if (recoverStageRef.isNull())
+            throw lastException;
+
+        RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
+        return recoverStage.tryRecover(context, lastException, failedEndpoint, requestMethod, requestHeaders, args, requestBody);
     }
 }
