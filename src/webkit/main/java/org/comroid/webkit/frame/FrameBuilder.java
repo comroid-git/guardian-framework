@@ -161,6 +161,15 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     dom.attr("onclick", String.format("actionChangePanel('%s')", href));
                 });
 
+        // apply panel attributes
+        frame.getElementsByAttribute("panel")
+                .forEach(dom -> {
+                    String panelName = dom.attr("panel");
+                    String panelData = findPanelData(panelName);
+
+                    dom.html(panelData);
+                });
+
         // apply when-attributes
         frame.getElementsByAttribute("when")
                 .forEach(dom -> {
@@ -179,15 +188,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     if (!keep)
                         dom.remove();
                     dom.removeAttr("when");
-                });
-
-        // apply panel attributes
-        frame.getElementsByAttribute("panel")
-                .forEach(dom -> {
-                    String panelName = dom.attr("panel");
-                    String panelData = findPanelData(panelName);
-
-                    dom.html(panelData);
                 });
 
         // apply action declarations
