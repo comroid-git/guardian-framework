@@ -167,7 +167,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
         pageProperties.put("errorData", errorData);
 
-        FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties, true);
+        FrameBuilder frameBuilder = new FrameBuilder("main", headers, pageProperties, true);
 
         return new REST.Response(200, "text/html", frameBuilder.toReader());
     }

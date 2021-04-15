@@ -34,12 +34,14 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
     public static final Reference<ClassLoader> classLoader;
     private static final Logger logger;
+    private static final Map<String, String> frameCache;
     private static final Map<String, String> partCache;
     private static final Map<String, String> panelCache;
     private static final Reference<ScriptEngine> jsEngine;
 
     static {
         logger = LogManager.getLogger();
+        frameCache = new ConcurrentHashMap<>();
         partCache = new ConcurrentHashMap<>();
         panelCache = new ConcurrentHashMap<>();
         classLoader = Reference.create(ClassLoader.getSystemClassLoader());
@@ -61,16 +63,15 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
-        this(headers, pageProperties, false);
+        this("main", headers, pageProperties, false);
     }
 
-    public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
+    public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
         this.pageProperties = pageProperties;
         try {
-            InputStream frame = getResource("frame.html");
-            this.frame = Jsoup.parse(frame, "UTF-8", "");
+            this.frame = Jsoup.parse(findFrameData(frameName));
         } catch (Throwable e) {
             throw new RuntimeException("Could not load page frame", e);
         }
@@ -213,6 +214,10 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
             return String.valueOf(it);
         //noinspection unchecked
         return resolveValue((Map<String, Object>) it, path, index + 1);
+    }
+
+    private static String findFrameData(String frame) {
+        return findAndCacheResourceData(frame, frameCache, () -> WebkitConfiguration.get().getFrame(frame));
     }
 
     private static String findPartData(String part) {

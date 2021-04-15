@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public final class WebkitConfiguration implements ContextualProvider.Underlying {
     private static final FutureReference<WebkitConfiguration> instance = new FutureReference<>();
     private final ContextualProvider context;
+    private final Map<String, String> frames = new ConcurrentHashMap<>();
     private final Map<String, String> parts = new ConcurrentHashMap<>();
     private final Map<String, String> panels = new ConcurrentHashMap<>();
 
@@ -31,6 +32,10 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
     private WebkitConfiguration(ContextualProvider context, Document dom) {
         this.context = context.plus("Webkit Configuration", this);
 
+        dom.getElementsByTag("frames")
+                .first()
+                .children()
+                .forEach(element -> frames.put(element.tagName(), element.html()));
         dom.getElementsByTag("parts")
                 .first()
                 .children()
@@ -64,6 +69,17 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
             throw new RuntimeException("Could not initialize Webkit Configuration");
 
         return instance.assertion("Initialization failed");
+    }
+
+    public Stream<String> streamFrameNames() {
+        return frames.keySet().stream();
+    }
+
+    public InputStream getFrame(String name) {
+        if (!frames.containsKey(name))
+            throw new NoSuchElementException("Could not find frame with name " + name);
+        String resource = frames.get(name);
+        return FrameBuilder.getResource(resource);
     }
 
     public Stream<String> streamPartNames() {
