@@ -151,7 +151,9 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
                     dom.attr("onclick", String.format("sendCommand('%s')", command));
                     String style = dom.attr("style");
-                    dom.attr("style", style + (style.isEmpty() ? "" : '\n') + "cursor: pointer !important;");
+                    dom.attr("style", style
+                            + (style.isEmpty() || !style.contains("\n") ? "" : '\n')
+                            + "cursor: pointer !important;");
                 });
 
         // try apply value injections
