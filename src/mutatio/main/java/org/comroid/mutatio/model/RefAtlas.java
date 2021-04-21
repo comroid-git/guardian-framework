@@ -2,6 +2,7 @@ package org.comroid.mutatio.model;
 
 import org.comroid.api.MutableState;
 import org.comroid.api.Polyfill;
+import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.ref.KeyedReference;
@@ -13,11 +14,14 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 public interface RefAtlas<InK, K, In, V>
-        extends ValueCache<Void>, MutableState, RefContainer<K, V> {
+        extends ValueCache<Void>, MutableState, RefContainer<K, V>, StreamSupplier<V> {
     ReferenceStageAdapter<InK, K, In, V, KeyedReference<InK, In>, KeyedReference<K, V>> getAdvancer();
 
     @Override
     boolean isMutable();
+
+    @Override
+    Stream<V> stream();
 
     @Override
     default <X, Y> ReferencePipe<K, V, X, Y> addStage(
