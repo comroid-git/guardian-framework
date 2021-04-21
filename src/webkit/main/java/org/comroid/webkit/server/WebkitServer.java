@@ -221,6 +221,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 // is Default Endpoint
                 return requestUrl.split("/");
             }
+
+            @Override
+            public String toString() {
+                return String.format("WebkitEndpoint{scope=%s}", scope);
+            }
         }
     }
 }

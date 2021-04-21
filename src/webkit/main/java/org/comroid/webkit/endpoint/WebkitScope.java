@@ -19,7 +19,7 @@ import static org.comroid.restless.HTTPStatusCodes.INTERNAL_SERVER_ERROR;
 import static org.comroid.restless.HTTPStatusCodes.OK;
 
 public enum WebkitScope implements EndpointScope, EndpointHandler {
-    FRAME("webkit/frame") {
+    FRAME("/webkit/frame") {
         @Override
         public REST.Response executeGET(ContextualProvider context, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
             Map<String, Object> pageProperties = context
@@ -37,7 +37,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             return true;
         }
     },
-    WEBKIT_API("webkit/api") {
+    WEBKIT_API("/webkit/api") {
         @Override
         public REST.Response executeGET(ContextualProvider context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
             InputStream resource = FrameBuilder.getInternalResource("api.js");

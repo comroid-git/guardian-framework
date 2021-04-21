@@ -146,7 +146,7 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
     default String replacer(String[] groups) {
         // todo: Inspect overhead
         return StaticCache.access(this, "replacer", () -> {
-            String yield = getFullUrl();
+            String yield = getUrlExtension();
 
             int i = 0;
             while (yield.contains("%s") && groups.length > i) {
@@ -168,10 +168,10 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
         final String[] regExpGroups = getRegExpGroups();
 
         if (regExpGroups != null && regExpGroups.length > 0)
-            return Pattern.compile(String.format(getFullUrl(), Arrays.stream(regExpGroups)
+            return Pattern.compile(String.format(getUrlExtension(), Arrays.stream(regExpGroups)
                     .map(str -> String.format("(%s)", str))
                     .toArray()));
-        return Pattern.compile(getFullUrl().replace("%s", "(.*)"));
+        return Pattern.compile(getUrlExtension().replace("%s", "(.*)"));
     }
 
     default boolean allowMemberAccess() {

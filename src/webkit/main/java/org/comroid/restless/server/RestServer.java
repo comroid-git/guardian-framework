@@ -167,7 +167,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
                                 .forEach(field -> finalRequestData.put(field[0], field.length == 1
-                                        ? "<empty>"
+                                        ? null
                                         : StandardValueType.findGoodType(field[1])));
                     } catch (Throwable formParseException) {
                         logger.warn("Could not parse request body '{}'", body, formParseException);
@@ -270,6 +270,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 logger.fatal("Error occurred while sending response; cannot continue", e);
             } finally {
                 exchange.close();
+                logger.trace("Handler finished");
             }
         } catch (Throwable t) {
             logger.fatal("An error occurred during handler; cannot continue", t);
