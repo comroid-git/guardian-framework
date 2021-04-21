@@ -110,72 +110,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         server.stop(5);
     }
 
-    private void writeResponse(HttpExchange exchange, int statusCode) throws IOException {
-        writeResponse(exchange, statusCode, "");
-    }
-
-    private void writeResponse(HttpExchange exchange, int statusCode, String data) throws IOException {
-        exchange.sendResponseHeaders(statusCode, data.length());
-        final OutputStream osr = exchange.getResponseBody();
-        osr.write(data.getBytes());
-        osr.flush();
-    }
-
-    private UniObjectNode generateErrorNode(CharSequence mimeType, RestEndpointException reex) {
-        final UniObjectNode rsp = createObjectNode(mimeType);
-
-        rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
-        rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
-        rsp.put("message", StandardValueType.STRING, reex.getSimpleMessage());
-
-        final Throwable cause = reex.getCause();
-        if (cause != null)
-            rsp.put("cause", StandardValueType.STRING, cause.toString());
-
-        return rsp;
-    }
-
-    private String consumeBody(HttpExchange exchange) {
-        String str = null;
-
-        try (
-                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody());
-                BufferedReader br = new BufferedReader(isr)
-        ) {
-            str = br.lines().collect(Collectors.joining());
-        } catch (Throwable t) {
-            logger.error("Could not read response");
-        }
-
-        return str;
-    }
-
-    private boolean supportedMimeType(List<String> targetMimes) {
-        return targetMimes.isEmpty() || targetMimes.stream()
-                .anyMatch(type -> type.contains(mimeType) || type.contains("*/*"));
-    }
-
-    private @Nullable Response tryRecoverFrom(
-            Throwable lastException,
-            String requestURI,
-            int statusCode,
-            REST.Method requestMethod,
-            Headers requestHeaders
-    ) {
-        logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, requestURI);
-        Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class, true);
-
-        if (recoverStageRef.isNull()) {
-            if (lastException == null)
-                return null;
-            else if (lastException instanceof RestEndpointException)
-                throw (RestEndpointException) lastException;
-        }
-
-        RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
-        return recoverStage.tryRecover(context, lastException, requestURI, statusCode, requestMethod, requestHeaders);
-    }
-
     @Override
     public void handle(HttpExchange exchange) {
         final String requestURI = baseUrl.substring(0, baseUrl.length() - 1) + exchange.getRequestURI().toString();
@@ -243,6 +177,72 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             exchange.close();
             logger.info("Finished handling {}", requestString);
         }
+    }
+
+    private void writeResponse(HttpExchange exchange, int statusCode) throws IOException {
+        writeResponse(exchange, statusCode, "");
+    }
+
+    private void writeResponse(HttpExchange exchange, int statusCode, String data) throws IOException {
+        exchange.sendResponseHeaders(statusCode, data.length());
+        final OutputStream osr = exchange.getResponseBody();
+        osr.write(data.getBytes());
+        osr.flush();
+    }
+
+    private UniObjectNode generateErrorNode(CharSequence mimeType, RestEndpointException reex) {
+        final UniObjectNode rsp = createObjectNode(mimeType);
+
+        rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
+        rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
+        rsp.put("message", StandardValueType.STRING, reex.getSimpleMessage());
+
+        final Throwable cause = reex.getCause();
+        if (cause != null)
+            rsp.put("cause", StandardValueType.STRING, cause.toString());
+
+        return rsp;
+    }
+
+    private String consumeBody(HttpExchange exchange) {
+        String str = null;
+
+        try (
+                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody());
+                BufferedReader br = new BufferedReader(isr)
+        ) {
+            str = br.lines().collect(Collectors.joining());
+        } catch (Throwable t) {
+            logger.error("Could not read response");
+        }
+
+        return str;
+    }
+
+    private boolean supportedMimeType(List<String> targetMimes) {
+        return targetMimes.isEmpty() || targetMimes.stream()
+                .anyMatch(type -> type.contains(mimeType) || type.contains("*/*"));
+    }
+
+    private @Nullable Response tryRecoverFrom(
+            Throwable lastException,
+            String requestURI,
+            int statusCode,
+            REST.Method requestMethod,
+            Headers requestHeaders
+    ) {
+        logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, requestURI);
+        Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class, true);
+
+        if (recoverStageRef.isNull()) {
+            if (lastException == null)
+                return null;
+            else if (lastException instanceof RestEndpointException)
+                throw (RestEndpointException) lastException;
+        }
+
+        RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
+        return recoverStage.tryRecover(context, lastException, requestURI, statusCode, requestMethod, requestHeaders);
     }
 
     private void forwardToEndpoint(
