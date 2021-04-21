@@ -106,6 +106,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
     @Override
     public void close() {
+        logger.info("Stopping HTTP Server");
         server.stop(5);
     }
 
