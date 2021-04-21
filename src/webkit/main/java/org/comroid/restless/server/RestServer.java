@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
+import org.comroid.mutatio.api.RefsSupplier;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
@@ -268,7 +269,8 @@ public class RestServer implements HttpHandler, Closeable {
             String requestBody) throws Throwable {
         final Iterator<ServerEndpoint> iter = Stream.concat(
                 // endpoints that accept the request uri
-                endpoints.stream()
+                endpoints.<RefsSupplier<Integer, ServerEndpoint>>upgrade(RefsSupplier.class)
+                        .refs()
                         .filter(endpoint -> endpoint.test(requestURI))
                         // handle member accessing endpoints with lower priority
                         .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
