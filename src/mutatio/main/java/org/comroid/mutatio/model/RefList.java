@@ -14,10 +14,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 @Experimental
 public interface RefList<T> extends RefAtlas<@Nullable Integer, @NotNull Integer, Object, T>, ValueCache<Void>, AbstractList<T> {
     @Nullable Reference<T> getReference(int index);
+
+    @Override
+    default Stream<T> stream() {
+        return RefAtlas.super.stream();
+    }
 
     void close();
 

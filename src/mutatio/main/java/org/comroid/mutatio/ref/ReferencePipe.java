@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class ReferencePipe<InK, InV, K, V>
         extends ReferenceAtlas<InK, K, InV, V>
@@ -171,6 +172,11 @@ public class ReferencePipe<InK, InV, K, V>
                 @Nullable Executor stageExecutor
         ) {
             super(parent, advancer, comparator, stageExecutor);
+        }
+
+        @Override
+        public Stream<V> stream() {
+            return super.stream();
         }
     }
 

@@ -9,8 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
-import org.comroid.mutatio.model.RefList;
-import org.comroid.mutatio.span.Span;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
@@ -37,7 +35,7 @@ public class RestServer implements HttpHandler, Closeable {
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final HttpServer server;
-    private final RefList<ServerEndpoint> endpoints;
+    private final StreamSupplier<ServerEndpoint> endpoints;
     private final SerializationAdapter seriLib;
     private final String mimeType;
     private final String baseUrl;
@@ -60,8 +58,8 @@ public class RestServer implements HttpHandler, Closeable {
         return server;
     }
 
-    public RefList<ServerEndpoint> getEndpoints() {
-        return endpoints;
+    public Stream<ServerEndpoint> getEndpoints() {
+        return endpoints.stream();
     }
 
     public SerializationAdapter getSerializationAdapter() {
@@ -105,7 +103,7 @@ public class RestServer implements HttpHandler, Closeable {
         this.mimeType = seriLib.getMimeType();
         this.baseUrl = baseUrl;
         this.server = HttpServer.create(new InetSocketAddress(address, port), port);
-        this.endpoints = Span.immutable(endpoints);
+        this.endpoints = endpoints;
 
         server.createContext("/", this);
         server.setExecutor(executor);
@@ -270,7 +268,8 @@ public class RestServer implements HttpHandler, Closeable {
             String requestBody) throws Throwable {
         final Iterator<ServerEndpoint> iter = Stream.concat(
                 // endpoints that accept the request uri
-                endpoints.filter(endpoint -> endpoint.test(requestURI))
+                endpoints.stream()
+                        .filter(endpoint -> endpoint.test(requestURI))
                         // handle member accessing endpoints with lower priority
                         .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
                         .flatMap(ServerEndpoint.class)
