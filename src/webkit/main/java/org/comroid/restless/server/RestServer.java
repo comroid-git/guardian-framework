@@ -10,11 +10,13 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.api.RefsSupplier;
+import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
-import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
@@ -31,84 +33,66 @@ import java.util.stream.Stream;
 import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
 
-public class RestServer implements HttpHandler, Closeable {
+public final class RestServer implements HttpHandler, Closeable, Context {
     private static final Response dummyResponse = new Response(0);
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final HttpServer server;
-    private final StreamSupplier<ServerEndpoint> endpoints;
-    private final SerializationAdapter seriLib;
-    private final String mimeType;
-    private final String baseUrl;
     private final REST.Header.List commonHeaders = new REST.Header.List();
-    private @Nullable ServerEndpoint defaultEndpoint;
+    private final StreamSupplier<ServerEndpoint> endpoints;
+    private final Ref<ServerEndpoint> defaultEndpoint;
+
+    public REST.Header.List getCommonHeaders() {
+        return commonHeaders;
+    }
 
     public ContextualProvider getContext() {
         return context;
     }
 
-    public @Nullable ServerEndpoint getDefaultEndpoint() {
-        return defaultEndpoint;
+    public Stream<? extends ServerEndpoint> getEndpoints() {
+        return endpoints.stream();
     }
 
-    public void setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
-        this.defaultEndpoint = defaultEndpoint;
+    public Stream<? extends ServerEndpoint> getDefaultEndpoint() {
+        return defaultEndpoint.stream();
     }
 
     public HttpServer getServer() {
         return server;
     }
 
-    public Stream<ServerEndpoint> getEndpoints() {
-        return endpoints.stream();
-    }
-
-    public SerializationAdapter getSerializationAdapter() {
-        return seriLib;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
-    public REST.Header.List getCommonHeaders() {
-        return commonHeaders;
-    }
-
+    @Deprecated
     public RestServer(
             ContextualProvider context,
             Executor executor,
-            String baseUrl,
+            @Nullable String baseUrl,
             InetAddress address,
             int port,
             ServerEndpoint... endpoints
     ) throws IOException {
-        this(context, executor, baseUrl, address, port, StreamSupplier.of(endpoints));
+        this(context.upgrade(Context.class), executor, new InetSocketAddress(address, port), StreamSupplier.of(endpoints));
     }
 
     public RestServer(
-            ContextualProvider context,
+            Context context,
             Executor executor,
-            String baseUrl,
-            InetAddress address,
-            int port,
+            InetSocketAddress socketAddress,
             StreamSupplier<ServerEndpoint> endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.stream().count());
         this.context = context;
-        this.seriLib = context.requireFromContext(SerializationAdapter.class);
-        this.mimeType = seriLib.getMimeType();
-        this.baseUrl = baseUrl;
-        this.server = HttpServer.create(new InetSocketAddress(address, port), port);
         this.endpoints = endpoints;
+        this.defaultEndpoint = Reference.create();
+        this.server = HttpServer.create(socketAddress, socketAddress.getPort());
 
         server.createContext("/", this);
         server.setExecutor(executor);
         server.start();
+    }
+
+    public boolean setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
+        return this.defaultEndpoint.set(defaultEndpoint);
     }
 
     public RestServer addCommonHeader(String name, String value) {
@@ -136,8 +120,8 @@ public class RestServer implements HttpHandler, Closeable {
         osr.flush();
     }
 
-    private UniObjectNode generateErrorNode(RestEndpointException reex) {
-        final UniObjectNode rsp = seriLib.createObjectNode();
+    private UniObjectNode generateErrorNode(CharSequence mimeType, RestEndpointException reex) {
+        final UniObjectNode rsp = createObjectNode(mimeType);
 
         rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
         rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
@@ -417,5 +401,10 @@ public class RestServer implements HttpHandler, Closeable {
                     }
                 }).get())
                 .orElse("");
+    }
+
+    @Override
+    public Stream<Object> streamContextMembers(boolean includeChildren) {
+        return context.streamContextMembers(includeChildren);
     }
 }
