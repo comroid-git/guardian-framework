@@ -119,7 +119,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
     @Override
     public void handle(HttpExchange exchange) {
-        logger.debug("Handling HttpExchange {}", exchange);
+        logger.trace("Handling HttpExchange {}", exchange);
 
         try {
             // get URI and extract query parameters
