@@ -16,7 +16,8 @@ public interface Context extends ContextualProvider {
         return streamContextMembers(true)
                 .filter(Serializer.class::isInstance)
                 .map(Serializer.class::cast)
-                .map(Serializer::getMimeType);
+                .map(Serializer::getMimeType)
+                .distinct();
     }
 
     @Upgrade

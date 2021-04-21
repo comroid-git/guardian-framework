@@ -165,7 +165,10 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Header(String name, String... values) {
             this.name = name;
-            this.values = new HashSet<>(Arrays.asList(values));
+            this.values = new HashSet<>(Arrays.asList(
+                    values.length == 1 && values[0].contains(",")
+                            ? values[0].split(",")
+                            : values));
             this.values.removeIf(String::isEmpty);
         }
 

@@ -219,7 +219,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 if (this != defaultEndpoint)
                     return super.extractArgs(requestUrl);
                 // is Default Endpoint
-                requestUrl = requestUrl.substring(urlBase.length());
                 return requestUrl.split("/");
             }
         }

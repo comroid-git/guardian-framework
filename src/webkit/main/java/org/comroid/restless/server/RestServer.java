@@ -4,6 +4,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
@@ -26,7 +27,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -136,7 +136,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
             // response vars
             String contentType = null;
-            ServerEndpoint endpoint = null;
+            ServerEndpoint endpoint;
             boolean memberAccess = false;
             String[] urlParams = null;
             Response response = null;
@@ -157,7 +157,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 String body = consumeBody(exchange);
                 UniNode requestData = null;
                 try {
-                    requestData = serializer.parse(body);
+                    requestData = body.isEmpty() ? serializer.createObjectNode() : serializer.parse(body);
                 } catch (IllegalArgumentException e) {
                     logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer, e);
                     requestData = serializer.createObjectNode();
@@ -166,7 +166,9 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         final UniObjectNode finalRequestData = requestData.asObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
-                                .forEach(field -> finalRequestData.put(field[0], StandardValueType.findGoodType(field[1])));
+                                .forEach(field -> finalRequestData.put(field[0], field.length == 1
+                                        ? "<empty>"
+                                        : StandardValueType.findGoodType(field[1])));
                     } catch (Throwable formParseException) {
                         logger.warn("Could not parse request body '{}'", body, formParseException);
                     }
@@ -192,6 +194,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         : urlParams;
 
                 // execute endpoint
+                logger.debug("Executing Endpoint {}...", endpoint);
                 response = endpoint.executeMethod(this, requestMethod, requestHeaders, urlParams, requestData);
             } catch (RestEndpointException e) {
                 logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
@@ -214,51 +217,59 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             final Headers responseHeaders = exchange.getResponseHeaders();
             response.getHeaders().forEach(responseHeaders::set);
             commonHeaders.forEach(responseHeaders::set);
-            String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(";"));
+            String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(","));
             responseHeaders.set(ACCEPTED_CONTENT_TYPE, accepted);
+            logger.trace("{} Headers applied to exchange", responseHeaders.size());
 
             // send response
-            int r, w = 0;
+            Reader responseData;
+            if (memberAccess) {
+                logger.debug("Attempting to write member-accessing response data");
+                Reference<Serializable> body = response.getBody();
+                UniObjectNode data = body.map(Serializable::toUniNode)
+                        .map(UniNode::asObjectNode)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
+                String yield = data.get(urlParams[urlParams.length]).toSerializedString();
+                responseData = new StringReader(yield);
+            } else responseData = response.getFullData();
+            logger.trace("Using response reader {}", responseData);
+
             try {
-                if (memberAccess) {
-                    logger.debug("Attempting to write member-accessing response data");
-                    Reference<Serializable> body = response.getBody();
-                    UniObjectNode data = body.map(Serializable::toUniNode)
-                            .map(UniNode::asObjectNode)
-                            .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
-                    String yield = data.get(urlParams[urlParams.length]).toSerializedString();
-                    byte[] bytes = yield.getBytes(StandardCharsets.UTF_8);
-                    exchange.getResponseBody().write(bytes);
-                    w = yield.length();
-                } else {
-                    char[] cbuf = new char[512];
-                    try (
-                            Reader responseData = response.getFullData();
-                            OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
-                    ) {
-                        while ((r = responseData.read(cbuf)) != -1) {
-                            osw.write(cbuf, w, r);
-                            w += r;
-                        }
+                StringBuilder sb = new StringBuilder();
+                char[] cbuf = new char[512];
+                int x;
+                while ((x = responseData.read(cbuf)) != -1) {
+                    char[] chars = x == cbuf.length ? cbuf : Arrays.copyOf(cbuf, x);
+                    sb.append(chars);
+                }
+
+                final String body = sb.toString();
+                final int len = body.length();
+                logger.debug("Sending Response with code {} and length {}", statusCode, len);
+                logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
+                        .stream()
+                        .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
+                        .collect(Collectors.joining("\n")));
+                logger.log(Level.ALL, "Response body:\n{}", body);
+                exchange.sendResponseHeaders(statusCode, len);
+
+                char[] wbuf = new char[512];
+                int r, w = 0;
+                try (
+                        Reader write = new StringReader(body);
+                        OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
+                ) {
+                    while ((r = write.read(wbuf)) != -1) {
+                        osw.write(wbuf, 0, r);
+                        w += r;
                     }
                 }
-            } catch (IOException e) {
-                logger.fatal("Error occurred while writing response data", e);
-            } finally {
-                try {
-                    logger.debug("Sending Response with code {} and length {}", statusCode, w);
-                    logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
-                            .stream()
-                            .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
-                            .collect(Collectors.joining("\n")));
 
-                    exchange.getResponseBody().flush();
-                    exchange.sendResponseHeaders(statusCode, w);
-                } catch (IOException e) {
-                    logger.fatal("Error occurred while sending response; cannot continue", e);
-                } finally {
-                    exchange.close();
-                }
+                exchange.getResponseBody().flush();
+            } catch (IOException e) {
+                logger.fatal("Error occurred while sending response; cannot continue", e);
+            } finally {
+                exchange.close();
             }
         } catch (Throwable t) {
             logger.fatal("An error occurred during handler; cannot continue", t);
