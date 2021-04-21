@@ -24,6 +24,7 @@ import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.ReaderUtil;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
@@ -250,6 +251,18 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Header.List getHeaders() {
             return headers;
+        }
+
+        public Reader getFullData() {
+            if (body == null && data == null)
+                return new StringReader("");
+            if (body != null && data == null)
+                return body.toReader();
+            if (body == null && data != null)
+                return data;
+            if (body != null && data != null)
+                return ReaderUtil.combine('\n', body, data);
+            throw new AssertionError("unreachable");
         }
 
         /**

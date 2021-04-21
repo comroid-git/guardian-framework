@@ -1,15 +1,12 @@
 package org.comroid.restless.server;
 
-import com.sun.net.httpserver.Headers;
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.UniObjectNode;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 public interface EndpointHandler {
     default boolean supports(REST.Method method) {
@@ -25,30 +22,12 @@ public interface EndpointHandler {
     default REST.Response executeMethod(
             RestServer server,
             REST.Method method,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
-            String body
+            UniNode data
     ) throws RestEndpointException {
         if (!supports(method))
             throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: " + method.name());
-
-        UniNode data;
-        if (body.isEmpty()) data = null;
-        else {
-            try {
-                data = server.getSerializationAdapter().createUniNode(body);
-            } catch (Throwable initial) {
-                try {
-                    UniObjectNode obj = server.getSerializationAdapter().createObjectNode();
-                    Stream.of(body.split("&"))
-                            .map(pair -> pair.split("="))
-                            .forEach(field -> obj.put(field[0], field[1]));
-                    data = obj;
-                } catch (Throwable ignored) {
-                    throw new RuntimeException("Could not handle endpoint; failed to parse form data", initial);
-                }
-            }
-        }
 
         switch (method) {
             case GET:
@@ -70,7 +49,7 @@ public interface EndpointHandler {
 
     default REST.Response executeGET(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -79,7 +58,7 @@ public interface EndpointHandler {
 
     default REST.Response executePUT(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -88,7 +67,7 @@ public interface EndpointHandler {
 
     default REST.Response executePOST(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -97,7 +76,7 @@ public interface EndpointHandler {
 
     default REST.Response executePATCH(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -106,7 +85,7 @@ public interface EndpointHandler {
 
     default REST.Response executeDELETE(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -115,7 +94,7 @@ public interface EndpointHandler {
 
     default REST.Response executeHEAD(
             ContextualProvider context,
-            Headers headers,
+            REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -133,7 +112,7 @@ public interface EndpointHandler {
         }
 
         @Override
-        default REST.Response executeMethod(RestServer server, REST.Method method, Headers headers, String[] urlParams, String body) throws RestEndpointException {
+        default REST.Response executeMethod(RestServer server, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
             return getEndpointHandler().executeMethod(server, method, headers, urlParams, body);
         }
     }

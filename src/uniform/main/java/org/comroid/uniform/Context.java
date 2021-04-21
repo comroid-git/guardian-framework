@@ -2,13 +2,23 @@ package org.comroid.uniform;
 
 import org.comroid.annotations.Upgrade;
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.Serializer;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.stream.Stream;
+
 public interface Context extends ContextualProvider {
+    default Stream<String> getSupportedMimeTypes() {
+        return streamContextMembers(true)
+                .filter(Serializer.class::isInstance)
+                .map(Serializer.class::cast)
+                .map(Serializer::getMimeType);
+    }
+
     @Upgrade
     static Context upgrade(ContextualProvider underlying) {
         return underlying::streamContextMembers;
