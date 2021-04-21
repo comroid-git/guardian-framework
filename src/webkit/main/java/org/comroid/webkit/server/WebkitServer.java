@@ -7,6 +7,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.RefContainer;
+import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
@@ -157,7 +158,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         REST.Header.List headers = REST.Header.List.of(requestHeaders);
         Map<String, Object> pageProperties = findPageProperties(headers);
 
-        final UniObjectNode errorData = this.<UniNode>findSerializer("application/json").createObjectNode().asObjectNode();
+        final UniObjectNode errorData = this.<UniNode>findSerializer(MimeType.JSON).createObjectNode().asObjectNode();
         errorData.put("requestMethod", requestMethod);
         errorData.put("requestUrl", requestURI);
         errorData.put("statusCode", statusCode);

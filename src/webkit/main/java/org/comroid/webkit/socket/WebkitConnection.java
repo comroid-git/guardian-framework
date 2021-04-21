@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
+import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.uniform.node.UniNode;
@@ -36,7 +37,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
     }
 
     protected final Serializer<UniNode> findSerializer() {
-        return findSerializer("application/json");
+        return findSerializer(MimeType.JSON);
     }
 
     protected abstract void handleCommand(UniNode command);
