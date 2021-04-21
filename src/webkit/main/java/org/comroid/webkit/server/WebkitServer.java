@@ -140,7 +140,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             String requestURI,
             int statusCode,
             REST.Method requestMethod,
-            Headers requestHeaders
+            REST.Header.List headers
     ) {
         String exceptionStackTrace = null;
         if (exception != null) {
@@ -155,7 +155,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             }
         }
 
-        REST.Header.List headers = REST.Header.List.of(requestHeaders);
         Map<String, Object> pageProperties = findPageProperties(headers);
 
         final UniObjectNode errorData = this.<UniNode>findSerializer(MimeType.JSON).createObjectNode().asObjectNode();
@@ -220,7 +219,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 if (this != defaultEndpoint)
                     return super.extractArgs(requestUrl);
                 // is Default Endpoint
-                requestUrl = requestUrl.substring(urlBase.length());
                 return requestUrl.split("/");
             }
         }

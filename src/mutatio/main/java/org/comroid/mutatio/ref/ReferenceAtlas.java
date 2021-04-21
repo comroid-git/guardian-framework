@@ -232,6 +232,11 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         }
 
         @Override
+        public Stream<V> stream() {
+            return super.stream();
+        }
+
+        @Override
         protected KeyedReference<@NotNull Integer, V> createEmptyRef(@NotNull Integer key) {
             return KeyedReference.createKey(key);
         }

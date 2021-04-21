@@ -4,17 +4,21 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.span.Span;
-import org.comroid.restless.CommonHeaderNames;
+import org.comroid.api.StreamSupplier;
+import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.Nullable;
@@ -22,82 +26,76 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.comroid.restless.CommonHeaderNames.ACCEPTED_CONTENT_TYPE;
 import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
 
-public class RestServer implements Closeable {
+public final class RestServer implements HttpHandler, Closeable, Context {
     private static final Response dummyResponse = new Response(0);
     private static final Logger logger = LogManager.getLogger();
-    private final ContextualProvider context;
-    private final AutoContextHandler autoContextHandler = new AutoContextHandler();
+    private final Context context;
     private final HttpServer server;
-    private final Span<ServerEndpoint> endpoints;
-    private final SerializationAdapter seriLib;
-    private final String mimeType;
-    private final String baseUrl;
     private final REST.Header.List commonHeaders = new REST.Header.List();
-    private @Nullable ServerEndpoint defaultEndpoint;
+    private final StreamSupplier<ServerEndpoint> endpoints;
+    private final Ref<ServerEndpoint> defaultEndpoint;
+
+    public REST.Header.List getCommonHeaders() {
+        return commonHeaders;
+    }
 
     public ContextualProvider getContext() {
         return context;
     }
 
-    public @Nullable ServerEndpoint getDefaultEndpoint() {
-        return defaultEndpoint;
+    public Stream<? extends ServerEndpoint> getEndpoints() {
+        return endpoints.stream();
     }
 
-    public void setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
-        this.defaultEndpoint = defaultEndpoint;
+    public Stream<? extends ServerEndpoint> getDefaultEndpoint() {
+        return defaultEndpoint.stream();
     }
 
     public HttpServer getServer() {
         return server;
     }
 
-    public Span<ServerEndpoint> getEndpoints() {
-        return endpoints;
-    }
-
-    public SerializationAdapter getSerializationAdapter() {
-        return seriLib;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
-    public REST.Header.List getCommonHeaders() {
-        return commonHeaders;
-    }
-
+    @Deprecated
     public RestServer(
             ContextualProvider context,
             Executor executor,
-            String baseUrl,
+            @Nullable String baseUrl,
             InetAddress address,
             int port,
             ServerEndpoint... endpoints
     ) throws IOException {
-        logger.info("Starting REST Server with {} endpoints", endpoints.length);
-        this.context = context;
-        this.seriLib = context.requireFromContext(SerializationAdapter.class);
-        this.mimeType = seriLib.getMimeType();
-        this.baseUrl = baseUrl;
-        this.server = HttpServer.create(new InetSocketAddress(address, port), port);
-        this.endpoints = Span.immutable(endpoints);
+        this(context.upgrade(Context.class), executor, new InetSocketAddress(address, port), StreamSupplier.of(endpoints));
+    }
 
-        server.createContext("/", autoContextHandler);
+    public RestServer(
+            Context context,
+            Executor executor,
+            InetSocketAddress socketAddress,
+            StreamSupplier<ServerEndpoint> endpoints
+    ) throws IOException {
+        logger.info("Starting REST Server with {} endpoints", endpoints.stream().count());
+        this.context = context;
+        this.endpoints = endpoints;
+        this.defaultEndpoint = Reference.create();
+        this.server = HttpServer.create(socketAddress, socketAddress.getPort());
+
+        server.createContext("/", this);
         server.setExecutor(executor);
         server.start();
+    }
+
+    public boolean setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
+        return this.defaultEndpoint.set(defaultEndpoint);
     }
 
     public RestServer addCommonHeader(String name, String value) {
@@ -111,11 +109,201 @@ public class RestServer implements Closeable {
 
     @Override
     public void close() {
+        logger.info("Stopping HTTP Server");
         server.stop(5);
     }
 
     private void writeResponse(HttpExchange exchange, int statusCode) throws IOException {
         writeResponse(exchange, statusCode, "");
+    }
+
+    @Override
+    public void handle(HttpExchange exchange) {
+        logger.debug("Handling HttpExchange {}", exchange);
+
+        try {
+            // get URI and extract query parameters
+            final URI uri = exchange.getRequestURI();
+            String query = uri.getQuery();
+            String uriStr = uri.toString();
+            final String requestURI = uriStr.substring(0, uriStr.length() - (query == null ? 0 : query.length()));
+            final Map<String, Object> requestQueryParameters = parseQuery(query);
+
+            // get headers
+            final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
+            final String requestString = String.format("%s @ %s", requestMethod, requestURI);
+            final REST.Header.List requestHeaders = REST.Header.List.of(exchange.getRequestHeaders());
+
+            // response vars
+            String contentType = null;
+            ServerEndpoint endpoint;
+            boolean memberAccess = false;
+            String[] urlParams = null;
+            Response response = null;
+
+            try {
+                // get serializer for this call
+                contentType = requestHeaders.getFirst(REQUEST_CONTENT_TYPE);
+                final SerializationAdapter serializer = findSerializer(contentType);
+                if (serializer == null)
+                    throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, "Unsupported Content-Type: " + contentType);
+
+                logger.debug("Receiving {} {}-Request to {} with {} headers", serializer.getMimeType(), requestMethod, requestURI, requestHeaders.size());
+                logger.trace("Response has headers:\n{}", requestHeaders.stream()
+                        .map(REST.Header::toString)
+                        .collect(Collectors.joining("\n")));
+
+                // get request body
+                String body = consumeBody(exchange);
+                UniNode requestData = null;
+                try {
+                    requestData = body.isEmpty() ? serializer.createObjectNode() : serializer.parse(body);
+                } catch (IllegalArgumentException e) {
+                    logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer, e);
+                    requestData = serializer.createObjectNode();
+
+                    try {
+                        final UniObjectNode finalRequestData = requestData.asObjectNode();
+                        Stream.of(body.split("&"))
+                                .map(pair -> pair.split("="))
+                                .forEach(field -> finalRequestData.put(field[0], field.length == 1
+                                        ? "<empty>"
+                                        : StandardValueType.findGoodType(field[1])));
+                    } catch (Throwable formParseException) {
+                        logger.warn("Could not parse request body '{}'", body, formParseException);
+                    }
+                } finally {
+                    logger.trace("Adding {} Query parameters as request body fields", requestQueryParameters.size());
+                    requestData.asObjectNode().putAll(requestQueryParameters);
+                }
+
+                // find endpoint for request
+                endpoint = findEndpoint(requestURI).orElseGet(defaultEndpoint);
+
+                // validate endpoint
+                if (endpoint == null)
+                    throw new RestEndpointException(NOT_FOUND, "No endpoint found for request URI: " + requestURI);
+                if (!endpoint.supports(requestMethod))
+                    throw new RestEndpointException(METHOD_NOT_ALLOWED, "Request method not supported: " + requestMethod);
+                memberAccess = endpoint.isMemberAccess(requestURI);
+
+                // extract url parameters
+                urlParams = endpoint.extractArgs(requestURI);
+                urlParams = memberAccess
+                        ? Arrays.copyOf(urlParams, urlParams.length - 1)
+                        : urlParams;
+
+                // execute endpoint
+                logger.debug("Executing Endpoint {}...", endpoint);
+                response = endpoint.executeMethod(this, requestMethod, requestHeaders, urlParams, requestData);
+            } catch (RestEndpointException e) {
+                logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
+                try {
+                    Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
+
+                    if (alternate.getStatusCode() == OK && e.getStatusCode() != OK)
+                        response = alternate;
+                } catch (Throwable t2) {
+                    logger.debug("An error occurred during recovery", t2);
+                }
+            } catch (Throwable t) {
+                logger.error("An error occurred during request handling", t);
+                RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
+                response = new Response(wrapped.getStatusCode(), generateErrorNode(contentType, wrapped));
+            }
+
+            // copy response headers
+            final int statusCode = response.getStatusCode();
+            final Headers responseHeaders = exchange.getResponseHeaders();
+            response.getHeaders().forEach(responseHeaders::set);
+            commonHeaders.forEach(responseHeaders::set);
+            String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(","));
+            responseHeaders.set(ACCEPTED_CONTENT_TYPE, accepted);
+            logger.trace("{} Headers applied to exchange", responseHeaders.size());
+
+            // send response
+            Reader responseData;
+            if (memberAccess) {
+                logger.debug("Attempting to write member-accessing response data");
+                Reference<Serializable> body = response.getBody();
+                UniObjectNode data = body.map(Serializable::toUniNode)
+                        .map(UniNode::asObjectNode)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
+                String yield = data.get(urlParams[urlParams.length]).toSerializedString();
+                responseData = new StringReader(yield);
+            } else responseData = response.getFullData();
+            logger.trace("Using response reader {}", responseData);
+
+            try {
+                StringBuilder sb = new StringBuilder();
+                char[] cbuf = new char[512];
+                int x;
+                while ((x = responseData.read(cbuf)) != -1) {
+                    char[] chars = x == cbuf.length ? cbuf : Arrays.copyOf(cbuf, x);
+                    sb.append(chars);
+                }
+
+                final String body = sb.toString();
+                final int len = body.length();
+                logger.debug("Sending Response with code {} and length {}", statusCode, len);
+                logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
+                        .stream()
+                        .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
+                        .collect(Collectors.joining("\n")));
+                logger.log(Level.ALL, "Response body:\n{}", body);
+                exchange.sendResponseHeaders(statusCode, len);
+
+                char[] wbuf = new char[512];
+                int r, w = 0;
+                try (
+                        Reader write = new StringReader(body);
+                        OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
+                ) {
+                    while ((r = write.read(wbuf)) != -1) {
+                        osw.write(wbuf, 0, r);
+                        w += r;
+                    }
+                }
+
+                exchange.getResponseBody().flush();
+            } catch (IOException e) {
+                logger.fatal("Error occurred while sending response; cannot continue", e);
+            } finally {
+                exchange.close();
+            }
+        } catch (Throwable t) {
+            logger.fatal("An error occurred during handler; cannot continue", t);
+        }
+    }
+
+    private Optional<ServerEndpoint> findEndpoint(String requestURI) {
+        return getEndpoints()
+                .filter(endpoint -> endpoint.test(requestURI))
+                .filter(endpoint -> !endpoint.allowMemberAccess() || endpoint.isMemberAccess(requestURI))
+                .findFirst()
+                .map(ServerEndpoint.class::cast);
+    }
+
+    private Map<String, Object> parseQuery(@Nullable String query) {
+        if (query == null)
+            return new HashMap<>();
+        Map<String, Object> yield = new HashMap<>();
+
+        // strip leading ? if present
+        if (query.startsWith("?"))
+            query = query.substring(1);
+
+        try (
+                Scanner scanner = new Scanner(query)
+        ) {
+            scanner.useDelimiter("&");
+
+            while (scanner.hasNext()) {
+                String[] pair = scanner.next().split("=");
+                yield.put(pair[0], StandardValueType.findGoodType(pair[1]));
+            }
+        }
+        return yield;
     }
 
     private void writeResponse(HttpExchange exchange, int statusCode, String data) throws IOException {
@@ -125,8 +313,8 @@ public class RestServer implements Closeable {
         osr.flush();
     }
 
-    private UniObjectNode generateErrorNode(RestEndpointException reex) {
-        final UniObjectNode rsp = seriLib.createObjectNode();
+    private UniObjectNode generateErrorNode(CharSequence mimeType, RestEndpointException reex) {
+        final UniObjectNode rsp = createObjectNode(mimeType);
 
         rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
         rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
@@ -154,257 +342,68 @@ public class RestServer implements Closeable {
         return str;
     }
 
-    private boolean supportedMimeType(List<String> targetMimes) {
-        return targetMimes.isEmpty() || targetMimes.stream()
-                .anyMatch(type -> type.contains(mimeType) || type.contains("*/*"));
-    }
-
     private @Nullable Response tryRecoverFrom(
-            Throwable lastException,
+            RestEndpointException lastException,
             String requestURI,
             int statusCode,
             REST.Method requestMethod,
-            Headers requestHeaders
+            REST.Header.List requestHeaders
     ) {
         logger.debug("Trying to recover from {} gotten from {} @ {}", lastException, requestMethod, requestURI);
         Rewrapper<RestEndpointException.RecoverStage> recoverStageRef = context.getFromContext(RestEndpointException.RecoverStage.class, true);
 
-        if (recoverStageRef.isNull()) {
-            if (lastException == null)
-                return null;
-            else if (lastException instanceof RestEndpointException)
-                throw (RestEndpointException) lastException;
-        }
+        if (recoverStageRef.isNull())
+            return null;
 
         RestEndpointException.RecoverStage recoverStage = recoverStageRef.assertion();
         return recoverStage.tryRecover(context, lastException, requestURI, statusCode, requestMethod, requestHeaders);
     }
 
-    private class AutoContextHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) {
-            final String requestURI = baseUrl.substring(0, baseUrl.length() - 1) + exchange.getRequestURI().toString();
-            final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
-            final String requestString = String.format("%s @ %s", requestMethod, requestURI);
-
-            Headers requestHeaders = null;
-            try {
-                try {
-                    final Headers responseHeaders = exchange.getResponseHeaders();
-                    requestHeaders = exchange.getRequestHeaders();
-                    commonHeaders.forEach(responseHeaders::add);
-                    responseHeaders.add(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, mimeType);
-                    responseHeaders.add(REQUEST_CONTENT_TYPE, mimeType);
-
-                    if (commonHeaders.stream().noneMatch(header -> header.getName().equals("Cookie"))
-                            && requestHeaders.containsKey("Cookie"))
-                        responseHeaders.add("Cookie", requestHeaders.getFirst("Cookie"));
-
-                    logger.info("Handling {} Request @ {} with Headers: {}", requestMethod, requestURI,
-                            requestHeaders
-                                    .entrySet()
-                                    .stream()
-                                    .filter(entry -> !entry.getKey().equals(CommonHeaderNames.AUTHORIZATION))
-                                    .map(entry -> String.format("%s: %s", entry.getKey(), Arrays.toString(entry.getValue().toArray())))
-                                    .collect(Collectors.joining("\n- ", "\n- ", ""))
-                    );
-
-                    final String mimeType = seriLib.getMimeType();
-                    final List<String> targetMimes = requestHeaders.get("Accept");
-                    if (!supportedMimeType(targetMimes == null ? new ArrayList<>() : targetMimes)) {
-                        logger.info(
-                                "Content Type {} not supported, cancelling. Accept Header: %s",
-                                mimeType,
-                                targetMimes
-                        );
-
-                        throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, String.format(
-                                "Content Type %s not supported, cancelling. Accept Header: %s",
-                                mimeType,
-                                targetMimes
-                        ));
-                    }
-
-                    String body = consumeBody(exchange);
-
-                    logger.info("Looking for matching endpoint...");
-                    forwardToEndpoint(exchange, requestURI, requestMethod, responseHeaders, requestHeaders, body);
-                } catch (Throwable t) {
-                    tryRecoverFrom(t, requestURI, 500, requestMethod, requestHeaders);
-                    if (t instanceof RestEndpointException)
-                        throw (RestEndpointException) t;
-                    throw new RestEndpointException(INTERNAL_SERVER_ERROR, t);
-                }
-            } catch (RestEndpointException reex) {
-                logger.info("An endpoint exception occurred: " + reex.getMessage(), reex);
-
-                final String rsp = generateErrorNode(reex).toString();
-                try {
-                    writeResponse(exchange, reex.getStatusCode(), rsp);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } finally {
-                exchange.close();
-                logger.info("Finished handling {}", requestString);
-            }
-        }
-
-        private void forwardToEndpoint(
-                HttpExchange exchange,
-                String requestURI,
-                REST.Method requestMethod,
-                Headers responseHeaders,
-                Headers requestHeaders,
-                String requestBody) throws Throwable {
-            final Iterator<ServerEndpoint> iter = Stream.concat(
-                    // endpoints that accept the request uri
-                    endpoints.filter(endpoint -> endpoint.test(requestURI))
-                            // handle member accessing endpoints with lower priority
-                            .sorted(Comparator.comparingInt(endpoint -> endpoint.isMemberAccess(requestURI) ? 1 : -1))
-                            .flatMap(ServerEndpoint.class)
-                            .streamValues(),
-                    // and concat to defaultEndpoint
-                    Stream.of(defaultEndpoint).filter(Objects::nonNull))
-                    .iterator();
-            Throwable lastException = null;
-            Response response = dummyResponse;
-
-            if (!iter.hasNext()) {
-                logger.info("No endpoints found; returning 404");
-
-                throw new RestEndpointException(NOT_FOUND, "No endpoint found at URL: " + requestURI);
-            }
-
-            while (iter.hasNext()) {
-                final ServerEndpoint endpoint = iter.next();
-
-                logger.info("Attempting to use endpoint {}", endpoint.getUrlExtension());
-
-                if (endpoint.supports(requestMethod)) {
-                    final String[] args = endpoint.extractArgs(requestURI);
-                    logger.info("Extracted parameters: {}", Arrays.toString(args));
-
-                    if (!endpoint.ignoreArgumentCount()
-                            && args.length != endpoint.getParameterCount()
-                            && !endpoint.allowMemberAccess())
-                        throw new RestEndpointException(BAD_REQUEST, "Invalid argument Count");
-
-                    try {
-                        logger.info("Executing Handler for method: {}", requestMethod);
-                        response = endpoint.executeMethod(RestServer.this, requestMethod, requestHeaders, args, requestBody);
-                    } catch (Throwable reex) {
-                        lastException = reex;
-                    }
-
-                    if ((lastException != null && endpoint.attemptRecovery() != RestEndpointException.RecoverStage.DO_NOT_ATTEMPT)
-                            || (response.getStatusCode() != OK && endpoint.attemptRecovery() == RestEndpointException.RecoverStage.ALL))
-                        try {
-                            Response alternate = tryRecoverFrom(
-                                    lastException,
-                                    requestURI,
-                                    lastException instanceof RestEndpointException
-                                            ? ((RestEndpointException) lastException).getStatusCode()
-                                            : response.getStatusCode(),
-                                    requestMethod,
-                                    requestHeaders
-                            );
-                            if (alternate == null) {
-                                logger.debug("Could not recover from {} with exception {}; handler returned {}", response, lastException, alternate);
-                            } else if (alternate.getStatusCode() == OK)
-                                response = alternate;
-                        } catch (Throwable recoveringException) {
-                            logger.error("An error ocurred during recovery", recoveringException);
-                        }
-
-                    if (response == dummyResponse) {
-                        logger.warn("Handler could not complete normally, attempting next handler...", lastException);
-                        continue;
-                    }
-
-                    logger.info("Handler Finished! Response: {}", response);
-                    handleResponse(exchange, requestURI, endpoint, responseHeaders, response);
-                    lastException = null;
-                    break;
-                } else
-                    logger.warn("Handler does not support method {}, attempting next handler...", requestMethod, lastException);
-            }
-
-            if (lastException != null)
-                throw lastException;
-        }
-
-        private void handleResponse(
-                HttpExchange exchange,
-                String requestURI,
-                ServerEndpoint sep,
-                Headers responseHeaders,
-                REST.Response response
-        ) throws IOException {
-            if (response == null) {
-                writeResponse(exchange, OK);
-                return;
-            }
-
-            response.getHeaders().forEach(responseHeaders::add);
-            responseHeaders.remove(REQUEST_CONTENT_TYPE);
-            responseHeaders.add(REQUEST_CONTENT_TYPE, response.getMimeType());
-            final String data = unwrapData(sep, requestURI, response);
-
-            writeResponse(exchange, response.getStatusCode(), data);
-
-            logger.info("Sent Response code {} with length {} and Headers: {}",
-                    response.getStatusCode(),
-                    data.length(),
-                    responseHeaders
-                            .entrySet()
-                            .stream()
-                            .map(entry -> String.format("%s: %s", entry.getKey(), Arrays.toString(entry.getValue().toArray())))
-                            .collect(Collectors.joining("\n- ", "\n- ", ""))
-            );
-        }
-
-        private String unwrapData(ServerEndpoint sep, String requestURI, Response response) {
-            return response.getBody()
-                    .map(Serializable::toUniNode)
-                    .map(responseBody -> {
-                        if (responseBody == null)
-                            return "";
-                        if (!sep.allowMemberAccess() || !sep.isMemberAccess(requestURI))
-                            return responseBody.toString();
-
-                        String fractalName = requestURI.substring(requestURI.lastIndexOf("/") + 1);
-
-                        if (fractalName.matches("\\d+")) {
-                            // numeric fractal
-                            final int fractalNum = Integer.parseInt(fractalName);
-
-                            if (!responseBody.has(fractalNum))
-                                fractalName = null;
-
-                            if (fractalName != null)
-                                return responseBody.get(fractalNum).toString();
-                        } else {
-                            // string fractal
-                            if (!responseBody.has(fractalName))
-                                fractalName = null;
-
-                            if (fractalName != null)
-                                return responseBody.get(fractalName).toString();
-                        }
-
+    private String unwrapData(ServerEndpoint sep, String requestURI, Response response) {
+        return response.getBody()
+                .map(Serializable::toUniNode)
+                .map(responseBody -> {
+                    if (responseBody == null)
+                        return "";
+                    if (!sep.allowMemberAccess() || !sep.isMemberAccess(requestURI))
                         return responseBody.toString();
-                    })
-                    .or(() -> response.getData().map(r -> {
-                        try (
-                                BufferedReader br = new BufferedReader(r)
-                        ) {
-                            return br.lines().collect(Collectors.joining("\r"));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).get())
-                    .orElse("");
-        }
+
+                    String fractalName = requestURI.substring(requestURI.lastIndexOf("/") + 1);
+
+                    if (fractalName.matches("\\d+")) {
+                        // numeric fractal
+                        final int fractalNum = Integer.parseInt(fractalName);
+
+                        if (!responseBody.has(fractalNum))
+                            fractalName = null;
+
+                        if (fractalName != null)
+                            return responseBody.get(fractalNum).toString();
+                    } else {
+                        // string fractal
+                        if (!responseBody.has(fractalName))
+                            fractalName = null;
+
+                        if (fractalName != null)
+                            return responseBody.get(fractalName).toString();
+                    }
+
+                    return responseBody.toString();
+                })
+                .or(() -> response.getData().map(r -> {
+                    try (
+                            BufferedReader br = new BufferedReader(r)
+                    ) {
+                        return br.lines().collect(Collectors.joining("\r"));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).get())
+                .orElse("");
+    }
+
+    @Override
+    public Stream<Object> streamContextMembers(boolean includeChildren) {
+        return context.streamContextMembers(includeChildren);
     }
 }

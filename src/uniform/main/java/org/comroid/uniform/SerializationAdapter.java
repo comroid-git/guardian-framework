@@ -67,7 +67,7 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
     DataStructureType<BAS, ? extends BAS, ? extends UniNode> typeOfData(String data);
 
     @Override
-    UniNode parse(@Nullable String data);
+    UniNode parse(@Nullable String data) throws IllegalArgumentException;
 
     @NonExtendable
     default UniObjectNode createObjectNode() {

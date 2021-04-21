@@ -60,4 +60,13 @@ public final class MimeType implements Named, CharSequence {
     public String toString() {
         return name;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof String)
+            return name.equals(o);
+        if (o instanceof MimeType)
+            return name.equals(((MimeType) o).name);
+        return false;
+    }
 }

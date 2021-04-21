@@ -1,6 +1,5 @@
 package org.comroid.restless.server;
 
-import com.sun.net.httpserver.Headers;
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
@@ -63,7 +62,7 @@ public class RestEndpointException extends RuntimeException {
                 String requestURI,
                 int statusCode,
                 REST.Method requestMethod,
-                Headers requestHeaders
+                REST.Header.List requestHeaders
         );
     }
 }
