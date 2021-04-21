@@ -62,7 +62,7 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
             throw new IllegalArgumentException("Invalid argument count");
         }
 
-        String format = String.format(getFullUrl(), args);
+        String format = String.format(getUrlExtension(), args);
 
         if (test(format))
             return format;
