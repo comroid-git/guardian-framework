@@ -121,143 +121,147 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     public void handle(HttpExchange exchange) {
         logger.debug("Handling HttpExchange {}", exchange);
 
-        // get URI and extract query parameters
-        final URI uri = exchange.getRequestURI();
-        String query = uri.getQuery();
-        String uriStr = uri.toString();
-        final String requestURI = uriStr.substring(0, uriStr.length() - query.length());
-        final Map<String, Object> requestQueryParameters = parseQuery(query);
-
-        // get headers
-        final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
-        final String requestString = String.format("%s @ %s", requestMethod, requestURI);
-        final REST.Header.List requestHeaders = REST.Header.List.of(exchange.getRequestHeaders());
-
-        // response vars
-        String contentType = null;
-        ServerEndpoint endpoint = null;
-        boolean memberAccess = false;
-        String[] urlParams = null;
-        Response response = null;
-
         try {
-            // get serializer for this call
-            contentType = requestHeaders.getFirst(REQUEST_CONTENT_TYPE);
-            final SerializationAdapter serializer = findSerializer(contentType);
-            if (serializer == null)
-                throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, "Unsupported Content-Type: " + contentType);
+            // get URI and extract query parameters
+            final URI uri = exchange.getRequestURI();
+            String query = uri.getQuery();
+            String uriStr = uri.toString();
+            final String requestURI = uriStr.substring(0, uriStr.length() - (query == null ? 0 : query.length()));
+            final Map<String, Object> requestQueryParameters = parseQuery(query);
 
-            logger.debug("Receiving {} {}-Request to {} with {} headers", serializer.getMimeType(), requestMethod, requestURI, requestHeaders.size());
-            logger.trace("Response has headers:\n{}", requestHeaders.stream()
-                    .map(REST.Header::toString)
-                    .collect(Collectors.joining("\n")));
+            // get headers
+            final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
+            final String requestString = String.format("%s @ %s", requestMethod, requestURI);
+            final REST.Header.List requestHeaders = REST.Header.List.of(exchange.getRequestHeaders());
 
-            // get request body
-            String body = consumeBody(exchange);
-            UniNode requestData = null;
+            // response vars
+            String contentType = null;
+            ServerEndpoint endpoint = null;
+            boolean memberAccess = false;
+            String[] urlParams = null;
+            Response response = null;
+
             try {
-                requestData = serializer.parse(body);
-            } catch (IllegalArgumentException e) {
-                logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer, e);
-                requestData = serializer.createObjectNode();
+                // get serializer for this call
+                contentType = requestHeaders.getFirst(REQUEST_CONTENT_TYPE);
+                final SerializationAdapter serializer = findSerializer(contentType);
+                if (serializer == null)
+                    throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, "Unsupported Content-Type: " + contentType);
 
-                try {
-                    final UniObjectNode finalRequestData = requestData.asObjectNode();
-                    Stream.of(body.split("&"))
-                            .map(pair -> pair.split("="))
-                            .forEach(field -> finalRequestData.put(field[0], StandardValueType.findGoodType(field[1])));
-                } catch (Throwable formParseException) {
-                    logger.warn("Could not parse request body '{}'", body, formParseException);
-                }
-            } finally {
-                logger.trace("Adding {} Query parameters as request body fields", requestQueryParameters.size());
-                requestData.asObjectNode().putAll(requestQueryParameters);
-            }
-
-            // find endpoint for request
-            endpoint = findEndpoint(requestURI).orElseGet(defaultEndpoint);
-
-            // validate endpoint
-            if (endpoint == null)
-                throw new RestEndpointException(NOT_FOUND, "No endpoint found for request URI: " + requestURI);
-            if (!endpoint.supports(requestMethod))
-                throw new RestEndpointException(METHOD_NOT_ALLOWED, "Request method not supported: " + requestMethod);
-            memberAccess = endpoint.isMemberAccess(requestURI);
-
-            // extract url parameters
-            urlParams = endpoint.extractArgs(requestURI);
-            urlParams = memberAccess
-                    ? Arrays.copyOf(urlParams, urlParams.length - 1)
-                    : urlParams;
-
-            // execute endpoint
-            response = endpoint.executeMethod(this, requestMethod, requestHeaders, urlParams, requestData);
-        } catch (RestEndpointException e) {
-            logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
-            try {
-                Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
-
-                if (alternate.getStatusCode() == OK && e.getStatusCode() != OK)
-                    response = alternate;
-            } catch (Throwable t2) {
-                logger.debug("An error occurred during recovery", t2);
-            }
-        } catch (Throwable t) {
-            logger.error("An error occurred during request handling", t);
-            RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
-            response = new Response(wrapped.getStatusCode(), generateErrorNode(contentType, wrapped));
-        }
-
-        // copy response headers
-        final int statusCode = response.getStatusCode();
-        final Headers responseHeaders = exchange.getResponseHeaders();
-        response.getHeaders().forEach(responseHeaders::set);
-        commonHeaders.forEach(responseHeaders::set);
-        String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(";"));
-        responseHeaders.set(ACCEPTED_CONTENT_TYPE, accepted);
-
-        // send response
-        int r, w = 0;
-        try {
-            if (memberAccess) {
-                logger.debug("Attempting to write member-accessing response data");
-                Reference<Serializable> body = response.getBody();
-                UniObjectNode data = body.map(Serializable::toUniNode)
-                        .map(UniNode::asObjectNode)
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
-                String yield = data.get(urlParams[urlParams.length]).toSerializedString();
-                byte[] bytes = yield.getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseBody().write(bytes);
-                w = yield.length();
-            } else {
-                char[] cbuf = new char[512];
-                try (
-                        Reader responseData = response.getFullData();
-                        OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
-                ) {
-                    while ((r = responseData.read(cbuf)) != -1) {
-                        osw.write(cbuf, w, r);
-                        w += r;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            logger.fatal("Error occurred while writing response data", e);
-        } finally {
-            try {
-                logger.debug("Sending Response with code {} and length {}", statusCode, w);
-                logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
-                        .stream()
-                        .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
+                logger.debug("Receiving {} {}-Request to {} with {} headers", serializer.getMimeType(), requestMethod, requestURI, requestHeaders.size());
+                logger.trace("Response has headers:\n{}", requestHeaders.stream()
+                        .map(REST.Header::toString)
                         .collect(Collectors.joining("\n")));
 
-                exchange.getResponseBody().flush();
-                exchange.sendResponseHeaders(statusCode, w);
-            } catch (IOException e) {
-                logger.fatal("Error occurred while sending response; cannot continue", e);
-            } finally {
-                exchange.close();
+                // get request body
+                String body = consumeBody(exchange);
+                UniNode requestData = null;
+                try {
+                    requestData = serializer.parse(body);
+                } catch (IllegalArgumentException e) {
+                    logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer, e);
+                    requestData = serializer.createObjectNode();
+
+                    try {
+                        final UniObjectNode finalRequestData = requestData.asObjectNode();
+                        Stream.of(body.split("&"))
+                                .map(pair -> pair.split("="))
+                                .forEach(field -> finalRequestData.put(field[0], StandardValueType.findGoodType(field[1])));
+                    } catch (Throwable formParseException) {
+                        logger.warn("Could not parse request body '{}'", body, formParseException);
+                    }
+                } finally {
+                    logger.trace("Adding {} Query parameters as request body fields", requestQueryParameters.size());
+                    requestData.asObjectNode().putAll(requestQueryParameters);
+                }
+
+                // find endpoint for request
+                endpoint = findEndpoint(requestURI).orElseGet(defaultEndpoint);
+
+                // validate endpoint
+                if (endpoint == null)
+                    throw new RestEndpointException(NOT_FOUND, "No endpoint found for request URI: " + requestURI);
+                if (!endpoint.supports(requestMethod))
+                    throw new RestEndpointException(METHOD_NOT_ALLOWED, "Request method not supported: " + requestMethod);
+                memberAccess = endpoint.isMemberAccess(requestURI);
+
+                // extract url parameters
+                urlParams = endpoint.extractArgs(requestURI);
+                urlParams = memberAccess
+                        ? Arrays.copyOf(urlParams, urlParams.length - 1)
+                        : urlParams;
+
+                // execute endpoint
+                response = endpoint.executeMethod(this, requestMethod, requestHeaders, urlParams, requestData);
+            } catch (RestEndpointException e) {
+                logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
+                try {
+                    Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
+
+                    if (alternate.getStatusCode() == OK && e.getStatusCode() != OK)
+                        response = alternate;
+                } catch (Throwable t2) {
+                    logger.debug("An error occurred during recovery", t2);
+                }
+            } catch (Throwable t) {
+                logger.error("An error occurred during request handling", t);
+                RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
+                response = new Response(wrapped.getStatusCode(), generateErrorNode(contentType, wrapped));
             }
+
+            // copy response headers
+            final int statusCode = response.getStatusCode();
+            final Headers responseHeaders = exchange.getResponseHeaders();
+            response.getHeaders().forEach(responseHeaders::set);
+            commonHeaders.forEach(responseHeaders::set);
+            String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(";"));
+            responseHeaders.set(ACCEPTED_CONTENT_TYPE, accepted);
+
+            // send response
+            int r, w = 0;
+            try {
+                if (memberAccess) {
+                    logger.debug("Attempting to write member-accessing response data");
+                    Reference<Serializable> body = response.getBody();
+                    UniObjectNode data = body.map(Serializable::toUniNode)
+                            .map(UniNode::asObjectNode)
+                            .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
+                    String yield = data.get(urlParams[urlParams.length]).toSerializedString();
+                    byte[] bytes = yield.getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseBody().write(bytes);
+                    w = yield.length();
+                } else {
+                    char[] cbuf = new char[512];
+                    try (
+                            Reader responseData = response.getFullData();
+                            OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
+                    ) {
+                        while ((r = responseData.read(cbuf)) != -1) {
+                            osw.write(cbuf, w, r);
+                            w += r;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                logger.fatal("Error occurred while writing response data", e);
+            } finally {
+                try {
+                    logger.debug("Sending Response with code {} and length {}", statusCode, w);
+                    logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
+                            .stream()
+                            .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
+                            .collect(Collectors.joining("\n")));
+
+                    exchange.getResponseBody().flush();
+                    exchange.sendResponseHeaders(statusCode, w);
+                } catch (IOException e) {
+                    logger.fatal("Error occurred while sending response; cannot continue", e);
+                } finally {
+                    exchange.close();
+                }
+            }
+        } catch (Throwable t) {
+            logger.fatal("An error occurred during handler; cannot continue", t);
         }
     }
 
