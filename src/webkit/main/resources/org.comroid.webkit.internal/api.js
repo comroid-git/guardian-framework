@@ -53,9 +53,11 @@ function handleMessage(json) {
 
     switch (type) {
         case 'inject':
-            return injectionEvent(event, data);
+            injectionEvent(event, data);
+            break;
         case 'changePanel':
-            return changePanelEvent(event, data);
+            changePanelEvent(event, data);
+            break;
     }
 
     sendLocalEvent(type, data);
