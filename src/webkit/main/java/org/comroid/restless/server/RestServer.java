@@ -219,6 +219,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             commonHeaders.forEach(responseHeaders::set);
             String accepted = context.getSupportedMimeTypes().collect(Collectors.joining(","));
             responseHeaders.set(ACCEPTED_CONTENT_TYPE, accepted);
+            responseHeaders.set(REQUEST_CONTENT_TYPE, response.getMimeType());
             logger.trace("{} Headers applied to exchange", responseHeaders.size());
 
             // send response
