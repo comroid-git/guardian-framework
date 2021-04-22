@@ -12,7 +12,6 @@ import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
-import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.RootBind;
@@ -90,18 +89,21 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             protected UniObjectNode doGet(final UniObjectNode into) {
                 streamInputRefs().forEach(ref -> ref
                         .consume(refs -> {
-                    if (refs.size() > 1) {
-                        UniArrayNode arr = into.putArray(ref.getKey());
-                        refs.forEach(arr::addValue);
-                    } else if (refs.size() == 0) {
-                    } else {
-                        Object v = refs.get(0);
-                        if (v instanceof Map) {
-                            UniObjectNode obj = into.putObject(ref.getKey());
-                            ((Map<String, Object>) v).forEach(obj::put);
-                        } else into.put(ref.getKey(), v);
-                    }
-                }));
+                            //noinspection StatementWithEmptyBody
+                            if (refs == null || refs.size() == 0) {
+                            } else if (refs.size() > 1) {
+                                UniArrayNode arr = into.putArray(ref.getKey());
+                                //noinspection unchecked
+                                refs.forEach(arr::addValue);
+                            } else {
+                                Object v = refs.get(0);
+                                if (v instanceof Map) {
+                                    UniObjectNode obj = into.putObject(ref.getKey());
+                                    //noinspection unchecked
+                                    ((Map<String, Object>) v).forEach(obj::put);
+                                } else into.put(ref.getKey(), v);
+                            }
+                        }));
                 return into;
             }
         };
