@@ -70,6 +70,10 @@ function sendCommand(command) {
     }));
 }
 
+function refreshPage() {
+    sendCommand('webkit/refresh')
+}
+
 function actionChangePanel(target) {
     const isWsReady = ws.readyState === WebSocket.OPEN;
     let url = '/' + target;
