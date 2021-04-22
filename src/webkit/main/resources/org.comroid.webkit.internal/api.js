@@ -31,13 +31,18 @@ function handleMessage(json) {
         return;
 
     let event = JSON.parse(json);
-    let data = event['data'];
+    const type = event['type'];
+    const data = event['data'];
 
-    switch (event['type']) {
+    switch (type) {
         case 'inject':
             return injectionEvent(event, data);
         case 'changePanel':
             return changePanelEvent(event, data);
+        default:
+            if (typeof handleCustomEvent === "function")
+                return handleCustomEvent(type, data);
+            else console.debug("Could not forward custom event", event)
     }
 }
 
