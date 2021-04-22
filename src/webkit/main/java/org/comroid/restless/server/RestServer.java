@@ -282,18 +282,18 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     }
 
     private Optional<ServerEndpoint> findEndpoint(String requestURI) {
-        logger.trace("Finding Endpoint for URI: {}", requestURI);
+        logger.log(Level.ALL, "Finding Endpoint for URI: {}", requestURI);
 
         return getEndpoints()
                 .filter(endpoint -> {
                     boolean result = endpoint.test(requestURI);
-                    logger.trace("Testing endpoint URI {} resulted in {}", endpoint, result);
+                    logger.log(Level.ALL, "Testing endpoint URI {} resulted in {}", endpoint, result);
                     return result;
                 })
                 .filter(endpoint -> {
                     boolean allows = endpoint.allowMemberAccess();
                     boolean is = endpoint.isMemberAccess(requestURI);
-                    logger.trace("Endpoint {} allows member access = {}; attempting = {}", endpoint, allows, is);
+                    logger.log(Level.ALL, "Endpoint {} allows member access = {}; attempting = {}", endpoint, allows, is);
                     return !allows || is;
                 })
                 .findFirst()
