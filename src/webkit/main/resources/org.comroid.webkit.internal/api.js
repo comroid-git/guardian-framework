@@ -4,6 +4,14 @@ if (socketToken === undefined)
     socketToken = '';
 let ws = undefined;
 
+function sendLocalEvent(type, data) {
+    let e = new CustomEvent(type, {
+        detail: data
+    });
+    console.debug('dispatching local event:', e)
+    document.dispatchEvent(e);
+}
+
 function populateTag(data, tag, names, index) {
     if (data === undefined)
         tag.innerText = 'undefined';
@@ -13,7 +21,16 @@ function populateTag(data, tag, names, index) {
 }
 
 function changePanelEvent(event, dom) {
+    console.debug('looking for received scripts...');
+    new DOMParser().parseFromString(dom, "text/html")
+        .querySelectorAll('script[type="application/javascript"]')
+        .forEach(dom => {
+            let rcvscr = dom.textContent;
+            //console.debug('evaluating received script:', rcvscr);
+            eval(rcvscr)
+        })
     document.getElementById('content').innerHTML = dom
+    sendLocalEvent('frameReady');
 }
 
 function injectionEvent(event, data) {
@@ -39,11 +56,9 @@ function handleMessage(json) {
             return injectionEvent(event, data);
         case 'changePanel':
             return changePanelEvent(event, data);
-        default:
-            if (typeof handleCustomEvent === "function")
-                return handleCustomEvent(type, data);
-            else console.debug("Could not forward custom event", event)
     }
+
+    sendLocalEvent(type, data);
 }
 
 function sendCommand(command) {
@@ -77,6 +92,7 @@ function initAPI() {
     ws.onopen = (msg) => {
         console.debug("open ", msg);
         ws.send("hello server; i'm " + (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken));
+        sendLocalEvent('frameReady');
     }
     ws.onmessage = (msg) => handleMessage(msg.data);
     ws.onerror = (msg) => console.debug("error in websocket", msg);
