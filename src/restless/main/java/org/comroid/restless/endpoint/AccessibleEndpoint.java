@@ -142,6 +142,7 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
             int i = 1;
             while (groups.length + 1 > i && matcher.matches())
                 yields.add(matcher.group(i++));
+            //yields.removeIf(String::isEmpty);
 
             return yields.toArray(new String[0]);
         }

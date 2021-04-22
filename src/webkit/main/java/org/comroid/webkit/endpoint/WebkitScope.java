@@ -27,16 +27,16 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
                     .requireFromContext(PagePropertiesProvider.class)
                     .findPageProperties(headers);
 
-            if (requestPath.length > 2) {
+            if (requestPath.length > 1) {
                 context.getLogger().debug("Adding request path to page properties");
-                String[] args = new String[requestPath.length - 2];
-                System.arraycopy(requestPath, 2, args, 0, args.length);
+                String[] args = new String[requestPath.length - 1];
+                System.arraycopy(requestPath, 1, args, 0, args.length);
                 pageProperties.put("args", Arrays.asList(args));
             }
 
             FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties);
-            if (requestPath.length > 1 && !requestPath[1].isEmpty())
-                frameBuilder.setPanel(requestPath[1]);
+            if (requestPath.length > 0 && !requestPath[0].isEmpty())
+                frameBuilder.setPanel(requestPath[0]);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 
