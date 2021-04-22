@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public interface EndpointHandler {
+    @Deprecated
     default boolean supports(REST.Method method) {
         final String mName = "execute" + method.name();
         return Arrays.stream(getClass().getMethods())
@@ -27,9 +28,6 @@ public interface EndpointHandler {
             String[] urlParams,
             UniNode data
     ) throws RestEndpointException {
-        if (!supports(method))
-            throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: " + method.name());
-
         switch (method) {
             case GET:
                 return executeGET(context, headers, urlParams, data);
@@ -105,11 +103,6 @@ public interface EndpointHandler {
     interface Underlying extends EndpointHandler {
         default EndpointHandler getEndpointHandler() {
             return this;
-        }
-
-        @Override
-        default boolean supports(REST.Method method) {
-            return getEndpointHandler().supports(method);
         }
 
         @Override

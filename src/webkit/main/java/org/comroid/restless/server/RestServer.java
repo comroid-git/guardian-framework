@@ -196,8 +196,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 // validate endpoint
                 if (endpoint == null)
                     throw new RestEndpointException(NOT_FOUND, "No endpoint found for request URI: " + requestURI);
-                if (!endpoint.supports(requestMethod))
-                    throw new RestEndpointException(METHOD_NOT_ALLOWED, "Request method not supported: " + requestMethod);
                 memberAccess = endpoint.isMemberAccess(requestURI);
 
                 // extract url parameters
