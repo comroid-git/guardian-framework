@@ -116,6 +116,10 @@ function initAPI() {
     ws.onmessage = (msg) => handleMessage(msg.data);
     ws.onerror = (msg) => console.debug("error in websocket", msg);
     ws.onclose = (msg) => console.debug("websocket closed", msg);
+    console.debug('looking for initial scripts...');
+    document.getElementById('content')
+        .querySelectorAll('script[type="application/javascript"]')
+        .forEach(dom => evals.push(dom.textContent))
 }
 
 function disconnectAPI() {
