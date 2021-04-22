@@ -124,10 +124,8 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         try {
             // get URI and extract query parameters
             final URI uri = exchange.getRequestURI();
+            final String requestURI = uri.getPath();
             String query = uri.getQuery();
-            String uriStr = uri.getPath();
-            String pre = uriStr.substring(0, uriStr.length() - (query == null ? 0 : query.length()));
-            final String requestURI = pre;
             final Map<String, Object> requestQueryParameters = parseQuery(query);
 
             // get headers
