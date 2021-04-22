@@ -195,7 +195,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
                 // execute endpoint
                 logger.debug("Executing Endpoint {}...", endpoint);
-                response = endpoint.executeMethod(this, requestMethod, requestHeaders, urlParams, requestData);
+                response = endpoint.executeMethod(context, requestMethod, requestHeaders, urlParams, requestData);
             } catch (RestEndpointException e) {
                 logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
                 try {

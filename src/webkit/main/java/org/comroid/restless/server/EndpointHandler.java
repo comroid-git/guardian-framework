@@ -3,6 +3,7 @@ package org.comroid.restless.server;
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 
 import java.lang.reflect.Method;
@@ -20,7 +21,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeMethod(
-            RestServer server,
+            Context context,
             REST.Method method,
             REST.Header.List headers,
             String[] urlParams,
@@ -31,17 +32,17 @@ public interface EndpointHandler {
 
         switch (method) {
             case GET:
-                return executeGET(server.getContext(), headers, urlParams, data);
+                return executeGET(context, headers, urlParams, data);
             case PUT:
-                return executePUT(server.getContext(), headers, urlParams, data);
+                return executePUT(context, headers, urlParams, data);
             case POST:
-                return executePOST(server.getContext(), headers, urlParams, data);
+                return executePOST(context, headers, urlParams, data);
             case PATCH:
-                return executePATCH(server.getContext(), headers, urlParams, data);
+                return executePATCH(context, headers, urlParams, data);
             case DELETE:
-                return executeDELETE(server.getContext(), headers, urlParams, data);
+                return executeDELETE(context, headers, urlParams, data);
             case HEAD:
-                return executeHEAD(server.getContext(), headers, urlParams, data);
+                return executeHEAD(context, headers, urlParams, data);
         }
 
         throw new AssertionError("No such method: " + method);
@@ -112,8 +113,8 @@ public interface EndpointHandler {
         }
 
         @Override
-        default REST.Response executeMethod(RestServer server, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            return getEndpointHandler().executeMethod(server, method, headers, urlParams, body);
+        default REST.Response executeMethod(Context context, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+            return getEndpointHandler().executeMethod(context, method, headers, urlParams, body);
         }
     }
 }
