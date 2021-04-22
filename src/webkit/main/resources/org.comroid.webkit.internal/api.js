@@ -3,6 +3,7 @@ if (isWindows === undefined)
 if (socketToken === undefined)
     socketToken = '';
 let ws = undefined;
+let evals = [];
 
 function sendLocalEvent(type, data) {
     let e = new CustomEvent(type, {
@@ -26,6 +27,12 @@ function changePanelEvent(event, dom) {
         .querySelectorAll('script[type="application/javascript"]')
         .forEach(dom => {
             let rcvscr = dom.textContent;
+            for (let old of evals)
+                if (old === rcvscr) {
+                    console.debug("Not executing script because it has been executed already")
+                    return;
+                }
+            evals.push(rcvscr);
             //console.debug('evaluating received script:', rcvscr);
             eval(rcvscr)
         })
