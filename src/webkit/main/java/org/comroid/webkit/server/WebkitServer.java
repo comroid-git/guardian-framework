@@ -1,11 +1,11 @@
 package org.comroid.webkit.server;
 
-import com.sun.net.httpserver.Headers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
+import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
@@ -14,6 +14,7 @@ import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestEndpointException;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.webkit.endpoint.WebkitScope;
@@ -28,8 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.Collection;
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, RestEndpointException.RecoverStage {
     private static final Logger logger = LogManager.getLogger();
-    private final ContextualProvider context;
+    private final Context context;
     private final ScheduledExecutorService executor;
     private final String urlBase;
     private final PagePropertiesProvider pagePropertiesProvider;
@@ -75,7 +75,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     }
 
     public WebkitServer(
-            ContextualProvider context,
+            Context context,
             ScheduledExecutorService executor,
             String urlBase,
             InetAddress inetAddress,
@@ -83,7 +83,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             int socketPort,
             NFunction.In3<WebSocket, REST.Header.List, ContextualProvider, ? extends WebkitConnection> connectionConstructor,
             PagePropertiesProvider pagePropertiesProvider,
-            ServerEndpoint... additionalEndpoints
+            StreamSupplier<ServerEndpoint> additionalEndpoints
     ) throws IOException {
         this(
                 context,
@@ -94,11 +94,12 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 socketPort,
                 new ConnectionFactory<>(connectionConstructor, context),
                 pagePropertiesProvider,
-                additionalEndpoints);
+                additionalEndpoints
+        );
     }
 
     public WebkitServer(
-            ContextualProvider context,
+            Context context,
             ScheduledExecutorService executor,
             String urlBase,
             InetAddress inetAddress,
@@ -106,15 +107,19 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             int socketPort,
             ConnectionFactory<? extends WebkitConnection> connectionFactory,
             PagePropertiesProvider pagePropertiesProvider,
-            ServerEndpoint... additionalEndpoints
+            StreamSupplier<ServerEndpoint> additionalEndpoints
     ) throws IOException {
         context.addToContext(this);
         this.context = context;
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
-        this.endpoints = new WebkitEndpoints(additionalEndpoints);
-        this.rest = new RestServer(this, executor, urlBase, inetAddress, port, endpoints.getEndpoints());
+        this.endpoints = new WebkitEndpoints();
+        this.rest = new RestServer(
+                context,
+                executor,
+                new InetSocketAddress(inetAddress, port),
+                endpoints.append(additionalEndpoints));
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
         this.socket = new WebSocketServer(
                 this.context,
@@ -178,26 +183,21 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         socket.close();
     }
 
-    private final class WebkitEndpoints {
+    private final class WebkitEndpoints implements StreamSupplier<ServerEndpoint> {
         private final Map<WebkitScope, WebkitEndpoint> endpointCache = new ConcurrentHashMap<>();
         private final WebkitEndpoint defaultEndpoint = new WebkitEndpoint(WebkitScope.FRAME);
-        private final Collection<ServerEndpoint> additionalEndpoints;
 
-        public ServerEndpoint[] getEndpoints() {
-            return Stream.concat(
-                    endpointCache.values().stream(),
-                    additionalEndpoints.stream()
-            ).toArray(ServerEndpoint[]::new);
-        }
-
-        public WebkitEndpoints(ServerEndpoint[] additionalEndpoints) {
-            this.additionalEndpoints = Arrays.asList(additionalEndpoints);
-
+        public WebkitEndpoints() {
             forScope(WebkitScope.WEBKIT_API).assertion("API Endpoint");
         }
 
         public Rewrapper<WebkitEndpoint> forScope(WebkitScope scope) {
             return () -> endpointCache.computeIfAbsent(scope, WebkitEndpoint::new);
+        }
+
+        @Override
+        public Stream<? extends ServerEndpoint> stream() {
+            return endpointCache.values().stream();
         }
 
         private class WebkitEndpoint extends ScopedEndpoint implements ServerEndpoint.This, EndpointHandler.Underlying {
