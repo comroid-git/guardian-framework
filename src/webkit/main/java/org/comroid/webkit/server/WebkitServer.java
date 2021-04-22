@@ -119,7 +119,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 context,
                 executor,
                 new InetSocketAddress(inetAddress, port),
-                endpoints.append(additionalEndpoints));
+                additionalEndpoints.append(endpoints));
         rest.setDefaultEndpoint(endpoints.defaultEndpoint);
         this.socket = new WebSocketServer(
                 this.context,
