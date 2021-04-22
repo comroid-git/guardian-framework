@@ -35,8 +35,8 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             }
 
             FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties);
-            if (requestPath.length > 0 && !requestPath[0].isEmpty())
-                frameBuilder.setPanel(requestPath[0]);
+            if (requestPath.length > 1 && !requestPath[1].isEmpty())
+                frameBuilder.setPanel(requestPath[1]);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 
