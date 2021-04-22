@@ -3,6 +3,8 @@ package org.comroid.webkit.frame;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Builder;
+import org.comroid.api.PropertiesHolder;
+import org.comroid.api.Rewrapper;
 import org.comroid.api.StringSerializable;
 import org.comroid.api.os.OS;
 import org.comroid.mutatio.ref.Reference;
@@ -28,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class FrameBuilder implements Builder<Document>, StringSerializable {
+public final class FrameBuilder implements Builder<Document>, StringSerializable, PropertiesHolder {
     public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\S.]+?)}");
     public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
     public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
@@ -80,6 +82,10 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
         host = headers.getFirst("Host");
         logger.info("Initializing new FrameBuilder for Host {} with {} props", host, pageProperties.size());
+        logger.trace("FrameBuilder has properties:\n{}", pageProperties.entrySet()
+                .stream()
+                .map(entry -> String.format("%s -> %s", entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining("\n")));
 
         // add api script
         frame.head().appendElement("script")
@@ -280,5 +286,18 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     @Override
     public String toSerializedString() {
         return postfabString(pageProperties, build().toString());
+    }
+
+    @Override
+    public final <T> Rewrapper<T> getProperty(String name) {
+        if (pageProperties.containsKey(name))
+            //noinspection unchecked
+            return () -> (T) pageProperties.get(name);
+        return Reference.empty();
+    }
+
+    @Override
+    public final boolean setProperty(String name, Object value) {
+        return pageProperties.put(name, value) != value;
     }
 }

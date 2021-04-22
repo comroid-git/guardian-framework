@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
+import org.comroid.api.PropertiesHolder;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.model.RefPipe;
@@ -18,7 +19,11 @@ import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Executor;
 
-public class WebSocketConnection implements WebSocketClientSpec.Complete, ContextualProvider.Underlying, EventPipeline<WebsocketPacket.Type, WebsocketPacket> {
+public class WebSocketConnection implements
+        WebSocketClientSpec.Complete,
+        ContextualProvider.Underlying,
+        EventPipeline<WebsocketPacket.Type, WebsocketPacket>,
+        PropertiesHolder {
     private static final Logger logger = LogManager.getLogger();
     public final RefMap<String, Object> properties = new ReferenceMap<>();
     protected final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> packetPipeline;
@@ -52,6 +57,7 @@ public class WebSocketConnection implements WebSocketClientSpec.Complete, Contex
         this.packetPipeline = new ReferencePipe<>(context.<Executor>requireFromContext(Executor.class));
     }
 
+    @Override
     public final <T> Reference<T> getProperty(String name) {
         if (properties.containsKey(name))
             return properties.getReference(name, false)
@@ -59,6 +65,7 @@ public class WebSocketConnection implements WebSocketClientSpec.Complete, Contex
         return Reference.empty();
     }
 
+    @Override
     public final boolean setProperty(String name, Object value) {
         return properties.getReference(name, true).set(value);
     }
