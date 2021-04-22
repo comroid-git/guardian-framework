@@ -49,7 +49,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeGET(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -58,7 +58,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePUT(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -67,7 +67,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePOST(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -76,7 +76,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executePATCH(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -85,7 +85,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeDELETE(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -94,7 +94,7 @@ public interface EndpointHandler {
     }
 
     default REST.Response executeHEAD(
-            ContextualProvider context,
+            Context context,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body

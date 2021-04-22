@@ -6,6 +6,7 @@ import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestEndpointException;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
@@ -21,7 +22,7 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("/webkit/frame") {
         @Override
-        public REST.Response executeGET(ContextualProvider context, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
             Map<String, Object> pageProperties = context
                     .requireFromContext(PagePropertiesProvider.class)
                     .findPageProperties(headers);
@@ -39,7 +40,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     },
     WEBKIT_API("/webkit/api") {
         @Override
-        public REST.Response executeGET(ContextualProvider context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
             InputStream resource = FrameBuilder.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
