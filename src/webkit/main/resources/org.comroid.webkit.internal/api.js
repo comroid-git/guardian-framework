@@ -62,6 +62,7 @@ function handleMessage(json) {
 }
 
 function sendCommand(command) {
+    sendLocalEvent(command);
     ws.send(JSON.stringify({
         'type': command
     }));
