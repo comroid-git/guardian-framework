@@ -92,6 +92,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
                                 response.put("type", commandName);
                                 UniObjectNode responseData = response.putObject("data");
                                 handleCommand(pageProperties, commandCategory, commandName, data, responseData);
+                                logger.debug("Data after Handler: {}", responseData);
                                 break;
                         }
                     } catch (Exception e) {
