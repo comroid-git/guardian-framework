@@ -182,6 +182,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                                 .forEach(field -> finalRequestData.put(field[0], field.length == 1
                                         ? null
                                         : StandardValueType.findGoodType(field[1])));
+                        logger.trace("Parsing form data succeeded; body: {}", finalRequestData);
                     } catch (Throwable formParseException) {
                         logger.warn("Could not parse request body '{}'", body, formParseException);
                     }
@@ -207,15 +208,12 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 // execute endpoint
                 logger.debug("Executing Endpoint {}...", endpoint);
                 response = endpoint.executeMethod(context, requestMethod, requestHeaders, urlParams, requestData);
-                // if response is null, send empty OK
-                if (response == null)
-                    response = new Response(OK);
             } catch (RestEndpointException e) {
                 logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
                 try {
                     Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
 
-                    if (alternate.getStatusCode() == OK && e.getStatusCode() != OK)
+                    if (alternate != null && alternate.getStatusCode() == OK && e.getStatusCode() != OK)
                         response = alternate;
                 } catch (Throwable t2) {
                     logger.debug("An error occurred during recovery", t2);
@@ -225,6 +223,9 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
                 response = new Response(wrapped.getStatusCode(), generateErrorNode(this, contentType, wrapped));
             }
+            // if response is null, send empty OK
+            if (response == null)
+                response = new Response(OK);
 
             // copy response headers
             final int statusCode = response.getStatusCode();

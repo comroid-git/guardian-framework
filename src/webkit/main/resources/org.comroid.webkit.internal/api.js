@@ -33,8 +33,13 @@ function changePanelEvent(event, dom) {
                     return;
                 }
             evals.push(rcvscr);
-            //console.debug('evaluating received script:', rcvscr);
-            eval(rcvscr)
+            try {
+                //console.debug('evaluating received script:', rcvscr);
+                eval(rcvscr)
+            } catch (e) {
+                console.error('Error occurred when evaluating received script', e);
+                console.debug('Script was:', rcvscr)
+            }
         })
     document.getElementById('content').innerHTML = dom
     sendLocalEvent('frameReady');

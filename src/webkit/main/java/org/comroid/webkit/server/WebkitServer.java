@@ -220,6 +220,8 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                     return super.extractArgs(requestUrl);
                 // is Default Endpoint
                 String[] split = requestUrl.split("/");
+                if (split.length <= 1)
+                    return new String[0];
                 if (requestUrl.startsWith("/")) {
                     String[] tmp = new String[split.length - 1];
                     System.arraycopy(split, 1, tmp, 0, tmp.length);
