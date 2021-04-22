@@ -5,6 +5,10 @@ if (socketToken === undefined)
 let ws = undefined;
 let evals = [];
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function sendLocalEvent(type, data) {
     let e = new CustomEvent(type, {
         detail: data
