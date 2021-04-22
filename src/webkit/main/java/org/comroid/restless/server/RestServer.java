@@ -128,7 +128,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             String uriStr = uri.toString();
             String pre = uriStr.substring(0, uriStr.length() - (query == null ? 0 : query.length()));
             // strip trailing query marker
-            if (pre.endsWith("?"))
+            if (pre.endsWith("?") && query != null)
                 pre = pre.substring(0, pre.length() - 1);
             final String requestURI = pre;
             final Map<String, Object> requestQueryParameters = parseQuery(query);
