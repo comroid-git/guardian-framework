@@ -43,15 +43,15 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
         return from.map(each -> remap(context, each));
     }
 
-    default FINAL process(final SELF context, RefContainer<?, EXTR> from) {
-        return finish(remapAll(context, from));
+    default FINAL process(SELF context, RefContainer<?, EXTR> from) {
+        return finish(context, remapAll(context, from));
     }
 
     RefContainer<?, EXTR> extract(UniNode data);
 
     REMAP remap(SELF context, EXTR data);
 
-    FINAL finish(RefContainer<?, REMAP> parts);
+    FINAL finish(SELF context, RefContainer<?, REMAP> parts);
 
     enum ExtractionMethod {
         VALUE, OBJECT, ARRAY

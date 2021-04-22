@@ -3,7 +3,6 @@ package org.comroid.varbind.bind.builder;
 import org.comroid.api.Polyfill;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.model.RefContainer;
-import org.comroid.mutatio.model.RefPipe;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -26,6 +25,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
     private final Function<? super RefContainer<?, REMAP>, ? extends FINAL> finisher;
+    private final Function<? super SELF, ? extends FINAL> defaultSupplier;
     private final Set<VarBind<? extends SELF, ?, ?, ?>> dependencies;
 
     @Override
@@ -66,6 +66,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             ExtractionMethod extractionMethod,
             BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
             Function<? super RefContainer<?, REMAP>, ? extends FINAL> finisher,
+            Function<? super SELF, ? extends FINAL> defaultSupplier,
             Set<VarBind<? extends SELF, ?, ?, ?>> dependencies
     ) {
         this.group = group;
@@ -75,6 +76,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         this.extractionMethod = extractionMethod;
         this.remapper = remapper;
         this.finisher = finisher;
+        this.defaultSupplier = defaultSupplier;
         this.dependencies = dependencies;
     }
 
@@ -151,7 +153,9 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
-    public FINAL finish(RefContainer<?, REMAP> parts) {
+    public FINAL finish(SELF context, RefContainer<?, REMAP> parts) {
+        if ((parts == null || parts.size() == 0) && defaultSupplier != null)
+            return defaultSupplier.apply(context);
         return finisher.apply(parts);
     }
 }
