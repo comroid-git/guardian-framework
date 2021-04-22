@@ -1,6 +1,5 @@
 package org.comroid.webkit.endpoint;
 
-import org.comroid.api.ContextualProvider;
 import org.comroid.api.os.OS;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
@@ -14,6 +13,7 @@ import org.comroid.webkit.model.PagePropertiesProvider;
 import org.intellij.lang.annotations.Language;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.comroid.restless.HTTPStatusCodes.INTERNAL_SERVER_ERROR;
@@ -26,6 +26,10 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             Map<String, Object> pageProperties = context
                     .requireFromContext(PagePropertiesProvider.class)
                     .findPageProperties(headers);
+
+            String[] args = new String[requestPath.length - 1];
+            System.arraycopy(requestPath, 1, args, 0, args.length);
+            pageProperties.put("args", Arrays.asList(args));
 
             FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties);
             if (requestPath.length > 0 && !requestPath[0].isEmpty())
