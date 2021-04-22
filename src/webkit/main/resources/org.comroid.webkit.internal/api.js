@@ -58,7 +58,7 @@ function actionChangePanel(target) {
     if (isWsReady) {
         console.debug('socket is ready; changing content via socket;', url)
         ws.send(JSON.stringify({
-            'type': 'action/changePanel',
+            'type': 'webkit/changePanel',
             'data': {
                 'target': target
             }

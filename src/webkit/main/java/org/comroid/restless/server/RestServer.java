@@ -94,6 +94,20 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         server.start();
     }
 
+    public static UniObjectNode generateErrorNode(Context context, CharSequence mimeType, RestEndpointException reex) {
+        final UniObjectNode rsp = context.createObjectNode(mimeType);
+
+        rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
+        rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
+        rsp.put("message", StandardValueType.STRING, reex.getSimpleMessage());
+
+        final Throwable cause = reex.getCause();
+        if (cause != null)
+            rsp.put("cause", StandardValueType.STRING, cause.toString());
+
+        return rsp;
+    }
+
     public boolean setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
         return this.defaultEndpoint.set(defaultEndpoint);
     }
@@ -211,7 +225,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             } catch (Throwable t) {
                 logger.error("An error occurred during request handling", t);
                 RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
-                response = new Response(wrapped.getStatusCode(), generateErrorNode(contentType, wrapped));
+                response = new Response(wrapped.getStatusCode(), generateErrorNode(this, contentType, wrapped));
             }
 
             // copy response headers
@@ -326,20 +340,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         final OutputStream osr = exchange.getResponseBody();
         osr.write(data.getBytes());
         osr.flush();
-    }
-
-    private UniObjectNode generateErrorNode(CharSequence mimeType, RestEndpointException reex) {
-        final UniObjectNode rsp = createObjectNode(mimeType);
-
-        rsp.put("code", StandardValueType.INTEGER, reex.getStatusCode());
-        rsp.put("description", StandardValueType.STRING, HTTPStatusCodes.toString(reex.getStatusCode()));
-        rsp.put("message", StandardValueType.STRING, reex.getSimpleMessage());
-
-        final Throwable cause = reex.getCause();
-        if (cause != null)
-            rsp.put("cause", StandardValueType.STRING, cause.toString());
-
-        return rsp;
     }
 
     private String consumeBody(HttpExchange exchange) {
