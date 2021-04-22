@@ -179,9 +179,9 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         final UniObjectNode finalRequestData = requestData.asObjectNode();
                         Stream.of(body.split("&"))
                                 .map(pair -> pair.split("="))
-                                .forEach(field -> finalRequestData.put(field[0], field.length == 1
+                                .forEach(field -> finalRequestData.put(field[0].replace('+', ' '), field.length == 1
                                         ? null
-                                        : StandardValueType.findGoodType(field[1])));
+                                        : StandardValueType.findGoodType(field[1].replace('+', ' '))));
                         logger.trace("Parsing form data succeeded; body: {}", finalRequestData);
                     } catch (Throwable formParseException) {
                         logger.warn("Could not parse request body '{}'", body, formParseException);
