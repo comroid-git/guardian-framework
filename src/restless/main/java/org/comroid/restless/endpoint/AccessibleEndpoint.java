@@ -59,11 +59,16 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
 
     @NonExtendable
     default String string(Object... args) throws IllegalArgumentException {
+        return string(false, args);
+    }
+
+    @NonExtendable
+    default String string(boolean includeBaseUrl, Object... args) throws IllegalArgumentException {
         if (args.length != getParameterCount()) {
             throw new IllegalArgumentException("Invalid argument count");
         }
 
-        String format = String.format(getUrlExtension(), args);
+        String format = String.format(includeBaseUrl ? getFullUrl() : getUrlExtension(), args);
 
         if (test(format))
             return format;
@@ -73,12 +78,12 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
 
     @NonExtendable
     default URL url(Object... args) throws IllegalArgumentException {
-        return Polyfill.url(string(args));
+        return Polyfill.url(string(true, args));
     }
 
     @NonExtendable
     default URI uri(Object... args) throws IllegalArgumentException {
-        return Polyfill.uri(string(args));
+        return Polyfill.uri(string(true, args));
     }
 
     @NonExtendable
@@ -94,9 +99,11 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
     @Override
     @NonExtendable
     default boolean test(String url) {
-        if (allowMemberAccess() && isMemberAccess(url)) {
+        String urlBase = getUrlBase();
+        if (url.startsWith(urlBase))
+            url = url.substring(urlBase.length());
+        if (allowMemberAccess() && isMemberAccess(url))
             url = url.substring(0, url.lastIndexOf("/"));
-        }
 
         final String[] regExpGroups = getRegExpGroups();
         String replacer = replacer(regExpGroups);
