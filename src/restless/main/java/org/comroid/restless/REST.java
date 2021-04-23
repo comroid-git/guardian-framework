@@ -231,7 +231,7 @@ public final class REST implements ContextualProvider.Underlying {
 
     public static class Response {
         private final int statusCode;
-        private final String mimeType;
+        private final CharSequence mimeType;
         private final @Nullable Serializable body;
         private final @Nullable Reader data;
         private final Header.List headers;
@@ -240,7 +240,7 @@ public final class REST implements ContextualProvider.Underlying {
             return statusCode;
         }
 
-        public String getMimeType() {
+        public CharSequence getMimeType() {
             return mimeType;
         }
 
@@ -342,11 +342,11 @@ public final class REST implements ContextualProvider.Underlying {
          * @param statusCode the status code
          * @param mimeType   the mimeType of the response file
          * @param file       the file to send in response
-         * @see Response#Response(int, String, File, Header.List) superloaded
+         * @see Response#Response(int, CharSequence, File, Header.List) superloaded
          */
         public Response(
                 int statusCode,
-                String mimeType,
+                CharSequence mimeType,
                 File file
         ) throws FileNotFoundException {
             this(statusCode, mimeType, file, new Header.List());
@@ -359,7 +359,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @param statusCode the status code
          * @param file       the file to send in response
          * @param headers    the response headers
-         * @see Response#Response(int, String, File, Header.List) superloaded
+         * @see Response#Response(int, CharSequence, File, Header.List) superloaded
          */
         public Response(
                 int statusCode,
@@ -380,7 +380,7 @@ public final class REST implements ContextualProvider.Underlying {
          */
         public Response(
                 int statusCode,
-                String mimeType,
+                CharSequence mimeType,
                 File file,
                 Header.List headers
         ) throws FileNotFoundException {
@@ -389,7 +389,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Response(
                 int statusCode,
-                String mimeType,
+                CharSequence mimeType,
                 @Nullable Reader data
         ) {
             this(statusCode, mimeType, data, new Header.List());
@@ -397,7 +397,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Response(
                 int statusCode,
-                String mimeType,
+                CharSequence mimeType,
                 @Nullable Reader data,
                 Header.List headers
         ) {
@@ -406,7 +406,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         private Response(
                 int statusCode,
-                String mimeType,
+                CharSequence mimeType,
                 @Nullable Serializable body,
                 @Nullable Reader data,
                 Header.List headers
