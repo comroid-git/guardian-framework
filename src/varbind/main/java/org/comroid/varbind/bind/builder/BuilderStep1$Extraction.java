@@ -6,11 +6,8 @@ import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
-import org.comroid.varbind.container.DataContainer;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.Serializable;
 
 public final class BuilderStep1$Extraction<SELF>
         extends VarBindBuilderComponent<SELF, Void, Void, Void> {
