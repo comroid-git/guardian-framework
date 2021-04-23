@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, Named, Serializable {
@@ -248,6 +249,10 @@ public interface UniNode extends SerializationAdapterHolder, Iterable<UniNode>, 
 
     default String asString(@Nullable String fallback) {
         return fallback;
+    }
+
+    default <R> R asString(Function<@Nullable String, R> andThen) {
+        return andThen.apply(asString((String) null));
     }
 
     default boolean asBoolean() {
