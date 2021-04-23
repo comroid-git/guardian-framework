@@ -28,7 +28,9 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -305,7 +307,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                     boolean allows = endpoint.allowMemberAccess();
                     boolean is = endpoint.isMemberAccess(requestURI);
                     logger.log(Level.ALL, "Endpoint {} allows member access = {}; attempting = {}", endpoint, allows, is);
-                    return !allows || is;
+                    return !is || allows;
                 })
                 .findFirst()
                 .map(ServerEndpoint.class::cast);
