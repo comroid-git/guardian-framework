@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SELF>, EXTR>
+public final class BuilderStep2$Remapping<SELF, EXTR>
         extends VarBindBuilderComponent<SELF, EXTR, Void, Void>
         implements Builder<VarBind<SELF, EXTR, EXTR, EXTR>> {
     private final ValueType<EXTR> valueType;

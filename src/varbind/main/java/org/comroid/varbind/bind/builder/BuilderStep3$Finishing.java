@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SELF>, EXTR, REMAP>
+public final class BuilderStep3$Finishing<SELF, EXTR, REMAP>
         extends VarBindBuilderComponent<SELF, EXTR, REMAP, Void>
         implements Builder<VarBind<SELF, EXTR, REMAP, REMAP>> {
     private final ValueType<EXTR> valueType;

@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
+public final class Binding<SELF, EXTR, REMAP, FINAL>
         implements VarBind<SELF, EXTR, REMAP, FINAL> {
     private final GroupBind<SELF> group;
     private final String fieldName;

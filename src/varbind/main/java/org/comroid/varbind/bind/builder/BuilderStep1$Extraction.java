@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
-public final class BuilderStep1$Extraction<SELF extends DataContainer<? super SELF>>
+public final class BuilderStep1$Extraction<SELF>
         extends VarBindBuilderComponent<SELF, Void, Void, Void> {
     public BuilderStep1$Extraction(GroupBind<SELF> group, String fieldName) {
         super(group, fieldName);

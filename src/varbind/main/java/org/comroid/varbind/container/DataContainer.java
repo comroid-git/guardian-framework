@@ -24,7 +24,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public interface DataContainer<S extends DataContainer<? super S>>
+public interface DataContainer<S>
         extends RefAtlas<String, VarBind, ReferenceList, Object>,
         AbstractMap<VarBind, Object>, Serializable, ContextualProvider.Underlying {
     @Override
