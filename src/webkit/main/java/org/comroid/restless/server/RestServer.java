@@ -108,6 +108,28 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         return rsp;
     }
 
+    public static Map<String, Object> parseQuery(@Nullable String query) {
+        if (query == null)
+            return new HashMap<>();
+        Map<String, Object> yield = new HashMap<>();
+
+        // strip leading ? if present
+        if (query.startsWith("?"))
+            query = query.substring(1);
+
+        try (
+                Scanner scanner = new Scanner(query)
+        ) {
+            scanner.useDelimiter("&");
+
+            while (scanner.hasNext()) {
+                String[] pair = scanner.next().split("=");
+                yield.put(pair[0], StandardValueType.findGoodType(pair[1]));
+            }
+        }
+        return yield;
+    }
+
     public boolean setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
         return this.defaultEndpoint.set(defaultEndpoint);
     }
@@ -310,28 +332,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 })
                 .findFirst()
                 .map(ServerEndpoint.class::cast);
-    }
-
-    private Map<String, Object> parseQuery(@Nullable String query) {
-        if (query == null)
-            return new HashMap<>();
-        Map<String, Object> yield = new HashMap<>();
-
-        // strip leading ? if present
-        if (query.startsWith("?"))
-            query = query.substring(1);
-
-        try (
-                Scanner scanner = new Scanner(query)
-        ) {
-            scanner.useDelimiter("&");
-
-            while (scanner.hasNext()) {
-                String[] pair = scanner.next().split("=");
-                yield.put(pair[0], StandardValueType.findGoodType(pair[1]));
-            }
-        }
-        return yield;
     }
 
     private void writeResponse(HttpExchange exchange, int statusCode, String data) throws IOException {
