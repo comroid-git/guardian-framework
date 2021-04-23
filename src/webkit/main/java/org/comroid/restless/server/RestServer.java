@@ -281,8 +281,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         w += r;
                     }
                 }
-
-                exchange.getResponseBody().flush();
             } catch (IOException e) {
                 logger.fatal("Error occurred while sending response; cannot continue", e);
             } finally {
