@@ -283,14 +283,14 @@ public final class REST implements ContextualProvider.Underlying {
         public Response(
                 URI uri
         ) {
-            this(uri, true);
+            this(HTTPStatusCodes.PERMANENT_REDIRECT, uri);
         }
 
         public Response(
-                URI uri,
-                boolean isPermanent
+                int statusCode,
+                URI uri
         ) {
-            this(isPermanent ? HTTPStatusCodes.PERMANENT_REDIRECT : HTTPStatusCodes.TEMPORARY_REDIRECT, redirectHeaderList(uri));
+            this(statusCode, redirectHeaderList(uri));
         }
 
         /**
