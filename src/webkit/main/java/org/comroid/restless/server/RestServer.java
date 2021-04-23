@@ -204,9 +204,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
                 // extract url parameters
                 urlParams = endpoint.extractArgs(requestURI);
-                urlParams = memberAccess
-                        ? Arrays.copyOf(urlParams, urlParams.length - 1)
-                        : urlParams;
 
                 // execute endpoint
                 logger.debug("Executing Endpoint {}...", endpoint);
