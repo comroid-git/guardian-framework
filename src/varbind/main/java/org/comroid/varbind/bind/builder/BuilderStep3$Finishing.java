@@ -35,7 +35,7 @@ public final class BuilderStep3$Finishing<SELF, EXTR, REMAP>
         this.resolver = resolver;
     }
 
-    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> reformatRefs(
+    public <C extends Collection<R>, R> BuilderStep4$Properties<SELF, EXTR, REMAP, C> reformatRefs(
             Function<RefContainer<?, REMAP>, C> spanResolver) {
         return new BuilderStep4$Properties<>(
                 group,
@@ -63,11 +63,11 @@ public final class BuilderStep3$Finishing<SELF, EXTR, REMAP>
         return reformatRefs(refs -> new Span<>(refs, Span.DEFAULT_MODIFY_POLICY));
     }
 
-    public <C extends Collection<REMAP>> BuilderStep4$Properties<SELF, EXTR, REMAP, C> intoCollection(
+    public <C extends Collection<R>, R> BuilderStep4$Properties<SELF, EXTR, REMAP, C> intoCollection(
             Supplier<C> collectionSupplier) {
         return reformatRefs(refs -> {
             C col = collectionSupplier.get();
-            refs.streamValues().forEach(col::add);
+            refs.streamValues().map(Polyfill::<R>uncheckedCast).forEach(col::add);
             return Polyfill.uncheckedCast(col);
         });
     }
