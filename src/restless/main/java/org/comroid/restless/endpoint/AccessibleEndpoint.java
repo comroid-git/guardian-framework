@@ -129,8 +129,11 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
 
     @NonExtendable
     default String[] extractArgs(String requestUrl) {
+        String extra = null;
         if (allowMemberAccess() && isMemberAccess(requestUrl)) {
-            requestUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/"));
+            int begin = requestUrl.lastIndexOf("/");
+            extra = requestUrl.substring(begin + 1);
+            requestUrl = requestUrl.substring(0, begin);
         }
 
         final Matcher matcher = getPattern().matcher(requestUrl);
@@ -144,6 +147,8 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
                 yields.add(matcher.group(i++));
             //yields.removeIf(String::isEmpty);
 
+            if (extra != null)
+                yields.add(extra);
             return yields.toArray(new String[0]);
         }
 

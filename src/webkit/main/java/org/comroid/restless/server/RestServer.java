@@ -175,7 +175,8 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 try {
                     requestData = body.isEmpty() ? serializer.createObjectNode() : serializer.parse(body);
                 } catch (IllegalArgumentException e) {
-                    logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer, e);
+                    logger.trace("Could not parse request body using selected serializer {}, attempting to parse as form data...", serializer);
+                    logger.log(Level.ALL, e);
                     requestData = serializer.createObjectNode();
 
                     try {
@@ -195,7 +196,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 }
 
                 // find endpoint for request
-                endpoint = findEndpoint(requestURI).orElseGet(defaultEndpoint);
+                endpoint = findEndpoint(requestMethod, requestURI).orElseGet(defaultEndpoint);
 
                 // validate endpoint
                 if (endpoint == null)
@@ -239,13 +240,18 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
             // send response
             Reader responseData;
-            if (memberAccess) {
+            if (memberAccess && response.getBody().isNonNull()) {
                 logger.debug("Attempting to write member-accessing response data");
                 Reference<Serializable> body = response.getBody();
+                logger.log(Level.ALL, "urlParams are {}; responseBody is {}", urlParams, response.getBody().get());
                 UniObjectNode data = body.map(Serializable::toUniNode)
                         .map(UniNode::asObjectNode)
                         .orElseThrow(() -> new IllegalArgumentException("Invalid Data for member access: " + body.ifPresentMap(Object::toString)));
-                String yield = data.get(urlParams[urlParams.length]).toSerializedString();
+                String targetField = urlParams[urlParams.length - 1];
+                logger.trace("Retrieving target field {} from data {}", targetField, data);
+                String yield = data.get(targetField).toSerializedString();
+                if (!yield.matches("\\d+"))
+                    yield = '"' + yield + '"';
                 responseData = new StringReader(yield);
             } else responseData = response.getFullData();
             logger.trace("Using response reader {}", responseData);
@@ -291,7 +297,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         }
     }
 
-    private Optional<ServerEndpoint> findEndpoint(String requestURI) {
+    private Optional<ServerEndpoint> findEndpoint(final REST.Method method, String requestURI) {
         logger.log(Level.ALL, "Finding Endpoint for URI: {}", requestURI);
 
         return getEndpoints()
@@ -304,7 +310,9 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                     boolean allows = endpoint.allowMemberAccess();
                     boolean is = endpoint.isMemberAccess(requestURI);
                     logger.log(Level.ALL, "Endpoint {} allows member access = {}; attempting = {}", endpoint, allows, is);
-                    return !is || allows;
+                    return method != REST.Method.GET
+                            ? !is
+                            : !is || allows;
                 })
                 .findFirst()
                 .map(ServerEndpoint.class::cast);
