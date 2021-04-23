@@ -60,4 +60,8 @@ public interface Context extends ContextualProvider {
                 throw new IllegalArgumentException("Cannot explicitly create UniValueNode");
         }
     }
+
+    default UniNode parse(CharSequence mimeType, String parse) {
+        return findSerializer(mimeType).parse(parse);
+    }
 }
