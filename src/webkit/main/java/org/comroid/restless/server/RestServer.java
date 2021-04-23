@@ -15,6 +15,7 @@ import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
+import org.comroid.restless.body.URIQueryEditor;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
@@ -108,28 +109,6 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         return rsp;
     }
 
-    public static Map<String, Object> parseQuery(@Nullable String query) {
-        if (query == null)
-            return new HashMap<>();
-        Map<String, Object> yield = new HashMap<>();
-
-        // strip leading ? if present
-        if (query.startsWith("?"))
-            query = query.substring(1);
-
-        try (
-                Scanner scanner = new Scanner(query)
-        ) {
-            scanner.useDelimiter("&");
-
-            while (scanner.hasNext()) {
-                String[] pair = scanner.next().split("=");
-                yield.put(pair[0], StandardValueType.findGoodType(pair[1]));
-            }
-        }
-        return yield;
-    }
-
     public boolean setDefaultEndpoint(@Nullable ServerEndpoint defaultEndpoint) {
         return this.defaultEndpoint.set(defaultEndpoint);
     }
@@ -162,7 +141,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             final URI uri = exchange.getRequestURI();
             final String requestURI = uri.getPath();
             String query = uri.getQuery();
-            final Map<String, Object> requestQueryParameters = parseQuery(query);
+            final Map<String, Object> requestQueryParameters = URIQueryEditor.parseQuery(query);
 
             // get headers
             final REST.Method requestMethod = REST.Method.valueOf(exchange.getRequestMethod());
