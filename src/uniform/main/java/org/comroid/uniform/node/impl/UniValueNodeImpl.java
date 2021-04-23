@@ -196,7 +196,7 @@ public final class UniValueNodeImpl
 
     @Override
     public String asString() {
-        return asString(null);
+        return asString((String) null);
     }
 
     @Override
