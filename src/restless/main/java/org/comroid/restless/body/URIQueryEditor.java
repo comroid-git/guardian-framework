@@ -62,7 +62,7 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
                 .map(entry -> String.format("%s=%s",
                         entry.getKey().replace(' ', '+'),
                         String.valueOf(entry.getValue()).replace(' ', '+')))
-                .collect(Collectors.joining("&", "?", ""));
+                .collect(Collectors.joining("&"));
     }
 
     public URI toURI() {
