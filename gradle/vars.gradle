@@ -3,7 +3,7 @@ import static java.lang.System.getenv
 String projname() {
     if (project.name == 'core') {
         return 'guardian-core'
-    } else if (parent.name != 'guardian') {
+    } else if (isSubmodule) {
         return parent.name + '-' + project.name
     } else {
         return project.name
@@ -12,6 +12,7 @@ String projname() {
 
 ext {
     isAutoDeploy = rootProject.name != 'repo' || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
+    isSubmodule = parent.name != 'guardian'
 
     artifactName = projname()
     projectDescription = ''

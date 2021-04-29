@@ -13,10 +13,18 @@ tasks.withType(Javadoc) {
 }
 
 sourceSets {
-    main.java.srcDirs = files("$parent.projectDir/src/$project.name/main/java")
-    main.resources.srcDirs = files("$parent.projectDir/src/$project.name/main/resources")
-    test.java.srcDirs = files("$parent.projectDir/src/$project.name/test/java")
-    test.resources.srcDirs = files("$parent.projectDir/src/$project.name/test/resources")
+    main.java.srcDirs = files(isSubmodule
+            ? "$parent.parent.projectDir/src/$parent.name/$project.name/java"
+            : "$parent.projectDir/src/$project.name/main/java")
+    main.resources.srcDirs = files(isSubmodule
+            ? "$parent.parent.projectDir/src/$parent.name/$project.name/resources"
+            : "$parent.projectDir/src/$project.name/main/resources")
+    test.java.srcDirs = files(isSubmodule
+            ? "$parent.parent.projectDir/src/$parent.name/test-$project.name/java"
+            : "$parent.projectDir/src/$project.name/test/java")
+    test.resources.srcDirs = files(isSubmodule
+            ? "$parent.parent.projectDir/src/$parent.name/test-$project.name/resources"
+            : "$parent.projectDir/src/$project.name/test/resources")
 }
 
 task sourcesJar(type: Jar) {
