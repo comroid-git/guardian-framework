@@ -1,16 +1,16 @@
-package org.comroid.oauth.user;
+package org.comroid.webkit.oauth.user;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.mutatio.model.Ref;
-import org.comroid.oauth.OAuth;
-import org.comroid.oauth.client.Client;
-import org.comroid.oauth.client.ClientProvider;
-import org.comroid.oauth.model.UserInfoProvider;
-import org.comroid.oauth.model.ValidityStage;
-import org.comroid.oauth.resource.Resource;
-import org.comroid.oauth.resource.ResourceProvider;
-import org.comroid.oauth.rest.request.AuthenticationRequest;
+import org.comroid.webkit.oauth.OAuth;
+import org.comroid.webkit.oauth.client.Client;
+import org.comroid.webkit.oauth.client.ClientProvider;
+import org.comroid.webkit.oauth.model.UserInfoProvider;
+import org.comroid.webkit.oauth.model.ValidityStage;
+import org.comroid.webkit.oauth.resource.Resource;
+import org.comroid.webkit.oauth.resource.ResourceProvider;
+import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.util.StandardValueType;
@@ -18,7 +18,6 @@ import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainerBase;
-import org.java_websocket.util.Base64;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;

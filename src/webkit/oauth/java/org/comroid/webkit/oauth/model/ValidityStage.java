@@ -1,4 +1,4 @@
-package org.comroid.oauth.model;
+package org.comroid.webkit.oauth.model;
 
 public interface ValidityStage {
     boolean isValid();

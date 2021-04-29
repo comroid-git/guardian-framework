@@ -1,7 +1,6 @@
-package org.comroid.oauth;
+package org.comroid.webkit.oauth;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.uniform.Context;
 
 public final class OAuth {
     public static String URL_BASE;

@@ -1,17 +1,17 @@
-package org.comroid.oauth.rest;
+package org.comroid.webkit.oauth.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.StreamSupplier;
-import org.comroid.oauth.OAuth;
-import org.comroid.oauth.client.Client;
-import org.comroid.oauth.client.ClientProvider;
-import org.comroid.oauth.model.OAuthError;
-import org.comroid.oauth.resource.Resource;
-import org.comroid.oauth.resource.ResourceProvider;
-import org.comroid.oauth.rest.request.AuthenticationRequest;
-import org.comroid.oauth.rest.request.TokenRequest;
-import org.comroid.oauth.user.OAuthAuthorization;
+import org.comroid.webkit.oauth.OAuth;
+import org.comroid.webkit.oauth.client.Client;
+import org.comroid.webkit.oauth.client.ClientProvider;
+import org.comroid.webkit.oauth.model.OAuthError;
+import org.comroid.webkit.oauth.resource.Resource;
+import org.comroid.webkit.oauth.resource.ResourceProvider;
+import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
+import org.comroid.webkit.oauth.rest.request.TokenRequest;
+import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;

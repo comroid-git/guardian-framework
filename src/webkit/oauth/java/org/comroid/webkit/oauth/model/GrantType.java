@@ -1,4 +1,4 @@
-package org.comroid.oauth.model;
+package org.comroid.webkit.oauth.model;
 
 import org.comroid.api.Named;
 

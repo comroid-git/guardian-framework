@@ -1,7 +1,7 @@
-package org.comroid.oauth.client;
+package org.comroid.webkit.oauth.client;
 
 import org.comroid.api.Rewrapper;
-import org.comroid.oauth.user.OAuthAuthorization;
+import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.comroid.restless.REST;
 import org.comroid.restless.server.RestEndpointException;
 

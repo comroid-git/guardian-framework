@@ -1,9 +1,9 @@
-package org.comroid.oauth.rest.request;
+package org.comroid.webkit.oauth.rest.request;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.mutatio.model.Ref;
-import org.comroid.oauth.OAuth;
+import org.comroid.webkit.oauth.OAuth;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.annotation.RootBind;

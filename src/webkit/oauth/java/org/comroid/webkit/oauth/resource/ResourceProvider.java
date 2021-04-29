@@ -1,4 +1,4 @@
-package org.comroid.oauth.resource;
+package org.comroid.webkit.oauth.resource;
 
 import org.comroid.api.Rewrapper;
 
