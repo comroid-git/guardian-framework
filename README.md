@@ -35,12 +35,12 @@ The guardian Framework is composed of a couple of modules, some of which can be 
 
 All currently available modules are:
 
-| Module                           | Short Description                                                 | Internal Dependencies |
-|----------------------------------|-------------------------------------------------------------------|-----------------------|
-| mutatio                          | Reference and Reference Pipeline Implementation                   | none                  |
-| core                             | guardian Core Utilities                                           | `mutatio`             |
-| uniform                          | Universal Adapter solution for data types, such as JSON, XML, ... | `mutatio`             |
-| varbind                          | `uniform` and `mutatio` compatible Databinding solution           | `uniform`             |
-| restless                         | Client-focused, universal adapter solution for REST-based Actions | `varbind`             |
-| webkit                           | Server-focused REST and Website Framework                         | `restless`            |
-| spellbind (currently inoperable) | Instance extension using Interface Proxies                        | `core`                |
+| Module                                                                                                                | Short Description                                                 | Internal Dependencies |
+|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------|
+| [mutatio](https://github.com/comroid-git/guardian-framework/blob/master/mutatio)                                      | Reference and Reference Pipeline Implementation                   | none                  |
+| [core](https://github.com/comroid-git/guardian-framework/blob/master/core)                                            | guardian Core Utilities                                           | `mutatio`             |
+| [uniform](https://github.com/comroid-git/guardian-framework/blob/master/uniform)                                      | Universal Adapter solution for data types, such as JSON, XML, ... | `mutatio`             |
+| [varbind](https://github.com/comroid-git/guardian-framework/blob/master/varbind/README.md)                            | `uniform` and `mutatio` compatible Databinding solution           | `uniform`             |
+| [restless](https://github.com/comroid-git/guardian-framework/blob/master/restless/README.md)                          | Client-focused, universal adapter solution for REST-based Actions | `varbind`             |
+| [webkit](https://github.com/comroid-git/guardian-framework/blob/master/webkit/README.md)                              | Server-focused REST and Website Framework                         | `restless`            |
+| [spellbind](https://github.com/comroid-git/guardian-framework/blob/master/spellbind/README.md) (currently inoperable) | Instance extension using Interface Proxies                        | `core`                |
