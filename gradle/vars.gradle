@@ -1,9 +1,19 @@
 import static java.lang.System.getenv
 
+String projname() {
+    if (project.name == 'core') {
+        return 'guardian-core'
+    } else if (parent.name != 'guardian') {
+        return parent.name + '-' + project.name
+    } else {
+        return project.name
+    }
+}
+
 ext {
     isAutoDeploy = rootProject.name != 'repo' || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
 
-    artifactName = project.name == 'core' ? 'guardian-core' : project.name
+    artifactName = projname()
     projectDescription = ''
     userbase = 'comroid-git'
     snapshot = project.version.endsWith('SNAPSHOT')
