@@ -36,13 +36,13 @@
     <dependency>
       <groupId>org.comroid</groupId>
       <artifactId>api</artifactId>
-      <version>0.20.1</version>
+      <version>0.21.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.comroid</groupId>
       <artifactId>guardian-core</artifactId>
-      <version>0.11.2</version>
+      <version>0.11.4-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
