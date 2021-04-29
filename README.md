@@ -37,9 +37,9 @@ All currently available modules are:
 
 | Module                                                                                                                | Short Description                                                 | Internal Dependencies |
 |-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------|
-| [mutatio](https://github.com/comroid-git/guardian-framework/blob/master/mutatio)                                      | Reference and Reference Pipeline Implementation                   | none                  |
-| [core](https://github.com/comroid-git/guardian-framework/blob/master/core)                                            | guardian Core Utilities                                           | `mutatio`             |
-| [uniform](https://github.com/comroid-git/guardian-framework/blob/master/uniform)                                      | Universal Adapter solution for data types, such as JSON, XML, ... | `mutatio`             |
+| [mutatio](https://github.com/comroid-git/guardian-framework/blob/master/mutatio/README.md)                            | Reference and Reference Pipeline Implementation                   | none                  |
+| [core](https://github.com/comroid-git/guardian-framework/blob/master/core/README.md)                                  | guardian Core Utilities                                           | `mutatio`             |
+| [uniform](https://github.com/comroid-git/guardian-framework/blob/master/uniform/README.md)                            | Universal Adapter solution for data types, such as JSON, XML, ... | `mutatio`             |
 | [varbind](https://github.com/comroid-git/guardian-framework/blob/master/varbind/README.md)                            | `uniform` and `mutatio` compatible Databinding solution           | `uniform`             |
 | [restless](https://github.com/comroid-git/guardian-framework/blob/master/restless/README.md)                          | Client-focused, universal adapter solution for REST-based Actions | `varbind`             |
 | [webkit](https://github.com/comroid-git/guardian-framework/blob/master/webkit/README.md)                              | Server-focused REST and Website Framework                         | `restless`            |
