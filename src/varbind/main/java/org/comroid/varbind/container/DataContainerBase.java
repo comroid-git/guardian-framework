@@ -114,7 +114,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 .stream()
                 .filter(field -> Modifier.isStatic(field.getModifiers()))
                 .findAny()
-                .map(ThrowingFunction.rethrowing(field -> field.get(null), null))
+                .map(ThrowingFunction.rethrowing(field -> field.get(null), RuntimeException::new))
                 .map(Polyfill::<GroupBind<S>>uncheckedCast)
                 .orElseThrow(() -> new NoSuchElementException("No RootBind found in class " + aClass));
     }
