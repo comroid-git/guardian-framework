@@ -4,9 +4,6 @@ Providing a universal structure for client-sided REST actions, `restless` is a v
 REST implementation Library. The main thought is to be able to use whatever REST library is equipped by other
 end-software dependencies.
 
-`restless` is not (yet) equipped with the capabilities to handle REST-Requests on its own; you will need a dependency
-for it to work.
-
 ## Gradle and Maven copy-pasta
 
 The guardian Framework is hosted under the comroid repository
