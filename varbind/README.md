@@ -18,6 +18,7 @@ dependencies {
 ### Maven
 
 ```xml
+
 <dependency>
     <groupId>org.comroid</groupId>
     <artifactId>varbind</artifactId>
@@ -36,7 +37,7 @@ VarBind consists of three parts:
     - Binding definition
     - Provided as `public static final` fields within the respective classes
     - Stores all information required to extract, compute and finalize all data
-- `DataContainer` interface; implementation class: `DataContainerBase`
+- `DataContainer<S>` interface; implementation class: `DataContainerBase`
     - `ReferenceAtlas` to contain all extracted and computed data of an object
     - Data can easily be updated using `DataContainer#updateFrom(UniObjectNode)`
 
@@ -51,14 +52,17 @@ A Type definition needs to be stored respecting the following rules:
 - It must be annotated with `@org.comroid.varbind.annotation.RootBind`
 - Its type parameter should be its respective class
 
+When searching its Type definition, a `DataContainer` will look for the topmost annotated field of its own class, so it
+is possible to override Type Definitions.
+
 With the `GroupBind`, we can now create `Bindings` using the `GroupBind#createBinding` method.
 
 Recommended Layout:
 
 ```java
-public class MyEventData extends DataContainerBase {
+public interface MyEventInterface implements DataContainer<MyEventData> {
     @RootBind
-    public static final GroupBind<MyEventData> TYPE_DEFINITION
+    GroupBind<MyEventData> TYPE_DEFINITION
             = new GroupBind<>(MyApp.SERIALIZATION_ADAPTER, "my-event-data");
 }
 ```
@@ -76,10 +80,7 @@ It is recommended to store computation and/or extraction references as `final` f
 Full Example:
 
 ```java
-public class MyEventData extends DataContainerBase {
-    @RootBind
-    public static final GroupBind<MyEventData> TYPE_DEFINITION
-            = new GroupBind<>(MyApp.SERIALIZATION_ADAPTER, "my-event-data");
+public class MyEventData extends DataContainerBase<MyEventData> implements MyEventInterface {
     // an example for a simple String field within data
     public static final VarBind<MyEventData, String, String, String> EVENT_TYPE
             = TYPE_DEFINITION.createBinding("eventType")
