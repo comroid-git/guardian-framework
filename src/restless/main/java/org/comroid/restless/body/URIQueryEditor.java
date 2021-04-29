@@ -1,7 +1,10 @@
 package org.comroid.restless.body;
 
 import org.comroid.api.WrappedFormattable;
+import org.comroid.restless.HTTPStatusCodes;
+import org.comroid.restless.REST;
 import org.comroid.util.StandardValueType;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,5 +80,9 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
         } catch (URISyntaxException e) {
             throw new IllegalStateException("Invalid URI generated", e);
         }
+    }
+
+    public REST.Response toResponse(@MagicConstant(valuesFromClass = HTTPStatusCodes.class) int code) {
+        return new REST.Response(code, toURI());
     }
 }
