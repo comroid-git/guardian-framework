@@ -16,9 +16,9 @@ dependencies {
     api 'org.jetbrains:annotations:20.1.0'
 
     if (isAutoDeploy) {
-        api project(':restless')
+        api project(':webkit')
     } else {
-        api project(':guardian:restless')
+        api project(':guardian:webkit')
     }
 
     // logging dependencies
