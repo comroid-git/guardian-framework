@@ -16,7 +16,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class GroupBind<T> implements Iterable<GroupBind<? extends T>>, Named, ContextualProvider.Member {
+public final class GroupBind<T extends DataContainer<? super T>> implements Iterable<GroupBind<? extends T>>, Named, ContextualProvider.Member {
     final List<? extends VarBind<T, ?, ?, ?>> children = new ArrayList<>();
     private final List<GroupBind<? extends T>> subgroups = new ArrayList<>();
     private final SerializationAdapter<?, ?, ?> serializationAdapter;

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DataContainerBase<S>
+public class DataContainerBase<S extends DataContainer<? super S>>
         extends ReferenceAtlas.ForMap<String, ReferenceList, VarBind, Object>
         implements DataContainer<S> {
     private static final Logger logger = LogManager.getLogger();

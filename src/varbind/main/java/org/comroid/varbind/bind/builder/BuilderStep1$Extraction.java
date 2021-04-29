@@ -6,10 +6,11 @@ import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
+import org.comroid.varbind.container.DataContainer;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
 
-public final class BuilderStep1$Extraction<SELF>
+public final class BuilderStep1$Extraction<SELF extends DataContainer<? super SELF>>
         extends VarBindBuilderComponent<SELF, Void, Void, Void> {
     public BuilderStep1$Extraction(GroupBind<SELF> group, String fieldName) {
         super(group, fieldName);

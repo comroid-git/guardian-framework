@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL>
+public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         extends VarBindBuilderComponent<SELF, EXTR, REMAP, FINAL> {
     private final ValueType<EXTR> valueType;
     private final VarBind.ExtractionMethod extractionMethod;

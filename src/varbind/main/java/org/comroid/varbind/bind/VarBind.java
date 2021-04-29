@@ -9,7 +9,7 @@ import org.comroid.varbind.container.DataContainer;
 
 import java.util.Set;
 
-public interface VarBind<SELF, EXTR, REMAP, FINAL>
+public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         extends Named, ValuePointer<EXTR> {
     String getFieldName();
 
