@@ -3,6 +3,7 @@ package org.comroid.common.io;
 import org.comroid.api.ContentParser;
 import org.comroid.api.Named;
 import org.comroid.api.Rewrapper;
+import org.comroid.api.StringSerializable;
 import org.comroid.common.os.OSBasedFileMover;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,6 +62,10 @@ public final class FileHandle extends File implements Named, ContentParser {
         }
 
         return yields;
+    }
+
+    public void setContent(StringSerializable content) {
+        setContent(content.toSerializedString());
     }
 
     public void setContent(String content) {
