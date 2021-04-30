@@ -95,7 +95,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
 
     @Override
     public String toString() {
-        return getAlternateFormattedName();
+        return getAlternateName();
     }
 
     @Override

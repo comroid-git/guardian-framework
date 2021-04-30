@@ -59,7 +59,7 @@ public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNo
     }
 
     @Override
-    public String getAlternateFormattedName() {
+    public String getAlternateName() {
         return String.format("UniNode<%s=%s>", getNodeType(), toString());
     }
 

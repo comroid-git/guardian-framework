@@ -20,7 +20,7 @@ public final class MimeType implements Named, CharSequence {
     }
 
     @Override
-    public String getAlternateFormattedName() {
+    public String getAlternateName() {
         return getType();
     }
 

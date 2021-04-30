@@ -34,12 +34,12 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
     }
 
     @Override
-    default String getDefaultFormattedName() {
+    default String getPrimaryName() {
         return getFullUrl();
     }
 
     @Override
-    default String getAlternateFormattedName() {
+    default String getAlternateName() {
         return getUrlExtension();
     }
 

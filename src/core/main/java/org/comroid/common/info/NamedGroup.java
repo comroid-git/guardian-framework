@@ -1,11 +1,11 @@
 package org.comroid.common.info;
 
-import org.comroid.api.IntEnum;
+import org.comroid.api.IntegerAttribute;
 import org.comroid.api.Named;
 import org.comroid.util.Bitmask;
 import org.jetbrains.annotations.NotNull;
 
-public interface NamedGroup extends Named, IntEnum {
+public interface NamedGroup extends Named, IntegerAttribute {
     @Override
     String getName();
 

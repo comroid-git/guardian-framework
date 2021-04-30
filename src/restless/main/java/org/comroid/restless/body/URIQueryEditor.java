@@ -19,12 +19,12 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
     private final URI uri;
 
     @Override
-    public String getDefaultFormattedName() {
+    public String getPrimaryName() {
         return toString();
     }
 
     @Override
-    public String getAlternateFormattedName() {
+    public String getAlternateName() {
         return String.format("URIQueryEditor{uri=%s}", uri);
     }
 

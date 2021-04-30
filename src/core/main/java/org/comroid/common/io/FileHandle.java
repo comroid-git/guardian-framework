@@ -28,12 +28,12 @@ public final class FileHandle extends File implements Named, ContentParser {
     }
 
     @Override
-    public final String getDefaultFormattedName() {
+    public final String getPrimaryName() {
         return getName();
     }
 
     @Override
-    public final String getAlternateFormattedName() {
+    public final String getAlternateName() {
         return getShortName();
     }
 

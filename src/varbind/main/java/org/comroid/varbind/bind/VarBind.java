@@ -19,7 +19,7 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
     }
 
     @Override
-    default String getAlternateFormattedName() {
+    default String getAlternateName() {
         return String.format("VarBind<%s.%s>", getGroup().getName(), getFieldName());
     }
 

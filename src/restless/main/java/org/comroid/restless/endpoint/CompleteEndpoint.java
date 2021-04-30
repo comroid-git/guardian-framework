@@ -8,13 +8,13 @@ import java.net.URL;
 
 public interface CompleteEndpoint extends WrappedFormattable {
     @Override
-    default String getDefaultFormattedName() {
+    default String getPrimaryName() {
         return getSpec();
     }
 
     @Override
-    default String getAlternateFormattedName() {
-        return getEndpoint().getDefaultFormattedName();
+    default String getAlternateName() {
+        return getEndpoint().getPrimaryName();
     }
 
     AccessibleEndpoint getEndpoint();
@@ -59,13 +59,13 @@ public interface CompleteEndpoint extends WrappedFormattable {
             }
 
             @Override
-            public String getDefaultFormattedName() {
+            public String getPrimaryName() {
                 return spec;
             }
 
             @Override
-            public String getAlternateFormattedName() {
-                return endpoint.getDefaultFormattedName();
+            public String getAlternateName() {
+                return endpoint.getPrimaryName();
             }
         }
     }
