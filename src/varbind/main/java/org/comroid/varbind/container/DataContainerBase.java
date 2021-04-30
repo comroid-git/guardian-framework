@@ -78,7 +78,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     ) {
         //noinspection ConstantConditions allowed here because we overwrite getAdvancer()
         super(new ReferenceMap<>(true), null);
-        setMutable();
+        if (isImmutable())
+            setMutable();
         this.context = context;
         //noinspection unchecked
         this.group = group != null ? group : findRootBind(getClass());
