@@ -11,6 +11,7 @@ import org.comroid.restless.server.RestEndpointException;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.util.Pair;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.oauth.OAuth;
@@ -112,7 +113,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             AuthenticationRequest authenticationRequest = loginRequests.getOrDefault(requestId, null);
             URIQueryEditor query = new URIQueryEditor(authenticationRequest.getRedirectURI());
 
-            Client client;
+            Pair<Client, String> client;
             try {
                 client = context.requireFromContext(ClientProvider.class)
                         .loginClient(email, login);
@@ -127,14 +128,18 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Service with ID " + clientID + " not found"));
             String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
-            String code = OAuthEndpoint.completeAuthorization(client, authenticationRequest, context, service, userAgent);
+            String code = OAuthEndpoint.completeAuthorization(client.getFirst(), authenticationRequest, context, service, userAgent);
 
             // assemble redirect uri
             query.put("code", code);
             if (authenticationRequest.state.isNonNull())
                 query.put("state", authenticationRequest.getState());
 
-            return new REST.Response(FOUND, query.toURI());
+            REST.Header.List response = new REST.Header.List();
+            response.add("Location", query.toURI().toString());
+            response.add("Set-Cookie", client.getSecond());
+
+            return new REST.Response(FOUND, response);
         }
     },
     TOKEN("/token") {
