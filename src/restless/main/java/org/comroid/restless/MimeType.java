@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class MimeType implements Named, CharSequence {
     private static final Map<String, MimeType> cache = new ConcurrentHashMap<>();
+    public static final MimeType ANY = forName("*/*");
     public static final MimeType JSON = forName("application/json");
     public static final MimeType XML = forName("application/xml");
     public static final MimeType JAVASCRIPT = forName("application/javascript");
