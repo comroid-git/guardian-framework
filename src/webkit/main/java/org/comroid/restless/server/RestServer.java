@@ -165,12 +165,13 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                     throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, "Unsupported Content-Type: " + contentType);
 
                 logger.debug("Receiving {} {}-Request to {} with {} headers", serializer.getMimeType(), requestMethod, requestURI, requestHeaders.size());
-                logger.trace("Response has headers:\n{}", requestHeaders.stream()
+                logger.trace("Request has headers:\n{}", requestHeaders.stream()
                         .map(REST.Header::toString)
                         .collect(Collectors.joining("\n")));
 
                 // get request body
                 String body = consumeBody(exchange);
+                logger.trace("Request body: {}", body);
                 UniNode requestData = null;
                 try {
                     requestData = body.isEmpty() ? serializer.createObjectNode() : serializer.parse(body);
