@@ -118,6 +118,8 @@ public final class FileHandle extends File implements Named, ContentParser {
     }
 
     public FileHandle createSubDir(String name) {
+        if (!isDirectory())
+            return getParentFile().createSubDir(name);
         return createSub(name, true);
     }
 
