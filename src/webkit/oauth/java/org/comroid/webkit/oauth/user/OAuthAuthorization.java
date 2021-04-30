@@ -228,7 +228,9 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
         }
 
         public boolean checkToken(String otherTk) {
-            return this.token.contentEquals(otherTk.contains(" ") ? otherTk.substring(otherTk.indexOf(' ')) : otherTk);
+            // strip prefix if present
+            otherTk = otherTk.contains(" ") ? otherTk.substring(otherTk.indexOf(' ')) : otherTk;
+            return this.token.contentEquals(otherTk);
         }
     }
 }
