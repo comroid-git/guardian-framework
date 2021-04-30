@@ -154,7 +154,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             ClientProvider clientProvider = context.requireFromContext(ClientProvider.class);
             TokenRevocationRequest request = new TokenRevocationRequest(context, body);
 
-            ValidityStage validity = null;
+            ValidityStage validity;
             if (request.tokenHint.isNull()) {
                 validity = clientProvider.findValidityStage(request.getToken());
             } else switch (request.getTokenHint()) {
@@ -171,7 +171,6 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
 
             if (validity == null)
                 throw new RestEndpointException(BAD_REQUEST, "Unknown Token");
-
             if (validity.isValid() && !validity.invalidate())
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not invalidate token");
             return new REST.Response(OK);
