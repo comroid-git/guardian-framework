@@ -60,13 +60,12 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             final String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
             try {
-                // find session & account
-                Client account = context.requireFromContext(ClientProvider.class)
-                        .findAccessToken(headers)
-                        .getAuthorization()
-                        .getClient();
+                // find client
+                Client client = context.requireFromContext(ClientProvider.class)
+                        .findClient(clientID)
+                        .assertion("No client found with ID " + clientID);
 
-                String authorizationCode = completeAuthorization(account, authenticationRequest, context, service, userAgent);
+                String authorizationCode = completeAuthorization(client, authenticationRequest, context, service, userAgent);
 
                 // assemble redirect uri
                 query.put("code", authorizationCode);
