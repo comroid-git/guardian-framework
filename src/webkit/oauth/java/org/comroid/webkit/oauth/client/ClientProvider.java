@@ -2,10 +2,10 @@ package org.comroid.webkit.oauth.client;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.restless.CommonHeaderNames;
-import org.comroid.webkit.oauth.model.ValidityStage;
-import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.comroid.restless.REST;
 import org.comroid.restless.server.RestEndpointException;
+import org.comroid.webkit.oauth.model.ValidityStage;
+import org.comroid.webkit.oauth.user.OAuthAuthorization;
 
 import java.util.UUID;
 
@@ -19,6 +19,8 @@ public interface ClientProvider {
     OAuthAuthorization.AccessToken findAccessToken(String accessToken) throws RestEndpointException;
 
     boolean hasClient(UUID uuid);
+
+    Rewrapper<? extends Client> findClient(REST.Header.List headers);
 
     Rewrapper<? extends Client> findClient(UUID uuid);
 

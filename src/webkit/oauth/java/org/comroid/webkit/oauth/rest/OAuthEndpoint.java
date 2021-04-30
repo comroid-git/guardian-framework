@@ -62,8 +62,9 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             try {
                 // find client
                 Client client = context.requireFromContext(ClientProvider.class)
-                        .findClient(clientID)
-                        .assertion("No client found with ID " + clientID);
+                        .findClient(headers)
+                        // throw with status code OK to send login frame
+                        .orElseThrow(() -> new RestEndpointException(OK));
 
                 String authorizationCode = completeAuthorization(client, authenticationRequest, context, service, userAgent);
 
