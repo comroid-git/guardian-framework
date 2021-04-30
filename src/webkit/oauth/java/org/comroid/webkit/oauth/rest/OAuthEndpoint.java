@@ -160,6 +160,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             } else switch (request.getTokenHint()) {
                 case "access_token":
                     validity = clientProvider.findAccessToken(request.getToken());
+                    break;
                 case "refresh_token":
                     // fixme
                     //validity = clientProvider.findAccessToken(request.getToken());
