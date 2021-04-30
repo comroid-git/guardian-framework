@@ -13,6 +13,7 @@ import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.HTTPStatusCodes;
+import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.restless.body.URIQueryEditor;
@@ -210,20 +211,26 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 // execute endpoint
                 logger.debug("Executing Endpoint {}...", endpoint);
                 response = endpoint.executeMethod(context, requestMethod, requestHeaders, urlParams, requestData);
-            } catch (RestEndpointException e) {
-                logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
-                try {
-                    Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
-
-                    if (alternate != null && alternate.getStatusCode() == OK && e.getStatusCode() != OK)
-                        response = alternate;
-                } catch (Throwable t2) {
-                    logger.debug("An error occurred during recovery", t2);
-                }
             } catch (Throwable t) {
-                logger.error("An error occurred during request handling", t);
-                RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
-                response = new Response(wrapped.getStatusCode(), generateErrorNode(this, contentType, wrapped));
+                if (t instanceof RestEndpointException && requestHeaders.getHeader(ACCEPTED_CONTENT_TYPE)
+                        .getValues()
+                        .stream()
+                        .anyMatch(str -> str.startsWith(MimeType.HTML.toString()) || str.startsWith(MimeType.ANY.toString()))) {
+                    RestEndpointException e = (RestEndpointException) t;
+                    logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
+                    try {
+                        Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
+
+                        if (alternate != null && alternate.getStatusCode() == OK && e.getStatusCode() != OK)
+                            response = alternate;
+                    } catch (Throwable t2) {
+                        logger.debug("An error occurred during recovery", t2);
+                    }
+                } else {
+                    logger.error("An error occurred during request handling", t);
+                    RestEndpointException wrapped = new RestEndpointException(INTERNAL_SERVER_ERROR, t);
+                    response = new Response(wrapped.getStatusCode(), generateErrorNode(this, contentType, wrapped));
+                }
             }
             // if response is null, send empty OK
             if (response == null)
