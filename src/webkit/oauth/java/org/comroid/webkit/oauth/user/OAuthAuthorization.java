@@ -230,8 +230,8 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
         public boolean checkToken(String otherTk) {
             // strip prefix if present
             int indexOfSpace = otherTk.indexOf(' ');
-            otherTk = indexOfSpace < 8 ? otherTk.substring(indexOfSpace) : otherTk;
-            logger.trace("checking token [{}] vs other token [{}]", this.token.get(), otherTk);
+            otherTk = indexOfSpace < 8 ? otherTk.substring(indexOfSpace + 1) : otherTk;
+            //logger.trace("checking token [{}] vs other token [{}]", this.token.get(), otherTk);
             return this.token.contentEquals(otherTk);
         }
     }
