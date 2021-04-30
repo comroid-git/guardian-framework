@@ -2,9 +2,11 @@ package org.comroid.webkit.oauth.client;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.restless.CommonHeaderNames;
-import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.comroid.restless.REST;
 import org.comroid.restless.server.RestEndpointException;
+import org.comroid.util.Pair;
+import org.comroid.webkit.oauth.model.ValidityStage;
+import org.comroid.webkit.oauth.user.OAuthAuthorization;
 
 import java.util.UUID;
 
@@ -19,7 +21,11 @@ public interface ClientProvider {
 
     boolean hasClient(UUID uuid);
 
+    Rewrapper<? extends Client> findClient(REST.Header.List headers);
+
     Rewrapper<? extends Client> findClient(UUID uuid);
 
-    Client loginClient(String email, String login);
+    Pair<Client, String> loginClient(String email, String login);
+
+    ValidityStage findValidityStage(String token);
 }

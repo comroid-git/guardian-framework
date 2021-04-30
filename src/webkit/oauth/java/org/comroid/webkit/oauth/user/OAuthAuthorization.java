@@ -3,6 +3,13 @@ package org.comroid.webkit.oauth.user;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.uniform.Context;
+import org.comroid.uniform.node.UniNode;
+import org.comroid.util.StandardValueType;
+import org.comroid.varbind.annotation.RootBind;
+import org.comroid.varbind.bind.GroupBind;
+import org.comroid.varbind.bind.VarBind;
+import org.comroid.varbind.container.DataContainerBase;
 import org.comroid.webkit.oauth.OAuth;
 import org.comroid.webkit.oauth.client.Client;
 import org.comroid.webkit.oauth.client.ClientProvider;
@@ -11,13 +18,6 @@ import org.comroid.webkit.oauth.model.ValidityStage;
 import org.comroid.webkit.oauth.resource.Resource;
 import org.comroid.webkit.oauth.resource.ResourceProvider;
 import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
-import org.comroid.uniform.Context;
-import org.comroid.uniform.node.UniNode;
-import org.comroid.util.StandardValueType;
-import org.comroid.varbind.annotation.RootBind;
-import org.comroid.varbind.bind.GroupBind;
-import org.comroid.varbind.bind.VarBind;
-import org.comroid.varbind.container.DataContainerBase;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -227,8 +227,12 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
             return invalidation.complete(null);
         }
 
-        public boolean checkToken(String token) {
-            return this.token.contentEquals(token);
+        public boolean checkToken(String otherTk) {
+            // strip prefix if present
+            int indexOfSpace = otherTk.indexOf(' ');
+            otherTk = indexOfSpace < 8 ? otherTk.substring(indexOfSpace + 1) : otherTk;
+            //logger.trace("checking token [{}] vs other token [{}]", this.token.get(), otherTk);
+            return this.token.contentEquals(otherTk);
         }
     }
 }

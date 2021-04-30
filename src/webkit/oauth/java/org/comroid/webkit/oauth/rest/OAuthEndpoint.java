@@ -3,15 +3,6 @@ package org.comroid.webkit.oauth.rest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.StreamSupplier;
-import org.comroid.webkit.oauth.OAuth;
-import org.comroid.webkit.oauth.client.Client;
-import org.comroid.webkit.oauth.client.ClientProvider;
-import org.comroid.webkit.oauth.model.OAuthError;
-import org.comroid.webkit.oauth.resource.Resource;
-import org.comroid.webkit.oauth.resource.ResourceProvider;
-import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
-import org.comroid.webkit.oauth.rest.request.TokenRequest;
-import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
@@ -20,8 +11,20 @@ import org.comroid.restless.server.RestEndpointException;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.util.Pair;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
+import org.comroid.webkit.oauth.OAuth;
+import org.comroid.webkit.oauth.client.Client;
+import org.comroid.webkit.oauth.client.ClientProvider;
+import org.comroid.webkit.oauth.model.OAuthError;
+import org.comroid.webkit.oauth.model.ValidityStage;
+import org.comroid.webkit.oauth.resource.Resource;
+import org.comroid.webkit.oauth.resource.ResourceProvider;
+import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
+import org.comroid.webkit.oauth.rest.request.TokenRequest;
+import org.comroid.webkit.oauth.rest.request.TokenRevocationRequest;
+import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.intellij.lang.annotations.Language;
 
 import java.net.URI;
@@ -58,13 +61,13 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             final String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
             try {
-                // find session & account
-                Client account = context.requireFromContext(ClientProvider.class)
-                        .findAccessToken(headers)
-                        .getAuthorization()
-                        .getClient();
+                // find client
+                Client client = context.requireFromContext(ClientProvider.class)
+                        .findClient(headers)
+                        // throw with status code OK to send login frame
+                        .orElseThrow(() -> new RestEndpointException(OK));
 
-                String authorizationCode = completeAuthorization(account, authenticationRequest, context, service, userAgent);
+                String authorizationCode = completeAuthorization(client, authenticationRequest, context, service, userAgent);
 
                 // assemble redirect uri
                 query.put("code", authorizationCode);
@@ -110,7 +113,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             AuthenticationRequest authenticationRequest = loginRequests.getOrDefault(requestId, null);
             URIQueryEditor query = new URIQueryEditor(authenticationRequest.getRedirectURI());
 
-            Client client;
+            Pair<Client, String> client;
             try {
                 client = context.requireFromContext(ClientProvider.class)
                         .loginClient(email, login);
@@ -125,14 +128,18 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Service with ID " + clientID + " not found"));
             String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
-            String code = OAuthEndpoint.completeAuthorization(client, authenticationRequest, context, service, userAgent);
+            String code = OAuthEndpoint.completeAuthorization(client.getFirst(), authenticationRequest, context, service, userAgent);
 
             // assemble redirect uri
             query.put("code", code);
             if (authenticationRequest.state.isNonNull())
                 query.put("state", authenticationRequest.getState());
 
-            return new REST.Response(FOUND, query.toURI());
+            REST.Header.List response = new REST.Header.List();
+            response.add("Location", query.toURI().toString());
+            response.add("Set-Cookie", client.getSecond());
+
+            return new REST.Response(FOUND, response);
         }
     },
     TOKEN("/token") {
@@ -144,6 +151,34 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             OAuthAuthorization.AccessToken accessToken = authorization.createAccessToken();
 
             return new REST.Response(OK, accessToken);
+        }
+    },
+    TOKEN_REVOKE("/token/revoke") {
+        @Override
+        public REST.Response executePOST(Context context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+            ClientProvider clientProvider = context.requireFromContext(ClientProvider.class);
+            TokenRevocationRequest request = new TokenRevocationRequest(context, body);
+
+            ValidityStage validity;
+            if (request.tokenHint.isNull()) {
+                validity = clientProvider.findValidityStage(request.getToken());
+            } else switch (request.getTokenHint()) {
+                case "access_token":
+                    validity = clientProvider.findAccessToken(request.getToken());
+                    break;
+                case "refresh_token":
+                    // fixme
+                    //validity = clientProvider.findAccessToken(request.getToken());
+                    throw new UnsupportedOperationException("unsupported: refresh token");
+                default:
+                    throw new AssertionError("invalid token hint: " + request.getTokenHint());
+            }
+
+            if (validity == null)
+                throw new RestEndpointException(BAD_REQUEST, "Unknown Token");
+            if (validity.isValid() && !validity.invalidate())
+                throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not invalidate token");
+            return new REST.Response(OK);
         }
     },
     USER_INFO("/userInfo") {
