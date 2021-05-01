@@ -111,6 +111,8 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
 
             UUID requestId = body.get("requestId").asString(UUID::fromString);
             AuthenticationRequest authenticationRequest = loginRequests.getOrDefault(requestId, null);
+            if (authenticationRequest == null)
+                throw new RestEndpointException(BAD_REQUEST, "Invalid request ID: " + requestId);
             URIQueryEditor query = new URIQueryEditor(authenticationRequest.getRedirectURI());
 
             Pair<Client, String> client;
