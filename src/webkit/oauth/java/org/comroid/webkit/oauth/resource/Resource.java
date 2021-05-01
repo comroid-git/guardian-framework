@@ -9,6 +9,8 @@ public interface Resource extends UUIDContainer, Named {
     String getSecret();
 
     default boolean checkBasicToken(String basicToken) {
+        if (basicToken == null)
+            return false;
         basicToken = Base64.decode(basicToken);
         if (!basicToken.startsWith("Basic "))
             return false;
