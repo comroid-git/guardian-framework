@@ -59,7 +59,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             final Resource service = resourceProvider.getResource(clientID)
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Resource with ID " + clientID + " not found"));
             final String basicToken = headers.getFirst(CommonHeaderNames.AUTHORIZATION);
-            if (!service.checkBasicToken(basicToken)) {
+            if (basicToken != null && !service.checkBasicToken(basicToken)) {
                 logger.debug("Access Denied: Invalid Basic Authorization token [{}]", basicToken);
                 query.put("error", OAuthError.ACCESS_DENIED);
                 return query.toResponse(FOUND);
