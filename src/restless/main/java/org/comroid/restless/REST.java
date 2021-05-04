@@ -560,6 +560,8 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public <B extends UniNode> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
+            if (bodyBuilder == null)
+                return this;
             final B body = type.apply(requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
             return body(body.toString());
