@@ -27,6 +27,7 @@ public abstract class AbstractCache<K, V>
 
     protected AbstractCache(ContextualProvider context) {
         super(true);
+        context.addToContext(this);
 
         this.context = context;
     }
