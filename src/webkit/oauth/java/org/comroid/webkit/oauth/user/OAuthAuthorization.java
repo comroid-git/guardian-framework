@@ -122,6 +122,10 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
         });
     }
 
+    public OAuthAuthorization(Context context, UniNode data) {
+        super(context, data.asObjectNode());
+    }
+
     private static String generateToken(OAuthAuthorization authorization) {
         return authorization.getResource().generateAccessToken(authorization);
     }
