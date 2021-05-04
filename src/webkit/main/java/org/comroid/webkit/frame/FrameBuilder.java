@@ -149,35 +149,45 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                     frame.getElementsByTag(part).html(partData);
                 });
 
-        // overwrite links
-        frame.getElementsByTag("a")
+        fabricate$overwriteLinks(frame, host);
+        fabricate$applyPanels(frame);
+        fabricate$applyWhenAttributes(frame, pageProperties);
+        fabricate$applyActionDeclarations(frame);
+        fabricate$applyInjection(frame, pageProperties);
+    }
+
+    private static void fabricate$applyInjection(Document frame, Map<String, Object> pageProperties) {
+        // try apply value injections
+        frame.getElementsByAttribute("inject")
                 .forEach(dom -> {
-                    boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
-                    String href = dom.attr("href");
-                    if (href.isEmpty())
-                        return;
-                    if (href.startsWith("http")) {
-                        if (!isDebug)
-                            dom.attr(href, href.replace("http://", "https://"));
-                        return;
-                    }
-                    if (href.startsWith("~/")) {
-                        dom.attr("href", href.replace("~/", String.format("http%s://%s/", isDebug ? "" : "s", host)));
-                        return;
-                    }
-                    dom.removeAttr("href");
-                    dom.attr("onclick", String.format("actionChangePanel('%s')", href));
-                });
+                    String fname = dom.attr("inject");
+                    try {
+                        String[] path = fname.split("\\.");
+                        String value = resolveValue(pageProperties, path, 0);
 
-        // apply panel attributes
-        frame.getElementsByAttribute("panel")
+                        dom.html(value);
+                    } catch (Throwable t) {
+                        logger.error("Error when injecting value " + fname, t);
+                        dom.html("NULL");
+                    }
+                });
+    }
+
+    private static void fabricate$applyActionDeclarations(Document frame) {
+        // apply action declarations
+        frame.getElementsByAttribute("command")
                 .forEach(dom -> {
-                    String panelName = dom.attr("panel");
-                    String panelData = findPanelData(panelName);
+                    String command = dom.attr("command");
 
-                    dom.html(panelData);
+                    dom.attr("onclick", String.format("sendCommand('%s')", command));
+                    String style = dom.attr("style");
+                    dom.attr("style", style
+                            + (style.isEmpty() || !style.contains("\n") ? "" : '\n')
+                            + "cursor: pointer !important;");
                 });
+    }
 
+    private static void fabricate$applyWhenAttributes(Document frame, Map<String, Object> pageProperties) {
         // apply when-attributes
         frame.getElementsByAttribute("when")
                 .forEach(dom -> {
@@ -197,34 +207,39 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                         dom.remove();
                     dom.removeAttr("when");
                 });
+    }
 
-        // apply action declarations
-        frame.getElementsByAttribute("command")
+    private static void fabricate$applyPanels(Document frame) {
+        // apply panel attributes
+        frame.getElementsByAttribute("panel")
                 .forEach(dom -> {
-                    String command = dom.attr("command");
+                    String panelName = dom.attr("panel");
+                    String panelData = findPanelData(panelName);
 
-                    dom.attr("onclick", String.format("sendCommand('%s')", command));
-                    String style = dom.attr("style");
-                    dom.attr("style", style
-                            + (style.isEmpty() || !style.contains("\n") ? "" : '\n')
-                            + "cursor: pointer !important;");
+                    dom.html(panelData);
                 });
+    }
 
-        // try apply value injections
-        frame.getElementsByAttribute("inject")
+    private static void fabricate$overwriteLinks(Document frame, String host) {
+        // overwrite links
+        frame.getElementsByTag("a")
                 .forEach(dom -> {
-                    String fname = dom.attr("inject");
-                    try {
-                        String[] path = fname.split("\\.");
-                        String value = resolveValue(pageProperties, path, 0);
-
-                        dom.html(value);
-                    } catch (Throwable t) {
-                        logger.error("Error when injecting value " + fname, t);
-                        dom.html("NULL");
+                    boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
+                    String href = dom.attr("href");
+                    if (href.isEmpty())
+                        return;
+                    if (href.startsWith("http")) {
+                        if (!isDebug)
+                            dom.attr(href, href.replace("http://", "https://"));
+                        return;
                     }
+                    if (href.startsWith("~/")) {
+                        dom.attr("href", href.replace("~/", String.format("http%s://%s/", isDebug ? "" : "s", host)));
+                        return;
+                    }
+                    dom.removeAttr("href");
+                    dom.attr("onclick", String.format("actionChangePanel('%s')", href));
                 });
-
     }
 
     private static String resolveValue(Map<String, Object> stage, String[] path, int index) {
