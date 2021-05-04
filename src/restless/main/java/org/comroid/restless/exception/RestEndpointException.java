@@ -1,4 +1,4 @@
-package org.comroid.restless.server;
+package org.comroid.restless.exception;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;

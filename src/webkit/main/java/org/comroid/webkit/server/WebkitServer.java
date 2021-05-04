@@ -11,7 +11,7 @@ import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.ScopedEndpoint;
 import org.comroid.restless.server.EndpointHandler;
-import org.comroid.restless.server.RestEndpointException;
+import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;

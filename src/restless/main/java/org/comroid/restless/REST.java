@@ -18,6 +18,7 @@ import org.comroid.restless.endpoint.AccessibleEndpoint;
 import org.comroid.restless.endpoint.CompleteEndpoint;
 import org.comroid.restless.endpoint.RatelimitDefinition;
 import org.comroid.restless.endpoint.TypeBoundEndpoint;
+import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.restless.server.Ratelimiter;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.Cache;
@@ -475,6 +476,10 @@ public final class REST implements ContextualProvider.Underlying {
         @Override
         public String toString() {
             return String.format("Response{statusCode=%d, mimeType='%s', headers=%s}", statusCode, mimeType, headers);
+        }
+
+        public RestEndpointException toException() {
+            return null;
         }
     }
 

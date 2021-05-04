@@ -17,6 +17,7 @@ import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.REST.Response;
 import org.comroid.restless.body.URIQueryEditor;
+import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;

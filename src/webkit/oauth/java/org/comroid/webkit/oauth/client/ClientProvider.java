@@ -3,7 +3,7 @@ package org.comroid.webkit.oauth.client;
 import org.comroid.api.Rewrapper;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
-import org.comroid.restless.server.RestEndpointException;
+import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.util.Pair;
 import org.comroid.webkit.oauth.model.ValidityStage;
 import org.comroid.webkit.oauth.user.OAuthAuthorization;

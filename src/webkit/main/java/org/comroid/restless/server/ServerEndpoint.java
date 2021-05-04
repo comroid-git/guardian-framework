@@ -1,6 +1,7 @@
 package org.comroid.restless.server;
 
 import org.comroid.restless.endpoint.AccessibleEndpoint;
+import org.comroid.restless.exception.RestEndpointException;
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Pattern;

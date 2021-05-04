@@ -1,8 +1,8 @@
 package org.comroid.restless.server;
 
-import org.comroid.api.ContextualProvider;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
+import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 
