@@ -14,7 +14,7 @@ import org.comroid.varbind.container.DataContainer;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public abstract class DataContainerCache<K, V extends DataContainer<? super V>>
+public class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
         implements Cache<K, V> {
     protected final VarBind<? super V, ?, ?, K> idBind;
