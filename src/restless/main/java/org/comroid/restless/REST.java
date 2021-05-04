@@ -479,7 +479,13 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public RestEndpointException toException() {
-            return null;
+            return getBody().map(Serializable::toUniNode)
+                    .map(data -> data.get("message").asString())
+                    .filter(Objects::nonNull)
+                    .ifPresentMapOrElseGet(
+                            msg -> new RestEndpointException(statusCode, msg),
+                            () -> new RestEndpointException(statusCode)
+                    );
         }
     }
 
