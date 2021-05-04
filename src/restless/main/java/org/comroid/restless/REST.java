@@ -634,22 +634,27 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public CompletableFuture<Span<T>> execute$deserialize() {
-            return execute$body().thenApply(Serializable::toUniNode)
-                    .thenApply(node -> {
-                        switch (node.getNodeType()) {
-                            case OBJECT:
-                                return Span.singleton(tProducer.apply(context, node.asObjectNode()));
-                            case ARRAY:
-                                return node.asArrayNode()
-                                        .streamNodes()
-                                        .map(data -> tProducer.apply(REST.this, data))
-                                        .collect(Span.collector());
-                            case VALUE:
-                                throw new AssertionError("Cannot deserialize from UniValueNode");
-                        }
+            return execute$body().thenApply(serializable -> {
+                if (serializable == null)
+                    return null;
+                return serializable.toUniNode();
+            }).thenApply(node -> {
+                if (node == null)
+                    return Span.empty();
+                switch (node.getNodeType()) {
+                    case OBJECT:
+                        return Span.singleton(tProducer.apply(context, node.asObjectNode()));
+                    case ARRAY:
+                        return node.asArrayNode()
+                                .streamNodes()
+                                .map(data -> tProducer.apply(REST.this, data))
+                                .collect(Span.collector());
+                    case VALUE:
+                        throw new AssertionError("Cannot deserialize from UniValueNode");
+                }
 
-                        throw new AssertionError();
-                    });
+                throw new AssertionError();
+            });
         }
 
         public CompletableFuture<T> execute$deserializeSingle() {
@@ -675,19 +680,24 @@ public final class REST implements ContextualProvider.Underlying {
         public <ID> CompletableFuture<RefList<T>> execute$autoCache(
                 VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
         ) {
-            return execute$body().thenApply(Serializable::toUniNode)
-                    .thenApply(node -> {
-                        if (node.isObjectNode()) {
-                            return ReferenceList.of(cacheProduce(identifyBind, cache, node.asObjectNode()));
-                        } else if (node.isArrayNode()) {
-                            return node.streamNodes()
-                                    .map(UniNode::asObjectNode)
-                                    .map(obj -> cacheProduce(identifyBind, cache, obj))
-                                    .collect(Collectors.toCollection(ReferenceList::new));
-                        } else {
-                            throw new AssertionError();
-                        }
-                    });
+            return execute$body().thenApply(serializable -> {
+                if (serializable == null)
+                    return null;
+                return serializable.toUniNode();
+            }).thenApply(node -> {
+                if (node == null)
+                    return Span.empty();
+                if (node.isObjectNode()) {
+                    return ReferenceList.of(cacheProduce(identifyBind, cache, node.asObjectNode()));
+                } else if (node.isArrayNode()) {
+                    return node.streamNodes()
+                            .map(UniNode::asObjectNode)
+                            .map(obj -> cacheProduce(identifyBind, cache, obj))
+                            .collect(Collectors.toCollection(ReferenceList::new));
+                } else {
+                    throw new AssertionError();
+                }
+            });
         }
 
         private <ID> T cacheProduce(VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache, UniObjectNode obj) {
