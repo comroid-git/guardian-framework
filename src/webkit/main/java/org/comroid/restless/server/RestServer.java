@@ -128,7 +128,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     @Override
     public void close() {
         logger.info("Stopping HTTP Server");
-        server.stop(5);
+        server.stop(0);
     }
 
     private void writeResponse(HttpExchange exchange, int statusCode) throws IOException {
