@@ -141,5 +141,4 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
         return flatMap(wrapOpt2Ref(mapper), backwardsConverter);
     }
 
-    Ref<T> or(Supplier<T> orElse);
 }
