@@ -2,9 +2,11 @@ package org.comroid.webkit.oauth.user;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.ContextualProvider;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
@@ -18,6 +20,7 @@ import org.comroid.webkit.oauth.model.ValidityStage;
 import org.comroid.webkit.oauth.resource.Resource;
 import org.comroid.webkit.oauth.resource.ResourceProvider;
 import org.comroid.webkit.oauth.rest.request.AuthenticationRequest;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -213,6 +216,13 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
         @Override
         public boolean isValid() {
             return !isExpired() && authorization.isValid() && !invalidation.isDone() && !invalidation.isCancelled();
+        }
+
+        @Experimental
+        public AccessToken(ContextualProvider context, @Nullable UniObjectNode initialData) {
+            super(context, initialData);
+            this.authorization = null;
+            this.createdAt = Instant.now().minus(getExpirationDuration());
         }
 
         private AccessToken(Context context, final OAuthAuthorization authorization, @Nullable Duration expiration) {
