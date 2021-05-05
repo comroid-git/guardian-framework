@@ -98,8 +98,8 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         server.setExecutor(executor);
         server.start();
 
-        logger.info("Rest Server available at http://{}:{} (http://{})",
-                socketAddress.getAddress().getHostAddress(), socketAddress.getPort(), socketAddress.getHostName());
+        logger.info("Rest Server available at http://{}:{} (http://{}:{})",
+                socketAddress.getAddress().getHostAddress(), socketAddress.getPort(), socketAddress.getHostName(), socketAddress.getPort());
     }
 
     public static UniObjectNode generateErrorNode(Context context, CharSequence mimeType, RestEndpointException reex) {
