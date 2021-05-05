@@ -1,11 +1,12 @@
 package org.comroid.common.io;
 
+import org.comroid.api.UncheckedCloseable;
 import org.comroid.common.Disposable;
 
 import java.io.IOException;
 import java.util.UUID;
 
-public interface FileProcessor extends Disposable {
+public interface FileProcessor extends Disposable, UncheckedCloseable {
     FileHandle getFile();
 
     int storeData() throws IOException;

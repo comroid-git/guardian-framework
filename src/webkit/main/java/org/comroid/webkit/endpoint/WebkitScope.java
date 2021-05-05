@@ -7,6 +7,7 @@ import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
+import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
@@ -51,8 +52,13 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             InputStream resource = FrameBuilder.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
+            Map<String, Object> pageProperties = context
+                    .requireFromContext(PagePropertiesProvider.class)
+                    .findPageProperties(headers);
+            UniObjectNode obj = context.createObjectNode();
+            obj.putAll(pageProperties);
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
-                    String.format("isWindows = %s;\nsocketToken = '%s';\n", OS.isWindows, ""),
+                    String.format("isWindows = %s;\nsocketToken = '%s';\nsessionData = JSON.parse('%s');\n", OS.isWindows, "", obj.toSerializedString()),
                     resource));
         }
     };
