@@ -61,7 +61,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             ContextualProvider context,
             Consumer<UniObjectNode> initialDataBuilder
     ) {
-        this(context, context.requireFromContext(SerializationAdapter.class).createObjectNode(initialDataBuilder));
+        this(context, initialDataBuilder == null ? null : context.requireFromContext(SerializationAdapter.class).createObjectNode(initialDataBuilder));
     }
 
     protected DataContainerBase(
