@@ -32,20 +32,21 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, RestEndpointException.RecoverStage {
     private static final Logger logger = LogManager.getLogger();
     private final Context context;
-    private final ScheduledExecutorService executor;
+    private final Executor executor;
     private final String urlBase;
     private final PagePropertiesProvider pagePropertiesProvider;
     private final WebkitEndpoints endpoints;
     private final RestServer rest;
     private final WebSocketServer socket;
 
-    public ScheduledExecutorService getExecutor() {
+    public Executor getExecutor() {
         return executor;
     }
 
@@ -76,7 +77,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public WebkitServer(
             Context context,
-            ScheduledExecutorService executor,
+            Executor executor,
             String urlBase,
             InetAddress inetAddress,
             int port,
@@ -100,7 +101,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public WebkitServer(
             Context context,
-            ScheduledExecutorService executor,
+            Executor executor,
             String urlBase,
             InetAddress inetAddress,
             int port,
