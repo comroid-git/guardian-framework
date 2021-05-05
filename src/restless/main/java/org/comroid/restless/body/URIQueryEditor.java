@@ -1,5 +1,7 @@
 package org.comroid.restless.body;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.WrappedFormattable;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
@@ -9,12 +11,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public final class URIQueryEditor extends HashMap<String, Object> implements WrappedFormattable {
+    private static final Logger logger = LogManager.getLogger();
     private final URI uri;
 
     @Override
@@ -52,6 +56,8 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
 
             while (scanner.hasNext()) {
                 String[] pair = scanner.next().split("=");
+                if (pair.length == 1)
+                    logger.debug("Suspicious query pair found: " + Arrays.toString(pair));
                 yield.put(pair[0], pair.length == 1 ? null : pair[1]);
             }
         }
