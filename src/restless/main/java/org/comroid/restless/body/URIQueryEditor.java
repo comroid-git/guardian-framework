@@ -53,7 +53,7 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
 
             while (scanner.hasNext()) {
                 String[] pair = scanner.next().split("=");
-                yield.put(pair[0], StandardValueType.findGoodType(pair[1]));
+                yield.put(pair[0], pair.length == 1 ? StandardValueType.VOID : StandardValueType.findGoodType(pair[1]));
             }
         }
         return yield;
