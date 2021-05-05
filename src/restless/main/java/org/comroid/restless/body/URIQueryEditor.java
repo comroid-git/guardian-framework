@@ -78,13 +78,15 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
 
     public URI toURI() {
         try {
-            return new URI(
-                    uri.getScheme(),
-                    uri.getAuthority(),
-                    uri.getPath(),
+            URI uri = new URI(
+                    this.uri.getScheme(),
+                    this.uri.getAuthority(),
+                    this.uri.getPath(),
                     toString(),
-                    uri.getFragment()
+                    this.uri.getFragment()
             );
+            logger.trace("Generated URI: {}", uri);
+            return uri;
         } catch (URISyntaxException e) {
             throw new IllegalStateException("Invalid URI generated", e);
         }
