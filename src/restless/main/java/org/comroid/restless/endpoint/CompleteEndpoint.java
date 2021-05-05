@@ -45,7 +45,7 @@ public interface CompleteEndpoint extends WrappedFormattable {
 
             @Override
             public String getSpec() {
-                return endpoint.getUrlBase() + spec;
+                return endpoint == null ? spec : endpoint.getUrlBase() + spec;
             }
 
             private OfSpec(AccessibleEndpoint endpoint, String spec) {

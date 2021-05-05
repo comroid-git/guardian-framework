@@ -122,6 +122,8 @@ public class DataContainerBase<S extends DataContainer<? super S>>
 
     @Override
     public final Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node) {
+        if (node == null)
+            return Collections.emptySet();
         final Set<VarBind<? extends S, Object, ?, Object>> initialized = new HashSet<>();
         node.forEach((key, value) -> {
             KeyedReference<String, ReferenceList<Object>> eRef = getExtractionReference(key);

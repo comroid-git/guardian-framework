@@ -1,7 +1,9 @@
 package org.comroid.varbind;
 
+import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.common.io.FileProcessor;
+import org.comroid.uniform.Context;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -13,8 +15,9 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class FileConfiguration extends DataContainerBase<FileConfiguration> implements FileProcessor {
-    private final SerializationAdapter<?, ?, ?> serializationAdapter;
+    private final Context context;
     private final FileHandle file;
+    private final CharSequence mimeType;
     private final UUID uuid = UUID.randomUUID();
 
     @Override
@@ -27,18 +30,16 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
         return uuid;
     }
 
-    public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
-        return serializationAdapter;
-    }
-
     public FileConfiguration(
-            SerializationAdapter<?, ?, ?> serializationAdapter,
-            FileHandle file
+            Context context,
+            FileHandle file,
+            CharSequence mimeType
     ) {
-        super(serializationAdapter);
+        super(context);
 
-        this.serializationAdapter = serializationAdapter;
+        this.context = context;
         this.file = file;
+        this.mimeType = mimeType;
 
         reloadData();
     }
@@ -56,7 +57,7 @@ public class FileConfiguration extends DataContainerBase<FileConfiguration> impl
 
     @Override
     public final int reloadData() {
-        final UniNode data = serializationAdapter.createUniNode(file.getContent());
+        final UniNode data = context.parse(mimeType, file.getContent());
 
         if (data != null)
             return updateFrom(data.asObjectNode()).size();
