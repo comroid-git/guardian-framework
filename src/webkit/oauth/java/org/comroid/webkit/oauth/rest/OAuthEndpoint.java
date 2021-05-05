@@ -171,6 +171,9 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             if (request.tokenHint.isNull()) {
                 validity = clientProvider.findValidityStage(request.getToken());
             } else switch (request.getTokenHint()) {
+                case "authorization_code":
+                    validity = clientProvider.findAuthorization(request.getToken());
+                    break;
                 case "access_token":
                     validity = clientProvider.findAccessToken(request.getToken());
                     break;
