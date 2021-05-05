@@ -110,7 +110,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
     }
 
     default boolean dependsOn(Ref<?> other) {
-        return other.upstream().anyMatch(this::equals);
+        return upstream().anyMatch(other::equals);
     }
 
     Ref<T> filter(Predicate<? super T> predicate);
