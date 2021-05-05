@@ -92,6 +92,10 @@ public interface DataContainer<S extends DataContainer<? super S>>
         return getComputedReference(bind).wrap();
     }
 
+    default @NotNull <T> T assertion(VarBind<? extends S, ?, ?, T> bind) {
+        return getComputedReference(bind).assertion("No value for " + bind + " @ " + this);
+    }
+
     default @NotNull <T> T requireNonNull(VarBind<? extends S, ?, ?, T> bind) {
         return getComputedReference(bind).requireNonNull("No value for " + bind + " @ " + toString());
     }
