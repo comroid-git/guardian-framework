@@ -162,9 +162,9 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
                 .onceEach()
                 .setRequired()
                 .build();
-        public static final VarBind<AccessToken, Long, Duration, Duration> EXPIRES_IN
+        public static final VarBind<AccessToken, Integer, Duration, Duration> EXPIRES_IN
                 = Type.createBind("expires_in")
-                .extractAs(StandardValueType.LONG)
+                .extractAs(StandardValueType.INTEGER)
                 .andRemap(Duration::ofSeconds)
                 .onceEach()
                 .setRequired()
@@ -229,7 +229,7 @@ public final class OAuthAuthorization extends DataContainerBase<OAuthAuthorizati
             super(context, obj -> {
                 obj.put(TOKEN, generateToken(authorization));
                 obj.put(TYPE, "bearer");
-                obj.put(EXPIRES_IN, expiration.getSeconds());
+                obj.put(EXPIRES_IN, (int) expiration.getSeconds());
                 obj.put(SCOPES, authorization.getScopes().toString());
             });
             this.authorization = authorization;

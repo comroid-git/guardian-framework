@@ -144,7 +144,7 @@ public class DataContainerBase<S extends DataContainer<? super S>>
             try {
                 prev = cRef.get();
             } catch (ClassCastException cce) {
-                throw new IllegalStateException("Data has invalid structure", cce);
+                throw new IllegalStateException(getRootBind().getName() + ": Data has invalid structure; failed at key " + key, cce);
             }
             if (cRef.get() != prev)
                 initialized.add(Polyfill.uncheckedCast(bind));

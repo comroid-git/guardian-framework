@@ -221,7 +221,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         .stream()
                         .anyMatch(str -> str.contains(MimeType.HTML.toString()) || str.contains(MimeType.ANY.toString()))) {
                     RestEndpointException e = (RestEndpointException) t;
-                    logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage());
+                    logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage(), e);
                     try {
                         Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
 
