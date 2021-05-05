@@ -3,7 +3,6 @@ package org.comroid.restless.body;
 import org.comroid.api.WrappedFormattable;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;
-import org.comroid.util.StandardValueType;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +52,7 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
 
             while (scanner.hasNext()) {
                 String[] pair = scanner.next().split("=");
-                yield.put(pair[0], pair.length == 1 ? StandardValueType.VOID : StandardValueType.findGoodType(pair[1]));
+                yield.put(pair[0], pair.length == 1 ? null : pair[1]);
             }
         }
         return yield;
