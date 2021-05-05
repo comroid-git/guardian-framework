@@ -68,8 +68,8 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
     public String toString() {
         return entrySet().stream()
                 .map(entry -> String.format("%s=%s",
-                        entry.getKey().replace(' ', '+'),
-                        String.valueOf(entry.getValue()).replace(' ', '+')))
+                        entry.getKey(), entry.getValue())
+                        .replace(' ', '+'))
                 .collect(Collectors.joining("&"));
     }
 
