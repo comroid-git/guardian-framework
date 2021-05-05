@@ -1,5 +1,6 @@
 package org.comroid.webkit.oauth.client;
 
+import org.comroid.api.EMailAddress;
 import org.comroid.api.Rewrapper;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
@@ -25,7 +26,7 @@ public interface ClientProvider {
 
     Rewrapper<? extends Client> findClient(UUID uuid);
 
-    Pair<Client, String> loginClient(String email, String login);
+    Pair<Client, String> loginClient(EMailAddress email, String login);
 
     ValidityStage findValidityStage(String token);
 }

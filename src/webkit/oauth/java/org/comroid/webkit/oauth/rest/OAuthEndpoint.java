@@ -2,6 +2,7 @@ package org.comroid.webkit.oauth.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.api.EMailAddress;
 import org.comroid.api.StreamSupplier;
 import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HTTPStatusCodes;
@@ -112,7 +113,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     AUTHORIZE_LOGIN("/authorize/login") {
         @Override
         public REST.Response executePOST(Context context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            String email = body.get("email").asString(str -> str.replace("%40", "@"));
+            EMailAddress email = body.get("email").asString(EMailAddress::parse);
             String login = body.get("password").asString();
 
             UUID requestId = body.get("requestId").asString(UUID::fromString);

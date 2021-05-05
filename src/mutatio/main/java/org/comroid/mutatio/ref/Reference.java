@@ -178,7 +178,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     @Override
     public final void rebind(final Supplier<T> behind) {
         if (behind == this || (behind instanceof Reference && dependsOn((Reference<T>) behind)))
-            throw new IllegalArgumentException("Cannot rebind behind itself");
+            throw new IllegalArgumentException("Circular Reference Dependency detected");
 
         overriddenSupplier = nil -> behind.get();
         if (behind instanceof Reference)

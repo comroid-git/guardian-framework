@@ -24,7 +24,7 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
     public static final @Instance
     FastJSONLib fastJsonLib = new FastJSONLib();
 
-    private FastJSONLib() {
+    public FastJSONLib() {
         super("application/json", JSONObject.class, JSONObject::new, JSONArray.class, JSONArray::new);
     }
 
