@@ -57,7 +57,7 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
             while (scanner.hasNext()) {
                 String[] pair = scanner.next().split("=");
                 if (pair.length == 1)
-                    logger.debug("Suspicious query pair found: " + Arrays.toString(pair));
+                    logger.warn("Suspicious query parameter pair found: " + Arrays.toString(pair));
                 yield.put(pair[0], pair.length == 1 ? null : pair[1]);
             }
         }
