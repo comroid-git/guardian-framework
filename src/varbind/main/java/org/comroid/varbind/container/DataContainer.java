@@ -80,6 +80,10 @@ public interface DataContainer<S extends DataContainer<? super S>>
         return null;
     }
 
+    default Set<VarBind<? extends S, Object, ?, Object>> updateFrom(Serializable data) {
+        return updateFrom(data.toUniNode().asObjectNode());
+    }
+
     Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node);
 
     Set<VarBind<? extends S, Object, ?, Object>> initiallySet();
@@ -97,7 +101,7 @@ public interface DataContainer<S extends DataContainer<? super S>>
     }
 
     default @NotNull <T> T requireNonNull(VarBind<? extends S, ?, ?, T> bind) {
-        return getComputedReference(bind).requireNonNull("No value for " + bind + " @ " + toString());
+        return getComputedReference(bind).requireNonNull("No value for " + bind + " @ " + this);
     }
 
     default @NotNull <T> T requireNonNull(VarBind<? extends S, ?, ?, T> bind, String message) {
