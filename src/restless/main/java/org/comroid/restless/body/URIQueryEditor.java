@@ -66,6 +66,9 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
 
     @Override
     public String toString() {
+        logger.trace("Creating query string from editor:\n{}", entrySet().stream()
+                .map(entry -> String.format("\t- %s => %s", entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining("\n")));
         return entrySet().stream()
                 .map(entry -> String.format("%s=%s",
                         entry.getKey(), entry.getValue())
