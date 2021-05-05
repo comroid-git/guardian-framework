@@ -103,6 +103,10 @@ public final class REST implements ContextualProvider.Underlying {
         this.ratelimiter = Objects.requireNonNull(ratelimiter, "Ratelimiter");
     }
 
+    public REST() {
+        this(Base.ROOT);
+    }
+
     public Request<UniNode> request() {
         return new Request<>((context, data) -> data);
     }
