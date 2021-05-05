@@ -93,6 +93,8 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
         this.connectionListeners = new HashSet<>();
 
         super.start();
+        logger.debug("Websocket Server available at ws://{}:{} / ws://{}:{}",
+                inetAddress.getHostAddress(), port, inetAddress.getHostName(), port);
     }
 
     public BooleanSupplier onNewConnection(Consumer<WebSocketConnection> listener) {

@@ -130,9 +130,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 socketPort,
                 connectionFactory
         );
-
-        logger.info("Webkit Server available at http://{}:{}", inetAddress.getHostAddress(), port);
-        logger.debug("Webkit WebSocket Server available at ws://{}:{}", inetAddress.getHostAddress(), socketPort);
     }
 
     @Override
