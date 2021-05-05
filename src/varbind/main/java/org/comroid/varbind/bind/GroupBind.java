@@ -1,12 +1,16 @@
 package org.comroid.varbind.bind;
 
-import org.comroid.api.*;
+import org.comroid.api.ContextualProvider;
+import org.comroid.api.Named;
+import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.builder.BuilderStep1$Extraction;
 import org.comroid.varbind.container.DataContainer;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +57,13 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     @Override
     public @NotNull SerializationAdapter<?, ?, ?> getFromContext() {
         return serializationAdapter;
+    }
+
+    @Experimental
+    public GroupBind(
+            String groupName
+    ) {
+        this(ContextualProvider.Base.ROOT, groupName);
     }
 
     public GroupBind(
@@ -157,11 +168,6 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         );
     }
 
-    @Override
-    public String toString() {
-        return getAlternateName();
-    }
-
     @SuppressWarnings({"unchecked", "InfiniteRecursion", "ConstantConditions"})
     private static String nameStringRecursive(List<? extends GroupBind<?>> parents, String ownName) {
         return (!parents.isEmpty()
@@ -173,6 +179,11 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
                         .map(GroupBind::getName)
                         .collect(Collectors.joining(";", "[", "]"))) + '.'
                 : "") + ownName;
+    }
+
+    @Override
+    public String toString() {
+        return getAlternateName();
     }
 
     public Optional<GroupBind<? extends T>> findGroupForData(UniObjectNode data) {
