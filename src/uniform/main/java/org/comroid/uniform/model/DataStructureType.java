@@ -1,8 +1,8 @@
 package org.comroid.uniform.model;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.ValueType;
 import org.comroid.api.Named;
+import org.comroid.api.ValueType;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;

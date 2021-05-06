@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
-import org.comroid.api.Polyfill;
 import org.comroid.common.exception.AssertionException;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
@@ -26,8 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-
-import static org.comroid.util.StandardValueType.*;
 
 public abstract class JacksonAdapter extends AbstractSerializationAdapter<JsonNode, ObjectNode, ArrayNode> {
     private final ObjectMapper objectMapper;

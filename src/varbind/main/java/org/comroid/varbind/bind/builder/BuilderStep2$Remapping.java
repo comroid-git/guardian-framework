@@ -1,17 +1,17 @@
 package org.comroid.varbind.bind.builder;
 
-import org.comroid.api.*;
+import org.comroid.api.Builder;
+import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
+import org.comroid.api.ValueType;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public final class BuilderStep2$Remapping<SELF extends DataContainer<? super SELF>, EXTR>
         extends VarBindBuilderComponent<SELF, EXTR, Void, Void>

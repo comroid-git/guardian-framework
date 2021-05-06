@@ -48,16 +48,6 @@ public interface CompleteEndpoint extends WrappedFormattable {
                 return endpoint == null ? spec : endpoint.getUrlBase() + spec;
             }
 
-            private OfSpec(AccessibleEndpoint endpoint, String spec) {
-                this.endpoint = endpoint;
-                this.spec = spec;
-            }
-
-            @Override
-            public String toString() {
-                return String.format("[%s / %#s]", this, this);
-            }
-
             @Override
             public String getPrimaryName() {
                 return spec;
@@ -66,6 +56,16 @@ public interface CompleteEndpoint extends WrappedFormattable {
             @Override
             public String getAlternateName() {
                 return endpoint.getPrimaryName();
+            }
+
+            private OfSpec(AccessibleEndpoint endpoint, String spec) {
+                this.endpoint = endpoint;
+                this.spec = spec;
+            }
+
+            @Override
+            public String toString() {
+                return String.format("[%s / %#s]", this, this);
             }
         }
     }

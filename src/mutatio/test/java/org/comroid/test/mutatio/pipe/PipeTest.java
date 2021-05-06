@@ -1,9 +1,7 @@
 package org.comroid.test.mutatio.pipe;
 
 import org.comroid.mutatio.model.RefContainer;
-import org.comroid.mutatio.pipe.Pipe;
 import org.comroid.mutatio.ref.ReferenceList;
-import org.comroid.mutatio.ref.ReferencePipe;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,8 +33,8 @@ public class PipeTest {
             Assert.assertEquals("index " + i, controlGroup.get(i).toLowerCase(), remapOp.getReference(i).get());
 
         final RefContainer<@NotNull Integer, String> filterOp = strings.filter(str -> str.chars()
-                        .map(Character::toLowerCase)
-                        .allMatch(c -> c != 'a'));
+                .map(Character::toLowerCase)
+                .allMatch(c -> c != 'a'));
         for (int i = 0; i < filterOp.size(); i++)
             filterOp.getReference(i)
                     .wrap()

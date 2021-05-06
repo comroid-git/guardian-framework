@@ -4,7 +4,6 @@ import org.comroid.annotations.Instance;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;

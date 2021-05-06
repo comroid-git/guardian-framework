@@ -1,11 +1,12 @@
 package org.comroid.uniform.node.impl;
 
-import org.comroid.api.*;
+import org.comroid.api.Polyfill;
+import org.comroid.api.ValueBox;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.Serializable;
-import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.uniform.node.UniValueNode;
@@ -135,12 +136,12 @@ public class UniObjectNodeImpl
     @Override
     protected KeyedReference<String, UniNode> generateAccessor(final String key) {
         return new KeyedReference.Support.Base<String, UniNode>(key, null, true) {
-/*
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
-*/
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+            */
             @Override
             protected UniNode doGet() {
                 final Object value = baseNode.get(key);

@@ -26,7 +26,7 @@ public final class BuilderStep3$Finishing<SELF extends DataContainer<? super SEL
             String fieldName,
             ValueType<EXTR> valueType,
             VarBind.ExtractionMethod extractionMethod,
-            BiFunction<? super SELF,? super EXTR,? extends REMAP> resolver
+            BiFunction<? super SELF, ? super EXTR, ? extends REMAP> resolver
     ) {
         super(group, fieldName);
 

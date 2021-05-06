@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static java.lang.Integer.min;
 import static java.lang.Integer.parseInt;
 import static org.comroid.api.Polyfill.regexGroupOrDefault;
 

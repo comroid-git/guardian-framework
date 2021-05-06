@@ -10,8 +10,8 @@ import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.ScopedEndpoint;
-import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.exception.RestEndpointException;
+import org.comroid.restless.server.EndpointHandler;
 import org.comroid.restless.server.RestServer;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;
@@ -33,7 +33,6 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, RestEndpointException.RecoverStage {

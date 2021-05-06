@@ -6,12 +6,10 @@ import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
-import org.comroid.uniform.cache.CacheReference;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 
-import java.util.Map;
 import java.util.function.BiFunction;
 
 public class DataContainerCache<K, V extends DataContainer<? super V>>

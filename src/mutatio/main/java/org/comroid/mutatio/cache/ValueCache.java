@@ -25,6 +25,8 @@ public interface ValueCache<T> {
 
     boolean isOutdated();
 
+    void setOutdated(boolean state);
+
     boolean isUpToDate();
 
     @Internal
@@ -103,8 +105,6 @@ public interface ValueCache<T> {
      */
     @Internal
     int deployListeners(T forValue, Executor executor);
-
-    void setOutdated(boolean state);
 
     interface Underlying<T> extends ValueCache<T> {
         ValueCache<T> getUnderlyingValueCache();
@@ -189,6 +189,11 @@ public interface ValueCache<T> {
         }
 
         @Override
+        public final void setOutdated(boolean state) {
+            lastUpdate.set(state ? Long.MAX_VALUE : Long.MIN_VALUE);
+        }
+
+        @Override
         public final Collection<? extends ValueCache<?>> getDependents() {
             return dependents.stream()
                     .filter(Objects::nonNull)
@@ -237,11 +242,6 @@ public interface ValueCache<T> {
         public final int deployListeners(final T forValue, Executor executor) {
             listeners.forEach(listener -> executor.execute(() -> listener.acceptNewValue(forValue)));
             return listeners.size();
-        }
-
-        @Override
-        public final void setOutdated(boolean state) {
-            lastUpdate.set(state ? Long.MAX_VALUE : Long.MIN_VALUE);
         }
 
         @Override

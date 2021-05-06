@@ -3,7 +3,6 @@ package org.comroid.webkit.oauth.rest.request;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;

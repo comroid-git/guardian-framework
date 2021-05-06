@@ -2,8 +2,6 @@ package org.comroid.test.mutatio.pipe;
 
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.ref.ReferenceList;
-import org.comroid.mutatio.ref.ReferenceMap;
-import org.comroid.mutatio.ref.ReferencePipe;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +40,7 @@ public class BiPipeTest {
                 .map(String::toLowerCase);
         controlGroup.forEach(uid ->
                 Assert.assertEquals(
-                "map entry", uid,
+                        "map entry", uid,
                         map.getReference(uid.hashCode()).get()));
     }
 }

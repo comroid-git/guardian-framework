@@ -37,6 +37,26 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
         return RestEndpointException.RecoverStage.EXCEPTIONS_ONLY;
     }
 
+    interface This extends ServerEndpoint {
+        @Override
+        String getUrlBase();
+
+        @Override
+        String getUrlExtension();
+
+        @Override
+        String[] getRegExpGroups();
+
+        @Override
+        Pattern getPattern();
+
+        @Override
+        @Contract("-> this")
+        default AccessibleEndpoint getEndpointBase() {
+            return this;
+        }
+    }
+
     final class Support {
         private static final class Combined implements ServerEndpoint, EndpointHandler.Underlying {
             private final AccessibleEndpoint accessibleEndpoint;
@@ -56,26 +76,6 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
                 this.accessibleEndpoint = accessibleEndpoint;
                 this.handler = handler;
             }
-        }
-    }
-
-    interface This extends ServerEndpoint {
-        @Override
-        String getUrlBase();
-
-        @Override
-        String getUrlExtension();
-
-        @Override
-        String[] getRegExpGroups();
-
-        @Override
-        Pattern getPattern();
-
-        @Override
-        @Contract("-> this")
-        default AccessibleEndpoint getEndpointBase() {
-            return this;
         }
     }
 }

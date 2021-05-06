@@ -2,8 +2,8 @@ package org.comroid.mutatio.model;
 
 import org.comroid.api.MutableState;
 import org.comroid.api.Polyfill;
-import org.comroid.mutatio.api.RefsSupplier;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
+import org.comroid.mutatio.api.RefsSupplier;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.ReferencePipe;

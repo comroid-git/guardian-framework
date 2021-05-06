@@ -39,6 +39,7 @@ public interface Ratelimiter extends BiFunction<RatelimitDefinition, REST.Reques
 
     final class Support {
         private static final Logger logger = LogManager.getLogger();
+
         private static final class Instant implements Ratelimiter {
             private Instant() {
             }

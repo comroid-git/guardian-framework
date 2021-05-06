@@ -4,7 +4,6 @@ import org.comroid.annotations.inheritance.MustExtend;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValuePointer;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.node.impl.UniValueNodeImpl;
@@ -19,16 +18,6 @@ public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<O
     @Override
     default NodeType getNodeType() {
         return NodeType.VALUE;
-    }
-
-    @Override
-    default Stream<UniValueNode> stream() {
-        return streamNodes();
-    }
-
-    @Override
-    default Stream<UniValueNode> streamNodes() {
-        return Stream.of(this);
     }
 
     @Override
@@ -49,5 +38,15 @@ public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<O
         if (value == null)
             return NULL;
         return null;
+    }
+
+    @Override
+    default Stream<UniValueNode> stream() {
+        return streamNodes();
+    }
+
+    @Override
+    default Stream<UniValueNode> streamNodes() {
+        return Stream.of(this);
     }
 }

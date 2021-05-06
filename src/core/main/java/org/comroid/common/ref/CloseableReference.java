@@ -1,6 +1,5 @@
 package org.comroid.common.ref;
 
-import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.util.StackTraceUtils;
 import org.jetbrains.annotations.Nullable;

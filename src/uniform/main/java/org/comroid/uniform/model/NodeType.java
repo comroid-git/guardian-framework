@@ -8,12 +8,12 @@ public enum NodeType implements Named {
     ARRAY(DataStructureType.Primitive.ARRAY),
     VALUE(null);
 
+    public final @Nullable DataStructureType.Primitive dst;
+
     @Override
     public String getName() {
         return name();
     }
-
-    public final @Nullable DataStructureType.Primitive dst;
 
     NodeType(@Nullable DataStructureType.Primitive primitive) {
         this.dst = primitive;

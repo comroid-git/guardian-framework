@@ -4,7 +4,6 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Provider;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -30,7 +29,7 @@ public class CacheReference<K, V> extends KeyedReference<K, V> {
 
     public static <K, V> CacheReference<K, V> createCache() {
         //noinspection unchecked
-        return (CacheReference<K, V>) new CacheReference<>(null);
+        return new CacheReference<>(null);
     }
 
     public static <K, V> CacheReference<K, V> constant(K key, V value) {

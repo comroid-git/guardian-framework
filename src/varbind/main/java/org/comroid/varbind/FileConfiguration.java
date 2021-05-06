@@ -1,14 +1,11 @@
 package org.comroid.varbind;
 
-import org.comroid.api.ContextualProvider;
 import org.comroid.common.io.FileHandle;
 import org.comroid.common.io.FileProcessor;
 import org.comroid.uniform.Context;
-import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainerBase;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.FileWriter;
 import java.io.IOException;

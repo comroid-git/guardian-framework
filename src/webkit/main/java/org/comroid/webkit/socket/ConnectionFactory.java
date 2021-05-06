@@ -6,7 +6,6 @@ import org.comroid.restless.REST;
 import org.comroid.webkit.server.WebSocketConnection;
 import org.java_websocket.WebSocket;
 
-import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 
 public final class ConnectionFactory<T extends WebSocketConnection> implements BiFunction<WebSocket, REST.Header.List, T> {

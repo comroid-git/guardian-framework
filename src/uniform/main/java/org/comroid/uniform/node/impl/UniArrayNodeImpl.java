@@ -1,7 +1,7 @@
 package org.comroid.uniform.node.impl;
 
-import org.comroid.api.ValueType;
 import org.comroid.api.Polyfill;
+import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.uniform.SerializationAdapter;
@@ -53,7 +53,7 @@ public class UniArrayNodeImpl
                 .filter(ref -> ref.contentEquals(other))
                 .findAny()
                 .map(Map.Entry::getKey)
-                .map(index -> accessors.getReference((int) index, true).unset())
+                .map(index -> accessors.getReference(index, true).unset())
                 .orElse(false);
     }
 
@@ -168,12 +168,12 @@ public class UniArrayNodeImpl
     @Override
     protected KeyedReference<Integer, UniNode> generateAccessor(Integer key) {
         return new KeyedReference.Support.Base<Integer, UniNode>(key, null, true) {
-/*
-            @Override
-            public boolean isOutdated() {
-                return true;
-            }
-*/
+            /*
+                        @Override
+                        public boolean isOutdated() {
+                            return true;
+                        }
+            */
             @Override
             protected UniNode doGet() {
                 if (key < 0 || key >= baseNode.size())

@@ -15,7 +15,10 @@ import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNode>, Bas> implements UniNode {
@@ -60,7 +63,7 @@ public abstract class AbstractUniNode<AcK, Ref extends KeyedReference<AcK, UniNo
 
     @Override
     public String getAlternateName() {
-        return String.format("UniNode<%s=%s>", getNodeType(), toString());
+        return String.format("UniNode<%s=%s>", getNodeType(), this);
     }
 
     protected AbstractUniNode(SerializationAdapter seriLib, @Nullable UniNode parent, Bas baseNode) {

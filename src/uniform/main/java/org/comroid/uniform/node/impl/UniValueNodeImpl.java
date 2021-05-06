@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.comroid.util.StandardValueType.*;
@@ -37,13 +36,13 @@ public final class UniValueNodeImpl
     }
 
     @Override
-    protected Stream<Void> streamKeys() {
-        return Stream.empty();
+    public boolean isOutdated() {
+        return baseNode.isOutdated();
     }
 
     @Override
-    public boolean isOutdated() {
-        return baseNode.isOutdated();
+    public void setOutdated(boolean state) {
+        baseNode.setOutdated(state);
     }
 
     @Override
@@ -57,23 +56,8 @@ public final class UniValueNodeImpl
     }
 
     @Override
-    public void updateCache() {
-        baseNode.updateCache();
-    }
-
-    @Override
     public Collection<? extends ValueCache<?>> getDependents() {
         return baseNode.getDependents();
-    }
-
-    @Override
-    public int deployListeners(Object forValue, Executor executor) {
-        return baseNode.deployListeners(forValue, executor);
-    }
-
-    @Override
-    public void setOutdated(boolean state) {
-        baseNode.setOutdated(state);
     }
 
     @Override
@@ -86,11 +70,36 @@ public final class UniValueNodeImpl
         return valueAdapter.getValueType();
     }
 
+    @Override
+    public Object getFromCache() {
+        return baseNode.getFromCache();
+    }
+
+    @Override
+    public @Nullable Executor getAutocomputor() {
+        return baseNode.getAutocomputor();
+    }
+
     public UniValueNodeImpl(String name, SerializationAdapter seriLib, @Nullable UniNode parent, ValueAdapter<? extends Object, Object> valueAdapter) {
         super(seriLib, parent, Reference.provided(valueAdapter::asActualType));
 
         this.name = name;
         this.valueAdapter = valueAdapter;
+    }
+
+    @Override
+    protected Stream<Void> streamKeys() {
+        return Stream.empty();
+    }
+
+    @Override
+    public void updateCache() {
+        baseNode.updateCache();
+    }
+
+    @Override
+    public int deployListeners(Object forValue, Executor executor) {
+        return baseNode.deployListeners(forValue, executor);
     }
 
     @Override
@@ -101,16 +110,6 @@ public final class UniValueNodeImpl
     @Override
     public void computeAndStoreValue() {
         baseNode.computeAndStoreValue();
-    }
-
-    @Override
-    public Object getFromCache() {
-        return baseNode.getFromCache();
-    }
-
-    @Override
-    public @Nullable Executor getAutocomputor() {
-        return baseNode.getAutocomputor();
     }
 
     @Override

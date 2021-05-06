@@ -3,7 +3,6 @@ package org.comroid.restless.body;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniNode;
-import org.comroid.uniform.node.impl.AbstractUniNode;
 import org.comroid.uniform.node.UniObjectNode;
 
 import java.util.function.Function;

@@ -18,7 +18,6 @@ import org.comroid.varbind.container.DataContainer;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
 public class FileCache<K, V extends DataContainer<V>>

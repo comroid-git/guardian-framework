@@ -10,8 +10,8 @@ import org.comroid.mutatio.ref.FutureReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferencePipe;
 import org.comroid.restless.REST;
-import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.restless.socket.Websocket;
+import org.comroid.restless.socket.WebsocketPacket;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,17 +46,6 @@ public final class JavaWebsocket implements Websocket {
         return executor;
     }
 
-    @Override
-    public CompletableFuture<Websocket> send(String[] splitMessage) {
-        final WebSocket jSocket = this.jSocket.requireNonNull("Socket not available");
-
-        logger.trace("{} - Sending Socket message: {}", getName(), Arrays.toString(splitMessage));
-        for (int i = 0; i < splitMessage.length; i++)
-            jSocket.sendText(splitMessage[i], i == splitMessage.length - 1);
-
-        return CompletableFuture.completedFuture(this);
-    }
-
     JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
         this.executor = executor;
         this.uri = uri;
@@ -71,6 +60,17 @@ public final class JavaWebsocket implements Websocket {
         socketBuilder.buildAsync(uri, new Listener())
                 .thenAccept(jSocket.future::complete)
                 .exceptionally(Polyfill.exceptionLogger(logger, "Error while building WebSocket"));
+    }
+
+    @Override
+    public CompletableFuture<Websocket> send(String[] splitMessage) {
+        final WebSocket jSocket = this.jSocket.requireNonNull("Socket not available");
+
+        logger.trace("{} - Sending Socket message: {}", getName(), Arrays.toString(splitMessage));
+        for (int i = 0; i < splitMessage.length; i++)
+            jSocket.sendText(splitMessage[i], i == splitMessage.length - 1);
+
+        return CompletableFuture.completedFuture(this);
     }
 
     private void feed(WebsocketPacket packet) {

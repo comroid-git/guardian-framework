@@ -1,25 +1,13 @@
 package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.api.Polyfill;
 import org.comroid.api.Provider;
-import org.comroid.mutatio.ref.Reference;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BasicCache<K, V> extends AbstractCache<K, V> {
     public static final int DEFAULT_LARGE_THRESHOLD = 250;
     private final @Nullable Provider.Now<V> emptyValueProvider;
     private final int largeThreshold;
-
-    @Override
-    protected CacheReference<K, V> createEmptyRef(K key) {
-        return new CacheReference<>(key);
-    }
 
     public BasicCache(ContextualProvider context) {
         this(context, DEFAULT_LARGE_THRESHOLD);
@@ -35,6 +23,11 @@ public class BasicCache<K, V> extends AbstractCache<K, V> {
 
         this.largeThreshold = largeThreshold;
         this.emptyValueProvider = emptyValueProvider;
+    }
+
+    @Override
+    protected CacheReference<K, V> createEmptyRef(K key) {
+        return new CacheReference<>(key);
     }
 
     @Override
