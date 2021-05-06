@@ -9,6 +9,7 @@ import org.comroid.mutatio.pipe.Pipeable;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferencePipe;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,10 +18,21 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.*;
+import java.util.stream.Stream;
 
 import static org.comroid.api.Polyfill.uncheckedCast;
 
 public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseable, Pipeable<V> {
+    @Nullable
+    default V getFirst() {
+        return findFirst().get();
+    }
+
+    @Nullable
+    default V getAny() {
+        return findAny().get();
+    }
+
     default <X, Y> ReferencePipe<K, V, X, Y> addStage(ReferenceStageAdapter<K, X, V, Y, Ref, KeyedReference<X, Y>> adapter) {
         return addStage(adapter, null);
     }
@@ -89,6 +101,12 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
 
     default <R> ReferencePipe<?, ?, K, R> flatMapOptional(Function<? super V, ? extends Optional<? extends R>> mapper) {
         return flatMap(mapper.andThen(Rewrapper::ofOptional));
+    }
+
+    // todo inspect
+    @Experimental
+    default <R> ReferencePipe<?, ?, K, R> flatMapStream(Function<? super V, ? extends Stream<? extends R>> mapper) {
+        return flatMap(mapper.andThen(stream -> stream.findAny().map(Reference::constant).orElseGet(Reference::empty)));
     }
 
     default <R> ReferencePipe<?, ?, R, V> flatMapKey(final Class<R> target) {
@@ -162,22 +180,12 @@ public interface RefOPs<K, V, Ref extends Reference<V>> extends UncheckedCloseab
         return addStage(uncheckedCast(BiStageAdapter.identity()), comparator, null);
     }
 
-    @Nullable
-    default V getFirst() {
-        return findFirst().get();
-    }
-
     @NotNull
     default KeyedReference<K, V> findFirst() {
         // todo This is wrong
         return ((RefContainer<K, V>) this).streamRefs()
                 .findFirst()
                 .orElseGet(KeyedReference::emptyKey);
-    }
-
-    @Nullable
-    default V getAny() {
-        return findAny().get();
     }
 
     @NotNull
