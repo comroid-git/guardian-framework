@@ -1,8 +1,15 @@
 package org.comroid.mutatio.model;
 
+import org.comroid.api.Named;
+
 import java.util.Map;
 
-public interface KeyRef<K, V> extends Ref<V>, Map.Entry<K, V> {
+public interface KeyRef<K, V> extends Named, Ref<V>, Map.Entry<K, V> {
+    @Override
+    default String getName() {
+        return String.valueOf(getKey());
+    }
+
     @Override
     default V getValue() {
         return get();
