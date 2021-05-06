@@ -4,6 +4,7 @@ import com.sun.net.httpserver.Headers;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.annotations.Upgrade;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Named;
 import org.comroid.api.Polyfill;
@@ -105,6 +106,11 @@ public final class REST implements ContextualProvider.Underlying {
 
     public REST() {
         this(Base.ROOT);
+    }
+
+    @Upgrade
+    public static REST upgrade(final ContextualProvider context) {
+        return context.getFromContext(REST.class).orElseGet(() -> new REST(context));
     }
 
     public Request<UniNode> request() {

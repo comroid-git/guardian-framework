@@ -1,5 +1,6 @@
 package org.comroid.uniform;
 
+import org.comroid.annotations.Upgrade;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
 import org.comroid.api.ValueType;
@@ -14,6 +15,7 @@ import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -25,6 +27,12 @@ public interface SerializationAdapter<BAS, OBJ extends BAS, ARR extends BAS> ext
     DataStructureType.Arr<BAS, ARR> getArrayType();
 
     DataStructureType<Object, Object, UniValueNode> getValueType();
+
+    @Upgrade
+    static SerializationAdapter upgrade(ContextualProvider context) {
+        return context.getFromContext(SerializationAdapter.class).orElseThrow(() ->
+                new NoSuchElementException("Could not find any SerializationAdapter in Context"));
+    }
 
     @NonExtendable
     default UniNode readFile(FileHandle file) {

@@ -1,9 +1,11 @@
 package org.comroid.restless;
 
+import org.comroid.annotations.Upgrade;
 import org.comroid.api.ContextualProvider;
 import org.comroid.restless.socket.Websocket;
 
 import java.net.URI;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -12,6 +14,12 @@ import java.util.function.Consumer;
 public interface HttpAdapter extends ContextualProvider.This<Object> {
     static HttpAdapter autodetect() {
         throw new UnsupportedOperationException();
+    }
+
+    @Upgrade
+    static HttpAdapter upgrade(ContextualProvider context) {
+        return context.getFromContext(HttpAdapter.class).orElseThrow(() ->
+                new NoSuchElementException("Could not find any HttpAdapter in Context"));
     }
 
     default CompletableFuture<? extends Websocket> createWebSocket(
