@@ -20,7 +20,6 @@ import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.server.WebSocketConnection;
 import org.java_websocket.WebSocket;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -123,10 +122,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
         return findSerializer(MimeType.JSON);
     }
 
-    @OverrideOnly
-    protected boolean handleHello(String identification) {
-        return true;
-    }
+    protected abstract boolean handleHello(String identification);
 
     protected abstract void handleCommand(
             Map<String, Object> pageProperties,
