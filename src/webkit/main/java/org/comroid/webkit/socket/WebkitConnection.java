@@ -39,7 +39,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
     private final Ref<Map<String, Object>> properties = Reference.provided(() ->
             requireFromContext(PagePropertiesProvider.class).findPageProperties(getHeaders()));
 
-    protected Map<String, Object> getPageProperties() {
+    public Map<String, Object> getPageProperties() {
         return properties.assertion();
     }
 
