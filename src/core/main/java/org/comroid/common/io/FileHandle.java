@@ -186,4 +186,9 @@ public final class FileHandle extends File implements Named, ContentParser {
     public boolean containsFile(String fileName) {
         return new File(this, fileName).exists();
     }
+
+    public boolean hasFileContent(String fileName) {
+        FileHandle f = createSubFile(fileName);
+        return f.exists() && !f.isEmpty();
+    }
 }
