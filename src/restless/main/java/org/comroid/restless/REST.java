@@ -43,6 +43,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class REST implements ContextualProvider.Underlying {
     private static final Logger logger = LogManager.getLogger();
@@ -514,7 +515,8 @@ public final class REST implements ContextualProvider.Underlying {
         private CompleteEndpoint endpoint;
         private Method method;
         private String body;
-        private int expectedCode = HTTPStatusCodes.OK;
+        private boolean throwOnMismatch = false;
+        private int[] expectedCodes = new int[]{HTTPStatusCodes.OK};
 
         public final CompleteEndpoint getEndpoint() {
             return endpoint;
@@ -556,8 +558,13 @@ public final class REST implements ContextualProvider.Underlying {
                     execution.isDone());
         }
 
-        public Request<T> expect(@MagicConstant(valuesFromClass = HTTPStatusCodes.class) int code) {
-            this.expectedCode = code;
+        public Request<T> expect(@MagicConstant(valuesFromClass = HTTPStatusCodes.class) int... codes) {
+            return expect(false, codes);
+        }
+
+        public Request<T> expect(boolean throwOnMismatch, @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int... codes) {
+            this.throwOnMismatch = throwOnMismatch;
+            this.expectedCodes = codes;
 
             return this;
         }
@@ -620,9 +627,13 @@ public final class REST implements ContextualProvider.Underlying {
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
                         .thenComposeAsync(request -> requireFromContext(HttpAdapter.class).call(request), executor)
                         .thenAcceptAsync(response -> {
-                            if (response.statusCode != expectedCode) {
-                                logger.warn("Unexpected Response status code {}; expected {}", response.statusCode, expectedCode);
+                            if (IntStream.of(expectedCodes).noneMatch(x -> x == response.statusCode)) {
+                                if (throwOnMismatch)
+                                    throw response.toException();
+                                else logger.warn("Unexpected Response status code {}; expected {}",
+                                        response.statusCode, expectedCodes);
                             }
+
                             logger.trace("{} @ {} responded with {} body {}", method,
                                     endpoint.getSpec(), response.statusCode, response.getBody().into(Objects::toString));
 
