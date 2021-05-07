@@ -50,7 +50,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
 
         on(WebsocketPacket.Type.DATA)
                 .flatMap(WebsocketPacket::getData)
-                .yield(str -> !str.startsWith("hello"), str -> sendToPanel("main"))
+                .yield(str -> !str.startsWith("hello"), str -> sendToPanel("home"))
                 .map(findSerializer()::parse)
                 .peek(this::handleCommand);
     }
