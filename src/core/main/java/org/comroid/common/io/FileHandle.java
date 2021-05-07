@@ -182,4 +182,8 @@ public final class FileHandle extends File implements Named, ContentParser {
             return OSBasedFileMover.current.moveDirectory(this, target, executor);
         else return OSBasedFileMover.current.moveFile(this, target, executor);
     }
+
+    public boolean containsFile(String fileName) {
+        return new File(this, fileName).exists();
+    }
 }
