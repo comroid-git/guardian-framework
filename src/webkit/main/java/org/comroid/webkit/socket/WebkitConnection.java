@@ -59,7 +59,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
                             sendText("hello unauthorized being");
                         else sendText("hello client");
                     } catch (Throwable t) {
-                        close(1008, "hello impostor; i do not accept u");
+                        close(1008, "hello impostor; i do not accept u because " + t.getMessage());
                     }
                 })
                 .map(findSerializer()::parse)
