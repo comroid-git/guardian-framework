@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.MimeType;
@@ -50,8 +51,9 @@ public abstract class WebkitConnection extends WebSocketConnection {
         super(socketBase, headers, context);
         this.host = getHeaders().getFirst("Host");
 
-        on(WebsocketPacket.Type.DATA)
-                .flatMap(WebsocketPacket::getData)
+        final RefContainer<WebsocketPacket.Type, WebsocketPacket> listener = on(WebsocketPacket.Type.DATA);
+        on(WebsocketPacket.Type.CLOSE).peek(n -> listener.close());
+        listener.flatMap(WebsocketPacket::getData)
                 .yield(str -> !str.startsWith(CLIENT_HELLO_PREFIX), str -> {
                     String ident = str.substring(CLIENT_HELLO_PREFIX.length() + 1);
                     try {
