@@ -1,6 +1,7 @@
 package org.comroid.webkit.endpoint;
 
 import org.comroid.api.os.OS;
+import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.exception.RestEndpointException;
@@ -10,6 +11,7 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
+import org.comroid.webkit.model.CookieProvider;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.intellij.lang.annotations.Language;
 
@@ -58,7 +60,8 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             UniObjectNode obj = context.createObjectNode();
             obj.putAll(pageProperties);
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
-                    String.format("isWindows = %s;\nsocketToken = '%s';\nsessionData = JSON.parse('%s');\n", OS.isWindows, "", obj.toSerializedString()),
+                    String.format("isWindows = %s;\nsocketToken = '%s';\nsessionData = JSON.parse('%s');\n",
+                            OS.isWindows, headers.getFirst(CommonHeaderNames.AUTHORIZATION), obj.toSerializedString()),
                     resource));
         }
     };
