@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.stream.Stream;
 
 public interface Context extends ContextualProvider {
-    default Stream<String> getSupportedMimeTypes() {
+    default Stream<CharSequence> getSupportedMimeTypes() {
         return streamContextMembers(true)
                 .filter(Serializer.class::isInstance)
                 .map(Serializer.class::cast)
