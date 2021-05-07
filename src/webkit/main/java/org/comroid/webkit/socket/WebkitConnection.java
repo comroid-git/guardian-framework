@@ -54,11 +54,13 @@ public abstract class WebkitConnection extends WebSocketConnection {
                 .flatMap(WebsocketPacket::getData)
                 .yield(str -> !str.startsWith(CLIENT_HELLO_PREFIX), str -> {
                     String ident = str.substring(CLIENT_HELLO_PREFIX.length() + 1);
-                    if (ident.equals("null"))
-                        sendText("hello unauthorized being");
-                    if (handleHello(ident))
-                        sendText("hello client");
-                    else close(1008, "hello impostor; i do not accept u");
+                    try {
+                        if (ident.equals("null") || !handleHello(ident))
+                            sendText("hello unauthorized being");
+                        else sendText("hello client");
+                    } catch (Throwable t) {
+                        close(1008, "hello impostor; i do not accept u");
+                    }
                 })
                 .map(findSerializer()::parse)
                 .peek(this::handleCommand);
