@@ -200,7 +200,8 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                         try {
                             return engine.eval(script);
                         } catch (ScriptException e) {
-                            throw new RuntimeException("Error in attribute evaluation", e);
+                            logger.warn("Attribute evaluation failed; removing " + dom, e);
+                            return false;
                         }
                     }).flatMap(Boolean.class).orElse(false);
                     if (!keep)
