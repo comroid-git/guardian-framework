@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class AuthenticationRequest extends DataContainerBase<AuthenticationRequest> {
-    public static final String SCOPE_SPLIT_PATTERN = "[\\s+,]{1,2}";
+    public static final String SCOPE_SPLIT_PATTERN = "[\\[{]?[\\s+,]{1,2}[]}]?";
     @RootBind
     public static final GroupBind<AuthenticationRequest> Type
             = new GroupBind<>(OAuth.CONTEXT, "authentication-request");
