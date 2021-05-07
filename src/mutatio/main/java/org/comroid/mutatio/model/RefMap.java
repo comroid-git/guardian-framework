@@ -21,4 +21,8 @@ public interface RefMap<K, V> extends RefAtlas<Object, K, Object, V>, ValueCache
     void forEach(final Consumer<? super V> action);
 
     void forEach(final BiConsumer<? super K, ? super V> action);
+
+    default boolean hasValue(K key) {
+        return containsKey(key) && getReference(key, false).isNonNull();
+    }
 }
