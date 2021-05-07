@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class WebkitConnection extends WebSocketConnection {
+    private static final String CLIENT_HELLO_PREFIX = "hello server; i'm ";
     private static final Logger logger = LogManager.getLogger();
     public final String host;
 
@@ -42,7 +43,10 @@ public abstract class WebkitConnection extends WebSocketConnection {
 
         on(WebsocketPacket.Type.DATA)
                 .flatMap(WebsocketPacket::getData)
-                .yield(str -> !str.startsWith("hello"), str -> sendText("hello client"))
+                .yield(str -> !str.startsWith(CLIENT_HELLO_PREFIX), str -> {
+                    handleHello(str.substring(CLIENT_HELLO_PREFIX.length() + 1));
+                    sendText("hello client");
+                })
                 .map(findSerializer()::parse)
                 .peek(command -> {
                     UniObjectNode response = findSerializer().createObjectNode().asObjectNode();
@@ -110,6 +114,8 @@ public abstract class WebkitConnection extends WebSocketConnection {
     protected final Serializer<UniNode> findSerializer() {
         return findSerializer(MimeType.JSON);
     }
+
+    protected abstract void handleHello(String identification);
 
     protected abstract void handleCommand(
             Map<String, Object> pageProperties,
