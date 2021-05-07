@@ -1,5 +1,6 @@
 package org.comroid.webkit.model;
 
+import org.comroid.api.Polyfill;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -66,5 +67,14 @@ public interface CookieProvider {
 
     default String getCookie(@Nullable Duration maxAge, @Nullable String path, @Nullable String domain) {
         return assembleCookie(getCookiePrefix(), getPlainCookie(), maxAge, path, domain);
+    }
+
+    default boolean checkCookie(String cookie) {
+        if (!cookie.startsWith(getCookiePrefix()))
+            return false;
+        if (cookie.contains(";"))
+            cookie = cookie.substring(cookie.indexOf(';'));
+        Polyfill.COMMON_LOGGER.trace("Checking cookie {} vs plain cookie {}", cookie, getPlainCookie());
+        return getPlainCookie().equals(cookie);
     }
 }

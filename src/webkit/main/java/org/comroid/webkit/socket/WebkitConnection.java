@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
+import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
@@ -41,11 +42,17 @@ public abstract class WebkitConnection extends WebSocketConnection {
         super(socketBase, headers, context);
         this.host = getHeaders().getFirst("Host");
 
-        on(WebsocketPacket.Type.DATA)
-                .flatMap(WebsocketPacket::getData)
+        RefContainer<WebsocketPacket.Type, WebsocketPacket> listener = on(WebsocketPacket.Type.DATA);
+        on(WebsocketPacket.Type.CLOSE).peek(n -> {
+            logger.trace("Closing Webkit Listener");
+            listener.close();
+        });
+
+        listener.flatMap(WebsocketPacket::getData)
                 .yield(str -> !str.startsWith(CLIENT_HELLO_PREFIX), str -> {
-                    handleHello(str.substring(CLIENT_HELLO_PREFIX.length() + 1));
-                    sendText("hello client");
+                    if (handleHello(str.substring(CLIENT_HELLO_PREFIX.length() + 1)))
+                        sendText("hello client");
+                    else close(1008, "hello impostor; i do not accept u");
                 })
                 .map(findSerializer()::parse)
                 .peek(command -> {
@@ -115,7 +122,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
         return findSerializer(MimeType.JSON);
     }
 
-    protected abstract void handleHello(String identification);
+    protected abstract boolean handleHello(String identification);
 
     protected abstract void handleCommand(
             Map<String, Object> pageProperties,
