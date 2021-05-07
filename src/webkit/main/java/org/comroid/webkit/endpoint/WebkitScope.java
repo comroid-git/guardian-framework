@@ -61,7 +61,8 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             obj.putAll(pageProperties);
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
                     String.format("isWindows = %s;\nsocketToken = '%s';\nsessionData = JSON.parse('%s');\n",
-                            OS.isWindows, headers.getFirst(CommonHeaderNames.AUTHORIZATION), obj.toSerializedString()),
+                            OS.isWindows, headers.tryFirst(CommonHeaderNames.AUTHORIZATION)
+                                    .orElseGet(() -> headers.getFirst(CommonHeaderNames.COOKIE)), obj.toSerializedString()),
                     resource));
         }
     };

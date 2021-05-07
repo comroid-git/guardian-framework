@@ -237,6 +237,14 @@ public final class REST implements ContextualProvider.Underlying {
                 forEach(headers::add);
                 return headers;
             }
+
+            public Optional<Header> tryHeader(String headerName) {
+                return Optional.ofNullable(getHeader(headerName));
+            }
+
+            public Optional<String> tryFirst(String headerName) {
+                return Optional.ofNullable(getFirst(headerName));
+            }
         }
     }
 

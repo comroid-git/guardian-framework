@@ -262,7 +262,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
     }
 
-    private static String postfabString(final Map<String, Object> pageProperties, String untreated) {
+    public static String postfabString(final Map<String, Object> pageProperties, String untreated) {
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
 
         // fill in vars
