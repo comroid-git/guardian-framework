@@ -352,7 +352,7 @@ public final class REST implements ContextualProvider.Underlying {
                 Serializable body,
                 Header.List headers
         ) {
-            this(statusCode, body.toUniNode().getMimeType(), body, null, headers);
+            this(statusCode, body == null ? null : body.toUniNode().getMimeType(), body, null, headers);
         }
 
         /**
