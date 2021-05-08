@@ -44,13 +44,8 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public boolean unset() {
-        return false; // todo
-    }
-
-    @Override
     public boolean set(T value) {
-        return false; // todo
+        return overriddenSetter.test(value);
     }
 
     @Override
@@ -76,7 +71,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final <X, R> ParameterizedReference<P, R> combine(Supplier<X> other, final BiFunction<T, X, R> accumulator) {
-        return null; // todo
+        throw new UnsupportedOperationException(); // todo
     }
 
     @Override
@@ -126,7 +121,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final ParameterizedReference<P, T> or(Supplier<T> orElse) {
-        return null; // todo
+        throw new UnsupportedOperationException(); // todo
     }
 
     @Override
