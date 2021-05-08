@@ -10,11 +10,13 @@ import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
+public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> implements Named {
     private static final Logger logger = LogManager.getLogger();
+    private @Nullable String name;
     protected Function<I, O> overriddenSupplier = null;
     private WeakReference<I> lastParam;
 
@@ -25,6 +27,15 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
 
     protected ValueProvider(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
+    }
+
+    public void setName(@Nullable String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name == null ? makeString(this) : name;
     }
 
     private static String makeString(ValueProvider provider) {
