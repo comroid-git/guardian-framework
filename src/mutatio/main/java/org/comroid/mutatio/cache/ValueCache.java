@@ -1,6 +1,7 @@
 package org.comroid.mutatio.cache;
 
 import org.comroid.annotations.inheritance.MustExtend;
+import org.comroid.api.Named;
 import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
@@ -20,7 +21,7 @@ import java.util.stream.Stream;
 import static java.lang.System.nanoTime;
 
 @MustExtend(ValueCache.Abstract.class)
-public interface ValueCache<T> {
+public interface ValueCache<T> extends Named {
     Rewrapper<? extends ValueCache<?>> getParent();
 
     boolean isOutdated();
