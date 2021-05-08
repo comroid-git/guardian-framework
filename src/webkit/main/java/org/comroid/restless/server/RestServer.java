@@ -23,6 +23,7 @@ import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.util.ReaderUtil;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.Nullable;
 
@@ -269,34 +270,21 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             logger.trace("Using response reader {}", responseData);
 
             try {
-                StringBuilder sb = new StringBuilder();
-                char[] cbuf = new char[512];
-                int x;
-                while ((x = responseData.read(cbuf)) != -1) {
-                    char[] chars = x == cbuf.length ? cbuf : Arrays.copyOf(cbuf, x);
-                    sb.append(chars);
-                }
-
-                final String body = sb.toString();
-                final int len = body.length();
+                Reader peek = ReaderUtil.peek(responseData, buf -> logger.log(Level.ALL, "Partial Response Body:\n" + new String(buf)));
+                final int len = 0; // todo Obtain Length somehow
                 logger.debug("Sending Response with code {} and length {}", statusCode, len);
                 logger.trace("Response has headers:\n{}", responseHeaders.entrySet()
                         .stream()
                         .map(header -> String.format("%s = %s", header.getKey(), String.join(";", header.getValue())))
                         .collect(Collectors.joining("\n")));
-                logger.log(Level.ALL, "Response body:\n{}", body);
                 exchange.sendResponseHeaders(statusCode, len);
 
                 char[] wbuf = new char[512];
                 int r, w = 0;
                 try (
-                        Reader write = new StringReader(body);
                         OutputStreamWriter osw = new OutputStreamWriter(exchange.getResponseBody())
                 ) {
-                    while ((r = write.read(wbuf)) != -1) {
-                        osw.write(wbuf, 0, r);
-                        w += r;
-                    }
+                    ReaderUtil.transferTo(peek, osw);
                 }
             } catch (IOException e) {
                 logger.fatal("Error occurred while sending response; cannot continue", e);
