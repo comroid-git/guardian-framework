@@ -129,16 +129,6 @@ public class ReferencePipe<InK, InV, K, V>
         return KeyedReference.createKey(key);
     }
 
-    @Override
-    public void forEach(Consumer<? super V> action) {
-        streamValues().forEach(action);
-    }
-
-    @Override
-    public void forEach(final BiConsumer<? super K, ? super V> action) {
-        streamRefs().forEach(ref -> ref.consume(action));
-    }
-
     public static abstract class ForList<InV, V>
             extends ReferencePipe<@NotNull Integer, InV, @NotNull Integer, V>
             implements AbstractList<V> {
