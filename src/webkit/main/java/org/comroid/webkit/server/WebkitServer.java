@@ -141,7 +141,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public String getSocketHost() {
         InetSocketAddress address = socket.getAddress();
-        return "ws" + (OS.isWindows ? "" : "s") + "://" + address.getAddress().getHostName() + ':' + address.getPort();
+        return address.getAddress().getHostName() + ':' + address.getPort();
     }
 
     @Override
