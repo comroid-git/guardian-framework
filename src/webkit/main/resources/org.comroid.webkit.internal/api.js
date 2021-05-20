@@ -79,10 +79,11 @@ function handleMessage(json) {
     sendLocalEvent(type, data);
 }
 
-function sendCommand(command) {
+function sendCommand(command, data) {
     sendLocalEvent(command);
     ws.send(JSON.stringify({
-        'type': command
+        'type': command,
+        'data': data // todo: inspect null case
     }));
 }
 

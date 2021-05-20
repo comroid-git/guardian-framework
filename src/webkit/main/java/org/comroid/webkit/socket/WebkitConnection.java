@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
+import org.comroid.api.StringSerializable;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.mutatio.ref.Reference;
@@ -23,6 +24,7 @@ import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.server.WebSocketConnection;
 import org.java_websocket.WebSocket;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -67,6 +69,22 @@ public abstract class WebkitConnection extends WebSocketConnection {
                 })
                 .map(findSerializer()::parse)
                 .peek(this::handleCommand);
+    }
+
+    public void sendCommand(String command) {
+        sendCommand(command, (String) null);
+    }
+
+    public void sendCommand(String command, @Nullable StringSerializable data) {
+        sendCommand(command, data != null ? data.toSerializedString() : null);
+    }
+
+    public void sendCommand(String command, @Nullable String data) {
+        UniObjectNode response = findSerializer().createObjectNode().asObjectNode();
+        response.put("type", command);
+        if (data != null)
+            response.put("data", data);
+        sendText(response);
     }
 
     protected void sendToPanel(String targetPanel) {
