@@ -83,13 +83,13 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     }
 
     public RestServer(
-            Context context,
+            ContextualProvider context,
             Executor executor,
             InetSocketAddress socketAddress,
             StreamSupplier<ServerEndpoint> endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.stream().count());
-        this.context = context;
+        this.context = context.upgrade(Context.class);
         this.endpoints = endpoints;
         this.defaultEndpoint = Reference.create();
         this.server = HttpServer.create(socketAddress, socketAddress.getPort());
@@ -213,7 +213,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 urlParams = endpoint.extractArgs(requestURI);
 
                 // execute endpoint
-                logger.debug("Executing Endpoint {}...", endpoint);
+                logger.info("Executing Endpoint {}...", endpoint);
                 response = endpoint.executeMethod(context, requestMethod, requestHeaders, urlParams, requestData);
             } catch (Throwable t) {
                 if (t instanceof RestEndpointException && requestHeaders.getHeader(ACCEPTED_CONTENT_TYPE)

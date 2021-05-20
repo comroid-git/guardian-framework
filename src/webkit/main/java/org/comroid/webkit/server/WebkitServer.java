@@ -75,7 +75,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     }
 
     public WebkitServer(
-            Context context,
+            ContextualProvider context,
             Executor executor,
             String urlBase,
             InetAddress inetAddress,
@@ -99,7 +99,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     }
 
     public WebkitServer(
-            Context context,
+            ContextualProvider context,
             Executor executor,
             String urlBase,
             InetAddress inetAddress,
@@ -110,13 +110,13 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             StreamSupplier<ServerEndpoint> additionalEndpoints
     ) throws IOException {
         context.addToContext(this);
-        this.context = context;
+        this.context = context.upgrade(Context.class);
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
         this.endpoints = new WebkitEndpoints();
         this.rest = new RestServer(
-                context,
+                this.context,
                 executor,
                 new InetSocketAddress(inetAddress, port),
                 additionalEndpoints.append(endpoints));
