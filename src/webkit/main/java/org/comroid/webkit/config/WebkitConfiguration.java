@@ -46,7 +46,9 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
                 .forEach(element -> panels.put(element.tagName(), element.html()));
     }
 
-    public static WebkitConfiguration get() {
+    public static WebkitConfiguration get() throws IllegalStateException {
+        if (!instance.future.isDone())
+            throw new IllegalStateException("Webkit was not initialized");
         return instance.assertion();
     }
 
