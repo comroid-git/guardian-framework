@@ -4,6 +4,7 @@ if (socketToken === undefined)
     socketToken = '';
 let ws = undefined;
 let evals = [];
+const secure = (window.location.href.startsWith("https") ? "s" : "") + '://'
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -112,7 +113,7 @@ function actionChangePanel(target) {
 function initAPI() {
     console.debug('loading socket');
 
-    ws = new WebSocket('ws' + (window.location.href.startsWith("https") ? "s" : "") + '://' + sessionData['wsHost']);
+    ws = new WebSocket('ws' + secure + sessionData['wsHost']);
     ws.onopen = (msg) => {
         console.debug("open ", msg);
         ws.send("hello server; i'm " + (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken));

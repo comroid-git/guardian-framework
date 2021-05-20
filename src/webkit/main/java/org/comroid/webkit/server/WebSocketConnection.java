@@ -50,6 +50,10 @@ public class WebSocketConnection implements
         return context;
     }
 
+    public boolean isSecure() {
+        return socketBase.getSSLSession() != null;
+    }
+
     protected WebSocketConnection(WebSocket socketBase, REST.Header.List headers, ContextualProvider context) {
         this.socketBase = socketBase;
         this.headers = headers;

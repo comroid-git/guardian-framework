@@ -7,6 +7,7 @@ import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.Arrays;
 
 public interface EndpointHandler {
@@ -23,6 +24,7 @@ public interface EndpointHandler {
 
     default REST.Response executeMethod(
             Context context,
+            URI requestURI,
             REST.Method method,
             REST.Header.List headers,
             String[] urlParams,
@@ -30,17 +32,17 @@ public interface EndpointHandler {
     ) throws RestEndpointException {
         switch (method) {
             case GET:
-                return executeGET(context, headers, urlParams, data);
+                return executeGET(context, requestURI, headers, urlParams, data);
             case PUT:
-                return executePUT(context, headers, urlParams, data);
+                return executePUT(context, requestURI, headers, urlParams, data);
             case POST:
-                return executePOST(context, headers, urlParams, data);
+                return executePOST(context, requestURI, headers, urlParams, data);
             case PATCH:
-                return executePATCH(context, headers, urlParams, data);
+                return executePATCH(context, requestURI, headers, urlParams, data);
             case DELETE:
-                return executeDELETE(context, headers, urlParams, data);
+                return executeDELETE(context, requestURI, headers, urlParams, data);
             case HEAD:
-                return executeHEAD(context, headers, urlParams, data);
+                return executeHEAD(context, requestURI, headers, urlParams, data);
         }
 
         throw new AssertionError("No such method: " + method);
@@ -48,15 +50,16 @@ public interface EndpointHandler {
 
     default REST.Response executeGET(
             Context context,
+            URI requestURI,
             REST.Header.List headers,
             String[] urlParams,
-            UniNode body
-    ) throws RestEndpointException {
+            UniNode body) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: GET");
     }
 
     default REST.Response executePUT(
             Context context,
+            URI requestURI,
             REST.Header.List headers,
             String[] urlParams,
             UniNode body
@@ -66,7 +69,7 @@ public interface EndpointHandler {
 
     default REST.Response executePOST(
             Context context,
-            REST.Header.List headers,
+            URI requestURI, REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -75,7 +78,7 @@ public interface EndpointHandler {
 
     default REST.Response executePATCH(
             Context context,
-            REST.Header.List headers,
+            URI requestURI, REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -84,7 +87,7 @@ public interface EndpointHandler {
 
     default REST.Response executeDELETE(
             Context context,
-            REST.Header.List headers,
+            URI requestURI, REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -93,7 +96,7 @@ public interface EndpointHandler {
 
     default REST.Response executeHEAD(
             Context context,
-            REST.Header.List headers,
+            URI requestURI, REST.Header.List headers,
             String[] urlParams,
             UniNode body
     ) throws RestEndpointException {
@@ -106,8 +109,8 @@ public interface EndpointHandler {
         }
 
         @Override
-        default REST.Response executeMethod(Context context, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            return getEndpointHandler().executeMethod(context, method, headers, urlParams, body);
+        default REST.Response executeMethod(Context context, URI requestURI, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+            return getEndpointHandler().executeMethod(context, requestURI, method, headers, urlParams, body);
         }
     }
 }

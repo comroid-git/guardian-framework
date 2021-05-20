@@ -11,12 +11,12 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
-import org.comroid.webkit.model.CookieProvider;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.server.WebkitServer;
 import org.intellij.lang.annotations.Language;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -26,7 +26,7 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("/webkit/frame") {
         @Override
-        public REST.Response executeGET(Context context, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
             Map<String, Object> pageProperties = context
                     .requireFromContext(PagePropertiesProvider.class)
                     .findPageProperties(headers);
@@ -38,9 +38,11 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
                 pageProperties.put("args", Arrays.asList(args));
             }
 
-            FrameBuilder frameBuilder = new FrameBuilder(headers, pageProperties);
-            if (requestPath.length > 0 && !requestPath[0].isEmpty())
-                frameBuilder.setPanel(requestPath[0]);
+            String panel = (requestPath.length > 0 && !requestPath[0].isEmpty()) ? requestPath[0] : "main";
+
+            String scheme = requestURI.getScheme();
+            boolean secure = scheme != null && scheme.equals("https");
+            FrameBuilder frameBuilder = new FrameBuilder(panel, headers, pageProperties, false, secure);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 
@@ -51,7 +53,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     },
     WEBKIT_API("/webkit/api") {
         @Override
-        public REST.Response executeGET(Context context, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
             InputStream resource = FrameBuilder.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");

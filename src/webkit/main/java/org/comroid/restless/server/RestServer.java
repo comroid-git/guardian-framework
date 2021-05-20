@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
+import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.model.Ref;
@@ -214,7 +215,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
                 // execute endpoint
                 logger.info("Executing Endpoint {}...", endpoint);
-                response = endpoint.executeMethod(context, requestMethod, requestHeaders, urlParams, requestData);
+                response = endpoint.executeMethod(context, Polyfill.uri(requestURI), requestMethod, requestHeaders, urlParams, requestData);
             } catch (Throwable t) {
                 if (t instanceof RestEndpointException && requestHeaders.getHeader(ACCEPTED_CONTENT_TYPE)
                         .getValues()

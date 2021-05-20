@@ -65,10 +65,14 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
-        this("main", headers, pageProperties, false);
+        this("main", headers, pageProperties, false, true);
     }
 
     public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
+        this(frameName, headers, pageProperties, isError, true);
+    }
+
+    public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError, boolean isSecure) {
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
         pageProperties.put("frame", frameName);
@@ -90,7 +94,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         // add api script
         frame.head().appendElement("script")
                 .attr("type", "application/javascript")
-                .attr("src", String.format("http%s://%s/webkit/api", isDebug ? "" : "s", host));
+                .attr("src", String.format("http%s://%s/webkit/api", isSecure ? "s" : "", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
     }
