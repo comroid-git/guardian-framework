@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 
 public final class FrameBuilder implements Builder<Document>, StringSerializable, PropertiesHolder {
     public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\[([\\w\\d\\S.]+?)]");
-    public static final String RESOURCE_PREFIX = "org.comroid.webkit/";
-    public static final String INTERNAL_RESOURCE_PREFIX = "org.comroid.webkit.internal/";
+    public static final String RESOURCE_PREFIX = "org/comroid/webkit/";
+    public static final String INTERNAL_RESOURCE_PREFIX = "org/comroid/webkit/internal/";
     public static final Reference<ClassLoader> classLoader;
     private static final Logger logger;
     private static final Map<String, String> frameCache;
