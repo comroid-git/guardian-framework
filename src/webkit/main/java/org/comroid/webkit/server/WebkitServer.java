@@ -6,6 +6,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
+import org.comroid.api.os.OS;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
@@ -133,7 +134,14 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     @Override
     public Map<String, Object> findPageProperties(REST.Header.List headers) {
-        return pagePropertiesProvider.findPageProperties(headers);
+        Map<String, Object> map = pagePropertiesProvider.findPageProperties(headers);
+        map.put("wsHost", getSocketHost());
+        return map;
+    }
+
+    public String getSocketHost() {
+        InetSocketAddress address = socket.getAddress();
+        return "ws" + (OS.isWindows ? "" : "s") + "://" + address.getAddress().getHostName() + ':' + address.getPort();
     }
 
     @Override

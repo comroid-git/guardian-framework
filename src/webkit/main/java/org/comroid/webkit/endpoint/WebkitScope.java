@@ -13,6 +13,7 @@ import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.CookieProvider;
 import org.comroid.webkit.model.PagePropertiesProvider;
+import org.comroid.webkit.server.WebkitServer;
 import org.intellij.lang.annotations.Language;
 
 import java.io.InputStream;
@@ -55,7 +56,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
             Map<String, Object> pageProperties = context
-                    .requireFromContext(PagePropertiesProvider.class)
+                    .requireFromContext(WebkitServer.class)
                     .findPageProperties(headers);
             UniObjectNode obj = context.createObjectNode();
             obj.putAll(pageProperties);
