@@ -125,7 +125,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         this.socket = new WebSocketServer(
                 this.context,
                 executor,
-                urlBase + "/websocket",
+                getSocketHost(),
                 inetAddress,
                 socketPort,
                 connectionFactory
@@ -141,7 +141,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public String getSocketHost() {
         InetSocketAddress address = socket.getAddress();
-        return address.getAddress().getHostName() + ':' + address.getPort();
+        return address.getAddress().getHostName() + ':' + address.getPort() + "/websocket";
     }
 
     @Override
