@@ -190,7 +190,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     private static InetSocketAddress formAddress(ContextualProvider context, int port) {
         return context.getFromContext(InetAddress.class)
                 .or(() -> context.getFromContext(InetSocketAddress.class).ifPresentMap(InetSocketAddress::getAddress))
-                .or(ThrowingSupplier.rethrowing(InetAddress::getLocalHost, null))
+                .or(ThrowingSupplier.rethrowing(InetAddress::getLocalHost, t -> new RuntimeException("Could not obtain localhost", t)))
                 .ifPresentMapOrElseThrow(
                         address -> new InetSocketAddress(address, port),
                         () -> new NoSuchElementException("No INetAddress candidate found at context " + context.getName())
