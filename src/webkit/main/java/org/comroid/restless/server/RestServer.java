@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     private final Context context;
     private final HttpServer server;
     private final REST.Header.List commonHeaders = new REST.Header.List();
-    private final StreamSupplier<ServerEndpoint> endpoints;
+    private final StreamSupplier<? extends ServerEndpoint> endpoints;
     private final Ref<ServerEndpoint> defaultEndpoint;
 
     public REST.Header.List getCommonHeaders() {
@@ -83,6 +84,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         this(context.upgrade(Context.class), executor, new InetSocketAddress(address, port), StreamSupplier.of(endpoints));
     }
 
+    @Deprecated
     public RestServer(
             ContextualProvider context,
             Executor executor,
@@ -90,13 +92,42 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             StreamSupplier<ServerEndpoint> endpoints
     ) throws IOException {
         logger.info("Starting REST Server with {} endpoints", endpoints.stream().count());
+        logger.warn("Deprecated Constructor used");
         this.context = context.upgrade(Context.class);
         this.endpoints = endpoints;
         this.defaultEndpoint = Reference.create();
-        this.server = HttpServer.create(socketAddress, socketAddress.getPort());
+        this.server = HttpServer.create(socketAddress, 0);
 
         server.createContext("/", this);
         server.setExecutor(executor);
+        server.start();
+
+        logger.info("Rest Server available at http://{}:{} (http://{}:{})",
+                socketAddress.getAddress().getHostAddress(), socketAddress.getPort(), socketAddress.getHostName(), socketAddress.getPort());
+    }
+
+    public RestServer(
+            ContextualProvider context,
+            StreamSupplier<? extends ServerEndpoint> endpoints
+    ) throws IOException {
+        this(context, context.requireFromContext(InetSocketAddress.class), endpoints);
+    }
+
+    public RestServer(
+            ContextualProvider context,
+            InetSocketAddress socketAddress,
+            StreamSupplier<? extends ServerEndpoint> endpoints
+    ) throws IOException {
+        logger.info("Starting REST Server with {} endpoints", endpoints.stream().count());
+        this.context = context.upgrade(Context.class);
+        this.endpoints = endpoints;
+        this.defaultEndpoint = Reference.create();
+        this.server = HttpServer.create(socketAddress, 0);
+
+        server.createContext("/", this);
+        context.getFromContext(Executor.class)
+                .or(ForkJoinPool::commonPool)
+                .consume(server::setExecutor);
         server.start();
 
         logger.info("Rest Server available at http://{}:{} (http://{}:{})",

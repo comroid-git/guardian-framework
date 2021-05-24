@@ -25,30 +25,32 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public final class WebSocketServer extends org.java_websocket.server.WebSocketServer implements Closeable, ContextualProvider.Underlying {
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
-    private final Executor executor;
     private final ConnectionFactory<? extends WebSocketConnection> connectionFactory;
     private final RefMap<WebSocket, WebSocketConnection> activeConnections;
     private final Set<Consumer<WebSocketConnection>> connectionListeners;
+
+    {
+        this.activeConnections = new ReferenceMap<>();
+        this.connectionListeners = new HashSet<>();
+    }
 
     @Override
     public ContextualProvider getUnderlyingContextualProvider() {
         return context;
     }
 
-    public Executor getExecutor() {
-        return executor;
-    }
-
     public RefContainer<?, WebSocketConnection> getActiveConnections() {
         return activeConnections.immutable();
     }
 
+    @Deprecated
     public WebSocketServer(
             ContextualProvider context,
             Executor executor,
@@ -58,6 +60,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
         this(context, executor, inetAddress, port, ConnectionFactory.standard(context));
     }
 
+    @Deprecated
     public <C extends WebSocketConnection> WebSocketServer(
             ContextualProvider context,
             Executor executor,
@@ -68,6 +71,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
         this(context, executor, inetAddress, port, new ConnectionFactory<>(connectionConstructor, context));
     }
 
+    @Deprecated
     public <C extends WebSocketConnection> WebSocketServer(
             ContextualProvider context,
             Executor executor,
@@ -76,16 +80,50 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             ConnectionFactory<C> connectionFactory
     ) {
         super(new InetSocketAddress(inetAddress, port));
+        logger.warn("Deprecated Constructor used");
 
         this.context = context;
-        this.executor = executor;
         this.connectionFactory = connectionFactory;
-        this.activeConnections = new ReferenceMap<>();
-        this.connectionListeners = new HashSet<>();
 
         super.start();
         logger.debug("Websocket Server available at ws://{}:{} / ws://{}:{}",
                 inetAddress.getHostAddress(), port, inetAddress.getHostName(), port);
+    }
+
+    public WebSocketServer(
+            ContextualProvider context,
+            InetAddress address,
+            int port
+    ) {
+        this(context, new InetSocketAddress(address, port));
+    }
+
+    public WebSocketServer(
+            ContextualProvider context
+    ) {
+        this(context, context.requireFromContext(InetSocketAddress.class));
+    }
+
+    public WebSocketServer(
+            ContextualProvider context,
+            InetSocketAddress address
+    ) {
+        this(context, address, context.requireFromContext(ConnectionFactory.class));
+    }
+
+    public WebSocketServer(
+            ContextualProvider context,
+            InetSocketAddress address,
+            ConnectionFactory<? extends WebSocketConnection> connectionFactory
+    ) {
+        super(address);
+
+        this.context = context;
+        this.connectionFactory = connectionFactory;
+
+        super.start();
+        logger.debug("Websocket Server available at ws://{}:{} / ws://{}:{}",
+                address.getAddress().getHostAddress(), address.getPort(), address.getHostName(), address.getPort());
     }
 
     public BooleanSupplier onNewConnection(Consumer<WebSocketConnection> listener) {

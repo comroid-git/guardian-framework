@@ -75,6 +75,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         return socket.getActiveConnections().flatMap(WebkitConnection.class);
     }
 
+    @Deprecated
     public WebkitServer(
             ContextualProvider context,
             Executor executor,
@@ -99,6 +100,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         );
     }
 
+    @Deprecated
     public WebkitServer(
             ContextualProvider context,
             Executor executor,
@@ -129,6 +131,22 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 socketPort,
                 connectionFactory
         );
+    }
+
+    protected WebkitServer(
+            Context context,
+            String urlBase,
+            Executor executor,
+            PagePropertiesProvider pagePropertiesProvider
+    ) throws IOException {
+        this.context = context;
+        this.executor = executor;
+        this.urlBase = urlBase;
+        this.pagePropertiesProvider = pagePropertiesProvider;
+        this.endpoints = new WebkitEndpoints();
+        this.rest = new RestServer(this, endpoints);
+        this.rest.setDefaultEndpoint(endpoints.defaultEndpoint);
+        this.socket = new WebSocketServer(this);
     }
 
     @Override
