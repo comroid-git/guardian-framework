@@ -32,7 +32,6 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
     private static final Logger logger = LogManager.getLogger();
     private final ContextualProvider context;
     private final Executor executor;
-    private final String baseUrl;
     private final ConnectionFactory<? extends WebSocketConnection> connectionFactory;
     private final RefMap<WebSocket, WebSocketConnection> activeConnections;
     private final Set<Consumer<WebSocketConnection>> connectionListeners;
@@ -46,10 +45,6 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
         return executor;
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
     public RefContainer<?, WebSocketConnection> getActiveConnections() {
         return activeConnections.immutable();
     }
@@ -57,28 +52,25 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
     public WebSocketServer(
             ContextualProvider context,
             Executor executor,
-            String baseUrl,
             InetAddress inetAddress,
             int port
     ) {
-        this(context, executor, baseUrl, inetAddress, port, ConnectionFactory.standard(context));
+        this(context, executor, inetAddress, port, ConnectionFactory.standard(context));
     }
 
     public <C extends WebSocketConnection> WebSocketServer(
             ContextualProvider context,
             Executor executor,
-            String baseUrl,
             InetAddress inetAddress,
             int port,
             NFunction.In3<WebSocket, REST.Header.List, ContextualProvider, ? extends WebSocketConnection> connectionConstructor
     ) {
-        this(context, executor, baseUrl, inetAddress, port, new ConnectionFactory<>(connectionConstructor, context));
+        this(context, executor, inetAddress, port, new ConnectionFactory<>(connectionConstructor, context));
     }
 
     public <C extends WebSocketConnection> WebSocketServer(
             ContextualProvider context,
             Executor executor,
-            String baseUrl,
             InetAddress inetAddress,
             int port,
             ConnectionFactory<C> connectionFactory
@@ -87,7 +79,6 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
 
         this.context = context;
         this.executor = executor;
-        this.baseUrl = baseUrl;
         this.connectionFactory = connectionFactory;
         this.activeConnections = new ReferenceMap<>();
         this.connectionListeners = new HashSet<>();

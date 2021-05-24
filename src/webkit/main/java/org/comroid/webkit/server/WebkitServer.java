@@ -125,7 +125,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         this.socket = new WebSocketServer(
                 this.context,
                 executor,
-                getSocketHost(),
                 inetAddress,
                 socketPort,
                 connectionFactory
