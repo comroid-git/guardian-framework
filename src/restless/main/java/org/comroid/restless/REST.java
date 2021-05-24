@@ -5,10 +5,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.annotations.Upgrade;
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.Named;
-import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
+import org.comroid.api.Readable;
+import org.comroid.api.*;
 import org.comroid.common.io.FileHandle;
 import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.ref.Reference;
@@ -404,7 +402,24 @@ public final class REST implements ContextualProvider.Underlying {
                 File file,
                 Header.List headers
         ) throws FileNotFoundException {
-            this(statusCode, mimeType, new InputStreamReader(new FileInputStream(file)), headers);
+            this(statusCode, mimeType, (Readable) FileHandle.of(file), headers);
+        }
+
+        public Response(
+                int statusCode,
+                CharSequence mimeType,
+                Readable readable
+        ) {
+            this(statusCode, mimeType, readable, new Header.List());
+        }
+
+        public Response(
+                int statusCode,
+                CharSequence mimeType,
+                Readable readable,
+                Header.List headers
+        ) {
+            this(statusCode, mimeType, readable.toReader(), headers);
         }
 
         public Response(
