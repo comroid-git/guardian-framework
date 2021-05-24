@@ -2,10 +2,7 @@ package org.comroid.webkit.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.NFunction;
-import org.comroid.api.Rewrapper;
-import org.comroid.api.StreamSupplier;
+import org.comroid.api.*;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
@@ -19,10 +16,12 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.webkit.endpoint.WebkitScope;
 import org.comroid.webkit.frame.FrameBuilder;
+import org.comroid.webkit.model.ConnectionFactory;
 import org.comroid.webkit.model.PagePropertiesProvider;
-import org.comroid.webkit.socket.ConnectionFactory;
+import org.comroid.webkit.socket.ConnectionFactoryBase;
 import org.comroid.webkit.socket.WebkitConnection;
 import org.java_websocket.WebSocket;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,6 +30,7 @@ import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -99,7 +99,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 inetAddress,
                 port,
                 socketPort,
-                new ConnectionFactory<>(connectionConstructor, context),
+                new ConnectionFactoryBase<>(connectionConstructor, context),
                 pagePropertiesProvider,
                 additionalEndpoints
         );
@@ -141,31 +141,60 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public WebkitServer(
             Context context,
-            String urlBase
+            String urlBase,
+            int httpPort,
+            int wsPort,
+            @Nullable StreamSupplier<? extends ServerEndpoint> additionalEndpoints
+    ) throws IOException {
+        this(context, urlBase, formAddress(context, httpPort), formAddress(context, wsPort), additionalEndpoints);
+    }
+
+    public WebkitServer(
+            Context context,
+            String urlBase,
+            InetSocketAddress httpAddress,
+            InetSocketAddress wsAddress,
+            @Nullable StreamSupplier<? extends ServerEndpoint> additionalEndpoints
     ) throws IOException {
         this(
                 context,
                 urlBase,
+                httpAddress,
+                wsAddress,
                 context.getFromContext(Executor.class)
                         .orElseGet(ForkJoinPool::commonPool),
-                context.requireFromContext(PagePropertiesProvider.class)
+                context.requireFromContext(PagePropertiesProvider.class),
+                additionalEndpoints
         );
     }
 
     public WebkitServer(
             Context context,
             String urlBase,
+            InetSocketAddress httpAddress,
+            InetSocketAddress wsAddress,
             Executor executor,
-            PagePropertiesProvider pagePropertiesProvider
+            PagePropertiesProvider pagePropertiesProvider,
+            @Nullable StreamSupplier<? extends ServerEndpoint> additionalEndpoints
     ) throws IOException {
         this.context = context;
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
         this.endpoints = new WebkitEndpoints();
-        this.rest = new RestServer(this, endpoints);
+        this.rest = new RestServer(this, httpAddress, additionalEndpoints == null ? endpoints : endpoints.append(additionalEndpoints));
         this.rest.setDefaultEndpoint(endpoints.defaultEndpoint);
-        this.socket = new WebSocketServer(this);
+        this.socket = new WebSocketServer(this, wsAddress);
+    }
+
+    private static InetSocketAddress formAddress(ContextualProvider context, int port) {
+        return context.getFromContext(InetAddress.class)
+                .or(() -> context.getFromContext(InetSocketAddress.class).ifPresentMap(InetSocketAddress::getAddress))
+                .or(ThrowingSupplier.rethrowing(InetAddress::getLocalHost, null))
+                .ifPresentMapOrElseThrow(
+                        address -> new InetSocketAddress(address, port),
+                        () -> new NoSuchElementException("No INetAddress candidate found at context " + context.getName())
+                );
     }
 
     @Override

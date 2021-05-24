@@ -9,7 +9,8 @@ import org.comroid.mutatio.model.RefMap;
 import org.comroid.mutatio.ref.ReferenceMap;
 import org.comroid.restless.REST;
 import org.comroid.restless.socket.WebsocketPacket;
-import org.comroid.webkit.socket.ConnectionFactory;
+import org.comroid.webkit.model.ConnectionFactory;
+import org.comroid.webkit.socket.ConnectionFactoryBase;
 import org.java_websocket.WebSocket;
 import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ClientHandshake;
@@ -25,7 +26,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -68,7 +68,7 @@ public final class WebSocketServer extends org.java_websocket.server.WebSocketSe
             int port,
             NFunction.In3<WebSocket, REST.Header.List, ContextualProvider, ? extends WebSocketConnection> connectionConstructor
     ) {
-        this(context, executor, inetAddress, port, new ConnectionFactory<>(connectionConstructor, context));
+        this(context, executor, inetAddress, port, new ConnectionFactoryBase<>(connectionConstructor, context));
     }
 
     @Deprecated
