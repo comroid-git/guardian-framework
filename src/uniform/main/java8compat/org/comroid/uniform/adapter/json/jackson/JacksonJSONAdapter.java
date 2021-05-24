@@ -5,8 +5,8 @@ import org.comroid.annotations.Instance;
 import org.comroid.uniform.adapter.model.JacksonAdapter;
 
 public final class JacksonJSONAdapter extends JacksonAdapter {
-    public static final @Instance
-    JacksonAdapter instance = new JacksonJSONAdapter();
+    @Instance
+    public static final JacksonJSONAdapter instance = new JacksonJSONAdapter();
 
     private JacksonJSONAdapter() {
         super("application/json", new ObjectMapper());

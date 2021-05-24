@@ -197,7 +197,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
             try {
                 // get serializer for this call
                 contentType = requestHeaders.getFirst(REQUEST_CONTENT_TYPE);
-                final SerializationAdapter serializer = findSerializer(contentType);
+                final SerializationAdapter serializer = MimeType.OCTET_STREAM.equals(contentType) ? null : findSerializer(contentType);
                 if (serializer == null)
                     throw new RestEndpointException(UNSUPPORTED_MEDIA_TYPE, "Unsupported Content-Type: " + contentType);
 
@@ -230,7 +230,8 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                     }
                 } finally {
                     logger.trace("Adding {} Query parameters as request body fields", requestQueryParameters.size());
-                    requestData.asObjectNode().putAll(requestQueryParameters);
+                    if (requestData != null)
+                        requestData.asObjectNode().putAll(requestQueryParameters);
                 }
 
                 // find endpoint for request
@@ -248,7 +249,9 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 logger.info("Executing Endpoint {}...", endpoint);
                 response = endpoint.executeMethod(context, Polyfill.uri(requestURI), requestMethod, requestHeaders, urlParams, requestData);
             } catch (Throwable t) {
-                if (t instanceof RestEndpointException && requestHeaders.getHeader(ACCEPTED_CONTENT_TYPE)
+                if (t instanceof RestEndpointException
+                        && requestHeaders.contains(ACCEPTED_CONTENT_TYPE)
+                        && requestHeaders.getHeader(ACCEPTED_CONTENT_TYPE)
                         .getValues()
                         .stream()
                         .anyMatch(str -> str.contains(MimeType.HTML.toString()) || str.contains(MimeType.ANY.toString()))) {
