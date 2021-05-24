@@ -25,7 +25,7 @@ public interface Disposable extends AutoCloseable, PropertyHolder {
 
     @OverrideOnly
     @SuppressWarnings("RedundantThrows")
-    default void closeSelf() throws Exception {
+    default void closeSelf() throws Throwable {
     }
 
     @Override
@@ -38,7 +38,13 @@ public interface Disposable extends AutoCloseable, PropertyHolder {
     default List<? extends Throwable> dispose() {
         return Collections.unmodifiableList(Stream.concat(
                 getCloseables().stream().map(AutoCloseable.class::cast),
-                Stream.of(this::closeSelf)
+                Stream.of(() -> {
+                    try {
+                        closeSelf();
+                    } catch (Throwable throwable) {
+                        throw new Exception("Exception when closing " + this, throwable);
+                    }
+                })
         )
                 .map(closeable -> {
                     try {
