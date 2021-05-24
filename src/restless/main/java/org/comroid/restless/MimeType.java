@@ -12,6 +12,8 @@ public final class MimeType implements Named, CharSequence {
     public static final MimeType XML = forName("application/xml");
     public static final MimeType JAVASCRIPT = forName("application/javascript");
     public static final MimeType HTML = forName("text/html");
+    public static final MimeType OCTET_STREAM = forName("application/octet-stream");
+    public static final MimeType JAR_ARCHIVE = forName("application/java-archive");
     private final String name;
     private final int separator;
 
