@@ -21,8 +21,18 @@ public interface Context extends ContextualProvider {
     }
 
     @Upgrade
-    static Context upgrade(ContextualProvider underlying) {
-        return underlying::streamContextMembers;
+    static Context upgrade(final ContextualProvider underlying) {
+        return new Context() {
+            @Override
+            public Stream<Object> streamContextMembers(boolean includeChildren) {
+                return underlying.streamContextMembers(includeChildren);
+            }
+
+            @Override
+            public String getName() {
+                return underlying.getName();
+            }
+        };
     }
 
     @Override
