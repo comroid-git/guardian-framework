@@ -31,16 +31,10 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\[([\\w\\d\\S.]+?)]");
     public static final Reference<ClassLoader> classLoader;
     private static final Logger logger;
-    private static final Map<String, String> frameCache;
-    private static final Map<String, String> partCache;
-    private static final Map<String, String> panelCache;
     private static final Reference<ScriptEngine> jsEngine;
 
     static {
         logger = LogManager.getLogger();
-        frameCache = new ConcurrentHashMap<>();
-        partCache = new ConcurrentHashMap<>();
-        panelCache = new ConcurrentHashMap<>();
         classLoader = Reference.create(ClassLoader.getSystemClassLoader());
         jsEngine = classLoader.map(loader -> new ScriptEngineManager(loader).getEngineByExtension("js"));
     }
@@ -237,15 +231,28 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     private static String findFrameData(String frame) {
-        return findAndCacheResourceData(frame, frameCache, () -> WebkitConfiguration.get().getFrame(frame));
+        return readResource(WebkitConfiguration.get().getFrame(frame));
     }
 
     private static String findPartData(String part) {
-        return findAndCacheResourceData(part, partCache, () -> WebkitConfiguration.get().getPart(part));
+        return readResource(WebkitConfiguration.get().getPart(part));
     }
 
     private static String findPanelData(String panel) {
-        return findAndCacheResourceData(panel, panelCache, () -> WebkitConfiguration.get().getPanel(panel));
+        return readResource(WebkitConfiguration.get().getPanel(panel));
+    }
+
+    private static String readResource(InputStream resource) {
+        String data;
+        try (
+                InputStreamReader isr = new InputStreamReader(resource);
+                BufferedReader br = new BufferedReader(isr)
+        ) {
+            data = br.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read resource");
+        }
+        return data;
     }
 
     public static String postfabString(final Map<String, Object> pageProperties, String untreated) {
@@ -272,7 +279,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
         if (isError) {
             logger.debug("Building Error Frame with PageProperties {}", pageProperties);
-            String errorPanel = findAndCacheResourceData("error", panelCache, () -> WebkitResourceLoader.getInternalResource("error.html"));
+            String errorPanel = findPanelData("error");
             frame.getElementById("content").html(errorPanel);
         } else if (!frame.select("[id='content']").isEmpty()) {
             logger.debug("Building Frame with panel {}", panel);
