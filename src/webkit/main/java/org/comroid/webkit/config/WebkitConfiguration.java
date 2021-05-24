@@ -2,7 +2,6 @@ package org.comroid.webkit.config;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.mutatio.ref.FutureReference;
-import org.comroid.webkit.frame.FrameBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -23,6 +22,10 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
     private final Map<String, String> frames = new ConcurrentHashMap<>();
     private final Map<String, String> parts = new ConcurrentHashMap<>();
     private final Map<String, String> panels = new ConcurrentHashMap<>();
+
+    static {
+        initialize(ContextualProvider.getRoot());
+    }
 
     @Override
     public ContextualProvider getUnderlyingContextualProvider() {
@@ -52,11 +55,12 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         return instance.assertion();
     }
 
+    @Deprecated
     public static WebkitConfiguration initialize(ContextualProvider context) {
         if (instance.future.isDone())
             throw new IllegalStateException("Configuration is already initialized");
 
-        InputStream config = FrameBuilder.getResource("config.xml");
+        InputStream config = WebkitResourceLoader.getResource("config.xml");
         String data;
         try (
                 InputStreamReader isr = new InputStreamReader(config);
@@ -64,7 +68,7 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         ) {
             data = br.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
-            throw new RuntimeException("Could not find config.xml resource (" + FrameBuilder.RESOURCE_PREFIX + "config.xml)", e);
+            throw new RuntimeException("Could not find config.xml resource (" + WebkitResourceLoader.RESOURCE_PREFIX + "config.xml)", e);
         }
         Document dom = Jsoup.parse(data, "", Parser.xmlParser());
         if (!instance.future.complete(new WebkitConfiguration(context, dom)))
@@ -81,7 +85,7 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         if (!frames.containsKey(name))
             throw new NoSuchElementException("Could not find frame with name " + name);
         String resource = frames.get(name);
-        return FrameBuilder.getResource(resource);
+        return WebkitResourceLoader.getResource(resource);
     }
 
     public Stream<String> streamPartNames() {
@@ -92,7 +96,7 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         if (!parts.containsKey(name))
             throw new NoSuchElementException("Could not find part with name " + name);
         String resource = parts.get(name);
-        return FrameBuilder.getResource(resource);
+        return WebkitResourceLoader.getResource(resource);
     }
 
     public Stream<String> streamPanelNames() {
@@ -103,6 +107,6 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
         if (!panels.containsKey(name))
             throw new NoSuchElementException("Could not find panel with name " + name);
         String resource = panels.get(name);
-        return FrameBuilder.getResource(resource);
+        return WebkitResourceLoader.getResource(resource);
     }
 }

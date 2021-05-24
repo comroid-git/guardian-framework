@@ -14,6 +14,7 @@ import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.webkit.config.WebkitResourceLoader;
 import org.comroid.webkit.endpoint.WebkitScope;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.ConnectionFactory;
@@ -23,10 +24,7 @@ import org.comroid.webkit.socket.WebkitConnection;
 import org.java_websocket.WebSocket;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -36,12 +34,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
-public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, RestEndpointException.RecoverStage {
+public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, ResourceLoader, RestEndpointException.RecoverStage {
     private static final Logger logger = LogManager.getLogger();
     private final Context context;
     private final Executor executor;
     private final String urlBase;
     private final PagePropertiesProvider pagePropertiesProvider;
+    private final ResourceLoader resourceLoader;
     private final WebkitEndpoints endpoints;
     private final RestServer rest;
     private final WebSocketServer socket;
@@ -123,6 +122,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
+        this.resourceLoader = ResourceLoader.SYSTEM_CLASS_LOADER;
         this.endpoints = new WebkitEndpoints();
         this.rest = new RestServer(
                 this.context,
@@ -164,6 +164,8 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
                 context.getFromContext(Executor.class)
                         .orElseGet(ForkJoinPool::commonPool),
                 context.requireFromContext(PagePropertiesProvider.class),
+                context.getFromContext(ResourceLoader.class)
+                        .orElseGet(() -> ResourceLoader.SYSTEM_CLASS_LOADER),
                 additionalEndpoints
         );
     }
@@ -175,12 +177,14 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             InetSocketAddress wsAddress,
             Executor executor,
             PagePropertiesProvider pagePropertiesProvider,
+            ResourceLoader resourceLoader,
             @Nullable StreamSupplier<? extends ServerEndpoint> additionalEndpoints
     ) throws IOException {
         this.context = context;
         this.executor = executor;
         this.urlBase = urlBase;
         this.pagePropertiesProvider = pagePropertiesProvider;
+        this.resourceLoader = WebkitResourceLoader.initialize(resourceLoader);
         this.endpoints = new WebkitEndpoints();
         this.rest = new RestServer(this, httpAddress, additionalEndpoints == null ? endpoints : endpoints.append(additionalEndpoints));
         this.rest.setDefaultEndpoint(endpoints.defaultEndpoint);
@@ -238,7 +242,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
         pageProperties.put("errorData", errorData);
 
-        FrameBuilder frameBuilder = new FrameBuilder("main", headers, pageProperties, true);
+        FrameBuilder frameBuilder = new FrameBuilder(context, "main", headers, true);
 
         return new REST.Response(200, "text/html", frameBuilder.toReader());
     }
@@ -247,6 +251,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     public void close() throws IOException {
         rest.close();
         socket.close();
+    }
+
+    @Override
+    public InputStream getResource(String name) {
+        return resourceLoader.getResource(name);
     }
 
     private final class WebkitEndpoints implements StreamSupplier<ServerEndpoint> {

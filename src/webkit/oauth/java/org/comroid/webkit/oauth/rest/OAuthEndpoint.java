@@ -87,7 +87,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
                     // send frame and obtain session from there
                     Map<String, Object> pageProps = context.requireFromContext(PagePropertiesProvider.class)
                             .findPageProperties(headers);
-                    FrameBuilder frame = new FrameBuilder("quickAction", headers, pageProps, false);
+                    FrameBuilder frame = new FrameBuilder(context, "quickAction", headers, false);
                     frame.setPanel("flowLogin");
 
                     UUID requestId = UUID.randomUUID();

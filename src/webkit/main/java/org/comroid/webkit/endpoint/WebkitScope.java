@@ -10,6 +10,7 @@ import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReaderUtil;
+import org.comroid.webkit.config.WebkitResourceLoader;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.comroid.webkit.server.WebkitServer;
@@ -42,7 +43,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
 
             String scheme = requestURI.getScheme();
             boolean secure = scheme != null && scheme.equals("https");
-            FrameBuilder frameBuilder = new FrameBuilder(panel, headers, pageProperties, false, secure);
+            FrameBuilder frameBuilder = new FrameBuilder(context, panel, headers, false, secure);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 
@@ -54,7 +55,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     WEBKIT_API("/webkit/api") {
         @Override
         public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            InputStream resource = FrameBuilder.getInternalResource("api.js");
+            InputStream resource = WebkitResourceLoader.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
             Map<String, Object> pageProperties = context

@@ -2,15 +2,13 @@ package org.comroid.webkit.frame;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.comroid.api.Builder;
-import org.comroid.api.PropertiesHolder;
-import org.comroid.api.Rewrapper;
-import org.comroid.api.StringSerializable;
+import org.comroid.api.*;
 import org.comroid.api.os.OS;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
-import org.jetbrains.annotations.NotNull;
+import org.comroid.webkit.config.WebkitResourceLoader;
+import org.comroid.webkit.model.PagePropertiesProvider;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -30,10 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class FrameBuilder implements Builder<Document>, StringSerializable, PropertiesHolder {
+public final class FrameBuilder implements Builder<Document>, StringSerializable, PropertiesHolder, ContextualProvider.Underlying {
     public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\[([\\w\\d\\S.]+?)]");
-    public static final String RESOURCE_PREFIX = "org/comroid/webkit/";
-    public static final String INTERNAL_RESOURCE_PREFIX = "org/comroid/webkit/internal/";
     public static final Reference<ClassLoader> classLoader;
     private static final Logger logger;
     private static final Map<String, String> frameCache;
@@ -51,6 +46,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
     }
 
     public final String host;
+    private final ContextualProvider context;
     private final Document frame;
     private final Map<String, Object> pageProperties;
     private final boolean isError;
@@ -60,23 +56,30 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return panel;
     }
 
+    @Override
+    public ContextualProvider getUnderlyingContextualProvider() {
+        return context;
+    }
+
     public void setPanel(@Nullable String panel) {
         this.panel = panel;
     }
 
-    public FrameBuilder(REST.Header.List headers, Map<String, Object> pageProperties) {
-        this("main", headers, pageProperties, false, true);
+    @Deprecated
+    public FrameBuilder(ContextualProvider context, REST.Header.List headers) {
+        this(context, "main", headers, false, true);
     }
 
-    public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError) {
-        this(frameName, headers, pageProperties, isError, true);
+    public FrameBuilder(ContextualProvider context, String frameName, REST.Header.List headers, boolean isError) {
+        this(context, frameName, headers, isError, true);
     }
 
-    public FrameBuilder(String frameName, REST.Header.List headers, Map<String, Object> pageProperties, boolean isError, boolean isSecure) {
+    public FrameBuilder(ContextualProvider context, String frameName, REST.Header.List headers, boolean isError, boolean isSecure) {
+        this.context = context;
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
+        this.pageProperties = context.requireFromContext(PagePropertiesProvider.class).findPageProperties(headers);
         pageProperties.put("frame", frameName);
-        this.pageProperties = pageProperties;
 
         try {
             this.frame = Jsoup.parse(findFrameData(frameName));
@@ -97,28 +100,6 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
                 .attr("src", String.format("http%s://%s/webkit/api", isSecure ? "s" : "", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
-    }
-
-    public static @NotNull InputStream getInternalResource(String name) {
-        return getResource(true, name);
-    }
-
-    public static @NotNull InputStream getResource(String name) {
-        return getResource(false, name);
-    }
-
-    public static @NotNull InputStream getResource(boolean internal, String name) {
-        String resourceName = (internal ? INTERNAL_RESOURCE_PREFIX : RESOURCE_PREFIX) + name;
-        InputStream resource = classLoader.map(loader -> loader.getResourceAsStream(resourceName)).get();
-        if (resource == null)
-            if (internal) {
-                throw new AssertionError(
-                        "Could not find internal resource with name " + name,
-                        new NoSuchElementException(String.format("Internal resource %s is missing", name)));
-            } else {
-                throw new NoSuchElementException(String.format("Could not find resource with name %s (%s)", name, resourceName));
-            }
-        return resource;
     }
 
     private static String findAndCacheResourceData(String key, Map<String, String> cache, Supplier<InputStream> resource) {
@@ -291,7 +272,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
 
         if (isError) {
             logger.debug("Building Error Frame with PageProperties {}", pageProperties);
-            String errorPanel = findAndCacheResourceData("error", panelCache, () -> getInternalResource("error.html"));
+            String errorPanel = findAndCacheResourceData("error", panelCache, () -> WebkitResourceLoader.getInternalResource("error.html"));
             frame.getElementById("content").html(errorPanel);
         } else if (!frame.select("[id='content']").isEmpty()) {
             logger.debug("Building Frame with panel {}", panel);
