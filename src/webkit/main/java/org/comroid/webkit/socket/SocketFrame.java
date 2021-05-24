@@ -2,13 +2,12 @@ package org.comroid.webkit.socket;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.comroid.util.Debug;
 import org.intellij.lang.annotations.MagicConstant;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
-import static org.comroid.util.Bitmask.*;
 
 public final class SocketFrame {
     private static final Logger logger = LogManager.getLogger();
@@ -152,17 +151,17 @@ public final class SocketFrame {
         if (rsv3)
             headerA |= 1 << 4;
 
-        logger.trace(createByteDump(String.format("OPCode Flagged (%1b;%1b;%1b;%1b): ", fin, rsv1, rsv2, rsv3), headerA));
+        logger.trace(Debug.createByteDump(String.format("OPCode Flagged (%1b;%1b;%1b;%1b): ", fin, rsv1, rsv2, rsv3), headerA));
 
         headerA |= (byte) opCode;
-        printIntegerBytes(logger, "OP Code + Header: ", opCode);
-        logger.trace(createByteDump("Header A", headerA));
+        Debug.printIntegerBytes(logger, "OP Code + Header: ", opCode);
+        logger.trace(Debug.createByteDump("Header A", headerA));
 
         byte headerB = (byte) (len >= 126 ? len > 126 ? 127 : 126 : len);
-        logger.trace(createByteDump("Header B with len", headerB));
+        logger.trace(Debug.createByteDump("Header B with len", headerB));
         if (masked)
             headerB |= 1 << 7;
-        logger.trace(createByteDump("Header B with Mask", headerB));
+        logger.trace(Debug.createByteDump("Header B with Mask", headerB));
 
         int arrLen = 2;
 
@@ -179,7 +178,7 @@ public final class SocketFrame {
         bytes[0] = headerA;
         bytes[1] = headerB;
 
-        printByteArrayDump(logger, "Generated Headers:", bytes);
+        Debug.printByteArrayDump(logger, "Generated Headers:", bytes);
 
         if (longPayload) {
             // insert long payload length
@@ -191,7 +190,7 @@ public final class SocketFrame {
             System.arraycopy(lenBytes, longerPayload ? 0 : 2, bytes, 2, longerPayload ? lenBytes.length : 2);
         }
 
-        printByteArrayDump(logger, String.format("With Lengths (%d;%b;%b):", len, longPayload, longerPayload), bytes);
+        Debug.printByteArrayDump(logger, String.format("With Lengths (%d;%b;%b):", len, longPayload, longerPayload), bytes);
 
         if (masked) {
             // insert masking key
@@ -201,8 +200,8 @@ public final class SocketFrame {
             System.arraycopy(maskBytes, 0, bytes, longPayload ? longerPayload ? 10 : 4 : 2, 4);
         }
 
-        printIntegerBytes(logger, String.format("With Mask Key (%d):", maskingKey), maskingKey);
-        printByteArrayDump(logger, "Bytes Now:", bytes);
+        Debug.printIntegerBytes(logger, String.format("With Mask Key (%d):", maskingKey), maskingKey);
+        Debug.printByteArrayDump(logger, "Bytes Now:", bytes);
 
         // insert payload
         byte[] payloadBytes;
@@ -216,13 +215,13 @@ public final class SocketFrame {
                 payloadBytes[i] = (byte) payloadChars[i];
             int destPos = 2 + (masked ? 4 : 0) + (longPayload ? longerPayload ? 8 : 2 : 0);
 
-            printByteArrayDump(logger, String.format("Payload Bytes (into %d):", destPos), payloadBytes);
+            Debug.printByteArrayDump(logger, String.format("Payload Bytes (into %d):", destPos), payloadBytes);
             System.arraycopy(payloadBytes, 0, bytes, destPos, payloadChars.length);
         } catch (IOException e) {
             throw new RuntimeException("Could not read payload", e);
         }
 
-        printByteArrayDump(logger, "Generated Frame:", bytes);
+        Debug.printByteArrayDump(logger, "Generated Frame:", bytes);
 
         // validate frame
         InputStream validator = new InputStream() {
@@ -269,7 +268,7 @@ public final class SocketFrame {
             boolean rsv3 = (headerA & 1 << 6) != 0;
             int opCode = (headerA & 0b0000_1111);
             logger.trace("last = {}; rsv1 = {}; rsv2 = {}; rsv3 = {}; op = x{}", isLast, rsv1, rsv2, rsv3, Integer.toHexString(opCode));
-            logger.trace(createByteDump("Header A", headerA));
+            logger.trace(Debug.createByteDump("Header A", headerA));
 
             byte headerB = (byte) in.read();
             boolean isMasked = (headerB & 1 << 7) != 0;
@@ -288,7 +287,7 @@ public final class SocketFrame {
                     break;
             }
 
-            logger.trace(createByteDump(String.format("isMasked = %b; payLen = %d; len = %d", isMasked, payLen, len), headerB));
+            logger.trace(Debug.createByteDump(String.format("isMasked = %b; payLen = %d; len = %d", isMasked, payLen, len), headerB));
 
             byte[] mask = isMasked ? readNextN(in, 4).array() : new byte[0];
 
