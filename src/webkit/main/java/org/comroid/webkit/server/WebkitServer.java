@@ -6,7 +6,6 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.NFunction;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
-import org.comroid.api.os.OS;
 import org.comroid.mutatio.model.RefContainer;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
@@ -34,6 +33,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 public final class WebkitServer implements ContextualProvider.Underlying, Closeable, PagePropertiesProvider, RestEndpointException.RecoverStage {
@@ -75,6 +75,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         return socket.getActiveConnections().flatMap(WebkitConnection.class);
     }
 
+    public String getSocketHost() {
+        InetSocketAddress address = socket.getAddress();
+        return address.getAddress().getHostName() + ':' + address.getPort() + "/websocket";
+    }
+
     @Deprecated
     public WebkitServer(
             ContextualProvider context,
@@ -112,6 +117,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             PagePropertiesProvider pagePropertiesProvider,
             StreamSupplier<ServerEndpoint> additionalEndpoints
     ) throws IOException {
+        logger.warn("Deprecated Constructor used");
         context.addToContext(this);
         this.context = context.upgrade(Context.class);
         this.executor = executor;
@@ -133,7 +139,20 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         );
     }
 
-    protected WebkitServer(
+    public WebkitServer(
+            Context context,
+            String urlBase
+    ) throws IOException {
+        this(
+                context,
+                urlBase,
+                context.getFromContext(Executor.class)
+                        .orElseGet(ForkJoinPool::commonPool),
+                context.requireFromContext(PagePropertiesProvider.class)
+        );
+    }
+
+    public WebkitServer(
             Context context,
             String urlBase,
             Executor executor,
@@ -154,11 +173,6 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         Map<String, Object> map = pagePropertiesProvider.findPageProperties(headers);
         map.put("wsHost", getSocketHost());
         return map;
-    }
-
-    public String getSocketHost() {
-        InetSocketAddress address = socket.getAddress();
-        return address.getAddress().getHostName() + ':' + address.getPort() + "/websocket";
     }
 
     @Override
