@@ -113,7 +113,7 @@ public final class REST implements ContextualProvider.Underlying {
     }
 
     public Request<UniNode> request() {
-        return new Request<>((context, data) -> data);
+        return new Request<>(context, (context, data) -> data);
     }
 
     public <T extends DataContainer<? super T>> Request<T> request(Class<T> type) {
@@ -130,7 +130,7 @@ public final class REST implements ContextualProvider.Underlying {
     }
 
     public <T> Request<T> request(BiFunction<ContextualProvider, UniNode, T> creator) {
-        return new Request<>(creator);
+        return new Request<>(plus(this), creator);
     }
 
     public enum Method implements Named {
@@ -523,13 +523,15 @@ public final class REST implements ContextualProvider.Underlying {
         }
     }
 
-    public final class Request<T> {
+    public static final class Request<T> {
         private final Header.List headers;
+        private final ContextualProvider context;
         private final BiFunction<ContextualProvider, UniNode, T> tProducer;
         private final CompletableFuture<REST.Response> execution = new CompletableFuture<>();
         private CompleteEndpoint endpoint;
         private Method method;
-        private String body;
+        private @Nullable Serializable body;
+        private @Nullable Readable data;
         private boolean throwOnMismatch = false;
         private int[] expectedCodes = new int[]{HTTPStatusCodes.OK};
 
@@ -541,28 +543,53 @@ public final class REST implements ContextualProvider.Underlying {
             return method;
         }
 
-        public final String getBody() {
+        public final @Nullable Serializable getBody() {
             return body;
+        }
+
+        public final @Nullable Reader getData() {
+            return data != null ? data.toReader() : body != null ? body.toReader() : null;
         }
 
         public final Header.List getHeaders() {
             return headers;
         }
 
-        public REST getREST() {
-            return REST.this;
+        public @Nullable REST getREST() {
+            return context.getFromContext(REST.class).get();
         }
 
         public boolean isExecuted() {
             return execution.isDone();
         }
 
-        public Request(BiFunction<ContextualProvider, UniNode, T> tProducer) {
+        public Request(
+                ContextualProvider context,
+                Header.List headers,
+                BiFunction<ContextualProvider, UniNode, T> tProducer,
+                CompleteEndpoint endpoint,
+                Method method,
+                @Nullable Serializable body,
+                @Nullable Readable data
+        ) {
+            this.context = context;
+            this.headers = headers;
+            this.tProducer = tProducer;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.body = body;
+            this.data = data;
+            this.throwOnMismatch = false;
+            this.expectedCodes = new int[0];
+        }
+
+        public Request(ContextualProvider context, BiFunction<ContextualProvider, UniNode, T> tProducer) {
+            this.context = context;
             this.tProducer = tProducer;
             this.headers = new Header.List();
 
-            addHeader(CommonHeaderNames.REQUEST_CONTENT_TYPE, requireFromContext(SerializationAdapter.class).getMimeType());
-            addHeader(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, requireFromContext(SerializationAdapter.class).getMimeType());
+            addHeader(CommonHeaderNames.REQUEST_CONTENT_TYPE, context.requireFromContext(SerializationAdapter.class).getMimeType());
+            addHeader(CommonHeaderNames.ACCEPTED_CONTENT_TYPE, context.requireFromContext(SerializationAdapter.class).getMimeType());
         }
 
         @Override
@@ -601,11 +628,13 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Request<T> body(Serializable body) {
-            return body(body.toSerializedString());
+            this.body = body;
+
+            return this;
         }
 
-        public Request<T> body(String body) {
-            this.body = body;
+        public Request<T> data(Readable readable) {
+            this.data = readable;
 
             return this;
         }
@@ -613,9 +642,9 @@ public final class REST implements ContextualProvider.Underlying {
         public <B extends UniNode> Request<T> buildBody(BodyBuilderType<B> type, Consumer<B> bodyBuilder) {
             if (bodyBuilder == null)
                 return this;
-            final B body = type.apply(requireFromContext(SerializationAdapter.class));
+            final B body = type.apply(context.requireFromContext(SerializationAdapter.class));
             bodyBuilder.accept(body);
-            return body(body.toString());
+            return body(body);
         }
 
         public Request<T> addHeaders(Header.List headers) {
@@ -639,8 +668,9 @@ public final class REST implements ContextualProvider.Underlying {
                 //addHeader("Content-Length", String.valueOf(body == null ? 0 : body.length()));
                 logger.trace("Executing request {} @ {} with body {}", method, endpoint.getSpec(), String.valueOf(body));
                 logger.log(Level.ALL, "Request has Headers: {}", headers.toString());
+                Executor executor = context.getFromContext(Executor.class).orElseGet(ForkJoinPool::commonPool);
                 getREST().ratelimiter.apply(endpoint.getEndpoint(), this)
-                        .thenComposeAsync(request -> requireFromContext(HttpAdapter.class).call(request), executor)
+                        .thenComposeAsync(request -> context.requireFromContext(HttpAdapter.class).call(request), executor)
                         .thenAcceptAsync(response -> {
                             if (IntStream.of(expectedCodes).noneMatch(x -> x == response.statusCode)) {
                                 if (throwOnMismatch)
@@ -657,11 +687,12 @@ public final class REST implements ContextualProvider.Underlying {
                             } catch (Throwable t) {
                                 throw new RuntimeException("A problem occurred while handling response " + response, t);
                             }
-                        }, executor).exceptionally(t -> {
-                    logger.trace("An error occurred during request", t);
-                    execution.completeExceptionally(t);
-                    return null;
-                });
+                        }, executor)
+                        .exceptionally(t -> {
+                            logger.trace("An error occurred during request", t);
+                            execution.completeExceptionally(t);
+                            return null;
+                        });
             }
 
             return execution;
@@ -691,7 +722,7 @@ public final class REST implements ContextualProvider.Underlying {
                     case ARRAY:
                         return node.asArrayNode()
                                 .streamNodes()
-                                .map(data -> tProducer.apply(REST.this, data))
+                                .map(data -> tProducer.apply(context, data))
                                 .collect(Span.collector());
                     case VALUE:
                         throw new AssertionError("Cannot deserialize from UniValueNode");
