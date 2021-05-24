@@ -180,6 +180,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
             ResourceLoader resourceLoader,
             @Nullable StreamSupplier<? extends ServerEndpoint> additionalEndpoints
     ) throws IOException {
+        context.addToContext(this);
         this.context = context;
         this.executor = executor;
         this.urlBase = urlBase;
