@@ -35,7 +35,8 @@ public final class BasicJavaHttpAdapter implements HttpAdapter {
 
             // send
             final DataOutputStream dos = new DataOutputStream(con.getOutputStream());
-            dos.writeBytes(req.getBody());
+            if (req.getBody() != null)
+                dos.writeBytes(req.getBody().toSerializedString());
             dos.close();
 
             // receive

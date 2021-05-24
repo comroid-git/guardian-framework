@@ -25,7 +25,10 @@ public final class OkHttp4Adapter implements HttpAdapter {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 final REST.Method requestMethod = request.getMethod();
-                final String requestBody = request.getBody();
+                String requestBody = null;
+                if (request.getBody() != null) {
+                    requestBody = request.getBody().toSerializedString();
+                }
 
                 final Request.Builder builder = new Request.Builder().url(request.getEndpoint().getURL());
 

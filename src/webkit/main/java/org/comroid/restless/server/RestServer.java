@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Readable;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.StreamSupplier;
 import org.comroid.mutatio.model.Ref;
@@ -207,9 +208,10 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                         .collect(Collectors.joining("\n")));
 
                 // get request body
-                String body = consumeBody(exchange);
+                final String body = consumeBody(exchange);
                 logger.trace("Request body: {}", body);
                 UniNode requestData = null;
+                Readable extraData = null;
                 try {
                     requestData = body.isEmpty() ? serializer.createObjectNode() : serializer.parse(body);
                 } catch (IllegalArgumentException e) {
@@ -226,12 +228,15 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                                         : StandardValueType.findGoodType(field[1].replace('+', ' '))));
                         logger.trace("Parsing form data succeeded; body: {}", finalRequestData);
                     } catch (Throwable formParseException) {
-                        logger.warn("Could not parse request body '{}'", body, formParseException);
+                        logger.warn("Could not parse request body '{}'; adding as readable data", body, formParseException);
+                        extraData = () -> new StringReader(body);
                     }
                 } finally {
                     logger.trace("Adding {} Query parameters as request body fields", requestQueryParameters.size());
                     if (requestData != null)
                         requestData.asObjectNode().putAll(requestQueryParameters);
+                    if (extraData == null)
+                        extraData = requestData;
                 }
 
                 // find endpoint for request
@@ -247,7 +252,15 @@ public final class RestServer implements HttpHandler, Closeable, Context {
 
                 // execute endpoint
                 logger.info("Executing Endpoint {}...", endpoint);
-                response = endpoint.executeMethod(context, Polyfill.uri(requestURI), requestMethod, requestHeaders, urlParams, requestData);
+                REST.Request<UniNode> request = new REST.Request<>(
+                        context, requestHeaders,
+                        (contextualProvider, uniNode) -> uniNode,
+                        endpoint,
+                        requestMethod,
+                        requestData,
+                        extraData
+                );
+                response = endpoint.executeMethod(context, Polyfill.uri(requestURI), request, urlParams);
             } catch (Throwable t) {
                 if (t instanceof RestEndpointException
                         && requestHeaders.contains(ACCEPTED_CONTENT_TYPE)

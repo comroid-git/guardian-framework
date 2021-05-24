@@ -42,7 +42,7 @@ import static org.comroid.restless.HTTPStatusCodes.*;
 public enum OAuthEndpoint implements ServerEndpoint.This {
     AUTHORIZE("/authorize") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             AuthenticationRequest authenticationRequest = new AuthenticationRequest(context, body.asObjectNode());
             URI redirectURI = authenticationRequest.getRedirectURI();
             URIQueryEditor query = new URIQueryEditor(redirectURI);
@@ -112,7 +112,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     AUTHORIZE_LOGIN("/authorize/login") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             EMailAddress email = body.get("email").asString(EMailAddress::parse);
             String login = body.get("password").asString();
 
@@ -153,7 +153,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     TOKEN("/token") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             TokenRequest.AuthorizationCodeGrant tokenRequest = new TokenRequest.AuthorizationCodeGrant(context, body.asObjectNode());
             OAuthAuthorization authorization = context.requireFromContext(ClientProvider.class)
                     .findAuthorization(tokenRequest.getCode());
@@ -164,7 +164,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     TOKEN_REVOKE("/token/revoke") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             ClientProvider clientProvider = context.requireFromContext(ClientProvider.class);
             TokenRevocationRequest request = new TokenRevocationRequest(context, body);
 
@@ -195,7 +195,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     USER_INFO("/userInfo") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             UniNode accountData = context.requireFromContext(ClientProvider.class)
                     .findAccessToken(headers)
                     .getAuthorization()
