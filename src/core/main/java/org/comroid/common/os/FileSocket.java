@@ -13,6 +13,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.io.*;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.Executor;
@@ -42,7 +43,9 @@ public final class FileSocket extends UUIDContainer.Base implements EventPipelin
         this.logger = LogManager.getLogger("FileSocket:" + getName());
         this.pipe = new ReferencePipe<>(executor);
 
-        if (!(file.getParentFile().mkdirs() && file.createNewFile()))
+        if (file.exists() && !file.delete())
+            throw new IOException("Could not delete old File: " + file);
+        if (!(file.getParentFile().mkdirs() || file.createNewFile()))
             throw new IOException("Could not create File: " + file);
         FileInputStream fis = new FileInputStream(file);
         this.fsock = new Scanner(fis);
@@ -53,7 +56,12 @@ public final class FileSocket extends UUIDContainer.Base implements EventPipelin
             logger.trace("Receiver started for file: {}", this.file);
             try {
                 while (true) {
-                    pipe.accept("data", fsock.nextLine());
+                    try {
+                        pipe.accept("data", fsock.nextLine());
+                    } catch (NoSuchElementException e) {
+                        if (!e.getMessage().equals("No line found"))
+                            throw e;
+                    }
                 }
             } catch (Throwable t) {
                 logger.fatal("Encountered a fatal problem; closing down", t);
