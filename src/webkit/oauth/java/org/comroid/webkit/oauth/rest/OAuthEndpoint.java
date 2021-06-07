@@ -11,6 +11,7 @@ import org.comroid.restless.body.URIQueryEditor;
 import org.comroid.restless.exception.RestEndpointException;
 import org.comroid.restless.server.ServerEndpoint;
 import org.comroid.uniform.Context;
+import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.util.Pair;
 import org.comroid.webkit.frame.FrameBuilder;
@@ -29,10 +30,7 @@ import org.comroid.webkit.oauth.user.OAuthAuthorization;
 import org.intellij.lang.annotations.Language;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -43,6 +41,10 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     AUTHORIZE("/authorize") {
         @Override
         public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            UniNode body = request.wrapBody().ifPresentMapOrElseThrow(
+                    Serializable::toUniNode,
+                    () -> new RestEndpointException(BAD_REQUEST, "Body cannot be empty"));
+            REST.Header.List headers = request.getHeaders();
             AuthenticationRequest authenticationRequest = new AuthenticationRequest(context, body.asObjectNode());
             URI redirectURI = authenticationRequest.getRedirectURI();
             URIQueryEditor query = new URIQueryEditor(redirectURI);
@@ -59,18 +61,18 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
 
             final Resource service = resourceProvider.getResource(clientID)
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Resource with ID " + clientID + " not found"));
-            final String basicToken = request.getFirst(CommonHeaderNames.AUTHORIZATION);
+            final String basicToken = headers.getFirst(CommonHeaderNames.AUTHORIZATION);
             if (basicToken != null && !service.checkBasicToken(basicToken)) {
                 logger.debug("Access Denied: Invalid Basic Authorization token [{}]", basicToken);
                 query.put("error", OAuthError.ACCESS_DENIED);
                 return query.toResponse(FOUND);
             }
-            final String userAgent = request.getFirst(CommonHeaderNames.USER_AGENT);
+            final String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
             try {
                 // find client
                 Client client = context.requireFromContext(ClientProvider.class)
-                        .findClient(request)
+                        .findClient(headers)
                         // throw with status code OK to send login frame
                         .orElseThrow(() -> new RestEndpointException(OK));
 
@@ -86,8 +88,8 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
                 else {
                     // send frame and obtain session from there
                     Map<String, Object> pageProps = context.requireFromContext(PagePropertiesProvider.class)
-                            .findPageProperties(request);
-                    FrameBuilder frame = new FrameBuilder(context, "quickAction", request, false);
+                            .findPageProperties(headers);
+                    FrameBuilder frame = new FrameBuilder(context, "quickAction", headers, false);
                     frame.setPanel("flowLogin");
 
                     UUID requestId = UUID.randomUUID();
@@ -113,6 +115,10 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     AUTHORIZE_LOGIN("/authorize/login") {
         @Override
         public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            UniNode body = request.wrapBody().ifPresentMapOrElseThrow(
+                    Serializable::toUniNode,
+                    () -> new RestEndpointException(BAD_REQUEST, "Body cannot be empty"));
+            REST.Header.List headers = request.getHeaders();
             EMailAddress email = body.get("email").asString(EMailAddress::parse);
             String login = body.get("password").asString();
 
@@ -135,7 +141,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             Resource service = context.requireFromContext(ResourceProvider.class)
                     .getResource(clientID)
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Service with ID " + clientID + " not found"));
-            String userAgent = request.getFirst(CommonHeaderNames.USER_AGENT);
+            String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
 
             String code = OAuthEndpoint.completeAuthorization(client.getFirst(), authenticationRequest, context, service, userAgent);
 
@@ -154,6 +160,10 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     TOKEN("/token") {
         @Override
         public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            UniNode body = request.wrapBody().ifPresentMapOrElseThrow(
+                    Serializable::toUniNode,
+                    () -> new RestEndpointException(BAD_REQUEST, "Body cannot be empty"));
+            REST.Header.List headers = request.getHeaders();
             TokenRequest.AuthorizationCodeGrant tokenRequest = new TokenRequest.AuthorizationCodeGrant(context, body.asObjectNode());
             OAuthAuthorization authorization = context.requireFromContext(ClientProvider.class)
                     .findAuthorization(tokenRequest.getCode());
@@ -165,25 +175,29 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     TOKEN_REVOKE("/token/revoke") {
         @Override
         public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            UniNode body = request.wrapBody().ifPresentMapOrElseThrow(
+                    Serializable::toUniNode,
+                    () -> new RestEndpointException(BAD_REQUEST, "Body cannot be empty"));
+            REST.Header.List headers = request.getHeaders();
             ClientProvider clientProvider = context.requireFromContext(ClientProvider.class);
-            TokenRevocationRequest request = new TokenRevocationRequest(context, body);
+            TokenRevocationRequest tkReq = new TokenRevocationRequest(context, body);
 
             ValidityStage validity;
-            if (request.tokenHint.isNull()) {
-                validity = clientProvider.findValidityStage(request.getToken());
-            } else switch (request.getTokenHint()) {
+            if (tkReq.tokenHint.isNull()) {
+                validity = clientProvider.findValidityStage(tkReq.getToken());
+            } else switch (Objects.requireNonNull(tkReq.getTokenHint())) {
                 case "authorization_code":
-                    validity = clientProvider.findAuthorization(request.getToken());
+                    validity = clientProvider.findAuthorization(tkReq.getToken());
                     break;
                 case "access_token":
-                    validity = clientProvider.findAccessToken(request.getToken());
+                    validity = clientProvider.findAccessToken(tkReq.getToken());
                     break;
                 case "refresh_token":
                     // fixme
-                    //validity = clientProvider.findAccessToken(request.getToken());
+                    //validity = clientProvider.findAccessToken(tkReq.getToken());
                     throw new UnsupportedOperationException("unsupported: refresh token");
                 default:
-                    throw new AssertionError("invalid token hint: " + request.getTokenHint());
+                    throw new AssertionError("invalid token hint: " + tkReq.getTokenHint());
             }
 
             if (validity == null)
@@ -196,8 +210,12 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     USER_INFO("/userInfo") {
         @Override
         public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            UniNode body = request.wrapBody().ifPresentMapOrElseThrow(
+                    Serializable::toUniNode,
+                    () -> new RestEndpointException(BAD_REQUEST, "Body cannot be empty"));
+            REST.Header.List headers = request.getHeaders();
             UniNode accountData = context.requireFromContext(ClientProvider.class)
-                    .findAccessToken(request)
+                    .findAccessToken(headers)
                     .getAuthorization()
                     .getUserInfo();
             return new REST.Response(OK, accountData);
