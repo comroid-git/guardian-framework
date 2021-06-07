@@ -121,8 +121,8 @@ function initAPI() {
         sendLocalEvent('frameReady');
     }
     ws.onmessage = (msg) => handleMessage(msg.data);
-    ws.onerror = (msg) => console.debug("error in websocket", msg);
-    ws.onclose = (msg) => console.debug("websocket closed", msg);
+    ws.onerror = (msg) => sendLocalEvent("wsError", msg);
+    ws.onclose = (msg) => sendLocalEvent("wsClose", msg);
     console.debug('looking for initial scripts...');
     document.getElementById('content')
         .querySelectorAll('script[type="application/javascript"]')
