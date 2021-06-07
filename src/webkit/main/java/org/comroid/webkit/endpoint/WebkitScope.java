@@ -40,11 +40,14 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
                 pageProperties.put("args", Arrays.asList(args));
             }
 
-            String panel = (requestPath.length > 0 && !requestPath[0].isEmpty()) ? requestPath[0] : "main";
+            String frame = (requestPath.length > 0 && !requestPath[0].isEmpty()) ? requestPath[0] : "main";
+            String panel = (requestPath.length > 1 && !requestPath[1].isEmpty()) ? requestPath[1] : null;
 
             String scheme = requestURI.getScheme();
             boolean secure = scheme != null && scheme.equals("https");
-            FrameBuilder frameBuilder = new FrameBuilder(context, panel, headers, false, secure);
+            FrameBuilder frameBuilder = new FrameBuilder(context, frame, headers, false, secure);
+            if (panel != null)
+                frameBuilder.setPanel(panel);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 

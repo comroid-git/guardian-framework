@@ -21,7 +21,9 @@ public class WebkitResourceLoader {
 
     public static @NotNull InputStream getResource(boolean internal, String name) {
         if (LOADER == null)
-            throw new NullPointerException("ResourceLoader is not initialized");
+            initialize();
+        if (LOADER == null)
+            throw new NullPointerException("ResourceLoader could not be initialized");
 
         String resourceName = (internal ? INTERNAL_RESOURCE_PREFIX : RESOURCE_PREFIX) + name;
         InputStream resource = (internal ? ResourceLoader.SYSTEM_CLASS_LOADER : LOADER).getResource(resourceName);
@@ -34,6 +36,10 @@ public class WebkitResourceLoader {
                 throw new NoSuchElementException(String.format("Could not find resource with name %s (%s)", name, resourceName));
             }
         return resource;
+    }
+
+    public static ResourceLoader initialize() {
+        return initialize(ResourceLoader.ofSystemClassLoader());
     }
 
     public static ResourceLoader initialize(ResourceLoader loader) {
