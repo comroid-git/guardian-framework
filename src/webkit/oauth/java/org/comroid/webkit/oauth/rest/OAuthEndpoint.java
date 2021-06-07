@@ -42,7 +42,7 @@ import static org.comroid.restless.HTTPStatusCodes.*;
 public enum OAuthEndpoint implements ServerEndpoint.This {
     AUTHORIZE("/authorize") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             AuthenticationRequest authenticationRequest = new AuthenticationRequest(context, body.asObjectNode());
             URI redirectURI = authenticationRequest.getRedirectURI();
             URIQueryEditor query = new URIQueryEditor(redirectURI);
@@ -59,18 +59,18 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
 
             final Resource service = resourceProvider.getResource(clientID)
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Resource with ID " + clientID + " not found"));
-            final String basicToken = headers.getFirst(CommonHeaderNames.AUTHORIZATION);
+            final String basicToken = request.getFirst(CommonHeaderNames.AUTHORIZATION);
             if (basicToken != null && !service.checkBasicToken(basicToken)) {
                 logger.debug("Access Denied: Invalid Basic Authorization token [{}]", basicToken);
                 query.put("error", OAuthError.ACCESS_DENIED);
                 return query.toResponse(FOUND);
             }
-            final String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
+            final String userAgent = request.getFirst(CommonHeaderNames.USER_AGENT);
 
             try {
                 // find client
                 Client client = context.requireFromContext(ClientProvider.class)
-                        .findClient(headers)
+                        .findClient(request)
                         // throw with status code OK to send login frame
                         .orElseThrow(() -> new RestEndpointException(OK));
 
@@ -86,8 +86,8 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
                 else {
                     // send frame and obtain session from there
                     Map<String, Object> pageProps = context.requireFromContext(PagePropertiesProvider.class)
-                            .findPageProperties(headers);
-                    FrameBuilder frame = new FrameBuilder(context, "quickAction", headers, false);
+                            .findPageProperties(request);
+                    FrameBuilder frame = new FrameBuilder(context, "quickAction", request, false);
                     frame.setPanel("flowLogin");
 
                     UUID requestId = UUID.randomUUID();
@@ -112,7 +112,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     AUTHORIZE_LOGIN("/authorize/login") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             EMailAddress email = body.get("email").asString(EMailAddress::parse);
             String login = body.get("password").asString();
 
@@ -135,7 +135,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
             Resource service = context.requireFromContext(ResourceProvider.class)
                     .getResource(clientID)
                     .orElseThrow(() -> new RestEndpointException(UNAUTHORIZED, "Service with ID " + clientID + " not found"));
-            String userAgent = headers.getFirst(CommonHeaderNames.USER_AGENT);
+            String userAgent = request.getFirst(CommonHeaderNames.USER_AGENT);
 
             String code = OAuthEndpoint.completeAuthorization(client.getFirst(), authenticationRequest, context, service, userAgent);
 
@@ -153,7 +153,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     TOKEN("/token") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             TokenRequest.AuthorizationCodeGrant tokenRequest = new TokenRequest.AuthorizationCodeGrant(context, body.asObjectNode());
             OAuthAuthorization authorization = context.requireFromContext(ClientProvider.class)
                     .findAuthorization(tokenRequest.getCode());
@@ -164,7 +164,7 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     TOKEN_REVOKE("/token/revoke") {
         @Override
-        public REST.Response executePOST(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executePOST(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             ClientProvider clientProvider = context.requireFromContext(ClientProvider.class);
             TokenRevocationRequest request = new TokenRevocationRequest(context, body);
 
@@ -195,9 +195,9 @@ public enum OAuthEndpoint implements ServerEndpoint.This {
     },
     USER_INFO("/userInfo") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             UniNode accountData = context.requireFromContext(ClientProvider.class)
-                    .findAccessToken(headers)
+                    .findAccessToken(request)
                     .getAuthorization()
                     .getUserInfo();
             return new REST.Response(OK, accountData);

@@ -27,10 +27,10 @@ import static org.comroid.restless.HTTPStatusCodes.OK;
 public enum WebkitScope implements EndpointScope, EndpointHandler {
     FRAME("/webkit/frame") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] requestPath, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] requestPath) throws RestEndpointException {
             Map<String, Object> pageProperties = context
                     .requireFromContext(PagePropertiesProvider.class)
-                    .findPageProperties(headers);
+                    .findPageProperties(request);
 
             if (requestPath.length > 1) {
                 context.getLogger().debug("Adding request path to page properties");
@@ -43,7 +43,7 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
 
             String scheme = requestURI.getScheme();
             boolean secure = scheme != null && scheme.equals("https");
-            FrameBuilder frameBuilder = new FrameBuilder(context, panel, headers, false, secure);
+            FrameBuilder frameBuilder = new FrameBuilder(context, panel, request, false, secure);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 
@@ -54,19 +54,19 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
     },
     WEBKIT_API("/webkit/api") {
         @Override
-        public REST.Response executeGET(Context context, URI requestURI, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
+        public REST.Response executeGET(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
             InputStream resource = WebkitResourceLoader.getInternalResource("api.js");
             if (resource == null)
                 throw new RestEndpointException(INTERNAL_SERVER_ERROR, "Could not find API in resources");
             Map<String, Object> pageProperties = context
                     .requireFromContext(WebkitServer.class)
-                    .findPageProperties(headers);
+                    .findPageProperties(request);
             UniObjectNode obj = context.createObjectNode();
             obj.putAll(pageProperties);
             return new REST.Response(OK, "application/javascript", ReaderUtil.combine(
                     String.format("isWindows = %s;\nsocketToken = '%s';\nsessionData = JSON.parse('%s');\n",
-                            OS.isWindows, headers.tryFirst(CommonHeaderNames.AUTHORIZATION)
-                                    .orElseGet(() -> headers.getFirst(CommonHeaderNames.COOKIE)), obj.toSerializedString()),
+                            OS.isWindows, request.tryFirst(CommonHeaderNames.AUTHORIZATION)
+                                    .orElseGet(() -> request.getFirst(CommonHeaderNames.COOKIE)), obj.toSerializedString()),
                     resource));
         }
     };

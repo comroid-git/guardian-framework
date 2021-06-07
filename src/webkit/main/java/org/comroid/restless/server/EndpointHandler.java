@@ -25,80 +25,73 @@ public interface EndpointHandler {
     default REST.Response executeMethod(
             Context context,
             URI requestURI,
-            REST.Method method,
-            REST.Header.List headers,
-            String[] urlParams,
-            UniNode data
+            REST.Request<UniNode> request,
+            String[] urlParams
     ) throws RestEndpointException {
-        switch (method) {
+        switch (request.getMethod()) {
             case GET:
-                return executeGET(context, requestURI, headers, urlParams, data);
+                return executeGET(context, requestURI, request, urlParams);
             case PUT:
-                return executePUT(context, requestURI, headers, urlParams, data);
+                return executePUT(context, requestURI, request, urlParams);
             case POST:
-                return executePOST(context, requestURI, headers, urlParams, data);
+                return executePOST(context, requestURI, request, urlParams);
             case PATCH:
-                return executePATCH(context, requestURI, headers, urlParams, data);
+                return executePATCH(context, requestURI, request, urlParams);
             case DELETE:
-                return executeDELETE(context, requestURI, headers, urlParams, data);
+                return executeDELETE(context, requestURI, request, urlParams);
             case HEAD:
-                return executeHEAD(context, requestURI, headers, urlParams, data);
+                return executeHEAD(context, requestURI, request, urlParams);
         }
 
-        throw new AssertionError("No such method: " + method);
+        throw new AssertionError("Invalid Request: " + request);
     }
 
     default REST.Response executeGET(
             Context context,
             URI requestURI,
-            REST.Header.List headers,
-            String[] urlParams,
-            UniNode body) throws RestEndpointException {
+            REST.Request<UniNode> request,
+            String[] urlParams
+    ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: GET");
     }
 
     default REST.Response executePUT(
             Context context,
             URI requestURI,
-            REST.Header.List headers,
-            String[] urlParams,
-            UniNode body
+            REST.Request<UniNode> request,
+            String[] urlParams
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: PUT");
     }
 
     default REST.Response executePOST(
             Context context,
-            URI requestURI, REST.Header.List headers,
-            String[] urlParams,
-            UniNode body
+            URI requestURI, REST.Request<UniNode> request,
+            String[] urlParams
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: POST");
     }
 
     default REST.Response executePATCH(
             Context context,
-            URI requestURI, REST.Header.List headers,
-            String[] urlParams,
-            UniNode body
+            URI requestURI, REST.Request<UniNode> request,
+            String[] urlParams
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: PATCH");
     }
 
     default REST.Response executeDELETE(
             Context context,
-            URI requestURI, REST.Header.List headers,
-            String[] urlParams,
-            UniNode body
+            URI requestURI, REST.Request<UniNode> request,
+            String[] urlParams
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: DELETE");
     }
 
     default REST.Response executeHEAD(
             Context context,
-            URI requestURI, REST.Header.List headers,
-            String[] urlParams,
-            UniNode body
+            URI requestURI,
+            REST.Request<UniNode> request, String[] urlParams
     ) throws RestEndpointException {
         throw new RestEndpointException(HTTPStatusCodes.METHOD_NOT_ALLOWED, "Method not supported: HEAD");
     }
@@ -109,8 +102,8 @@ public interface EndpointHandler {
         }
 
         @Override
-        default REST.Response executeMethod(Context context, URI requestURI, REST.Method method, REST.Header.List headers, String[] urlParams, UniNode body) throws RestEndpointException {
-            return getEndpointHandler().executeMethod(context, requestURI, method, headers, urlParams, body);
+        default REST.Response executeMethod(Context context, URI requestURI, REST.Request<UniNode> request, String[] urlParams) throws RestEndpointException {
+            return getEndpointHandler().executeMethod(context, requestURI, request, urlParams);
         }
     }
 }

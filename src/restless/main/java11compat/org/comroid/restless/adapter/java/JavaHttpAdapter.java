@@ -41,9 +41,9 @@ public final class JavaHttpAdapter implements HttpAdapter {
         final HttpRequest.Builder builder = HttpRequest.newBuilder(request.getEndpoint().getURI());
 
         request.getHeaders().forEach(builder::header);
-        final HttpRequest.BodyPublisher publisher = request.getMethod() == REST.Method.GET
+        final HttpRequest.BodyPublisher publisher = request.getMethod() == REST.Method.GET || request.getBody() == null
                 ? HttpRequest.BodyPublishers.noBody()
-                : HttpRequest.BodyPublishers.ofString(request.getBody(), StandardCharsets.UTF_8);
+                : HttpRequest.BodyPublishers.ofString(request.getBody().toSerializedString(), StandardCharsets.UTF_8);
         builder.method(request.getMethod().name(), publisher);
 
         return httpClient.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))

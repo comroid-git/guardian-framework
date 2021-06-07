@@ -245,9 +245,16 @@ public final class RestServer implements HttpHandler, Closeable, Context {
                 // extract url parameters
                 urlParams = endpoint.extractArgs(requestURI);
 
+                REST.Request<UniNode> request = new REST.Request<>(
+                        requestHeaders,
+                        endpoint,
+                        requestMethod,
+                        requestData,
+                        () -> new StringReader(body)
+                );
                 // execute endpoint
                 logger.info("Executing Endpoint {}...", endpoint);
-                response = endpoint.executeMethod(context, Polyfill.uri(requestURI), requestMethod, requestHeaders, urlParams, requestData);
+                response = endpoint.executeMethod(context, Polyfill.uri(requestURI), request, urlParams);
             } catch (Throwable t) {
                 if (t instanceof RestEndpointException
                         && requestHeaders.contains(ACCEPTED_CONTENT_TYPE)
