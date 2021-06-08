@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.model.UncachedRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> implements Ref<T>, Function<P, T> {
+public abstract class ParameterizedReference<P, T> extends CachedValueProvider<P, T> implements Ref<T>, Function<P, T> {
     private final Reference<P> defaultParameter = Reference.create();
     private Predicate<T> overriddenSetter;
 
@@ -76,7 +77,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final ParameterizedReference<P, T> peek(Consumer<? super T> action) {
-        return filter(Ref.wrapPeek(action));
+        return filter(UncachedRef.wrapPeek(action));
     }
 
     @Override
@@ -116,11 +117,11 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final <R> ParameterizedReference<P, R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(Ref.wrapOpt2Ref(mapper), backwardsConverter);
+        return flatMap(UncachedRef.wrapOpt2Ref(mapper), backwardsConverter);
     }
 
     @Override
-    public final ParameterizedReference<P, T> or(Supplier<T> orElse) {
+    public final ParameterizedReference<P, T> or(Supplier<? extends T> orElse) {
         throw new UnsupportedOperationException(); // todo
     }
 

@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
-public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
+public abstract class Reference<T> extends CachedValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
     private Predicate<T> overriddenSetter;
 
@@ -45,14 +45,14 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     protected Reference(
-            @Nullable ValueProvider.NoParam<?> parent,
+            @Nullable CachedValueProvider.NoParam<?> parent,
             boolean mutable
     ) {
         this(parent, mutable, parent != null ? parent.getAutocomputor() : null);
     }
 
     protected Reference(
-            @Nullable ValueProvider.NoParam<?> parent,
+            @Nullable CachedValueProvider.NoParam<?> parent,
             boolean mutable,
             Executor autoComputor
     ) {
@@ -75,7 +75,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     private Reference(
-            @Nullable ValueProvider.NoParam<?> parent,
+            @Nullable CachedValueProvider.NoParam<?> parent,
             @Nullable Predicate<T> setter,
             boolean mutable,
             Executor autoComputor
@@ -211,7 +211,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public Reference<T> or(Supplier<T> orElse) {
+    public Reference<T> or(Supplier<? extends T> orElse) {
         return new Support.Or<>(this, orElse);
     }
 
@@ -243,7 +243,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
 
             @Deprecated
-            protected Base(@Nullable ValueProvider.NoParam<?> parent, boolean mutable) {
+            protected Base(@Nullable CachedValueProvider.NoParam<?> parent, boolean mutable) {
                 super(parent, mutable);
             }
         }
@@ -399,9 +399,9 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         }
 
         public static final class Or<T> extends Reference<T> {
-            private final Supplier<T> other;
+            private final Supplier<? extends T> other;
 
-            public Or(Reference<T> base, Supplier<T> other) {
+            public Or(Reference<T> base, Supplier<? extends T> other) {
                 super(base, Function.identity());
 
                 this.other = other;
