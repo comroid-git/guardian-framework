@@ -1,18 +1,21 @@
 package org.comroid.varbind.model;
 
+import org.comroid.api.Named;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.model.ParamRef;
-import org.comroid.varbind.annotation.Prop;
+import org.comroid.varbind.annotation.Property;
 
 import java.util.List;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
-public interface Property<T> extends Prop, ParamRef<T, Object> {
+public interface ConversionProperty<P, I, O> extends Property, ParamRef<P, I>, Named {
+    ParamRef<P, O> convert();
+
     List<String> getNameAlternatives();
 
-    ValueType<?> getTargetType();
+    ValueType<I> getTargetType();
 
-    Class<?> getConvertedType();
+    Class<O> getConvertedType();
 
     boolean isRequired();
 

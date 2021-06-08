@@ -74,6 +74,10 @@ public interface ParamRef<P, O> extends BaseRef<O>, ValueProvider<P, O> {
         return new ParameterizedReference.Support.Mapped<P, O, R>(this, mapper, backwardsConverter, null);
     }
 
+    default <R> ParamRef<P, R> mapBoth(BiFunction<? super P, ? super O, ? extends R> mapper) {
+        // todo
+    }
+
     @Override
     default <R> ParamRef<P, R> flatMap(Function<? super O, ? extends Rewrapper<? extends R>> mapper) {
         return flatMap(mapper, null);

@@ -1,14 +1,13 @@
 package org.comroid.varbind.annotation;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.comroid.api.Invocable;
 import org.comroid.api.Polyfill;
 import org.comroid.api.ValueType;
+import org.comroid.mutatio.model.ParamRef;
 import org.comroid.util.ReflectionHelper;
 import org.comroid.util.StandardValueType;
 import org.comroid.varbind.exception.InvalidPropertyException;
-import org.comroid.varbind.model.Property;
+import org.comroid.varbind.model.ConversionProperty;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.*;
@@ -19,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Prop {
+public @interface Property {
     /**
      * All name variants of the property.
      * First is default value.
@@ -114,32 +114,43 @@ public @interface Prop {
     String converter() default "convert&";
 
     final class Support {
-        private static final Map<Prop, Property<?>> cache = new ConcurrentHashMap<>();
+        private static final Map<Property, ConversionProperty<?, ?, ?>> cache = new ConcurrentHashMap<>();
 
-        public static <T> List<Property<T>> findProperties(Class<T> inClass) {
+        public static <T, I, O> List<ConversionProperty<T, I, O>> findProperties(Class<T> inClass) {
             //noinspection Convert2MethodRef
             return Stream.concat(
                     Arrays.stream(inClass.getDeclaredFields()),
                     Arrays.stream(inClass.getDeclaredMethods()))
-                    .filter(member -> member.isAnnotationPresent(Prop.class))
-                    .map(source -> Support.<T>impl(source))
+                    .filter(member -> member.isAnnotationPresent(Property.class))
+                    .map(source -> Support.<T, I, O>impl(source))
                     .collect(Collectors.toList());
         }
 
-        private static <T> Property<T> impl(AccessibleObject source) {
-            Prop prop = source.getAnnotation(Prop.class);
+        private static <T, I, O> ConversionProperty<T, I, O> impl(AccessibleObject source) {
+            Property prop = source.getAnnotation(Property.class);
             //noinspection unchecked
-            return (Property<T>) cache.computeIfAbsent(prop, k -> new Impl<T>(source, k));
+            return (ConversionProperty<T, I, O>) cache.computeIfAbsent(prop, k -> new Impl<T, I, O>(source, k));
         }
 
-        @SuppressWarnings({"rawtypes", "FieldMayBeFinal"})
-        private static final class Impl<OWNER> implements Property<OWNER> {
-            private final Prop prop;
+        @SuppressWarnings({"rawtypes", "FieldMayBeFinal", "unchecked"})
+        private static final class Impl<OWNER, BASE, CONVERT> implements ConversionProperty<OWNER, BASE, CONVERT> {
+            private final Property prop;
             private final List<String> names;
-            private final ValueType<?> targetType;
+            private final ValueType<BASE> targetType;
+            private final Invocable<CONVERT> converter;
             private final Invocable getter;
             private BiPredicate<OWNER, Object> setter;
             private boolean mutable;
+
+            @Override
+            public ParamRef<OWNER, CONVERT> convert() {
+                return mapBoth();
+            }
+
+            @Override
+            public String getName() {
+                return names.get(0);
+            }
 
             @Override
             public List<String> getNameAlternatives() {
@@ -147,13 +158,13 @@ public @interface Prop {
             }
 
             @Override
-            public ValueType<?> getTargetType() {
+            public ValueType<BASE> getTargetType() {
                 return targetType;
             }
 
             @Override
-            public Class<?> getConvertedType() {
-                return converted();
+            public Class<CONVERT> getConvertedType() {
+                return (Class<CONVERT>) converted();
             }
 
             @Override
@@ -187,20 +198,20 @@ public @interface Prop {
             }
 
             @Override
-            public Object get(OWNER param) {
+            public BASE get(OWNER param) {
                 try {
-                    return getter.invoke(param);
+                    return (BASE) getter.invoke(param);
                 } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
                     throw new RuntimeException("Could not access property getter", e);
                 }
             }
 
             @Override
-            public boolean set(OWNER param, Object value) {
+            public boolean set(OWNER param, BASE value) {
                 return setter.test(param, value);
             }
 
-            private Impl(AccessibleObject source, Prop prop) {
+            private Impl(AccessibleObject source, Property prop) {
                 this.prop = prop;
                 this.names = prop.name().length == 0
                         ? Collections.singletonList(((Member) source).getName())
@@ -208,13 +219,34 @@ public @interface Prop {
                         Arrays.stream(prop.name()),
                         Stream.of(((Member) source).getName())
                 ).collect(Collectors.toList());
-                this.targetType = findTargetType(source, prop);
-                this.mutable = !readonly();
+                this.targetType = (ValueType<BASE>) findTargetType(source, prop);
                 this.getter = makeGetter(source);
                 this.setter = readonly() ? null : makeSetter(source);
+                this.converter = makeConverter();
+                this.mutable = !readonly();
             }
 
-            private Invocable makeGetter(AccessibleObject source) {
+            private Invocable<CONVERT> makeConverter() {
+                String converter = converter();
+                converter = converter.replace("&", getName());
+                return null;
+            }
+
+            private static ValueType<?> findTargetType(AccessibleObject source, Property prop) {
+                Class<?> cls = null;
+                if (source instanceof Field)
+                    cls = ((Field) source).getType();
+                if (source instanceof Method)
+                    cls = ((Method) source).getReturnType();
+                assert cls != null : "unreachable";
+                return StandardValueType.forClass(cls)
+                        .or(() -> ReflectionHelper.resolveField(prop.typedef()))
+                        .ifPresentMapOrElseThrow(
+                                Polyfill::uncheckedCast,
+                                () -> new InvalidPropertyException("Could not resolve ValueType of property: " + source));
+            }
+
+            private static Invocable makeGetter(AccessibleObject source) {
                 class FieldGetter implements Invocable {
                     private final Field field;
 
@@ -263,21 +295,6 @@ public @interface Prop {
                 if (source instanceof Field)
                     return new FieldSetter(source);
                 return null; // todo
-            }
-
-            private static ValueType<?> findTargetType(AccessibleObject source, Prop prop) {
-                Class<?> cls = null;
-                if (source instanceof Field)
-                    cls = ((Field) source).getType();
-                if (source instanceof Method)
-                    cls = ((Method) source).getReturnType();
-                assert cls != null : "unreachable";
-                return StandardValueType.forClass(cls)
-                        .or(() -> ReflectionHelper.resolveField(prop.typedef()))
-                        .ifPresentMapOrElseThrow(
-                                Polyfill::uncheckedCast,
-                                () -> new InvalidPropertyException("Could not resolve ValueType of property: " + source)
-                        );
             }
 
             @Override
@@ -344,7 +361,7 @@ public @interface Prop {
 
             @Override
             public Class<? extends Annotation> annotationType() {
-                return Prop.class;
+                return Property.class;
             }
         }
     }
