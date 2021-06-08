@@ -3,6 +3,7 @@ package org.comroid.mutatio.cache;
 import org.comroid.annotations.inheritance.MustExtend;
 import org.comroid.api.Named;
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.model.Ref;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.NonExtendable;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +40,10 @@ public interface ValueCache<T> extends Named {
     @NonExtendable
     default ValueUpdateListener<T> onChange(Consumer<T> consumer) {
         return ValueUpdateListener.ofConsumer(this, consumer);
+    }
+
+    default boolean dependsOn(ValueCache<?> other) {
+        return upstream().anyMatch(other::equals);
     }
 
     default Stream<? extends ValueCache<?>> upstream() {
