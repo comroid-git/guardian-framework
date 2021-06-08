@@ -114,7 +114,7 @@ function initAPI() {
     console.debug('loading socket');
 
     ws = new WebSocket('ws' + secure + sessionData['wsHost']);
-    ws.setRequestHeader('Socket-Token', (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken))
+    //ws.setRequestHeader('Socket-Token', (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken))
     ws.onopen = (msg) => {
         console.debug("open ", msg);
         ws.send("hello server; i'm " + (socketToken === undefined || socketToken === '' ? 'unknown' : socketToken));
