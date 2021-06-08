@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Rewrapper;
+import org.comroid.api.ValueProvider;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +13,7 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
+public abstract class CachedValueProvider<I, O> extends SingleValueCache.Abstract<O> implements ValueProvider<I, O> {
     private static final Logger logger = LogManager.getLogger();
     protected Function<I, O> overriddenSupplier = null;
     private @Nullable String name;
@@ -27,14 +28,14 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
     public String getName() {
         String yield = name;
         if (yield == null) {
-            Class<? extends ValueProvider> cls = getClass();
+            Class<? extends CachedValueProvider> cls = getClass();
             String simpleName = cls.getSimpleName();
             yield = (simpleName.isEmpty() ? cls.getName() : simpleName);
         }
         return "ValueCache@" + hashCode() + ":'" + yield + "'";
     }
 
-    protected ValueProvider(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
+    protected CachedValueProvider(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
     }
 
@@ -46,6 +47,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
 
     protected abstract O doGet(I param);
 
+    @Override
     public synchronized final O get(I param) {
         if (param != null && lastParam != null) { // todo Inspect
             I lastParam = this.lastParam.get();
@@ -85,7 +87,7 @@ public abstract class ValueProvider<I, O> extends SingleValueCache.Abstract<O> {
             putIntoCache(v);
     }
 
-    public static abstract class NoParam<T> extends ValueProvider<@Nullable("always") Object, T> {
+    public static abstract class NoParam<T> extends CachedValueProvider<@Nullable("always") Object, T> {
         protected NoParam(@Nullable SingleValueCache<?> parent, @Nullable Executor autocomputor) {
             super(parent, autocomputor);
         }
