@@ -34,11 +34,18 @@ public @interface Prop {
     String[] name() default {};
 
     /**
-     * The target type of the property.
+     * The base type of the property.
      *
      * @return the target type of the property
      */
     Class<?> type() default Void.class;
+
+    /**
+     * The converted type of the property.
+     *
+     * @return the target type of the property
+     */
+    Class<?> converted() default Void.class;
 
     /**
      * The field containing the type definition, if not resolvable by {@link #type()}.
@@ -98,6 +105,14 @@ public @interface Prop {
      */
     String setter() default "set&";
 
+    /**
+     * The format of the setter method.
+     * The letter {@code &} represents the name of the property.
+     *
+     * @return the format of the setter method
+     */
+    String converter() default "convert&";
+
     final class Support {
         private static final Map<Prop, Property<?>> cache = new ConcurrentHashMap<>();
 
@@ -134,6 +149,11 @@ public @interface Prop {
             @Override
             public ValueType<?> getTargetType() {
                 return targetType;
+            }
+
+            @Override
+            public Class<?> getConvertedType() {
+                return converted();
             }
 
             @Override
@@ -271,6 +291,11 @@ public @interface Prop {
             }
 
             @Override
+            public Class<?> converted() {
+                return prop.converted();
+            }
+
+            @Override
             public String typedef() {
                 return prop.typedef();
             }
@@ -310,6 +335,11 @@ public @interface Prop {
             @Override
             public String setter() {
                 return prop.setter();
+            }
+
+            @Override
+            public String converter() {
+                return prop.converter();
             }
 
             @Override

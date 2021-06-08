@@ -12,6 +12,8 @@ public interface Property<T> extends Prop, ParamRef<T, Object> {
 
     ValueType<?> getTargetType();
 
+    Class<?> getConvertedType();
+
     boolean isRequired();
 
     boolean isNullable();
