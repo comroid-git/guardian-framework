@@ -1,6 +1,5 @@
 package org.comroid.mutatio.model;
 
-import org.comroid.api.MutableState;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.function.*;
 
-public interface UncachedRef<T> extends Rewrapper<T>, ValueBox<T> {
+public interface BaseRef<T> extends Rewrapper<T>, ValueBox<T> {
     @Override
     default T getValue() {
         return get();
@@ -101,39 +100,39 @@ public interface UncachedRef<T> extends Rewrapper<T>, ValueBox<T> {
     void rebind(Supplier<T> behind);
 
     @Override
-    <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
+    <X, R> BaseRef<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
 
     <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source);
 
-    default Ref<T> peek(Consumer<? super T> action) {
+    default BaseRef<T> peek(Consumer<? super T> action) {
         return filter(wrapPeek(action));
     }
 
-    Ref<T> filter(Predicate<? super T> predicate);
+    BaseRef<T> filter(Predicate<? super T> predicate);
 
-    default <R> Ref<R> flatMap(Class<R> type) {
+    default <R> BaseRef<R> flatMap(Class<R> type) {
         return filter(type::isInstance).map(type::cast);
     }
 
-    default <R> Ref<R> map(Function<? super T, ? extends R> mapper) {
+    default <R> BaseRef<R> map(Function<? super T, ? extends R> mapper) {
         return map(mapper, null);
     }
 
-    <R> Ref<R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter);
+    <R> BaseRef<R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter);
 
-    default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    default <R> BaseRef<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return flatMap(mapper, null);
     }
 
-    default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
+    default <R> BaseRef<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
         return map(mapper.andThen(Rewrapper::get), backwardsConverter);
     }
 
-    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
+    default <R> BaseRef<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(wrapOpt2Ref(mapper));
     }
 
-    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
+    default <R> BaseRef<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
         return flatMap(wrapOpt2Ref(mapper), backwardsConverter);
     }
 }

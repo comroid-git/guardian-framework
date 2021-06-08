@@ -20,5 +20,5 @@ public interface Property<T> extends Prop, ParamRef<T, Object> {
 
     boolean isIdentifier();
 
-    boolean isForceAccessible();
+    //boolean isForceAccessible();
 }
