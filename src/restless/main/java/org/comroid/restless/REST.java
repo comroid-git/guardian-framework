@@ -136,15 +136,21 @@ public final class REST implements ContextualProvider.Underlying {
     public enum Method implements Named {
         GET,
 
-        PUT,
+        HEAD,
 
         POST,
 
-        PATCH,
+        PUT,
 
         DELETE,
 
-        HEAD;
+        CONNECT,
+
+        OPTIONS,
+
+        TRACE,
+
+        PATCH;
 
         @Override
         public String getName() {
