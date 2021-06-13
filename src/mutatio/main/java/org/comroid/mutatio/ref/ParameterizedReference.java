@@ -120,7 +120,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public final ParameterizedReference<P, T> or(Supplier<T> orElse) {
+    public final ParameterizedReference<P, T> or(Supplier<? extends T> orElse) {
         throw new UnsupportedOperationException(); // todo
     }
 

@@ -211,7 +211,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public Reference<T> or(Supplier<T> orElse) {
+    public Reference<T> or(Supplier<? extends T> orElse) {
         return new Support.Or<>(this, orElse);
     }
 
@@ -399,9 +399,9 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         }
 
         public static final class Or<T> extends Reference<T> {
-            private final Supplier<T> other;
+            private final Supplier<? extends T> other;
 
-            public Or(Reference<T> base, Supplier<T> other) {
+            public Or(Reference<T> base, Supplier<? extends T> other) {
                 super(base, Function.identity());
 
                 this.other = other;
