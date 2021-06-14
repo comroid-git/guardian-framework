@@ -3,12 +3,6 @@ import java.util.concurrent.TimeUnit
 ext {
     buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
 }
-task tcBuildId {
-    doLast {
-        println "##teamcity[buildNumber '$buildId']"
-    }
-}
-tasks.named('jar').configure { dependsOn tcBuildId }
 version = '0.32.1' + '.' + buildId
 group 'org.comroid'
 

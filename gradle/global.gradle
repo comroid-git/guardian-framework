@@ -1,3 +1,10 @@
+task tcBuildId {
+    doLast {
+        println "##teamcity[buildNumber '$buildId']"
+    }
+}
+tasks.named('jar').configure { dependsOn tcBuildId }
+
 tasks.withType(Javadoc) {
     source = sourceSets.main.java
 
