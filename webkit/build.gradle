@@ -1,4 +1,15 @@
-version = '0.1.4-SNAPSHOT'
+import java.util.concurrent.TimeUnit
+
+ext {
+    buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+}
+task tcBuildId {
+    doLast {
+        println "##teamcity[buildNumber '$buildId']"
+    }
+}
+tasks.named('jar').configure { dependsOn tcBuildId }
+version = '0.1.4' + '.' + buildId
 group 'org.comroid'
 
 apply plugin: 'java-library'
