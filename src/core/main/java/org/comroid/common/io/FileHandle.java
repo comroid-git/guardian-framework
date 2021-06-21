@@ -89,6 +89,10 @@ public final class FileHandle extends File implements Named, ContentParser {
         this(absolutePath, absolutePath.endsWith(File.separator));
     }
 
+    public FileHandle(File parent, String name, boolean dir) {
+        this(parent.getAbsolutePath() + File.separator + name + (dir ? File.separator : ""), dir);
+    }
+
     public FileHandle(String absolutePath, boolean dir) {
         super(absolutePath);
 
