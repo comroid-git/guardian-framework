@@ -8,6 +8,7 @@ public class ScopedEndpoint implements AccessibleEndpoint {
     private final Pattern pattern;
 
     @Override
+    @Deprecated
     public String getUrlBase() {
         return urlBase;
     }

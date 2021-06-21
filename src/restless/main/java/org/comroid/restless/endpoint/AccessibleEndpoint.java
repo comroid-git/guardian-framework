@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable, Predicate<String>, EndpointScope {
-    // fixme: add Url base whenever needed
+    @Deprecated
     String getUrlBase();
 
     @Override

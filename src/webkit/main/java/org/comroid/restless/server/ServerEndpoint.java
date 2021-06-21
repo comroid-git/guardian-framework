@@ -15,6 +15,7 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
     }
 
     @Override
+    @Deprecated
     default String getUrlBase() {
         return getEndpointBase().getUrlBase();
     }
@@ -39,6 +40,7 @@ public interface ServerEndpoint extends AccessibleEndpoint, EndpointHandler {
 
     interface This extends ServerEndpoint {
         @Override
+        @Deprecated
         String getUrlBase();
 
         @Override
