@@ -5,8 +5,11 @@ import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.HttpAdapter;
 import org.comroid.restless.REST;
 import org.comroid.uniform.SerializationAdapter;
+import org.comroid.uniform.node.UniNode;
+import org.comroid.util.ReaderUtil;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -38,10 +41,19 @@ public final class OkHttp4Adapter implements HttpAdapter {
                 final Call call = httpClient.newCall(kRequest);
                 final Response response = call.execute();
                 final ResponseBody responseBody = response.body();
+                byte[] bytes = responseBody == null ? null : responseBody.bytes();
 
-                return new REST.Response(response.code(), request.getREST()
-                        .requireFromContext(SerializationAdapter.class)
-                        .createUniNode(responseBody == null ? null : responseBody.string()));
+                try {
+                    UniNode uniNode = request.getREST()
+                            .requireFromContext(SerializationAdapter.class)
+                            .createUniNode(bytes == null ? null : new String(bytes));
+                    return new REST.Response(response.code(), uniNode);
+                } catch (RuntimeException re) {
+                    if (responseBody != null) {
+                        return new REST.Response(response.code(), response.header(CommonHeaderNames.REQUEST_CONTENT_TYPE), ReaderUtil.ofArray(bytes));
+                    }
+                    return new REST.Response(response.code());
+                }
             } catch (IOException e) {
                 throw new RuntimeException("Request failed", e);
             }
