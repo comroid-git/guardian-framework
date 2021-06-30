@@ -181,11 +181,16 @@ public interface AccessibleEndpoint extends CompleteEndpoint, WrappedFormattable
     default Pattern buildUrlPattern() {
         final String[] regExpGroups = getRegExpGroups();
 
-        if (regExpGroups != null && regExpGroups.length > 0)
-            return Pattern.compile(String.format(getUrlExtension(), Arrays.stream(regExpGroups)
+        if (regExpGroups != null && regExpGroups.length > 0) {
+            String format = String.format(getUrlExtension(), Arrays.stream(regExpGroups)
                     .map(str -> String.format("(%s)", str))
-                    .toArray()));
-        return Pattern.compile(getUrlExtension().replace("%s", "(.*)"));
+                    .toArray());
+            format = format.replace("?", "\\?");
+            return Pattern.compile(format);
+        }
+        String format = getUrlExtension().replace("%s", "(.*)");
+        format = format.replace("?", "\\?");
+        return Pattern.compile(format);
     }
 
     default boolean allowMemberAccess() {
