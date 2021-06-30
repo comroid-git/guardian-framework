@@ -195,4 +195,24 @@ public final class FileHandle extends File implements Named, ContentParser {
         FileHandle f = createSubFile(fileName);
         return f.exists() && !f.isEmpty();
     }
+
+    public Reader openReader() {
+        try {
+            return new FileReader(this);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Writer openWriter() {
+        return openWriter(false);
+    }
+
+    public Writer openWriter(boolean append) {
+        try {
+            return new FileWriter(this, append);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
