@@ -107,9 +107,7 @@ public class ReferencePipe<InK, InV, K, V>
             ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer = getAdvancer();
             final K key = advancer.advanceKey(inK);
             final V value = advancer.advanceValue(inK, inV);
-            if (advancer.isFiltering()
-                    && ((inK != null && key == null)
-                    || (inV != null && value == null)))
+            if (advancer.isFiltering() && inV != null && value == null)
                 return;
             getDependents().stream()
                     .filter(ReferencePipe.class::isInstance)
