@@ -100,34 +100,38 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
 
     @Override
     public RefContainer<?, EXTR> extract(UniNode from) {
-        final UniNode target = getTargetNode(from);
+        try {
+            final UniNode target = getTargetNode(from);
 
-        switch (extractionMethod) {
-            case VALUE:
-                assert valueType instanceof StandardValueType;
-                EXTR value = target.as(valueType);
-                return Span.immutable(value);
-            case OBJECT:
-                assert group.getFromContext().getObjectType().equals(valueType);
-                UniObjectNode obj = target.asObjectNode();
-                EXTR cast = Polyfill.uncheckedCast(obj);
-                return Span.immutable(cast);
-            case ARRAY:
-                if (valueType instanceof StandardValueType) {
-                    // extract values array
-                    return target.streamNodes()
-                            .map(each -> each.as(valueType))
-                            .collect(Span.collector());
-                } else if (group.getFromContext().getArrayType().equals(valueType)) {
-                    // extract uninode array
-                    return target.streamNodes()
-                            .map(UniNode::asObjectNode)
-                            // assume EXTR = UniObjectNode !!
-                            .map(Polyfill::<EXTR>uncheckedCast)
-                            .collect(Span.collector());
-                }
+            switch (extractionMethod) {
+                case VALUE:
+                    assert valueType instanceof StandardValueType;
+                    EXTR value = target.as(valueType);
+                    return Span.immutable(value);
+                case OBJECT:
+                    assert group.getFromContext().getObjectType().equals(valueType);
+                    UniObjectNode obj = target.asObjectNode();
+                    EXTR cast = Polyfill.uncheckedCast(obj);
+                    return Span.immutable(cast);
+                case ARRAY:
+                    if (valueType instanceof StandardValueType) {
+                        // extract values array
+                        return target.streamNodes()
+                                .map(each -> each.as(valueType))
+                                .collect(Span.collector());
+                    } else if (group.getFromContext().getArrayType().equals(valueType)) {
+                        // extract uninode array
+                        return target.streamNodes()
+                                .map(UniNode::asObjectNode)
+                                // assume EXTR = UniObjectNode !!
+                                .map(Polyfill::<EXTR>uncheckedCast)
+                                .collect(Span.collector());
+                    }
+            }
+            throw new AssertionError("unreachable");
+        } catch (Exception e) {
+            throw new RuntimeException("Could not extract data for bind " + fieldName, e);
         }
-        throw new AssertionError("unreachable");
     }
 
     private UniNode getTargetNode(UniNode from) {
@@ -149,13 +153,21 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
 
     @Override
     public REMAP remap(SELF context, EXTR data) {
-        return remapper.apply(context, data);
+        try {
+            return remapper.apply(context, data);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not remap data for bind " + fieldName, e);
+        }
     }
 
     @Override
     public FINAL finish(SELF context, RefContainer<?, REMAP> parts) {
-        if ((parts == null || parts.size() == 0) && defaultSupplier != null)
-            return defaultSupplier.apply(context);
-        return finisher.apply(parts);
+        try {
+            if ((parts == null || parts.size() == 0) && defaultSupplier != null)
+                return defaultSupplier.apply(context);
+            return finisher.apply(parts);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not finalize data for bind " + fieldName, e);
+        }
     }
 }
