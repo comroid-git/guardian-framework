@@ -9,7 +9,9 @@ public interface RefPipe<InK, InV, K, V> extends RefAtlas<InK, K, InV, V>, BiCon
     @Nullable Executor getStageExecutor();
 
     @Override
-    void accept(InK inK, InV inV);
+    default void accept(InK inK, InV inV) {
+        callDependentStages(getStageExecutor() == null ? Runnable::run : getStageExecutor(), inK, inV);
+    }
 
     void callDependentStages(Executor executor, InK inK, InV inV);
 }

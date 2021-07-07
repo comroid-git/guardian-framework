@@ -97,11 +97,6 @@ public class ReferencePipe<InK, InV, K, V>
     }
 
     @Override
-    public final void accept(InK inK, InV inV) {
-        callDependentStages(stageExecutor == null ? Runnable::run : stageExecutor, inK, inV);
-    }
-
-    @Override
     public final void callDependentStages(Executor executor, InK inK, InV inV) {
         executor.execute(() -> {
             ReferenceStageAdapter<InK, K, InV, V, KeyedReference<InK, InV>, KeyedReference<K, V>> advancer = getAdvancer();
@@ -114,7 +109,7 @@ public class ReferencePipe<InK, InV, K, V>
                     .map(Polyfill::<ReferencePipe<K, V, ?, ?>>uncheckedCast)
                     .forEach(next -> {
                         try {
-                            next.accept(key, value);
+                            next.callDependentStages(executor, key, value);
                         } catch (Throwable t) {
                             logger.error("An error occurred during forwarding to pipe " + next, t);
                         }
