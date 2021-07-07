@@ -116,7 +116,7 @@ public class ReferencePipe<InK, InV, K, V>
                         try {
                             next.accept(key, value);
                         } catch (Throwable t) {
-                            logger.error("An error ocurred during forwarding to pipe " + next, t);
+                            logger.error("An error occurred during forwarding to pipe " + next, t);
                         }
                     });
         });
