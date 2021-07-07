@@ -26,9 +26,12 @@ import java.util.function.Consumer;
 
 public final class JavaWebsocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
+    private final HttpClient httpClient;
     private final Executor executor;
     private final URI uri;
     private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> pipeline;
+    private final REST.Header.List headers;
+    private final String preferredProtocol;
     private final FutureReference<WebSocket> jSocket = new FutureReference<>();
 
     @Override
@@ -47,19 +50,12 @@ public final class JavaWebsocket implements Websocket {
     }
 
     JavaWebsocket(HttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
+        this.httpClient = httpClient;
         this.executor = executor;
         this.uri = uri;
         this.pipeline = new ReferencePipe<>(executor);
-
-        WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
-        headers.forEach(socketBuilder::header);
-        if (preferredProtocol != null)
-            socketBuilder.subprotocols(preferredProtocol);
-
-        logger.debug("Building WebSocket");
-        socketBuilder.buildAsync(uri, new Listener())
-                .thenAccept(jSocket.future::complete)
-                .exceptionally(Polyfill.exceptionLogger(logger, "Error while building WebSocket"));
+        this.headers = headers;
+        this.preferredProtocol = preferredProtocol;
     }
 
     @Override
@@ -71,6 +67,21 @@ public final class JavaWebsocket implements Websocket {
             jSocket.sendText(splitMessage[i], i == splitMessage.length - 1);
 
         return CompletableFuture.completedFuture(this);
+    }
+
+    @Override
+    public CompletableFuture<? extends Websocket> open() {
+        if (jSocket.future.isDone())
+            throw new IllegalStateException("Websocket is already open");
+
+        WebSocket.Builder socketBuilder = httpClient.newWebSocketBuilder();
+        headers.forEach(socketBuilder::header);
+        if (preferredProtocol != null)
+            socketBuilder.subprotocols(preferredProtocol);
+        return socketBuilder.buildAsync(uri, new Listener())
+                .thenAccept(jSocket.future::complete)
+                .thenApply(nil -> this)
+                .exceptionally(Polyfill.exceptionLogger(logger, "Error while building WebSocket"));
     }
 
     private void feed(WebsocketPacket packet) {

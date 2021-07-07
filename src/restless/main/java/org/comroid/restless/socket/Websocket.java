@@ -39,4 +39,6 @@ public interface Websocket extends Named, Closeable, EventPipeline<WebsocketPack
     }
 
     CompletableFuture<Websocket> send(String[] splitMessage);
+
+    CompletableFuture<? extends Websocket> open();
 }

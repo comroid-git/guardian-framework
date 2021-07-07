@@ -24,10 +24,14 @@ import java.util.function.Consumer;
 
 public final class OkHttp4WebSocket implements Websocket {
     private static final Logger logger = LogManager.getLogger();
+    private final OkHttpClient httpClient;
     private final Executor executor;
+    private final Consumer<Throwable> exceptionHandler;
     private final URI uri;
     private final RefPipe<WebsocketPacket.Type, WebsocketPacket, WebsocketPacket.Type, WebsocketPacket> pipeline;
-    private final WebSocket internalSocket;
+    private final REST.Header.List headers;
+    private final String preferredProtocol;
+    private WebSocket internalSocket;
 
     @Override
     public RefContainer<WebsocketPacket.Type, WebsocketPacket> getEventPipeline() {
@@ -45,6 +49,25 @@ public final class OkHttp4WebSocket implements Websocket {
     }
 
     OkHttp4WebSocket(OkHttpClient httpClient, Executor executor, Consumer<Throwable> exceptionHandler, URI uri, REST.Header.List headers, String preferredProtocol) {
+        this.httpClient = httpClient;
+        this.executor = executor;
+        this.exceptionHandler = exceptionHandler;
+        this.uri = uri;
+        this.pipeline = new ReferencePipe<>(executor);
+        this.headers = headers;
+        this.preferredProtocol = preferredProtocol;
+    }
+
+    @Override
+    public CompletableFuture<Websocket> send(String[] splitMessage) {
+        return send(String.join("", splitMessage));
+    }
+
+    @Override
+    public CompletableFuture<? extends Websocket> open() {
+        if (internalSocket != null)
+            throw new IllegalStateException("Websocket is already open");
+
         final Request.Builder initBuilder = new Request.Builder().url(uri.toString());
         if (preferredProtocol != null)
             headers.add(CommonHeaderNames.WEBSOCKET_SUBPROTOCOL, preferredProtocol);
@@ -55,16 +78,8 @@ public final class OkHttp4WebSocket implements Websocket {
                 throw new RuntimeException(String.format("Problem with header: %s = %s", name, value), t);
             }
         });
-
-        this.executor = executor;
-        this.uri = uri;
-        this.pipeline = new ReferencePipe<>(executor);
         this.internalSocket = httpClient.newWebSocket(initBuilder.build(), new Listener());
-    }
-
-    @Override
-    public CompletableFuture<Websocket> send(String[] splitMessage) {
-        return send(String.join("", splitMessage));
+        return null;
     }
 
     @Override
