@@ -1,8 +1,11 @@
 package org.comroid.varbind.bind.builder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.model.RefContainer;
+import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -18,6 +21,7 @@ import java.util.function.Function;
 
 public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         implements VarBind<SELF, EXTR, REMAP, FINAL> {
+    private final static Logger logger = LogManager.getLogger();
     private final GroupBind<SELF> group;
     private final String fieldName;
     private final boolean required;
@@ -130,7 +134,8 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             }
             throw new AssertionError("unreachable");
         } catch (Exception e) {
-            throw new RuntimeException("Could not extract data for bind " + fieldName, e);
+            logger.error("Could not extract data for bind " + fieldName, e);
+            return ReferenceList.empty();
         }
     }
 
@@ -156,7 +161,8 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         try {
             return remapper.apply(context, data);
         } catch (Exception e) {
-            throw new RuntimeException("Could not remap data for bind " + fieldName, e);
+            logger.error("Could not remap data for bind " + fieldName, e);
+            return null;
         }
     }
 
@@ -167,7 +173,8 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
                 return defaultSupplier.apply(context);
             return finisher.apply(parts);
         } catch (Exception e) {
-            throw new RuntimeException("Could not finalize data for bind " + fieldName, e);
+            logger.error("Could not finalize data for bind " + fieldName, e);
+            return null;
         }
     }
 }
