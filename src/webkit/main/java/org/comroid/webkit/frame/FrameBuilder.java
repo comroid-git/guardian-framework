@@ -91,7 +91,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         // add api script
         frame.head().appendElement("script")
                 .attr("type", "application/javascript")
-                .attr("src", "https://raw.githubusercontent.com/comroid-git/guardian-framework/master/src/webkit/main/resources/org/comroid/webkit/internal/api.js");
+                .attr("src", String.format("http%s://%s/webkit/api", isSecure ? "s" : "", host));
         frame.body().attr("onload", "initAPI()");
         frame.body().attr("onclose", "disconnectAPI()");
     }
