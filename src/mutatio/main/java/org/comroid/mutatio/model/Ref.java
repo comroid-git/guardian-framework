@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.function.*;
 
 public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
-    //region RefStack-Related Methods
+    //region RefStack Methods
     /**
      * Returns the index of this Reference.
      * Returns {@code -1} if there is no index.
@@ -63,6 +63,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     }
     //endregion
 
+    //region Accessor Methods
     @Override
     @SuppressWarnings("unchecked")
     default T get() throws ClassCastException {
@@ -121,6 +122,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
         set(into(computor));
         return old;
     }
+    //endregion
 
     //region ValueBox Methods
     @Override
@@ -135,27 +137,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     }
     // endregion
 
-    @NotNull
-    @Internal
-    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
-        return any -> {
-            action.accept(any);
-            return true;
-        };
-    }
-
-    @NotNull
-    @Internal
-    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
-    }
-
-    /**
-     * @deprecated Use {@link RefStack#overrideGetter(Supplier)}
-     */
-    @Deprecated
-    void rebind(Supplier<T> behind);
-
+    //region RefOPs Methods
     @Override
     <X, R> Ref<R> combine(Supplier<X> other, BiFunction<T, X, R> accumulator);
 
@@ -163,10 +145,6 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
 
     default Ref<T> peek(Consumer<? super T> action) {
         return filter(wrapPeek(action));
-    }
-
-    default boolean dependsOn(Ref<?> other) {
-        return upstream().anyMatch(other::equals);
     }
 
     Ref<T> filter(Predicate<? super T> predicate);
@@ -196,5 +174,26 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
         return flatMap(wrapOpt2Ref(mapper), backwardsConverter);
     }
+    //endregion
 
+    @NotNull
+    @Internal
+    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
+        return any -> {
+            action.accept(any);
+            return true;
+        };
+    }
+
+    @NotNull
+    @Internal
+    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
+    }
+
+    /**
+     * @deprecated Use {@link RefStack#overrideGetter(Supplier)}
+     */
+    @Deprecated
+    void rebind(Supplier<T> behind);
 }
