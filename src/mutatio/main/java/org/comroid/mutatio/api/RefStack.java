@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapper<T>, MutableState, Named, Index {
     private final AtomicReference<T> value;
     private final AtomicBoolean mutable;
-    private final boolean overridable;
+    private final int overridable;
     private final String name;
     private final int index;
     protected @NotNull Supplier<? extends T> getter;
@@ -30,8 +30,41 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         return mutable.get();
     }
 
-    public boolean isOverridable() {
-        return overridable;
+    public boolean isGetterOverridable() {
+        return Overridability.GETTER.isFlagSet(overridable);
+    }
+
+    public boolean isSetterOverridable() {
+        return Overridability.SETTER.isFlagSet(overridable);
+    }
+
+    public RefStack(
+            String name,
+            int index,
+            T initialValue,
+            boolean mutable
+    ) {
+        this(name, index, initialValue, mutable, Overridability.GETTER_AND_SETTER);
+    }
+
+    public RefStack(
+            String name,
+            int index,
+            T initialValue,
+            boolean mutable,
+            Overridability overridable
+    ) {
+        this(null, name, index, initialValue, mutable, overridable);
+    }
+
+    public RefStack(
+            @Nullable ValueCache<?> parent,
+            String name,
+            int index,
+            T initialValue,
+            boolean mutable
+    ) {
+        this(parent, name, index, initialValue, mutable, Overridability.GETTER);
     }
 
     public RefStack(
@@ -40,7 +73,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
             int index,
             T initialValue,
             boolean mutable,
-            boolean overridable
+            Overridability overridable
     ) {
         this(
                 parent,
@@ -58,7 +91,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
             @Nullable ValueCache<?> parent,
             AtomicReference<T> value,
             AtomicBoolean mutable,
-            boolean overridable,
+            Overridability overridable,
             String name,
             int index,
             @Nullable Supplier<? extends T> getter,
@@ -67,7 +100,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         super(parent, null);
         this.value = value;
         this.mutable = mutable;
-        this.overridable = overridable;
+        this.overridable = overridable.getAsInt();
         this.name = name;
         this.index = index;
         this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
@@ -97,7 +130,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     }
 
     public final void overrideGetter(Supplier<? extends T> getter) throws IllegalStateException {
-        if (isOverridable())
+        if (isGetterOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override getter");
         this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
     }
@@ -107,7 +140,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     }
 
     public final void overrideSetter(Predicate<? super T> setter) throws IllegalStateException {
-        if (isOverridable())
+        if (isSetterOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override setter");
         this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
@@ -126,5 +159,12 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     @Override
     public void computeAndStoreValue() {
         putIntoCache(get());
+    }
+
+    public enum Overridability implements BitmaskAttribute<Overridability> {
+        NONE, // 0
+        GETTER, // 1
+        SETTER, // 2
+        GETTER_AND_SETTER // 4
     }
 }
