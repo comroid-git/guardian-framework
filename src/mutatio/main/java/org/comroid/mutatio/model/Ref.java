@@ -151,7 +151,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     }
 
     /**
-     * @deprecated Use {@link RefStack#replaceGetter(Supplier)}
+     * @deprecated Use {@link RefStack#overrideGetter(Supplier)}
      */
     @Deprecated
     void rebind(Supplier<T> behind);
