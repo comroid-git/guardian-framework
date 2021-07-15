@@ -38,7 +38,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public final T get() {
+    public final T get(int stack) {
         return defaultParameter.ifPresentMapOrElseThrow(this::get,
                 () -> new NoSuchElementException("No default parameter defined"));
     }

@@ -10,6 +10,7 @@ import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import java.util.Optional;
 import java.util.function.*;
@@ -44,8 +45,37 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
         return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
     }
 
+    /**
+     * Returns the index of this Reference.
+     * Returns {@code -1} if there is no index.
+     * @return the index of this Reference
+     */
+    default int index() {
+        return -1;
+    }
+
+    /**
+     * Returns the number of Values held by this Reference.
+     * @return The number of values.
+     */
+    @Range(from = 1, to = Integer.MAX_VALUE)
+    default int stack() {
+        return 1;
+    }
+
     @Override
-    T get();
+    @SuppressWarnings("unchecked")
+    default T get() throws ClassCastException {
+        return (T) get(0);
+    }
+
+    /**
+     * Returns the Value held by the given index.
+     * @param stack The index of the value.
+     * @return the Value
+     */
+    @Internal
+    Object get(int stack);
 
     default boolean unset() {
         return set(null);

@@ -128,7 +128,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public final @Nullable T get() {
+    public final @Nullable T get(int stack) {
         return super.get(null);
     }
 
