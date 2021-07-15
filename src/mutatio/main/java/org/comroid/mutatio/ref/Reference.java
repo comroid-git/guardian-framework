@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Ref;
-import org.comroid.mutatio.model.RefStack;
+import org.comroid.mutatio.api.RefStack;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;

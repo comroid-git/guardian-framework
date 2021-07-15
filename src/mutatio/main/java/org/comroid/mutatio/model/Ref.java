@@ -4,48 +4,20 @@ import org.comroid.api.Index;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.ref.ParameterizedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.util.Optional;
 import java.util.function.*;
 
-public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
-    @Override
-    default T getValue() {
-        return get();
-    }
-
-    @Override
-    @Nullable
-    default ValueType<? extends T> getHeldType() {
-        return StandardValueType.typeOf(getValue());
-    }
-
-    @Override
-    boolean isMutable();
-
-    @NotNull
-    @Internal
-    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
-        return any -> {
-            action.accept(any);
-            return true;
-        };
-    }
-
-    @NotNull
-    @Internal
-    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
-    }
-
+public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
+    //region RefStack-Related Methods
     /**
      * Returns the index of this Reference.
      * Returns {@code -1} if there is no index.
@@ -60,14 +32,17 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T>, 
      * Returns the full Reference Stack underlying this Reference.
      * @return the full Reference stack
      */
-    @SuppressWarnings("rawtypes")
     @Internal
+    @SuppressWarnings("rawtypes")
     RefStack[] stack();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    default T get() throws ClassCastException {
-        return (T) get(0);
+    @Internal
+    @SuppressWarnings("rawtypes")
+    default RefStack stack(int index) throws IndexOutOfBoundsException {
+        RefStack[] stack = stack();
+        if (index >= stack.length || index < 0)
+            throw new IndexOutOfBoundsException(String.format("Stack index %d is out of bounds; length = %d", index, stack.length));
+        return stack[index];
     }
 
     /**
@@ -77,22 +52,29 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T>, 
      * @return the Value
      */
     @Internal
-    default Object get(int stack) {
-        return stack()[stack].get();
+    default Object get(int stack) throws IndexOutOfBoundsException {
+        return stack(stack).get();
     }
 
-    default boolean unset() {
-        return set(null);
+    @Internal
+    default boolean set(int stack, Object value) throws IndexOutOfBoundsException {
+        //noinspection unchecked
+        return stack(stack).set(value);
+    }
+    //endregion
+
+    @Override
+    @SuppressWarnings("unchecked")
+    default T get() throws ClassCastException {
+        return (T) get(0);
     }
 
     default boolean set(T value) {
         return set(0, value);
     }
 
-    @Internal
-    default boolean set(int stack, Object value) {
-        //noinspection unchecked
-        return stack()[stack].set(value);
+    default boolean unset() {
+        return set(null);
     }
 
     default T replace(T newValue) {
@@ -140,6 +122,37 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T>, 
         return old;
     }
 
+    //region ValueBox Methods
+    @Override
+    default T getValue() {
+        return get();
+    }
+
+    @Override
+    @Nullable
+    default ValueType<? extends T> getHeldType() {
+        return StandardValueType.typeOf(getValue());
+    }
+    // endregion
+
+    @NotNull
+    @Internal
+    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
+        return any -> {
+            action.accept(any);
+            return true;
+        };
+    }
+
+    @NotNull
+    @Internal
+    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
+    }
+
+    /**
+     * @deprecated Use {@link RefStack#replaceGetter(Supplier)}
+     */
     @Deprecated
     void rebind(Supplier<T> behind);
 
