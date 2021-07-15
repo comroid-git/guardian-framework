@@ -118,11 +118,16 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     }
 
     public final T get() {
-        return getter.get();
+        if (isUpToDate())
+            return getFromCache();
+        return putIntoCache(getter.get());
     }
 
     public final boolean set(T newValue) {
-        return isMutable() && setter.test(newValue);
+        if (!isMutable() || !setter.test(newValue))
+            return false;
+        putIntoCache(newValue);
+        return true;
     }
 
     public final void resetGetter() throws IllegalStateException {
