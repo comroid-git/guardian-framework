@@ -137,6 +137,8 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     public final void overrideGetter(Supplier<? extends T> getter) throws IllegalStateException {
         if (isGetterOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override getter");
+        if (getter == this || (getter instanceof ValueCache && dependsOn((ValueCache<?>) getter)))
+            throw new IllegalArgumentException("Circular RefStack Dependency detected");
         this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
     }
 
