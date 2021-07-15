@@ -1,24 +1,22 @@
 package org.comroid.mutatio.api;
 
-import org.comroid.api.Index;
-import org.comroid.api.MutableState;
-import org.comroid.api.Named;
-import org.comroid.api.Rewrapper;
-import org.jetbrains.annotations.ApiStatus.Experimental;
+import org.comroid.api.*;
+import org.comroid.mutatio.cache.SingleValueCache;
+import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
+public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapper<T>, MutableState, Named, Index {
     private final AtomicReference<T> value;
     private final AtomicBoolean mutable;
-    private final IntSupplier index;
     private final boolean overridable;
     private final String name;
+    private final int index;
     protected @NotNull Supplier<? extends T> getter;
     protected @NotNull Predicate<? super T> setter;
 
@@ -36,31 +34,44 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
         return overridable;
     }
 
-    @Experimental
-    protected RefStack(String name, T initialValue) {
-        this(name, () -> -1, initialValue);
+    public RefStack(
+            @Nullable ValueCache<?> parent,
+            String name,
+            int index,
+            T initialValue,
+            boolean mutable,
+            boolean overridable
+    ) {
+        this(
+                parent,
+                new AtomicReference<>(initialValue),
+                new AtomicBoolean(mutable),
+                overridable,
+                name,
+                index,
+                null,
+                null
+        );
     }
 
-    public RefStack(String name, IntSupplier index) {
-        this(name, index, null);
-    }
-
-    public RefStack(String name, IntSupplier index, T initialValue) {
-        this(name, index, initialValue, true);
-    }
-
-    public RefStack(String name, IntSupplier index, T initialValue, boolean mutable) {
-        this(name, index, initialValue, mutable, false);
-    }
-
-    public RefStack(String name, IntSupplier index, T initialValue, boolean mutable, boolean overridable) {
+    protected RefStack(
+            @Nullable ValueCache<?> parent,
+            AtomicReference<T> value,
+            AtomicBoolean mutable,
+            boolean overridable,
+            String name,
+            int index,
+            @Nullable Supplier<? extends T> getter,
+            @Nullable Predicate<? super T> setter
+    ) {
+        super(parent, null);
+        this.value = value;
+        this.mutable = mutable;
+        this.overridable = overridable;
         this.name = name;
         this.index = index;
-        this.value = new AtomicReference<>(initialValue);
-        this.mutable = new AtomicBoolean(mutable);
-        this.overridable = overridable;
-        this.getter = this::$get;
-        this.setter = this::$set;
+        this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
+        this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
 
     @Override
@@ -70,7 +81,7 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
     }
 
     public final int index() {
-        return index.getAsInt();
+        return index;
     }
 
     public final T get() {
@@ -82,23 +93,23 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
     }
 
     public final void resetGetter() throws IllegalStateException {
-        overrideGetter(this::$get);
+        overrideGetter(null);
     }
 
     public final void overrideGetter(Supplier<? extends T> getter) throws IllegalStateException {
         if (isOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override getter");
-        this.getter = getter;
+        this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
     }
 
     public final void resetSetter() throws IllegalStateException {
-        overrideSetter(this::$set);
+        overrideSetter(null);
     }
 
     public final void overrideSetter(Predicate<? super T> setter) throws IllegalStateException {
         if (isOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override setter");
-        this.setter = setter;
+        this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
 
     private T $get() {
@@ -110,5 +121,10 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
             throw new IllegalStateException("RefStack " + getName() + " is Immutable");
         value.set(newValue);
         return true;
+    }
+
+    @Override
+    public void computeAndStoreValue() {
+        putIntoCache(get());
     }
 }
