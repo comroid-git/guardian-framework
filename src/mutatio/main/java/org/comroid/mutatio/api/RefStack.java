@@ -17,7 +17,7 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
     private final AtomicReference<T> value;
     private final AtomicBoolean mutable;
     private final IntSupplier index;
-    private final boolean isFinal;
+    private final boolean overridable;
     private final String name;
     protected @NotNull Supplier<? extends T> getter;
     protected @NotNull Predicate<? super T> setter;
@@ -32,13 +32,17 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
         return mutable.get();
     }
 
-    public boolean isFinal() {
-        return isFinal;
+    public boolean isOverridable() {
+        return overridable;
     }
 
     @Experimental
     protected RefStack(String name, T initialValue) {
         this(name, () -> -1, initialValue);
+    }
+
+    public RefStack(String name, IntSupplier index) {
+        this(name, index, null);
     }
 
     public RefStack(String name, IntSupplier index, T initialValue) {
@@ -49,12 +53,12 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
         this(name, index, initialValue, mutable, false);
     }
 
-    public RefStack(String name, IntSupplier index, T initialValue, boolean mutable, boolean isFinal) {
+    public RefStack(String name, IntSupplier index, T initialValue, boolean mutable, boolean overridable) {
         this.name = name;
         this.index = index;
         this.value = new AtomicReference<>(initialValue);
         this.mutable = new AtomicBoolean(mutable);
-        this.isFinal = isFinal;
+        this.overridable = overridable;
         this.getter = this::$get;
         this.setter = this::$set;
     }
@@ -78,21 +82,21 @@ public class RefStack<T> implements Rewrapper<T>, MutableState, Named, Index {
     }
 
     public final void resetGetter() throws IllegalStateException {
-        replaceGetter(this::$get);
+        overrideGetter(this::$get);
     }
 
-    public final void replaceGetter(Supplier<? extends T> getter) throws IllegalStateException {
-        if (isFinal())
+    public final void overrideGetter(Supplier<? extends T> getter) throws IllegalStateException {
+        if (isOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override getter");
         this.getter = getter;
     }
 
     public final void resetSetter() throws IllegalStateException {
-        replaceSetter(this::$set);
+        overrideSetter(this::$set);
     }
 
-    public final void replaceSetter(Predicate<? super T> setter) throws IllegalStateException {
-        if (isFinal())
+    public final void overrideSetter(Predicate<? super T> setter) throws IllegalStateException {
+        if (isOverridable())
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override setter");
         this.setter = setter;
     }
