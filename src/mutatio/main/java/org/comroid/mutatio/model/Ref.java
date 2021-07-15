@@ -1,5 +1,6 @@
 package org.comroid.mutatio.model;
 
+import org.comroid.api.Index;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Range;
 import java.util.Optional;
 import java.util.function.*;
 
-public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
+public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
     @Override
     default T getValue() {
         return get();
@@ -50,18 +51,18 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
      * Returns {@code -1} if there is no index.
      * @return the index of this Reference
      */
+    @Override
     default int index() {
         return -1;
     }
 
     /**
-     * Returns the number of Values held by this Reference.
-     * @return The number of values.
+     * Returns the full Reference Stack underlying this Reference.
+     * @return the full Reference stack
      */
-    @Range(from = 1, to = Integer.MAX_VALUE)
-    default int stack() {
-        return 1;
-    }
+    @SuppressWarnings("rawtypes")
+    @Internal
+    RefStack[] stack();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -71,17 +72,28 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
 
     /**
      * Returns the Value held by the given index.
+     *
      * @param stack The index of the value.
      * @return the Value
      */
     @Internal
-    Object get(int stack);
+    default Object get(int stack) {
+        return stack()[stack].get();
+    }
 
     default boolean unset() {
         return set(null);
     }
 
-    boolean set(T value);
+    default boolean set(T value) {
+        return set(0, value);
+    }
+
+    @Internal
+    default boolean set(int stack, Object value) {
+        //noinspection unchecked
+        return stack()[stack].set(value);
+    }
 
     default T replace(T newValue) {
         T old = get();
@@ -128,6 +140,7 @@ public interface Ref<T> extends SingleValueCache<T>, Rewrapper<T>, ValueBox<T> {
         return old;
     }
 
+    @Deprecated
     void rebind(Supplier<T> behind);
 
     @Override

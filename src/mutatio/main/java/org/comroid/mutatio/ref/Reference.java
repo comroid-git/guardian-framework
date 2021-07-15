@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.model.RefStack;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
@@ -18,7 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+@SuppressWarnings("rawtypes")
 public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
+    private final RefStack[] stack = new RefStack[0];
     private final boolean mutable;
     private Predicate<T> overriddenSetter;
 
@@ -128,8 +131,8 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public final @Nullable T get(int stack) {
-        return super.get(null);
+    public RefStack[] stack() {
+        return stack;
     }
 
     @OverrideOnly
@@ -147,11 +150,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public boolean unset() {
-        return set(null);
-    }
-
-    @Override
     public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
         return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
     }
@@ -159,19 +157,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     @Override
     public final <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source) {
         return new ParameterizedReference.Support.Source<>(this, source);
-    }
-
-    @Override
-    public final boolean set(T value) {
-        if (isImmutable())
-            return false;
-
-        boolean doSet = overriddenSetter == null ? doSet(value) : overriddenSetter.test(value);
-        if (!doSet)
-            return false;
-        overriddenSupplier = null;
-        putIntoCache(value);
-        return true;
     }
 
     @Override

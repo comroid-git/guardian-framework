@@ -3,6 +3,7 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.model.RefStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,9 @@ import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+@SuppressWarnings("rawtypes")
 public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> implements Ref<T>, Function<P, T> {
+    private final RefStack[] stack = new RefStack[0];
     private final Reference<P> defaultParameter = Reference.create();
     private Predicate<T> overriddenSetter;
 
@@ -38,14 +41,8 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public final T get(int stack) {
-        return defaultParameter.ifPresentMapOrElseThrow(this::get,
-                () -> new NoSuchElementException("No default parameter defined"));
-    }
-
-    @Override
-    public boolean set(T value) {
-        return overriddenSetter.test(value);
+    public RefStack[] stack() {
+        return stack;
     }
 
     @Override
