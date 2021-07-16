@@ -10,6 +10,8 @@ Every module of the guardian Framework depends on the [comroid common Java API](
 The guardian Framework is hosted under the comroid repository
 at [maven.comroid.org](https://maven.comroid.org/org/comroid)
 
+Alternatively, it is possible to use the JitPack Pipeline to aquire all modules.
+
 ### Gradle
 
 ```groovy
