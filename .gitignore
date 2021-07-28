@@ -27,3 +27,18 @@ gradle-app.setting
 docs/
 
 # End of https://www.gitignore.io/api/gradle,intellij
+.project
+*.prefs
+core/.classpath
+*.class
+mutatio/.classpath
+restless/.classpath
+restless/bin/test/dummy/message.json
+spellbind/.classpath
+uniform/.classpath
+uniform/bin/test/dummy/message.json
+varbind/.classpath
+webkit/.classpath
+webkit/bin/main/org/comroid/webkit/internal/api.js
+webkit/bin/main/org/comroid/webkit/internal/error.html
+webkit/oauth/.classpath
