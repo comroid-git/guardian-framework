@@ -7,7 +7,6 @@ import org.comroid.api.os.OS;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.REST;
 import org.comroid.webkit.config.WebkitConfiguration;
-import org.comroid.webkit.config.WebkitResourceLoader;
 import org.comroid.webkit.model.PagePropertiesProvider;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
@@ -20,7 +19,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -50,13 +48,13 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         return panel;
     }
 
+    public void setPanel(@Nullable String panel) {
+        this.panel = panel;
+    }
+
     @Override
     public ContextualProvider getUnderlyingContextualProvider() {
         return context;
-    }
-
-    public void setPanel(@Nullable String panel) {
-        this.panel = panel;
     }
 
     @Deprecated

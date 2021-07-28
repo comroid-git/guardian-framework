@@ -9,7 +9,6 @@ import org.comroid.uniform.node.UniNode;
 import org.comroid.util.ReaderUtil;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
