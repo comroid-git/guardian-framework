@@ -56,7 +56,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             final K id = results.getObject(idColumn, idBind.getHeldType().getTargetClass());
             V container;
             if (!containsKey(id) || (container = get(id)) == null) {
-                getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache {}", id, this);
+                getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache", id);
                 continue;
             }
 
