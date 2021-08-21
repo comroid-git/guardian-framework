@@ -175,7 +175,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     }
 
     @ApiStatus.Experimental
-    public final <T extends V> Reference<T> autoUpdate(UniObjectNode data) {
+    public final Reference<V> autoUpdate(UniObjectNode data) {
         return autoUpdate(Polyfill.uncheckedCast(idBind.getGroup().getResolver().orElseThrow()), data);
     }
 
