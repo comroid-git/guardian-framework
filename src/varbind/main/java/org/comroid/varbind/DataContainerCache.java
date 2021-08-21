@@ -200,26 +200,28 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     }
 
     @Experimental
-    public final void reloadData(Connection connection, String table) throws SQLException {
+    public final int reloadData(Connection connection, String table) throws SQLException {
         try (
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateFrom(results);
             getLogger().trace("Loaded data from table {} in {} operations using connection {}", table, operations, connection);
+            return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
             getLogger().debug("Could not load data from table {} because the driver does not support this method", table, fnse);
         }
     }
 
     @Experimental
-    public final void saveData(Connection connection, String table) throws SQLException {
+    public final int saveData(Connection connection, String table) throws SQLException {
         try (
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateInto(results);
             getLogger().trace("Saved data into table {} in {} operations using connection {}", table, operations, connection);
+            return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
             getLogger().debug("Could not save data into table {} because the driver does not support this method", table, fnse);
         }
