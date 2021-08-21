@@ -11,6 +11,7 @@ import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -117,7 +118,8 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
 
                 if (bind.isListing()) {
                     // expect array
-                    throw new UnsupportedOperationException("UpdateInto cannot work with Arrays currently");
+                    // todo
+                    getLogger().debug("Skipped updating data for ID {} because the cache currently cannot input arrays", id);
                 } else {
                     // expect object
                     final Object object = ref.ifPresentMap(refs -> refs.get(0));
@@ -139,6 +141,11 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         final K key = value.requireNonNull(Polyfill.uncheckedCast(idBind));
 
         return containsKey(key) && put(key, null) != value;
+    }
+
+    @ApiStatus.Experimental
+    public final <T extends V> Reference<T> autoUpdate(UniObjectNode data) {
+        return autoUpdate(Polyfill.uncheckedCast(idBind.getGroup().getResolver().orElseThrow()), data);
     }
 
     public final <T extends V> Reference<T> autoUpdate(BiFunction<ContextualProvider, UniObjectNode, T> resolver, UniObjectNode data) {
