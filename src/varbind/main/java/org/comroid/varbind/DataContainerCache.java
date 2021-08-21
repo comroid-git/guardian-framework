@@ -15,6 +15,7 @@ import org.comroid.varbind.container.DataContainer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 public class DataContainerCache<K, V extends DataContainer<? super V>>
@@ -104,13 +105,9 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         int c = 0;
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
 
-        while (results.next()) {
-            final K id = results.getObject(idColumn, idBind.getHeldType().getTargetClass());
-            V container;
-            if (!containsKey(id) || (container = get(id)) == null) {
-                getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache {}", id, this);
-                continue;
-            }
+        for (Map.Entry<K, V> entry : entrySet()) {
+            final K id = entry.getKey();
+            final V container = entry.getValue();
 
             //noinspection unchecked
             for (VarBind<?, Object, ?, Object> bind : container.keySet()) {
