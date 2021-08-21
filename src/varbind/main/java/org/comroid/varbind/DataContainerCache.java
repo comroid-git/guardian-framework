@@ -16,6 +16,7 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -50,10 +51,12 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         this.idColumn = idColumn == null ? idBind.getFieldName() : idColumn;
     }
 
+    @Experimental
     public final int updateFrom(ResultSet results) throws SQLException {
         return updateFrom(results, idColumn);
     }
 
+    @Experimental
     public final int updateFrom(final ResultSet results, String idColumn) throws SQLException {
         int c = 0;
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
@@ -127,10 +130,12 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         return obj;
     }
 
+    @Experimental
     public final int updateInto(ResultSet results) throws SQLException {
         return updateInto(results, idColumn);
     }
 
+    @Experimental
     public final int updateInto(final ResultSet results, String idColumn) throws SQLException {
         int c = 0;
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
@@ -172,7 +177,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         return containsKey(key) && put(key, null) != value;
     }
 
-    @ApiStatus.Experimental
+    @Experimental
     public final Reference<V> autoUpdate(UniObjectNode data) {
         return autoUpdate(Polyfill.uncheckedCast(idBind.getGroup().getResolver().orElseThrow()), data);
     }
@@ -194,6 +199,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         }
     }
 
+    @Experimental
     public final void reloadData(Connection connection, String table) throws SQLException {
         try (
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
@@ -206,6 +212,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         }
     }
 
+    @Experimental
     public final void saveData(Connection connection, String table) throws SQLException {
         try (
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
