@@ -3,10 +3,12 @@ package org.comroid.varbind;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
+import org.comroid.api.Serializer;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
+import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
 import org.comroid.uniform.node.UniNode;
@@ -20,7 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
@@ -48,11 +52,11 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         this.idColumn = idColumn == null ? idBind.getFieldName() : idColumn;
     }
 
-    public int updateFrom(ResultSet results) throws SQLException {
+    public final int updateFrom(ResultSet results) throws SQLException {
         return updateFrom(results, idColumn);
     }
 
-    public int updateFrom(final ResultSet results, String idColumn) throws SQLException {
+    public final int updateFrom(final ResultSet results, String idColumn) throws SQLException {
         int c = 0;
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
 
@@ -111,15 +115,25 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         return c;
     }
 
-    private UniObjectNode copyBindsFromResultSet(ContextualProvider ctx, GroupBind<? super V> group, ResultSet results) {
-        return null;
+    private UniObjectNode copyBindsFromResultSet(ContextualProvider ctx, GroupBind<? super V> group, ResultSet results) throws SQLException {
+        UniObjectNode obj = ctx.getFromContext(SerializationAdapter.class)
+                .orElseThrow(() -> new NoSuchElementException("Missing SerializationAdapter"))
+                .createObjectNode();
+
+        for (VarBind<? super V, ?, ?, ?> bind : group.streamAllChildren().collect(Collectors.toList())) {
+            // fixme Handle arrays & lists & uninodes
+            Object object = results.getObject(bind.getFieldName(), bind.getHeldType().getTargetClass());
+            obj.put(bind.getFieldName(), object);
+        }
+
+        return obj;
     }
 
-    public int updateInto(ResultSet results) throws SQLException {
+    public final int updateInto(ResultSet results) throws SQLException {
         return updateInto(results, idColumn);
     }
 
-    public int updateInto(final ResultSet results, String idColumn) throws SQLException {
+    public final int updateInto(final ResultSet results, String idColumn) throws SQLException {
         int c = 0;
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
 
