@@ -2,13 +2,16 @@ package org.comroid.varbind;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
+import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
+import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
+import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus;
@@ -57,7 +60,17 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             final K id = results.getObject(idColumn, idBind.getHeldType().getTargetClass());
             V container;
             if (!containsKey(id) || (container = get(id)) == null) {
-                getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache", id);
+                // need to create object
+                //noinspection unchecked
+                Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>> resolver =
+                        (Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>>) idBind.getGroup().getResolver();
+                if (resolver.isNull()) {
+                    getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache", id);
+                    continue;
+                }
+                UniObjectNode data = copyBindsFromResultSet(this, idBind.getGroup(), results);
+                container = resolver.into(it -> it.apply(this, data));
+                put(id, container);
                 continue;
             }
 
@@ -96,6 +109,10 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             }
         }
         return c;
+    }
+
+    private UniObjectNode copyBindsFromResultSet(ContextualProvider ctx, GroupBind<? super V> group, ResultSet results) {
+        return null;
     }
 
     public int updateInto(ResultSet results) throws SQLException {
