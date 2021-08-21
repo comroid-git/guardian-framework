@@ -3,7 +3,6 @@ package org.comroid.varbind;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.api.Serializer;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;
@@ -18,8 +17,7 @@ import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -193,6 +191,30 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             ref.set(result);
             //noinspection unchecked
             return (Reference<T>) ref;
+        }
+    }
+
+    public final void reloadData(Connection connection, String table) throws SQLException {
+        try (
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                ResultSet results = statement.executeQuery()
+        ) {
+            int operations = updateFrom(results);
+            getLogger().trace("Loaded data from table {} in {} operations using connection {}", table, operations, connection);
+        } catch (SQLFeatureNotSupportedException fnse) {
+            getLogger().debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+        }
+    }
+
+    public final void saveData(Connection connection, String table) throws SQLException {
+        try (
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                ResultSet results = statement.executeQuery()
+        ) {
+            int operations = updateInto(results);
+            getLogger().trace("Saved data into table {} in {} operations using connection {}", table, operations, connection);
+        } catch (SQLFeatureNotSupportedException fnse) {
+            getLogger().debug("Could not save data into table {} because the driver does not support this method", table, fnse);
         }
     }
 }
