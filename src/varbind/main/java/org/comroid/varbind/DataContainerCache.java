@@ -45,7 +45,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         super(context, largeThreshold);
 
         this.idBind = Polyfill.uncheckedCast(idBind);
-        this.idColumn = idColumn;
+        this.idColumn = idColumn == null ? idBind.getFieldName() : idColumn;
     }
 
     public int updateFrom(ResultSet results) throws SQLException {
