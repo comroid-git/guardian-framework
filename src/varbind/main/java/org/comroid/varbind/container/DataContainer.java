@@ -129,7 +129,8 @@ public interface DataContainer<S extends DataContainer<? super S>>
     default <T, Value extends ValueBox<T>> @Nullable T put(VarBind<? extends S, T, ?, Value> bind, Value value) {
         if (!bind.getHeldType().equals(value.getHeldType()))
             throw new IllegalArgumentException("Unmatching ValueTypes");
-        return put(bind, value.getValue());
+        //noinspection unchecked
+        return (T) put(bind, (Object) value.getValue());
     }
 
     default <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value) {
@@ -139,7 +140,7 @@ public interface DataContainer<S extends DataContainer<? super S>>
 
     default <T, X> @Nullable T put(VarBind<? extends S, X, ?, T> bind, Function<T, X> parser, T value) {
         //noinspection unchecked
-        return (T) put(bind, parser.apply(value));
+        return (T) put(bind, (Object) parser.apply(value));
     }
 
     default <E> KeyedReference<String, ReferenceList<E>> getExtractionReference(VarBind<?, E, ?, ?> bind) {
@@ -206,7 +207,8 @@ public interface DataContainer<S extends DataContainer<? super S>>
 
         @Override
         default <T> @Nullable T put(VarBind<? extends S, T, ?, ?> bind, T value) {
-            return getUnderlyingVarCarrier().put(bind, value);
+            //noinspection unchecked
+            return (T) getUnderlyingVarCarrier().put(bind, (Object) value);
         }
     }
 }
