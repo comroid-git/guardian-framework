@@ -162,26 +162,14 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
         return filter(type::isInstance).map(type::cast);
     }
 
-    default <R> Ref<R> map(Function<? super T, ? extends R> mapper) {
-        return map(mapper, null);
-    }
-
-    <R> Ref<R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter);
+    <R> Ref<R> map(Function<? super T, ? extends R> mapper);
 
     default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return flatMap(mapper, null);
-    }
-
-    default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
-        return map(mapper.andThen(Rewrapper::get), backwardsConverter);
+        return map(mapper.andThen(Rewrapper::get));
     }
 
     default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(wrapOpt2Ref(mapper));
-    }
-
-    default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, @Nullable Function<R, T> backwardsConverter) {
-        return flatMap(wrapOpt2Ref(mapper), backwardsConverter);
     }
     //endregion
 

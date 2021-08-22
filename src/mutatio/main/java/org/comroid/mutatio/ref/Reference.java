@@ -25,8 +25,6 @@ import java.util.function.*;
 public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
     private RefStack[] stack = new RefStack[0];
-    @Deprecated
-    private Predicate<T> overriddenSetter;
 
     @Internal
     protected <X> X getFromParent() {
@@ -47,13 +45,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Deprecated
     protected Reference(
-            @Nullable Reference<?> parent
-    ) {
-        this(parent, false, parent != null ? parent.getExecutor() : null);
-    }
-
-    @Deprecated
-    protected Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable
     ) {
@@ -66,37 +57,33 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             boolean mutable,
             Executor autoComputor
     ) {
-        this(parent, null, mutable, 1, autoComputor);
+        this(parent, mutable, 1, autoComputor);
     }
 
     @Deprecated
     protected <X> Reference(
-            final @Nullable Reference<X> parent,
-            final @NotNull Function<T, X> backwardsConverter
+            final @Nullable Reference<X> parent
     ) {
-        this(parent, backwardsConverter, parent != null ? parent.getExecutor() : null);
+        this(parent, parent != null ? parent.getExecutor() : null);
     }
 
     @Deprecated
     protected <X> Reference(
             final @Nullable Reference<X> parent,
-            final @NotNull Function<T, X> backwardsConverter,
             Executor autoComputor
     ) {
-        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, 1, autoComputor);
+        this(parent, parent != null, 1, autoComputor);
     }
 
     @Deprecated
     private Reference(
             @Nullable ValueProvider.NoParam<?> parent,
-            @Nullable Predicate<T> setter,
             boolean mutable,
             int stackSize,
             Executor autoComputor
     ) {
         super(parent, autoComputor);
 
-        this.overriddenSetter = setter;
         this.mutable = mutable;
         adjustStackSize(stackSize);
     }
@@ -187,12 +174,12 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return new Reference.Support.Remapped<>(this, it -> {
             action.accept(it);
             return it;
-        }, Function.identity());
+        });
     }
 
     @Override
     public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
-        return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()), null);
+        return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()));
     }
 
     @Override
@@ -201,13 +188,12 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
+    @Deprecated
     public final void rebind(final Supplier<T> behind) {
         if (behind == this || (behind instanceof Reference && dependsOn((Reference<T>) behind)))
             throw new IllegalArgumentException("Circular Reference Dependency detected");
 
         overriddenSupplier = nil -> behind.get();
-        if (behind instanceof Reference)
-            overriddenSetter = ((Reference<T>) behind)::set;
         outdateCache();
     }
 
@@ -218,22 +204,12 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Override
     public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
-        return map(mapper, null);
-    }
-
-    @Override
-    public <R> Reference<R> map(Function<? super T, ? extends R> mapper, Function<R, T> backwardsConverter) {
-        return new Reference.Support.Remapped<>(this, mapper, backwardsConverter);
+        return new Reference.Support.Remapped<>(this, mapper);
     }
 
     @Override
     public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return flatMap(mapper, null);
-    }
-
-    @Override
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return new Reference.Support.ReferenceFlatMapped<>(this, mapper, backwardsConverter);
+        return new Reference.Support.ReferenceFlatMapped<>(this, mapper);
     }
 
     @Override
@@ -363,7 +339,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             private final Predicate<? super T> filter;
 
             public Filtered(Reference<T> base, Predicate<? super T> filter) {
-                super(base, Function.identity());
+                super(base);
 
                 this.filter = filter;
             }
@@ -383,10 +359,9 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
             public <R> Remapped(
                     Reference<I> base,
-                    Function<? super I, ? extends O> remapper,
-                    Function<O, I> backwardsConverter
+                    Function<? super I, ? extends O> remapper
             ) {
-                super(base, backwardsConverter);
+                super(base);
 
                 this.remapper = remapper;
             }
@@ -406,10 +381,9 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
             public ReferenceFlatMapped(
                     Reference<I> base,
-                    Function<? super I, ? extends Rewrapper<? extends O>> remapper,
-                    Function<O, I> backwardsConverter
+                    Function<? super I, ? extends Rewrapper<? extends O>> remapper
             ) {
-                super(base, backwardsConverter);
+                super(base);
 
                 this.remapper = remapper;
             }
@@ -428,7 +402,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             private final Supplier<? extends T> other;
 
             public Or(Reference<T> base, Supplier<? extends T> other) {
-                super(base, Function.identity());
+                super(base);
 
                 this.other = other;
             }
