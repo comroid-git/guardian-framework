@@ -100,6 +100,10 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         adjustStackSize(stackSize);
     }
 
+    public Reference(Supplier<T> getter, @Nullable Predicate<T> setter) {
+        this(setter != null, new RefStack<>(null, "Reference(getter&setter)", 0, getter, setter));
+    }
+
     public Reference(RefStack<?>... stack) {
         this(false, stack);
     }

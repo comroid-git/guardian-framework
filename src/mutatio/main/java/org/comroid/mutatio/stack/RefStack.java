@@ -87,6 +87,25 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         );
     }
 
+    public RefStack(
+        @Nullable ValueCache<?> parent,
+        String name,
+        int index,
+        @Nullable Supplier<? extends T> getter,
+        @Nullable Predicate<? super T> setter
+    ) {
+        this(
+                parent,
+                new AtomicReference<>(null),
+                new AtomicBoolean(setter != null),
+                Overridability.GETTER_AND_SETTER,
+                name,
+                index,
+                getter,
+                setter
+        );
+    }
+
     protected RefStack(
             @Nullable ValueCache<?> parent,
             AtomicReference<T> value,
