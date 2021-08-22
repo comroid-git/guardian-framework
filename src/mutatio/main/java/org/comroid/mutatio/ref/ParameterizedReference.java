@@ -1,9 +1,9 @@
 package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.stack.RefStack;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.stack.RefStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +29,12 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     @Override
     public boolean isMutable() {
         return overriddenSetter != null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final T get() throws ClassCastException {
+        return putIntoCache((T) get(0));
     }
 
     protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {

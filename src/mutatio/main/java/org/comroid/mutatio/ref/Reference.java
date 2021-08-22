@@ -2,11 +2,11 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.stack.RefStack;
-import org.comroid.mutatio.stack.RefStackUtil;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +34,20 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     @Override
     public boolean isMutable() {
         return mutable;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final T get() throws ClassCastException {
+        return putIntoCache((T) get(0));
+    }
+
+    public final boolean set(T value) {
+        if (set(0, value)) {
+            putIntoCache(value);
+            return true;
+        }
+        return false;
     }
 
     //region Constructors

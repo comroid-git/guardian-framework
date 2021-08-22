@@ -4,10 +4,10 @@ import org.comroid.api.Index;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.stack.RefStack;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.ref.ParameterizedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.stack.RefStack;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
@@ -74,14 +74,9 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
 
     //region Accessor Methods
     @Override
-    @SuppressWarnings("unchecked")
-    default T get() throws ClassCastException {
-        return (T) get(0);
-    }
+    @Nullable T get();
 
-    default boolean set(T value) {
-        return set(0, value);
-    }
+    boolean set(T value);
 
     default boolean unset() {
         return set(null);
