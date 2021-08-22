@@ -6,6 +6,8 @@ import org.comroid.mutatio.cache.ValueCache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -20,6 +22,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     protected @NotNull Supplier<? extends T> getter;
     protected @NotNull Predicate<? super T> setter;
 
+    //region Getters, Setters & Accessors
     @Override
     public String getName() {
         return name;
@@ -38,6 +41,31 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         return Overridability.SETTER.isFlagSet(overridable);
     }
 
+    @Override
+    public final boolean setMutable(boolean state) {
+        mutable.set(state);
+        return true;
+    }
+
+    public final int index() {
+        return index;
+    }
+
+    public final T get() {
+        if (isUpToDate())
+            return getFromCache();
+        return putIntoCache(getter.get());
+    }
+
+    public final boolean set(T newValue) {
+        if (!isMutable() || !setter.test(newValue))
+            return false;
+        putIntoCache(newValue);
+        return true;
+    }
+    //endregion
+
+    //region Constructors
     public RefStack(
             String name,
             int index,
@@ -88,11 +116,11 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     }
 
     public RefStack(
-        @Nullable ValueCache<?> parent,
-        String name,
-        int index,
-        @Nullable Supplier<? extends T> getter,
-        @Nullable Predicate<? super T> setter
+            @Nullable ValueCache<?> parent,
+            String name,
+            int index,
+            @Nullable Supplier<? extends T> getter,
+            @Nullable Predicate<? super T> setter
     ) {
         this(
                 parent,
@@ -125,30 +153,27 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
         this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
+    //endregion
 
-    @Override
-    public final boolean setMutable(boolean state) {
-        mutable.set(state);
-        return true;
+    //region Static Methods
+    private static final RefStack<?> EMPTY = new RefStack<>("EMPTY", -1, null, false);
+    private static final Map<Object, Map<Integer, RefStack<?>>> CONSTANTS = new ConcurrentHashMap<>();
+
+    public static <T> RefStack<T> constant(int index, T value) {
+        if (value == null)
+            return empty();
+        //noinspection unchecked
+        return (RefStack<T>) CONSTANTS.computeIfAbsent(value, v -> new ConcurrentHashMap<>())
+                .computeIfAbsent(index, i -> new RefStack<>(String.format("Constant[%d](%s)", i, value), index, value, false));
     }
 
-    public final int index() {
-        return index;
+    private static <T> RefStack<T> empty() {
+        //noinspection unchecked
+        return (RefStack<T>) EMPTY;
     }
+    //endregion
 
-    public final T get() {
-        if (isUpToDate())
-            return getFromCache();
-        return putIntoCache(getter.get());
-    }
-
-    public final boolean set(T newValue) {
-        if (!isMutable() || !setter.test(newValue))
-            return false;
-        putIntoCache(newValue);
-        return true;
-    }
-
+    //region Function Methods
     public final void resetGetter() throws IllegalStateException {
         overrideGetter(null);
     }
@@ -170,7 +195,9 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
             throw new IllegalStateException("RefStack " + getName() + " is Final; cannot override setter");
         this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
+    //endregion
 
+    //region Base get & set implementation
     protected T $get() {
         return value.get();
     }
@@ -181,11 +208,14 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         value.set(newValue);
         return true;
     }
+    //endregion
 
+    //region ValueCache Compatibility
     @Override
     public void computeAndStoreValue() {
         putIntoCache(get());
     }
+    //endregion
 
     public enum Overridability implements BitmaskAttribute<Overridability> {
         NONE, // 0
