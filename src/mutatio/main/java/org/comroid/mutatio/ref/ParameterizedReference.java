@@ -7,15 +7,20 @@ import org.comroid.mutatio.api.RefStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+/**
+ * @deprecated needs fix
+ */
+@Deprecated // todo Needs fix
 @SuppressWarnings("rawtypes")
 public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> implements Ref<T>, Function<P, T> {
-    private final RefStack[] stack = new RefStack[0];
     private final Reference<P> defaultParameter = Reference.create();
+    private RefStack[] stack = new RefStack[0];
     private Predicate<T> overriddenSetter;
 
     public final @Nullable P getDefaultParameter() {
@@ -42,6 +47,13 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     @Override
     public RefStack[] stack() {
         return stack;
+    }
+
+    @Override
+    public int adjustStackSize(int newSize) {
+        int oldSize = stack.length;
+        stack = Arrays.copyOf(stack, newSize);
+        return newSize - oldSize;
     }
 
     @Override
