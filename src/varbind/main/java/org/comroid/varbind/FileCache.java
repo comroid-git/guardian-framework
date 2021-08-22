@@ -42,7 +42,7 @@ public class FileCache<K, V extends DataContainer<V>>
     public FileCache(
             ContextualProvider context,
             BiFunction<ContextualProvider, UniObjectNode, V> resolver,
-            VarBind<? super V, ?, ?, K> idBind,
+            VarBind<? super V, K, ?, K> idBind,
             FileHandle file,
             int largeThreshold
     ) {
@@ -52,7 +52,7 @@ public class FileCache<K, V extends DataContainer<V>>
     public FileCache(
             ContextualProvider context,
             BiFunction<ContextualProvider, UniObjectNode, V> resolver,
-            VarBind<? super V, ?, ?, K> idBind,
+            VarBind<? super V, K, ?, K> idBind,
             Junction<K, String> converter,
             FileHandle file,
             int largeThreshold,

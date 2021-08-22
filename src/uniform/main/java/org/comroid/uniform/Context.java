@@ -24,13 +24,13 @@ public interface Context extends ContextualProvider {
     static Context upgrade(final ContextualProvider underlying) {
         return new Context() {
             @Override
-            public Stream<Object> streamContextMembers(boolean includeChildren) {
-                return underlying.streamContextMembers(includeChildren);
+            public String getName() {
+                return underlying.getName();
             }
 
             @Override
-            public String getName() {
-                return underlying.getName();
+            public Stream<Object> streamContextMembers(boolean includeChildren) {
+                return underlying.streamContextMembers(includeChildren);
             }
         };
     }

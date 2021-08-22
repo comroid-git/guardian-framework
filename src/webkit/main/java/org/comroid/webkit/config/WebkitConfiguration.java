@@ -18,14 +18,15 @@ import java.util.stream.Stream;
 
 public final class WebkitConfiguration implements ContextualProvider.Underlying {
     private static final FutureReference<WebkitConfiguration> instance = new FutureReference<>();
-    private final ContextualProvider context;
-    private final Map<String, String> frames = new ConcurrentHashMap<>();
-    private final Map<String, String> parts = new ConcurrentHashMap<>();
-    private final Map<String, String> panels = new ConcurrentHashMap<>();
 
     static {
         initialize(ContextualProvider.getRoot());
     }
+
+    private final ContextualProvider context;
+    private final Map<String, String> frames = new ConcurrentHashMap<>();
+    private final Map<String, String> parts = new ConcurrentHashMap<>();
+    private final Map<String, String> panels = new ConcurrentHashMap<>();
 
     @Override
     public ContextualProvider getUnderlyingContextualProvider() {

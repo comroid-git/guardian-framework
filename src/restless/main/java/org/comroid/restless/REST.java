@@ -549,28 +549,12 @@ public final class REST implements ContextualProvider.Underlying {
             return method;
         }
 
-        public final boolean hasExplicitBody() {
-            return body != null && body != data;
-        }
-
         public final Serializable getBody() {
             return body;
         }
 
-        public final Rewrapper<Serializable> wrapBody() {
-            return Rewrapper.of(getBody());
-        }
-
-        public final boolean hasExplicitData() {
-            return data != null && data != body;
-        }
-        
         public final Reader getData() {
             return data == null ? (body == null ? new StringReader("") : body.toReader()) : data.toReader();
-        }
-
-        public final Rewrapper<Reader> wrapData() {
-            return Rewrapper.of(getData());
         }
 
         public final Header.List getHeaders() {
@@ -596,7 +580,7 @@ public final class REST implements ContextualProvider.Underlying {
 
         public Request(
                 Header.List headers,
-                CompleteEndpoint endpoint, 
+                CompleteEndpoint endpoint,
                 Method method,
                 @Nullable Serializable body,
                 @Nullable Readable data
@@ -608,6 +592,22 @@ public final class REST implements ContextualProvider.Underlying {
             this.method = method;
             this.body = body;
             this.data = data;
+        }
+
+        public final boolean hasExplicitBody() {
+            return body != null && body != data;
+        }
+
+        public final Rewrapper<Serializable> wrapBody() {
+            return Rewrapper.of(getBody());
+        }
+
+        public final boolean hasExplicitData() {
+            return data != null && data != body;
+        }
+
+        public final Rewrapper<Reader> wrapData() {
+            return Rewrapper.of(getData());
         }
 
         @Override
