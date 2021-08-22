@@ -152,11 +152,11 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
 
-    private T $get() {
+    protected T $get() {
         return value.get();
     }
 
-    private boolean $set(T newValue) throws IllegalStateException {
+    protected boolean $set(T newValue) throws IllegalStateException {
         if (isImmutable())
             throw new IllegalStateException("RefStack " + getName() + " is Immutable");
         value.set(newValue);
