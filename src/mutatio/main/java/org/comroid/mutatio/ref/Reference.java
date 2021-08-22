@@ -10,7 +10,6 @@ import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -23,6 +22,8 @@ import java.util.function.*;
 
 @SuppressWarnings("rawtypes")
 public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
+    private static final Reference<?> EMPTY = Reference.create(false, null);
+    private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();
     private final boolean mutable;
     private RefStack[] stack = new RefStack[0];
 
@@ -110,12 +111,12 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         if (of == null)
             return empty();
         //noinspection unchecked
-        return (Reference<T>) Support.IMMUTABLE_CACHE.computeIfAbsent(of, v -> new Support.Default<>(false, of));
+        return (Reference<T>) CONSTANTS.computeIfAbsent(of, v -> create(false, v));
     }
 
     public static <T> Reference<T> empty() {
         //noinspection unchecked
-        return (Reference<T>) Support.EMPTY;
+        return (Reference<T>) EMPTY;
     }
 
     public static <T> Reference<T> provided(Supplier<T> supplier) {
@@ -139,6 +140,8 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     }
 
     public static <T> Reference<T> create(boolean mutable, @Nullable T initialValue) {
+        if (!mutable && initialValue == null && EMPTY != null)
+            return empty();
         Reference<T> ref = new Reference<>(mutable);
         ref.set(initialValue);
         return ref;
@@ -147,16 +150,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static <T> Reference<T> optional(Optional<T> optional) {
         return provided(() -> optional.orElse(null));
-    }
-
-    @Override
-    public RefStack[] stack() {
-        return stack;
-    }
-
-    @Override
-    public void adjustStackSize(int newSize) {
-        stack = $adjustStackSize(this, stack, newSize);
     }
 
     static RefStack[] $adjustStackSize(Ref ref, RefStack[] stack, int newSize) {
@@ -170,6 +163,16 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
                 // fixme: not expected; but here's a temporary error for you:
                 throw new IllegalStateException("RefStack order of " + ref + " is incorrect");
         return stack;
+    }
+
+    @Override
+    public RefStack[] stack() {
+        return stack;
+    }
+
+    @Override
+    public void adjustStackSize(int newSize) {
+        stack = $adjustStackSize(this, stack, newSize);
     }
 
     @Override
@@ -249,41 +252,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     @Deprecated
     public static final class Support {
         private static final Logger logger = LogManager.getLogger();
-        private static final Reference<?> EMPTY = new Default<>(false, null);
-        private static final Map<Object, Reference<?>> IMMUTABLE_CACHE = new ConcurrentHashMap<>();
-
-        @Deprecated
-        public static abstract class Base<T> extends Reference<T> {
-            @Deprecated
-            protected Base(boolean mutable) {
-                this(null, mutable);
-            }
-
-            @Deprecated
-            protected Base(@Nullable ValueProvider.NoParam<?> parent, boolean mutable) {
-                super(parent, mutable);
-            }
-        }
-
-        @Deprecated
-        private static class Default<T> extends Reference<T> {
-            private Default(boolean mutable, T initialValue) {
-                super(mutable);
-
-                putIntoCache(initialValue);
-            }
-
-            @Override
-            protected T doGet() {
-                return getFromCache();
-            }
-
-            @Override
-            protected boolean doSet(T value) {
-                putIntoCache(value);
-                return true;
-            }
-        }
 
         @Deprecated
         private static final class Rebound<T> extends Reference<T> {
@@ -339,18 +307,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
                 if (condition.getAsBoolean())
                     return supplier.get();
                 return null;
-            }
-        }
-
-        @Deprecated
-        public static class Identity<T> extends Reference<T> {
-            public Identity(Reference<T> parent) {
-                super(parent);
-            }
-
-            @Override
-            protected T doGet() {
-                return getFromParent();
             }
         }
 
