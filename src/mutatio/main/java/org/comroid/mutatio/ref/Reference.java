@@ -38,13 +38,6 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
 
     @Deprecated
     protected Reference(
-            boolean mutable
-    ) {
-        this(null, mutable, null);
-    }
-
-    @Deprecated
-    protected Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable
     ) {
@@ -88,6 +81,20 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         adjustStackSize(stackSize);
     }
 
+    public Reference() {
+        this(true);
+    }
+
+    public Reference(boolean mutable) {
+        this(null, null, mutable);
+        adjustStackSize(1);
+    }
+
+    public Reference(int stackSize) {
+        this(null, null, true);
+        adjustStackSize(stackSize);
+    }
+
     public Reference(
             @Nullable SingleValueCache<?> parent,
             @Nullable Executor autocomputor,
@@ -96,7 +103,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     ) {
         super(parent, autocomputor);
         this.mutable = mutable;
-        this.stack = stack;
+        this.stack = stack == null ? new RefStack[0] : stack;
     }
 
     public static <T> Reference<T> constant(@Nullable T of) {
