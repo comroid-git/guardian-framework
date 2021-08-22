@@ -4,7 +4,7 @@ import org.comroid.api.Index;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
-import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.stack.RefStack;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.ref.ParameterizedReference;
 import org.comroid.mutatio.ref.Reference;

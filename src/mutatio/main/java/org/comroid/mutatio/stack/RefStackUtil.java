@@ -1,7 +1,4 @@
-package org.comroid.mutatio.api;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+package org.comroid.mutatio.stack;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
@@ -9,28 +6,6 @@ import java.util.function.*;
 public final class RefStackUtil {
     private RefStackUtil() {
         throw new UnsupportedOperationException();
-    }
-
-    public abstract static class OutputStack<T> extends RefStack<T> {
-        protected OutputStack(
-                @Nullable RefStack<?> parent,
-                @NotNull String name
-        ) {
-            super(parent, null, null, Overridability.NONE, name, parent == null ? 0 : parent.index(), null, null);
-        }
-
-        @Override
-        protected abstract T $get();
-
-        @Override
-        protected boolean $set(T newValue) throws IllegalStateException {
-            return false; // todo
-        }
-
-        @Override
-        public boolean isMutable() {
-            return false;
-        }
     }
 
     public static <T> RefStack<T> $future(CompletableFuture<T> future) {

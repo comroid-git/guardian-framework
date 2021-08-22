@@ -2,8 +2,8 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.api.RefStack;
-import org.comroid.mutatio.api.RefStackUtil;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
@@ -92,7 +92,11 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     }
 
     public Reference(int stackSize) {
-        this(null, null, true);
+        this(stackSize, true);
+    }
+
+    public Reference(int stackSize, boolean mutable) {
+        this(null, null, mutable);
         adjustStackSize(stackSize);
     }
 

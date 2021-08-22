@@ -1,7 +1,7 @@
 package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.stack.RefStack;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.jetbrains.annotations.NotNull;
