@@ -86,7 +86,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final ParameterizedReference<P, T> filter(Predicate<? super T> predicate) {
-        return new Support.Filtered<>(this, predicate, getAutocomputor());
+        return new Support.Filtered<>(this, predicate, getExecutor());
     }
 
     @Override
@@ -101,7 +101,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter) {
-        return new Support.Mapped<>(this, mapper, backwardsConverter, getAutocomputor());
+        return new Support.Mapped<>(this, mapper, backwardsConverter, getExecutor());
     }
 
     @Override
@@ -142,7 +142,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
                     @NotNull Reference<I> parent,
                     @NotNull BiFunction<I, P, O> function
             ) {
-                this(parent, function, parent.getAutocomputor());
+                this(parent, function, parent.getExecutor());
             }
 
             public Source(

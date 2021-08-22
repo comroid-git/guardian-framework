@@ -76,8 +76,8 @@ public final class UniValueNodeImpl
     }
 
     @Override
-    public @Nullable Executor getAutocomputor() {
-        return baseNode.getAutocomputor();
+    public @Nullable Executor getExecutor() {
+        return baseNode.getExecutor();
     }
 
     public UniValueNodeImpl(String name, SerializationAdapter seriLib, @Nullable UniNode parent, ValueAdapter<? extends Object, Object> valueAdapter) {

@@ -17,7 +17,7 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRe
     }
 
     public KeyedReference(K key, Reference<V> valueHolder) {
-        super(valueHolder, valueHolder.isMutable(), valueHolder.getAutocomputor());
+        super(valueHolder, valueHolder.isMutable(), valueHolder.getExecutor());
 
         this.key = key;
         this.valueHolder = valueHolder;

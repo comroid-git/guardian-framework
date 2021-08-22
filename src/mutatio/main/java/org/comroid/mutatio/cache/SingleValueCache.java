@@ -11,11 +11,11 @@ public interface SingleValueCache<T> extends ValueCache<T> {
     T getFromCache();
 
     default boolean isAutoCompute() {
-        return getAutocomputor() != null;
+        return getExecutor() != null;
     }
 
     @Nullable
-    Executor getAutocomputor();
+    Executor getExecutor();
 
     /**
      * Updates this cache with the new value and {@linkplain #deployListeners(Object) causes a ValueUpdate Event}.
@@ -31,7 +31,7 @@ public interface SingleValueCache<T> extends ValueCache<T> {
 
     abstract class Abstract<T> extends ValueCache.Abstract<T, ValueCache<?>> implements SingleValueCache<T> {
         private final AtomicReference<T> cache = new AtomicReference<>();
-        private final @Nullable Executor autocomputor;
+        private final @Nullable Executor executor;
 
         @Override
         public final T getFromCache() {
@@ -39,34 +39,35 @@ public interface SingleValueCache<T> extends ValueCache<T> {
         }
 
         @Override
-        public @Nullable Executor getAutocomputor() {
-            return autocomputor;
+        public @Nullable Executor getExecutor() {
+            return executor;
         }
 
         protected Abstract(@Nullable SingleValueCache<?> parent) {
-            this(parent, parent != null ? parent.getAutocomputor() : null);
+            this(parent, parent != null ? parent.getExecutor() : null);
         }
 
         protected Abstract(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
             super(parent);
 
-            this.autocomputor = autocomputor;
+            this.executor = autocomputor;
         }
 
         @Override
         public final synchronized T putIntoCache(T withValue) {
             cache.set(withValue);
             updateCache();
-            if (autocomputor == null)
-                deployListeners(withValue);
-            else autocomputor.execute(() -> {
-                deployListeners(withValue);
-                getDependents().stream()
-                        .filter(SingleValueCache.class::isInstance)
-                        .map(SingleValueCache.class::cast)
-                        .forEach(SingleValueCache::computeAndStoreValue);
-            });
+            if (executor == null) fireListeners(withValue);
+            else executor.execute(() -> fireListeners(withValue));
             return withValue;
+        }
+
+        private void fireListeners(T withValue) {
+            deployListeners(withValue);
+            getDependents().stream()
+                    .filter(SingleValueCache.class::isInstance)
+                    .map(SingleValueCache.class::cast)
+                    .forEach(SingleValueCache::computeAndStoreValue);
         }
     }
 }

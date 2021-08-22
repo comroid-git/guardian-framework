@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -24,6 +25,7 @@ import java.util.function.*;
 public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
     private RefStack[] stack = new RefStack[0];
+    @Deprecated
     private Predicate<T> overriddenSetter;
 
     @Internal
@@ -36,25 +38,29 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return mutable;
     }
 
+    @Deprecated
     protected Reference(
             boolean mutable
     ) {
         this(null, mutable, null);
     }
 
+    @Deprecated
     protected Reference(
             @Nullable Reference<?> parent
     ) {
-        this(parent, false, parent != null ? parent.getAutocomputor() : null);
+        this(parent, false, parent != null ? parent.getExecutor() : null);
     }
 
+    @Deprecated
     protected Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable
     ) {
-        this(parent, mutable, parent != null ? parent.getAutocomputor() : null);
+        this(parent, mutable, parent != null ? parent.getExecutor() : null);
     }
 
+    @Deprecated
     protected Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             boolean mutable,
@@ -63,13 +69,15 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         this(parent, null, mutable, 1, autoComputor);
     }
 
+    @Deprecated
     protected <X> Reference(
             final @Nullable Reference<X> parent,
             final @NotNull Function<T, X> backwardsConverter
     ) {
-        this(parent, backwardsConverter, parent != null ? parent.getAutocomputor() : null);
+        this(parent, backwardsConverter, parent != null ? parent.getExecutor() : null);
     }
 
+    @Deprecated
     protected <X> Reference(
             final @Nullable Reference<X> parent,
             final @NotNull Function<T, X> backwardsConverter,
@@ -78,6 +86,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, 1, autoComputor);
     }
 
+    @Deprecated
     private Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             @Nullable Predicate<T> setter,
@@ -90,6 +99,17 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         this.overriddenSetter = setter;
         this.mutable = mutable;
         adjustStackSize(stackSize);
+    }
+
+    public Reference(
+            @Nullable SingleValueCache<?> parent,
+            @Nullable Executor autocomputor,
+            boolean mutable,
+            RefStack<?>... stack
+    ) {
+        super(parent, autocomputor);
+        this.mutable = mutable;
+        this.stack = stack;
     }
 
     public static <T> Reference<T> constant(@Nullable T of) {
