@@ -57,14 +57,14 @@ public interface SingleValueCache<T> extends ValueCache<T> {
         public final synchronized T putIntoCache(T withValue) {
             cache.set(withValue);
             updateCache();
-            if (executor == null) fireListeners(withValue);
-            else executor.execute(() -> fireListeners(withValue));
+            if (executor == null) fireListeners(withValue, false);
+            else executor.execute(() -> fireListeners(withValue, true));
             return withValue;
         }
 
-        private void fireListeners(T withValue) {
+        private void fireListeners(T withValue, boolean doTransient) {
             deployListeners(withValue);
-            getDependents().stream()
+            if (doTransient) getDependents().stream()
                     .filter(SingleValueCache.class::isInstance)
                     .map(SingleValueCache.class::cast)
                     .forEach(SingleValueCache::computeAndStoreValue);
