@@ -159,6 +159,10 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     private static final RefStack<?> EMPTY = new RefStack<>("EMPTY", -1, null, false);
     private static final Map<Object, Map<Integer, RefStack<?>>> CONSTANTS = new ConcurrentHashMap<>();
 
+    public static <T> RefStack<T> create(int index, T value) {
+        return new RefStack<>(String.format("RefStack[%d]", index), index, value, true);
+    }
+
     public static <T> RefStack<T> constant(int index, T value) {
         if (value == null)
             return empty();
