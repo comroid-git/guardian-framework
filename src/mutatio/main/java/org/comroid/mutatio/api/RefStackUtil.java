@@ -3,6 +3,7 @@ package org.comroid.mutatio.api;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 
 public final class RefStackUtil {
@@ -30,6 +31,15 @@ public final class RefStackUtil {
         public boolean isMutable() {
             return false;
         }
+    }
+
+    public static <T> RefStack<T> $future(CompletableFuture<T> future) {
+        return new OutputStack<T>(null, "RefStack.future()") {
+            @Override
+            protected T $get() {
+                return future.join();
+            }
+        };
     }
 
     public static <I, O> RefStack<O> $map(RefStack<I> in, final Function<? super I, ? extends O> mapper) {

@@ -1,7 +1,5 @@
 package org.comroid.mutatio.ref;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.api.RefStack;
@@ -23,8 +21,7 @@ import java.util.function.*;
 
 @SuppressWarnings("rawtypes")
 public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
-    private static final Reference<?> EMPTY = Reference.create(false, null);
-    private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();
+    private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();    private static final Reference<?> EMPTY = Reference.create(false, null);
     private final boolean mutable;
     private RefStack[] stack = new RefStack[0];
 
@@ -39,6 +36,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return mutable;
     }
 
+    //region Constructors
     @Deprecated
     protected Reference(
             @Nullable ValueProvider.NoParam<?> parent,
@@ -98,6 +96,14 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         adjustStackSize(stackSize);
     }
 
+    public Reference(RefStack<?>... stack) {
+        this(false, stack);
+    }
+
+    public Reference(boolean mutable, RefStack<?>... stack) {
+        this(null, null, mutable, stack);
+    }
+
     public Reference(
             @Nullable SingleValueCache<?> parent,
             @Nullable Executor autocomputor,
@@ -108,7 +114,9 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         this.mutable = mutable;
         this.stack = stack == null ? new RefStack[0] : stack;
     }
+    //endregion
 
+    //region Static Methods
     public static <T> Reference<T> constant(@Nullable T of) {
         if (of == null)
             return empty();
@@ -155,6 +163,12 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return provided(() -> optional.orElse(null));
     }
 
+    public static <T> Reference<T> future(CompletableFuture<T> future) {
+        return new Reference<>(RefStackUtil.$future(future));
+    }
+    //endregion
+
+    //region RefStack Methods
     static RefStack[] $adjustStackSize(Ref ref, RefStack[] stack, int newSize) {
         int oldSize = stack.length;
         stack = Arrays.copyOf(stack, newSize);
@@ -177,7 +191,9 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public void adjustStackSize(int newSize) {
         stack = $adjustStackSize(this, stack, newSize);
     }
+    //endregion
 
+    //region RefOP Methods
     @Override
     public final Reference<T> peek(Consumer<? super T> action) {
         return map(it -> {
@@ -229,6 +245,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         RefStack stack = RefStackUtil.$or(stack(0, false), orElse);
         return new Reference<>(this, getExecutor(), false, stack);
     }
+    //endregion
 
     @Override
     public final String toString() {
@@ -240,6 +257,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
+    //region ValueCache Methods
     @Override
     protected final T doGet() {
         //noinspection unchecked
@@ -250,8 +268,11 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     protected final boolean doSet(T value) {
         return set(0, putIntoCache(value));
     }
+    //endregion
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
     }
+
+
 }
