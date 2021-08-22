@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.function.*;
 
 @SuppressWarnings("rawtypes")
-public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
+public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private final boolean mutable;
     private RefStack[] stack = new RefStack[0];
 
@@ -139,7 +139,9 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     public static <T> Reference<T> create(boolean mutable, @Nullable T initialValue) {
-        return new Support.Default<>(mutable, initialValue);
+        Reference<T> ref = new Reference<>(mutable);
+        ref.set(initialValue);
+        return ref;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -170,14 +172,8 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return stack;
     }
 
-    @OverrideOnly
-    protected boolean doSet(T value) {
-        putIntoCache(value);
-        return true;
-    }
-
     @Override
-    public Reference<T> peek(Consumer<? super T> action) {
+    public final Reference<T> peek(Consumer<? super T> action) {
         return new Reference.Support.Remapped<>(this, it -> {
             action.accept(it);
             return it;
@@ -185,7 +181,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
+    public final <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
         return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()));
     }
 
@@ -205,22 +201,22 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public Reference<T> filter(Predicate<? super T> predicate) {
+    public final Reference<T> filter(Predicate<? super T> predicate) {
         return new Reference.Support.Filtered<>(this, predicate);
     }
 
     @Override
-    public <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
+    public final <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
         return new Reference.Support.Remapped<>(this, mapper);
     }
 
     @Override
-    public <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
+    public final <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return new Reference.Support.ReferenceFlatMapped<>(this, mapper);
     }
 
     @Override
-    public Reference<T> or(Supplier<? extends T> orElse) {
+    public final Reference<T> or(Supplier<? extends T> orElse) {
         return new Support.Or<>(this, orElse);
     }
 
@@ -234,11 +230,23 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
 
+    @Override
+    protected final T doGet() {
+        //noinspection unchecked
+        return (T) get(0);
+    }
+
+    @OverrideOnly
+    protected final boolean doSet(T value) {
+        return set(0, putIntoCache(value));
+    }
+
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
     }
 
     @Internal
+    @Deprecated
     public static final class Support {
         private static final Logger logger = LogManager.getLogger();
         private static final Reference<?> EMPTY = new Default<>(false, null);
@@ -257,6 +265,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         private static class Default<T> extends Reference<T> {
             private Default(boolean mutable, T initialValue) {
                 super(mutable);
@@ -276,6 +285,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         private static final class Rebound<T> extends Reference<T> {
             private final Consumer<T> setter;
             private final Supplier<T> getter;
@@ -306,6 +316,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         private static final class Conditional<T> extends Reference<T> {
             private final BooleanSupplier condition;
             private final Supplier<T> supplier;
@@ -331,6 +342,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         public static class Identity<T> extends Reference<T> {
             public Identity(Reference<T> parent) {
                 super(parent);
@@ -342,6 +354,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         public static final class Filtered<T> extends Reference<T> {
             private final Predicate<? super T> filter;
 
@@ -361,6 +374,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         public static final class Remapped<I, O> extends Reference<O> {
             private final Function<? super I, ? extends O> remapper;
 
@@ -383,6 +397,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         public static final class ReferenceFlatMapped<I, O> extends Reference<O> {
             private final Function<? super I, ? extends Rewrapper<? extends O>> remapper;
 
@@ -405,6 +420,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             }
         }
 
+        @Deprecated
         public static final class Or<T> extends Reference<T> {
             private final Supplier<? extends T> other;
 
