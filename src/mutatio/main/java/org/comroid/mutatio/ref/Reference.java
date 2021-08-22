@@ -12,6 +12,7 @@ import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -21,8 +22,8 @@ import java.util.function.*;
 
 @SuppressWarnings("rawtypes")
 public abstract class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
-    private final RefStack[] stack = new RefStack[0];
     private final boolean mutable;
+    private RefStack[] stack = new RefStack[0];
     private Predicate<T> overriddenSetter;
 
     @Internal
@@ -133,6 +134,13 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     @Override
     public RefStack[] stack() {
         return stack;
+    }
+
+    @Override
+    public int adjustStackSize(int newSize) {
+        int oldSize = stack.length;
+        stack = Arrays.copyOf(stack, newSize);
+        return newSize - oldSize;
     }
 
     @OverrideOnly

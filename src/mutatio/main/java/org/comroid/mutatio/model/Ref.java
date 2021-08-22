@@ -37,11 +37,16 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     RefStack[] stack();
 
     @Internal
+    int adjustStackSize(int newSize);
+
+    @Internal
     @SuppressWarnings("rawtypes")
-    default RefStack stack(int index) throws IndexOutOfBoundsException {
+    default RefStack stack(int index, boolean createIfAbsent) throws IndexOutOfBoundsException {
         RefStack[] stack = stack();
-        if (index >= stack.length || index < 0)
-            throw new IndexOutOfBoundsException(String.format("Stack index %d is out of bounds; length = %d", index, stack.length));
+        if (index >= stack.length || index < 0) {
+            if (createIfAbsent) adjustStackSize(index + 1);
+            else throw new IndexOutOfBoundsException(String.format("Stack index %d is out of bounds; length = %d", index, stack.length));
+        }
         return stack[index];
     }
 
@@ -53,13 +58,13 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
      */
     @Internal
     default Object get(int stack) throws IndexOutOfBoundsException {
-        return stack(stack).get();
+        return stack(stack, false).get();
     }
 
     @Internal
     default boolean set(int stack, Object value) throws IndexOutOfBoundsException {
         //noinspection unchecked
-        return stack(stack).set(value);
+        return stack(stack, true).set(value);
     }
     //endregion
 
