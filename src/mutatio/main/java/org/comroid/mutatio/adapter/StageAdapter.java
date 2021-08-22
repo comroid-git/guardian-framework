@@ -4,6 +4,7 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-@Deprecated
+@ApiStatus.Experimental // todo: fix
 public abstract class StageAdapter<In, Out>
         extends ReferenceStageAdapter<@Nullable Integer, @NotNull Integer, In, Out, KeyedReference<@NotNull Integer, In>, KeyedReference<@NotNull Integer, Out>>
         implements KeyedReference.Advancer<@NotNull Integer, In, @NotNull Integer, Out> {
