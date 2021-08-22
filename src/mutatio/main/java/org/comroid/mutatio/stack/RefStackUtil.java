@@ -27,7 +27,7 @@ public final class RefStackUtil {
     }
 
     public static <T> RefStack<T> $filter(RefStack<T> in, final Predicate<? super T> tester) {
-        return new OutputStack<T>(in, "RefStack.filter()") {
+        return new MutableStack<T>(in, "RefStack.filter()") {
             @Override
             protected T $get() {
                 T value = getParent().<RefStack<T>>cast().get();
@@ -49,7 +49,7 @@ public final class RefStackUtil {
     }
 
     public static <T> RefStack<T> $or(RefStack<T> in, final Supplier<? extends T> supplier) {
-        return new OutputStack<T>(in, "RefStack.or()") {
+        return new MutableStack<T>(in, "RefStack.or()") {
             @Override
             protected T $get() {
                 return getParent().<RefStack<T>>cast().orElseGet(supplier);

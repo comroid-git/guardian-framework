@@ -7,7 +7,7 @@ import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.stack.OutputStack;
+import org.comroid.mutatio.stack.MutableStack;
 import org.comroid.mutatio.stack.RefStack;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
@@ -147,7 +147,7 @@ public final class UniValueNodeImpl
 
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
-        class Accessor extends OutputStack<UniNode> {
+        class Accessor extends MutableStack<UniNode> {
             protected Accessor(@Nullable RefStack<?> parent) {
                 super(parent, String.format("ValueNode(%s)", nil));
             }
@@ -173,11 +173,6 @@ public final class UniValueNodeImpl
                 }
 
                 return baseNode.set(value.asRaw(null));
-            }
-
-            @Override
-            public boolean isMutable() {
-                return true;
             }
         }
 

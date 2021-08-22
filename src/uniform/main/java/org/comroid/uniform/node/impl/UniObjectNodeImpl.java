@@ -4,7 +4,7 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.KeyedReference;
-import org.comroid.mutatio.stack.OutputStack;
+import org.comroid.mutatio.stack.MutableStack;
 import org.comroid.mutatio.stack.RefStack;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
@@ -137,7 +137,7 @@ public class UniObjectNodeImpl
 
     @Override
     protected KeyedReference<String, UniNode> generateAccessor(final String key) {
-        class Accessor extends OutputStack<UniNode> {
+        class Accessor extends MutableStack<UniNode> {
             protected Accessor(@Nullable RefStack<?> parent) {
                 super(parent, String.format("UniNode(%s)", key));
             }
@@ -169,11 +169,6 @@ public class UniObjectNodeImpl
                 if (value instanceof UniValueNode)
                     return baseNode.put(key, value.asRaw()) != value;
                 return baseNode.put(key, value.getBaseNode()) != value;
-            }
-
-            @Override
-            public boolean isMutable() {
-                return true;
             }
         }
 
