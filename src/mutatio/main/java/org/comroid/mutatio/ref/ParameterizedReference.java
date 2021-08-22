@@ -37,6 +37,14 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
         return putIntoCache((T) get(0));
     }
 
+    public final boolean set(T value) {
+        if (set(0, value)) {
+            putIntoCache(value);
+            return true;
+        }
+        return false;
+    }
+
     protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
         super(parent, autocomputor);
     }
