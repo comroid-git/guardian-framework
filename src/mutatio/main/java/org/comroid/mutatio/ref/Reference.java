@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.api.RefStackUtil;
 import org.comroid.mutatio.cache.SingleValueCache;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
@@ -28,6 +29,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private RefStack[] stack = new RefStack[0];
 
     @Internal
+    @Deprecated
     protected <X> X getFromParent() {
         return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
     }
@@ -124,7 +126,8 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     }
 
     public static <T> Reference<T> conditional(BooleanSupplier condition, Supplier<T> supplier) {
-        return new Support.Conditional<>(condition, supplier);
+        RefStack stack = RefStackUtil.$conditional(condition, supplier);
+        return new Reference<>(null, null, false, stack);
     }
 
     public static <T> FutureReference<T> later(CompletableFuture<T> future) {
@@ -177,7 +180,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
 
     @Override
     public final Reference<T> peek(Consumer<? super T> action) {
-        return new Reference.Support.Remapped<>(this, it -> {
+        return map(it -> {
             action.accept(it);
             return it;
         });
@@ -185,7 +188,8 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
 
     @Override
     public final <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
-        return new Reference.Support.Remapped<>(this, it -> accumulator.apply(it, other.get()));
+        RefStack stack = RefStackUtil.$combine(stack(0, false), other, accumulator);
+        return new Reference<>(this, getExecutor(), false, stack);
     }
 
     @Override
@@ -205,22 +209,25 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
 
     @Override
     public final Reference<T> filter(Predicate<? super T> predicate) {
-        return new Reference.Support.Filtered<>(this, predicate);
+        RefStack stack = RefStackUtil.$filter(stack(0, false), predicate);
+        return new Reference<>(this, getExecutor(), false, stack);
     }
 
     @Override
     public final <R> Reference<R> map(Function<? super T, ? extends R> mapper) {
-        return new Reference.Support.Remapped<>(this, mapper);
+        RefStack stack = RefStackUtil.$map(stack(0, false), mapper);
+        return new Reference<>(this, getExecutor(), false, stack);
     }
 
     @Override
     public final <R> Reference<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return new Reference.Support.ReferenceFlatMapped<>(this, mapper);
+        return map(mapper.andThen(it -> it.orElse(null)));
     }
 
     @Override
     public final Reference<T> or(Supplier<? extends T> orElse) {
-        return new Support.Or<>(this, orElse);
+        RefStack stack = RefStackUtil.$or(stack(0, false), orElse);
+        return new Reference<>(this, getExecutor(), false, stack);
     }
 
     @Override
