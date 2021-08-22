@@ -10,6 +10,8 @@ import org.comroid.common.info.MessageSupplier;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniArrayNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -190,17 +192,14 @@ public class DataContainerBase<S extends DataContainer<? super S>>
     }
 
     @Override
-    protected final KeyedReference<VarBind, Object> advanceReference(KeyedReference<String, ReferenceList> inputRef) {
-        class OutputReference extends KeyedReference.Support.Base<VarBind, Object> {
-            private OutputReference(final VarBind bind) {
-                //noinspection unchecked
-                super(bind, inputRef.map(refs -> bind.process(self().into(Polyfill::<DataContainer>uncheckedCast), refs)));
-            }
-        }
-
-        String key = inputRef.getKey();
-        VarBind bind = getBindByName(key);
-        return new OutputReference(bind);
+    protected final KeyedReference<VarBind, Object> advanceReference(KeyedReference<String, ReferenceList> ref) {
+        RefStack<? extends VarBind<? extends S, ?, ?, Object>> keyStack = RefStackUtil.$map(ref.keyStack(), this::getBindByName);
+        RefStack<Object> valueStack = RefStackUtil.$combine(ref.valueStack(), keyStack, (refs, bind) -> {
+            if (bind == null)
+                throw new NoSuchElementException("Bind not found!");
+            return bind.process(self().cast(), refs);
+        });
+        return new KeyedReference<>(Polyfill.uncheckedCast(keyStack), Polyfill.uncheckedCast(valueStack));
     }
 
     private <T, R> R computeValueFor(VarBind<? super S, T, ?, R> bind, ReferenceList<T> fromBase) {
@@ -239,8 +238,10 @@ public class DataContainerBase<S extends DataContainer<? super S>>
         }
 
         @Override
-        public KeyedReference<VarBind, Object> advance(KeyedReference<String, ReferenceList> reference) {
-            return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
+        public KeyedReference<VarBind, Object> advance(KeyedReference<String, ReferenceList> ref) {
+            RefStack<VarBind> keyStack = RefStackUtil.$map(ref.keyStack(), this::advanceKey);
+            RefStack<Object> valueStack = RefStackUtil.$combine(ref.valueStack(), ref.keyStack(), (refs, bind) -> advanceValue(bind, refs));
+            return new KeyedReference<>(keyStack, valueStack);
         }
     }
 }
