@@ -4,6 +4,8 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -76,18 +78,23 @@ public abstract class StageAdapter<In, Out>
 
         @Override
         public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, T> reference) {
-            return new KeyedReference.Support.Filtered<>(reference, (i, v) -> predicate.test(v));
+            RefStack<T> valueStack = reference.valueStack();
+            return new KeyedReference<>(reference.keyStack(), RefStackUtil.$filter(valueStack, predicate));
         }
     }
 
     private static final class Map<O, T> extends StageAdapter<O, T> {
+        private final Function<? super O, ? extends T> mapper;
+
         public Map(Function<? super O, ? extends T> mapper) {
             super(false, mapper);
+            this.mapper = mapper;
         }
 
         @Override
         public KeyedReference<@NotNull Integer, T> advance(KeyedReference<@NotNull Integer, O> reference) {
-            return new KeyedReference.Support.Mapped<>(reference, this::advanceKey, this::advanceValue);
+            RefStack<O> valueStack = reference.valueStack();
+            return new KeyedReference<>(reference.keyStack(), RefStackUtil.$map(valueStack, mapper));
         }
     }
 }
