@@ -1,13 +1,12 @@
 package org.comroid.mutatio.ref;
 
 import org.comroid.api.Rewrapper;
+import org.comroid.mutatio.api.RefStack;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
-import org.comroid.mutatio.api.RefStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
@@ -50,10 +49,8 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public int adjustStackSize(int newSize) {
-        int oldSize = stack.length;
-        stack = Arrays.copyOf(stack, newSize);
-        return newSize - oldSize;
+    public void adjustStackSize(int newSize) {
+        stack = Reference.$adjustStackSize(this, stack, newSize);
     }
 
     @Override

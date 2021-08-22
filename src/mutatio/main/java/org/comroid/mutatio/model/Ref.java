@@ -18,9 +18,11 @@ import java.util.function.*;
 
 public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
     //region RefStack Methods
+
     /**
      * Returns the index of this Reference.
      * Returns {@code -1} if there is no index.
+     *
      * @return the index of this Reference
      */
     @Override
@@ -30,6 +32,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
 
     /**
      * Returns the full Reference Stack underlying this Reference.
+     *
      * @return the full Reference stack
      */
     @Internal
@@ -37,7 +40,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     RefStack[] stack();
 
     @Internal
-    int adjustStackSize(int newSize);
+    void adjustStackSize(int newSize);
 
     @Internal
     @SuppressWarnings("rawtypes")
@@ -45,7 +48,8 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
         RefStack[] stack = stack();
         if (index >= stack.length || index < 0) {
             if (createIfAbsent) adjustStackSize(index + 1);
-            else throw new IndexOutOfBoundsException(String.format("Stack index %d is out of bounds; length = %d", index, stack.length));
+            else
+                throw new IndexOutOfBoundsException(String.format("Stack index %d is out of bounds; length = %d", index, stack.length));
         }
         return stack[index];
     }

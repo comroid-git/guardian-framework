@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
-import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.api.RefStack;
+import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.model.ReferenceOverwriter;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
@@ -60,7 +60,7 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             boolean mutable,
             Executor autoComputor
     ) {
-        this(parent, null, mutable, autoComputor);
+        this(parent, null, mutable, 1, autoComputor);
     }
 
     protected <X> Reference(
@@ -75,19 +75,21 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
             final @NotNull Function<T, X> backwardsConverter,
             Executor autoComputor
     ) {
-        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, autoComputor);
+        this(parent, t -> parent != null && parent.set(backwardsConverter.apply(t)), parent != null, 1, autoComputor);
     }
 
     private Reference(
             @Nullable ValueProvider.NoParam<?> parent,
             @Nullable Predicate<T> setter,
             boolean mutable,
+            int stackSize,
             Executor autoComputor
     ) {
         super(parent, autoComputor);
 
         this.overriddenSetter = setter;
         this.mutable = mutable;
+        adjustStackSize(stackSize);
     }
 
     public static <T> Reference<T> constant(@Nullable T of) {
@@ -137,10 +139,21 @@ public abstract class Reference<T> extends ValueProvider.NoParam<T> implements R
     }
 
     @Override
-    public int adjustStackSize(int newSize) {
+    public void adjustStackSize(int newSize) {
+        stack = $adjustStackSize(this, stack, newSize);
+    }
+
+    static RefStack[] $adjustStackSize(Ref ref, RefStack[] stack, int newSize) {
         int oldSize = stack.length;
         stack = Arrays.copyOf(stack, newSize);
-        return newSize - oldSize;
+        for (int i = 0; i < stack.length; i++)
+            if (stack[i] == null)
+                stack[i] = new RefStack<>(ref.getName() + '#' + i, i, null, ref.isMutable(),
+                        ref.isMutable() ? RefStack.Overridability.GETTER_AND_SETTER : RefStack.Overridability.GETTER);
+            else if (stack[i].index() != i)
+                // fixme: not expected; but here's a temporary error for you:
+                throw new IllegalStateException("RefStack order of " + ref + " is incorrect");
+        return stack;
     }
 
     @OverrideOnly
