@@ -95,33 +95,18 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper) {
-        return map(mapper, null);
-    }
-
-    @Override
-    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter) {
-        return new Support.Mapped<>(this, mapper, backwardsConverter, getExecutor());
+    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper){
+        return new Support.Mapped<>(this, mapper, getExecutor());
     }
 
     @Override
     public final <R> ParameterizedReference<P, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return flatMap(mapper, null);
-    }
-
-    @Override
-    public final <R> ParameterizedReference<P, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return map(mapper.andThen(Rewrapper::get), backwardsConverter);
+        return map(mapper.andThen(Rewrapper::get));
     }
 
     @Override
     public final <R> ParameterizedReference<P, R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return flatMapOptional(mapper, null);
-    }
-
-    @Override
-    public final <R> ParameterizedReference<P, R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(Ref.wrapOpt2Ref(mapper), backwardsConverter);
+        return flatMap(Ref.wrapOpt2Ref(mapper));
     }
 
     @Override
@@ -187,16 +172,13 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
         public static final class Mapped<P, I, O> extends ParameterizedReference<P, O> {
             private final Function<? super P, ? extends O> action;
-            private final Function<? super O, ? extends I> reverse;
 
             public Mapped(
                     ParameterizedReference<P, I> parent,
                     Function<? super I, ? extends O> mapper,
-                    Function<? super O, ? extends I> reverse,
                     @Nullable Executor autocomputor
             ) {
                 super(parent, autocomputor);
-                this.reverse = reverse;
                 this.action = parent.andThen(mapper);
             }
 
