@@ -16,7 +16,7 @@ public abstract class OutputStack<T> extends RefStack<T> {
 
     @Override
     protected boolean $set(T newValue) throws IllegalStateException {
-        return false; // todo
+        return false;
     }
 
     @Override
