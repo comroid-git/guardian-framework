@@ -16,27 +16,35 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
     public static final int VALUE_INDEX = 0;
 
     @Override
-    public K getKey() {
-        return this.<K>stack(KEY_INDEX, true).get();
+    public final K getKey() {
+        return keyStack().get();
     }
 
     @Override
-    public boolean setKey(K key) {
-        return this.<K>stack(KEY_INDEX, true).set(key);
+    public final boolean setKey(K key) {
+        return keyStack().set(key);
     }
 
     @Override
-    public V getValue() throws ClassCastException {
-        return this.<V>stack(VALUE_INDEX, true).get();
+    public final V getValue() throws ClassCastException {
+        return valueStack().get();
     }
 
     @Override
-    public V setValue(V value) {
-        RefStack<V> stack = this.stack(VALUE_INDEX, true);
+    public final V setValue(V value) {
+        RefStack<V> stack = valueStack();
         V prev = stack.get();
         if (!stack.set(value))
             return null;
         return prev;
+    }
+
+    public final RefStack<K> keyStack() {
+        return this.stack(KEY_INDEX, true);
+    }
+
+    public final RefStack<V> valueStack() {
+        return this.stack(VALUE_INDEX, true);
     }
     //endregion
 
@@ -45,7 +53,6 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
         this(key, null, mutable);
     }
 
-    //region Constructors
     public KeyedReference(K key, V value, boolean mutable) {
         super(2);
         setKey(key);
@@ -104,7 +111,7 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
     }
     //endregion
 
-    public void consume(BiConsumer<? super K, ? super V> consumer) {
+    public final void consume(BiConsumer<? super K, ? super V> consumer) {
         consumer.accept(getKey(), getValue());
     }
 
