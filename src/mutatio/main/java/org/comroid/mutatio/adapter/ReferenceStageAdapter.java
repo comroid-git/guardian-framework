@@ -16,10 +16,10 @@ import java.util.function.Function;
 public abstract class ReferenceStageAdapter<InK, OutK, InV, OutV, InRef extends Reference<InV>, OutRef extends Reference<OutV>>
         implements ReferenceConverter<InRef, OutRef> {
     private final boolean isFiltering;
-    private final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
-    private final BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper;
-    private final @Nullable Function<? super OutK, ? extends InK> keyReverser;
-    private final @Nullable Function<? super OutV, ? extends InV> valueReverser;
+    protected final Function<@NotNull ? super InK, @NotNull ? extends OutK> keyMapper;
+    protected final BiFunction<? super InK, ? super InV, @Nullable ? extends OutV> valueMapper;
+    protected final @Nullable Function<? super OutK, ? extends InK> keyReverser;
+    protected final @Nullable Function<? super OutV, ? extends InV> valueReverser;
 
     public final boolean isFiltering() {
         return isFiltering;

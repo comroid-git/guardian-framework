@@ -2,49 +2,79 @@ package org.comroid.mutatio.ref;
 
 import org.comroid.mutatio.model.KeyRef;
 import org.comroid.mutatio.model.ReferenceOverwriter;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.Executor;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
-public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
-    private final K key;
-    private final Reference<V> valueHolder;
+public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
+    //region Stack Accessors
+    public static final int KEY_INDEX = 1;
+    public static final int VALUE_INDEX = 0;
 
     @Override
-    public K getKey() {
-        return key;
+    public final K getKey() {
+        return keyStack().get();
     }
 
-    public KeyedReference(K key, Reference<V> valueHolder) {
-        super(valueHolder, valueHolder.isMutable(), valueHolder.getAutocomputor());
-
-        this.key = key;
-        this.valueHolder = valueHolder;
+    @Override
+    public final boolean setKey(K key) {
+        return keyStack().set(key);
     }
 
-    protected KeyedReference(K key, boolean mutable) {
+    @Override
+    public final V getValue() throws ClassCastException {
+        return valueStack().get();
+    }
+
+    @Override
+    public final V setValue(V value) {
+        RefStack<V> stack = valueStack();
+        V prev = stack.get();
+        if (!stack.set(value))
+            return null;
+        return prev;
+    }
+
+    public final RefStack<K> keyStack() {
+        return this.stack(KEY_INDEX, true);
+    }
+
+    public final RefStack<V> valueStack() {
+        return this.stack(VALUE_INDEX, true);
+    }
+    //endregion
+
+    //region Constructors
+    public KeyedReference(K key, boolean mutable) {
         this(key, null, mutable);
     }
 
-    protected KeyedReference(K key, boolean mutable, Executor autoComputor) {
-        this(key, null, mutable, autoComputor);
+    public KeyedReference(K key, V value, boolean mutable) {
+        super(2);
+        setKey(key);
+        setValue(value);
+        setMutable(mutable);
     }
 
-    protected KeyedReference(K key, @Nullable V initialValue, boolean mutable) {
-        this(key, initialValue, mutable, null);
+    public KeyedReference(RefStack<K> keyStack, RefStack<V> valueStack) {
+        this(false, keyStack, valueStack);
     }
 
-    protected KeyedReference(K key, @Nullable V initialValue, boolean mutable, Executor autoComputor) {
-        super(null, mutable, autoComputor);
-
-        this.key = key;
-        this.valueHolder = Reference.create(initialValue);
+    public KeyedReference(boolean mutable, RefStack<K> keyStack, RefStack<V> valueStack) {
+        super(mutable, keyStack, valueStack);
     }
+    //endregion
+
+    //region Static Methods
+    private final static KeyedReference<?, ?> EMPTY = createKey(false, null, null);
 
     public static <K, V> KeyedReference<K, V> emptyKey() {
         //noinspection unchecked
-        return (KeyedReference<K, V>) Support.EMPTY;
+        return (KeyedReference<K, V>) EMPTY;
     }
 
     public static <K, V> KeyedReference<K, V> emptyValue(K key) {
@@ -63,8 +93,10 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRe
         return createKey(mutable, key, null);
     }
 
-    public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key, @Nullable V initialValue) {
-        return new Support.Base<>(key, initialValue, mutable);
+    public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key, @Nullable V value) {
+        if (!mutable && (key == null && value == null) && EMPTY != null)
+            return emptyKey();
+        return new KeyedReference<>(key, value, mutable);
     }
 
     public static <K, V> KeyedReference<K, V> conditional(
@@ -72,131 +104,19 @@ public abstract class KeyedReference<K, V> extends Reference<V> implements KeyRe
             Supplier<K> keySupplier,
             Supplier<V> valueSupplier
     ) {
-        return new Support.Conditional<>(condition, keySupplier, valueSupplier);
+        return new KeyedReference<>(
+                RefStackUtil.$conditional(condition, keySupplier),
+                RefStackUtil.$conditional(condition, valueSupplier)
+        );
     }
+    //endregion
 
-    @Override
-    protected V doGet() {
-        return valueHolder.get();
-    }
-
-    @Override
-    protected boolean doSet(V value) {
-        return valueHolder.set(value);
-    }
-
-    public void consume(BiConsumer<? super K, ? super V> consumer) {
+    public final void consume(BiConsumer<? super K, ? super V> consumer) {
         consumer.accept(getKey(), getValue());
     }
 
     public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
         @Override
         KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
-    }
-
-    public static final class Support {
-        public static final KeyedReference<?, ?> EMPTY = createKey(false, null);
-
-        public static class Base<K, V> extends KeyedReference<K, V> {
-            public Base(K key, Reference<V> valueHolder) {
-                super(key, valueHolder);
-            }
-
-            protected Base(K key, @Nullable V initialValue, boolean mutable) {
-                this(key, initialValue, mutable, null);
-            }
-
-            protected Base(K key, @Nullable V initialValue, boolean mutable, Executor autoComputor) {
-                super(key, initialValue, mutable, autoComputor);
-            }
-        }
-
-        public static final class Filtered<K, V> extends Support.Base<K, V> {
-            private final KeyedReference<K, V> parent;
-            private final BiPredicate<? super K, ? super V> filter;
-
-            @Deprecated
-            public Filtered(
-                    KeyedReference<K, V> parent,
-                    final Predicate<? super K> keyFilter,
-                    final Predicate<? super V> valueFilter
-            ) {
-                this(parent, (k, v) -> keyFilter.test(k) && valueFilter.test(v));
-            }
-
-            public Filtered(
-                    KeyedReference<K, V> parent,
-                    BiPredicate<? super K, ? super V> filter
-            ) {
-                super(parent.getKey(), parent);
-                this.parent = parent;
-                this.filter = filter;
-            }
-
-            @Override
-            protected V doGet() {
-                if (filter.test(getKey(), getFromParent()))
-                    return parent.getValue();
-                return null;
-            }
-        }
-
-        public static final class Mapped<InK, InV, K, V> extends Support.Base<K, V> {
-            private final KeyedReference<InK, InV> parent;
-            private final Function<? super InK, ? extends K> keyMapper;
-
-            @Override
-            public K getKey() {
-                return keyMapper.apply(parent.getKey());
-            }
-
-            public Mapped(
-                    KeyedReference<InK, InV> parent,
-                    Function<? super InK, ? extends K> keyMapper,
-                    BiFunction<? super InK, ? super InV, ? extends V> valueMapper
-            ) {
-                super(null, parent.map(in -> valueMapper.apply(parent.getKey(), in)));
-
-                this.parent = parent;
-                this.keyMapper = keyMapper;
-            }
-        }
-
-        private static final class Conditional<K, V> extends Support.Base<K, V> {
-            private final BooleanSupplier condition;
-            private final Supplier<K> keySupplier;
-            private final Supplier<V> valueSupplier;
-
-            @Override
-            public K getKey() {
-                return keySupplier.get();
-            }
-
-
-            /*
-                        @Override
-                        public boolean isOutdated() {
-                            return true;
-                        }
-            */
-            public Conditional(
-                    BooleanSupplier condition,
-                    Supplier<K> keySupplier,
-                    Supplier<V> valueSupplier
-            ) {
-                super(null, null, false);
-
-                this.condition = condition;
-                this.keySupplier = keySupplier;
-                this.valueSupplier = valueSupplier;
-            }
-
-            @Override
-            protected V doGet() {
-                if (condition.getAsBoolean())
-                    return valueSupplier.get();
-                return null;
-            }
-        }
     }
 }

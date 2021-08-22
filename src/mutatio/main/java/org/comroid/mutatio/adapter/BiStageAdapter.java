@@ -4,6 +4,10 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.model.Structure;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.stack.OutputStack;
+import org.comroid.mutatio.stack.RefStack;
+import org.comroid.mutatio.stack.RefStackUtil;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 
+@ApiStatus.Experimental // todo: fix
 public abstract class BiStageAdapter<InK, InV, OutK, OutV>
         extends ReferenceStageAdapter<InK, OutK, InV, OutV, KeyedReference<InK, InV>, KeyedReference<OutK, OutV>>
         implements KeyedReference.Advancer<InK, InV, OutK, OutV> {
@@ -117,7 +122,23 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
 
         @Override
         public KeyedReference<X, Y> advance(final KeyedReference<X, Y> ref) {
-            return new KeyedReference.Support.Filtered<>(ref, filter);
+            class BiFilterStack extends OutputStack<Y> {
+                private final RefStack<X> keyStack = ref.keyStack();
+                private final RefStack<Y> valueStack = ref.valueStack();
+
+                protected BiFilterStack() {
+                    super(ref.valueStack(), "KeyedReference.filter()");
+                }
+
+                @Override
+                protected Y $get() {
+                    if (keyStack.accumulate(valueStack, filter::test))
+                        return valueStack.get();
+                    return null;
+                }
+            }
+            BiFilterStack stack = new BiFilterStack();
+            return new KeyedReference<>(stack.keyStack, stack);
         }
     }
 
@@ -156,7 +177,21 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
 
         @Override
         public KeyedReference<OX, OY> advance(KeyedReference<IX, IY> ref) {
-            return new KeyedReference.Support.Mapped<>(ref, this::advanceKey, this::advanceValue);
+            class MergeValueStack extends OutputStack<OY> {
+                private final RefStack<IX> keyStack = ref.keyStack();
+                private final RefStack<IY> valueStack = ref.valueStack();
+
+                protected MergeValueStack() {
+                    super(ref.valueStack(), "KeyedReference.map()[merge]");
+                }
+
+                @Override
+                protected OY $get() {
+                    return keyStack.accumulate(valueStack, valueMapper::apply);
+                }
+            }
+            MergeValueStack stack = new MergeValueStack();
+            return new KeyedReference<>(RefStackUtil.$map(stack.keyStack, keyMapper), stack);
         }
     }
 
@@ -173,15 +208,8 @@ public abstract class BiStageAdapter<InK, InV, OutK, OutV>
 
         @Override
         public KeyedReference<X, T> advance(KeyedReference<Object, T> ref) {
-            return new KeyedReference.Support.Mapped<>(
-                    ref,
-                    prevKey -> {
-                        X yieldKey = ref.into(this.source);
-                        reverseKeys.put(yieldKey, prevKey);
-                        return yieldKey;
-                    },
-                    (unused, val) -> val
-            );
+            RefStack<X> stack = RefStackUtil.$map(ref.valueStack(), source);
+            return new KeyedReference<>(stack, ref.valueStack());
         }
 
         @Override

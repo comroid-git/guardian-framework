@@ -3,17 +3,23 @@ package org.comroid.mutatio.ref;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.model.Ref;
+import org.comroid.mutatio.stack.RefStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
+/**
+ * @deprecated needs fix
+ */
+@Deprecated // todo Needs fix
+@SuppressWarnings("rawtypes")
 public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> implements Ref<T>, Function<P, T> {
     private final Reference<P> defaultParameter = Reference.create();
+    private RefStack[] stack = new RefStack[0];
     private Predicate<T> overriddenSetter;
 
     public final @Nullable P getDefaultParameter() {
@@ -23,6 +29,20 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     @Override
     public boolean isMutable() {
         return overriddenSetter != null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final T get() throws ClassCastException {
+        return putIntoCache((T) get(0));
+    }
+
+    public final boolean set(T value) {
+        if (set(0, value)) {
+            putIntoCache(value);
+            return true;
+        }
+        return false;
     }
 
     protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
@@ -38,14 +58,13 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public final T get() {
-        return defaultParameter.ifPresentMapOrElseThrow(this::get,
-                () -> new NoSuchElementException("No default parameter defined"));
+    public RefStack[] stack() {
+        return stack;
     }
 
     @Override
-    public boolean set(T value) {
-        return overriddenSetter.test(value);
+    public void adjustStackSize(int newSize) {
+        stack = Reference.$adjustStackSize(this, stack, newSize);
     }
 
     @Override
@@ -81,7 +100,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
     @Override
     public final ParameterizedReference<P, T> filter(Predicate<? super T> predicate) {
-        return new Support.Filtered<>(this, predicate, getAutocomputor());
+        return new Support.Filtered<>(this, predicate, getExecutor());
     }
 
     @Override
@@ -90,33 +109,18 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper) {
-        return map(mapper, null);
-    }
-
-    @Override
-    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper, @Nullable Function<R, T> backwardsConverter) {
-        return new Support.Mapped<>(this, mapper, backwardsConverter, getAutocomputor());
+    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper){
+        return new Support.Mapped<>(this, mapper, getExecutor());
     }
 
     @Override
     public final <R> ParameterizedReference<P, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
-        return flatMap(mapper, null);
-    }
-
-    @Override
-    public final <R> ParameterizedReference<P, R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return map(mapper.andThen(Rewrapper::get), backwardsConverter);
+        return map(mapper.andThen(Rewrapper::get));
     }
 
     @Override
     public final <R> ParameterizedReference<P, R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return flatMapOptional(mapper, null);
-    }
-
-    @Override
-    public final <R> ParameterizedReference<P, R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper, Function<R, T> backwardsConverter) {
-        return flatMap(Ref.wrapOpt2Ref(mapper), backwardsConverter);
+        return flatMap(Ref.wrapOpt2Ref(mapper));
     }
 
     @Override
@@ -137,7 +141,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
                     @NotNull Reference<I> parent,
                     @NotNull BiFunction<I, P, O> function
             ) {
-                this(parent, function, parent.getAutocomputor());
+                this(parent, function, parent.getExecutor());
             }
 
             public Source(
@@ -182,16 +186,13 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
 
         public static final class Mapped<P, I, O> extends ParameterizedReference<P, O> {
             private final Function<? super P, ? extends O> action;
-            private final Function<? super O, ? extends I> reverse;
 
             public Mapped(
                     ParameterizedReference<P, I> parent,
                     Function<? super I, ? extends O> mapper,
-                    Function<? super O, ? extends I> reverse,
                     @Nullable Executor autocomputor
             ) {
                 super(parent, autocomputor);
-                this.reverse = reverse;
                 this.action = parent.andThen(mapper);
             }
 

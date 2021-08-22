@@ -66,9 +66,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             V container;
             if (!containsKey(id) || (container = get(id)) == null) {
                 // need to create object
-                //noinspection unchecked
-                Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>> resolver =
-                        (Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>>) idBind.getGroup().getResolver();
+                Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>> resolver = Polyfill.uncheckedCast(idBind.getGroup().getResolver());
                 if (resolver.isNull()) {
                     getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache", id);
                     continue;
@@ -210,6 +208,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
             getLogger().debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+            return -1;
         }
     }
 
@@ -224,6 +223,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
             getLogger().debug("Could not save data into table {} because the driver does not support this method", table, fnse);
+            return -1;
         }
     }
 }
