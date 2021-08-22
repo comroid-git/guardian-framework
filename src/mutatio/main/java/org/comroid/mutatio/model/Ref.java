@@ -62,8 +62,9 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
      * @return the Value
      */
     @Internal
-    default Object get(int stack) throws IndexOutOfBoundsException {
-        return stack(stack, false).get();
+    default <R> R get(int stack) throws IndexOutOfBoundsException {
+        //noinspection unchecked
+        return (R) stack(stack, false).get();
     }
 
     @Internal
