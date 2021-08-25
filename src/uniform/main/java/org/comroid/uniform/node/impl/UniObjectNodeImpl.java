@@ -4,6 +4,8 @@ import org.comroid.api.Polyfill;
 import org.comroid.api.ValueBox;
 import org.comroid.api.ValueType;
 import org.comroid.mutatio.ref.KeyedReference;
+import org.comroid.mutatio.stack.MutableStack;
+import org.comroid.mutatio.stack.RefStack;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.Serializable;
@@ -135,15 +137,13 @@ public class UniObjectNodeImpl
 
     @Override
     protected KeyedReference<String, UniNode> generateAccessor(final String key) {
-        return new KeyedReference.Support.Base<String, UniNode>(key, null, true) {
-            /*
-                        @Override
-                        public boolean isOutdated() {
-                            return true;
-                        }
-            */
+        class Accessor extends MutableStack<UniNode> {
+            protected Accessor(@Nullable RefStack<?> parent) {
+                super(parent, String.format("UniNode(%s)", key));
+            }
+
             @Override
-            protected UniNode doGet() {
+            protected UniNode $get() {
                 final Object value = baseNode.get(key);
 
                 assert getNodeType() == NodeType.OBJECT;
@@ -161,7 +161,7 @@ public class UniObjectNodeImpl
             }
 
             @Override
-            protected boolean doSet(UniNode value) {
+            protected boolean $set(UniNode value) {
                 if (value == null) {
                     baseNode.put(key, null);
                     return true;
@@ -170,7 +170,10 @@ public class UniObjectNodeImpl
                     return baseNode.put(key, value.asRaw()) != value;
                 return baseNode.put(key, value.getBaseNode()) != value;
             }
-        };
+        }
+
+        Accessor accessor = new Accessor(null);
+        return new KeyedReference<>(RefStack.constant(KeyedReference.KEY_INDEX, key), accessor);
     }
 
     @Override

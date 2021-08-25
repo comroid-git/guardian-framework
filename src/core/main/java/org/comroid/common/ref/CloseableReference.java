@@ -20,7 +20,7 @@ public abstract class CloseableReference<T> extends Reference<T> implements Clos
     }
 
     protected CloseableReference(@Nullable Reference<?> parent, boolean mutable) {
-        super(parent, mutable, parent == null ? null : parent.getAutocomputor());
+        super(parent, mutable, parent == null ? null : parent.getExecutor());
     }
 
     @Override

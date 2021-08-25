@@ -11,7 +11,7 @@ public interface KeyRef<K, V> extends Named, Ref<V>, Map.Entry<K, V> {
     }
 
     @Override
-    default V getValue() {
+    default V getValue() throws ClassCastException {
         return get();
     }
 
@@ -20,5 +20,15 @@ public interface KeyRef<K, V> extends Named, Ref<V>, Map.Entry<K, V> {
         V prev = get();
 
         return set(value) ? prev : null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    default K getKey() throws ClassCastException {
+        return (K) get(1);
+    }
+
+    default boolean setKey(K key) {
+        return set(1, key);
     }
 }

@@ -7,6 +7,8 @@ import org.comroid.mutatio.cache.ValueCache;
 import org.comroid.mutatio.cache.ValueUpdateListener;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
+import org.comroid.mutatio.stack.MutableStack;
+import org.comroid.mutatio.stack.RefStack;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.model.NodeType;
 import org.comroid.uniform.model.ValueAdapter;
@@ -76,8 +78,8 @@ public final class UniValueNodeImpl
     }
 
     @Override
-    public @Nullable Executor getAutocomputor() {
-        return baseNode.getAutocomputor();
+    public @Nullable Executor getExecutor() {
+        return baseNode.getExecutor();
     }
 
     public UniValueNodeImpl(String name, SerializationAdapter seriLib, @Nullable UniNode parent, ValueAdapter<? extends Object, Object> valueAdapter) {
@@ -145,15 +147,13 @@ public final class UniValueNodeImpl
 
     @Override
     protected KeyedReference<Void, UniNode> generateAccessor(Void nil) {
-        return new KeyedReference.Support.Base<Void, UniNode>(nil, null, true) {
-            /*
-                        @Override
-                        public boolean isOutdated() {
-                            return true;
-                        }
-            */
+        class Accessor extends MutableStack<UniNode> {
+            protected Accessor(@Nullable RefStack<?> parent) {
+                super(parent, String.format("ValueNode(%s)", nil));
+            }
+
             @Override
-            protected UniNode doGet() {
+            protected UniNode $get() {
                 final Object value = valueAdapter.asActualType();
                 if (value == null)
                     return UniValueNode.NULL;
@@ -162,7 +162,7 @@ public final class UniValueNodeImpl
             }
 
             @Override
-            protected boolean doSet(UniNode value) {
+            protected boolean $set(UniNode value) {
                 switch (value.getNodeType()) {
                     case OBJECT:
                         Map<String, Object> map = new HashMap<>(value.asObjectNode());
@@ -174,7 +174,10 @@ public final class UniValueNodeImpl
 
                 return baseNode.set(value.asRaw(null));
             }
-        };
+        }
+
+        Accessor accessor = new Accessor(null);
+        return new KeyedReference<>(RefStack.constant(KeyedReference.KEY_INDEX, nil), accessor);
     }
 
     @Override

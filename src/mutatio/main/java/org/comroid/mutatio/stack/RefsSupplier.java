@@ -1,4 +1,4 @@
-package org.comroid.mutatio.api;
+package org.comroid.mutatio.stack;
 
 import org.comroid.annotations.Upgrade;
 import org.comroid.api.StreamSupplier;

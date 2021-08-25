@@ -50,6 +50,10 @@ public interface ValueCache<T> extends Named {
                 ));
     }
 
+    default boolean dependsOn(ValueCache<?> other) {
+        return upstream().anyMatch(other::equals);
+    }
+
     /**
      * Marks this cache as updated now, but does not {@linkplain #deployListeners(Object) cause a ValueUpdate Event}.
      * Implicitly calls {@link #outdateDependents()}.

@@ -9,17 +9,7 @@ import static org.comroid.util.StandardValueType.*;
 
 public abstract class ValueAdapter<B, T> {
     protected final B base;
-    private final Reference<T> actualValue = new Reference.Support.Base<T>(true) {
-        @Override
-        protected T doGet() {
-            return asActualType();
-        }
-
-        @Override
-        protected boolean doSet(T value) {
-            return ValueAdapter.this.doSet(value);
-        }
-    };
+    private final Reference<T> actualValue = new Reference<>(this::asActualType, this::doSet);
 
     public ValueType<T> getValueType() {
         return actualValue.into(StandardValueType::typeOf);
