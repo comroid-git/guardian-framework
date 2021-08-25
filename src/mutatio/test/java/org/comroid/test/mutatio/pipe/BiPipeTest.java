@@ -23,14 +23,14 @@ public class BiPipeTest {
                 .collect(Collectors.toList()));
     }
 
-    //@Test
+    @Test
     public void testSimple() {
         ReferenceList.of(controlGroup)
                 .bi(String::hashCode)
                 .peekBoth((hash, str) -> Assert.assertEquals("hash code", (long) hash, str.hashCode()));
     }
 
-    //@Test
+    @Test
     public void testMap() {
         final RefContainer<Integer, Object> map = ReferenceList.of(controlGroup)
                 .bi(String::hashCode)
