@@ -24,7 +24,7 @@ public class PipeTest {
                 .collect(Collectors.toList()));
     }
 
-    @Test
+    //@Test
     public void testBasicOperations() {
         final ReferenceList<String> strings = ReferenceList.of(controlGroup);
 
