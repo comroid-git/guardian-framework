@@ -7,10 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
-import org.comroid.api.StreamSupplier;
+import org.comroid.api.*;
 import org.comroid.mutatio.model.Ref;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.restless.HTTPStatusCodes;
@@ -43,7 +40,7 @@ import static org.comroid.restless.CommonHeaderNames.ACCEPTED_CONTENT_TYPE;
 import static org.comroid.restless.CommonHeaderNames.REQUEST_CONTENT_TYPE;
 import static org.comroid.restless.HTTPStatusCodes.*;
 
-public final class RestServer implements HttpHandler, Closeable, Context {
+public final class RestServer implements Startable, HttpHandler, Closeable, Context {
     private static final Response dummyResponse = new Response(0);
     private static final Logger logger = LogManager.getLogger();
     private final Context context;
@@ -128,7 +125,7 @@ public final class RestServer implements HttpHandler, Closeable, Context {
         context.getFromContext(Executor.class)
                 .or(ForkJoinPool::commonPool)
                 .consume(server::setExecutor);
-        server.start();
+        start(); // todo Remove
 
         logger.info("Rest Server available at http://{}:{} (http://{}:{})",
                 socketAddress.getAddress().getHostAddress(), socketAddress.getPort(), socketAddress.getHostName(), socketAddress.getPort());
@@ -457,5 +454,10 @@ public final class RestServer implements HttpHandler, Closeable, Context {
     @Override
     public Stream<Object> streamContextMembers(boolean includeChildren) {
         return context.streamContextMembers(includeChildren);
+    }
+
+    @Override
+    public void start() {
+        server.start();
     }
 }
