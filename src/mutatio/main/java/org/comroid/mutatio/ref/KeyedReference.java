@@ -65,7 +65,7 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
     }
 
     public KeyedReference(boolean mutable, RefStack<K> keyStack, RefStack<V> valueStack) {
-        super(mutable, keyStack, valueStack);
+        super(mutable, valueStack, keyStack);
     }
     //endregion
 
