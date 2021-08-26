@@ -26,7 +26,7 @@ dependencies {
     }
 
     // jsoup HTML parser library @ https://jsoup.org/
-    api 'org.jsoup:jsoup:1.13.1'
+    api 'org.jsoup:jsoup:1.14.2'
     api 'org.java-websocket:Java-WebSocket:1.5.1'
 
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
