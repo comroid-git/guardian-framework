@@ -3,7 +3,7 @@ import java.util.concurrent.TimeUnit
 ext {
     buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
 }
-version = '1.0.3' + '.' + buildId
+version = '1.1.0' + '.' + buildId
 group 'org.comroid'
 
 apply plugin: 'java-library'
