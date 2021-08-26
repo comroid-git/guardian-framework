@@ -28,13 +28,20 @@ import java.util.stream.Collectors;
 public class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
         implements Cache<K, V> {
-    protected final VarBind<? super V, K, ?, K> idBind;
+    protected final VarBind<? super V, ?, ?, K> idBind;
     protected final String idColumn;
+
+    public DataContainerCache(
+        int largeThreshold,
+        VarBind<? super V, ?, ?, K> idBind
+    ) {
+        this(ContextualProvider.getRoot(), largeThreshold, idBind);
+    }
 
     public DataContainerCache(
             ContextualProvider context,
             int largeThreshold,
-            VarBind<? super V, K, ?, K> idBind
+            VarBind<? super V, ?, ?, K> idBind
     ) {
         this(context, largeThreshold, idBind, null);
     }
@@ -42,7 +49,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     public DataContainerCache(
             ContextualProvider context,
             int largeThreshold,
-            VarBind<? super V, K, ?, K> idBind,
+            VarBind<? super V, ?, ?, K> idBind,
             String idColumn
     ) {
         super(context, largeThreshold);
@@ -62,7 +69,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
 
         while (results.next()) {
-            final K id = results.getObject(idColumn, idBind.getHeldType().getTargetClass());
+            final K id = (K) results.getObject(idColumn, idBind.getHeldType().getTargetClass());
             V container;
             if (!containsKey(id) || (container = get(id)) == null) {
                 // need to create object
