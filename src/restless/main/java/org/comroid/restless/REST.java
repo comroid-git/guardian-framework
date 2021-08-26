@@ -333,6 +333,18 @@ public final class REST implements ContextualProvider.Underlying {
         /**
          * Creates a non-empty response, using the given {@code body}.
          *
+         * @param body       the response body
+         * @see Response#Response(int, Serializable, Header.List) superloaded
+         */
+        public Response(
+                Serializable body
+        ) {
+            this(HTTPStatusCodes.OK, body);
+        }
+
+        /**
+         * Creates a non-empty response, using the given {@code body}.
+         *
          * @param statusCode the status code
          * @param body       the response body
          * @see Response#Response(int, Serializable, Header.List) superloaded
