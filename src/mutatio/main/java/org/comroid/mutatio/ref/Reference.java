@@ -191,11 +191,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     }
 
     @Upgrade
-    public static <T> Reference<T> upgrade(RefStack<T> stack) {
-        return new Reference<>(stack);
-    }
-
-    @Upgrade
     public static <T> Reference<T> upgrade(Rewrapper<T> rewrapper) {
         return provided(rewrapper);
     }
