@@ -74,6 +74,13 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public GroupBind(
+        String groupName,
+        @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
+) {
+        this(ContextualProvider.getRoot(), groupName, resolver);
+    }
+
+    public GroupBind(
             ContextualProvider context,
             String groupName,
             @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
