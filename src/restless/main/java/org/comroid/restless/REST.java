@@ -299,7 +299,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @see Response#Response(int, Header.List) superloaded
          */
         public Response(
-                int statusCode
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode
         ) {
             this(statusCode, new Header.List());
         }
@@ -311,7 +311,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 URI uri
         ) {
             this(statusCode, redirectHeaderList(uri));
@@ -324,7 +324,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @param headers    the response headers
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 Header.List headers
         ) {
             this(statusCode, "*/*", null, null, headers);
@@ -338,7 +338,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @see Response#Response(int, Serializable, Header.List) superloaded
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 Serializable body
         ) {
             this(statusCode, body, new Header.List());
@@ -352,7 +352,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @param headers    the response headers
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 Serializable body,
                 Header.List headers
         ) {
@@ -369,7 +369,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @see Response#Response(int, CharSequence, File, Header.List) superloaded
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 File file
         ) throws FileNotFoundException {
@@ -386,7 +386,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @see Response#Response(int, CharSequence, File, Header.List) superloaded
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 File file,
                 Header.List headers
         ) throws FileNotFoundException {
@@ -403,7 +403,7 @@ public final class REST implements ContextualProvider.Underlying {
          * @param headers    the response headers
          */
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 File file,
                 Header.List headers
@@ -412,7 +412,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 Readable readable
         ) {
@@ -420,7 +420,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 Readable readable,
                 Header.List headers
@@ -429,7 +429,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 @Nullable Reader data
         ) {
@@ -437,7 +437,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 @Nullable Reader data,
                 Header.List headers
@@ -446,7 +446,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         private Response(
-                int statusCode,
+                @MagicConstant(valuesFromClass = HTTPStatusCodes.class) int statusCode,
                 CharSequence mimeType,
                 @Nullable Serializable body,
                 @Nullable Reader data,
