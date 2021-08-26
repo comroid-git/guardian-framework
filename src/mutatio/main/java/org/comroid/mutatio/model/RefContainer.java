@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -42,7 +43,7 @@ public interface RefContainer<K, V> extends RefOPs<K, V, KeyedReference<K, V>> {
     }
 
     @ApiStatus.Experimental
-    default Collection<V> unwrap() {
+    default List<V> unwrap() {
         final ArrayList<V> list = new ArrayList<>();
         streamValues().forEach(list::add);
         return list;
