@@ -160,9 +160,10 @@ public abstract class ReferenceAtlas<InK, K, In, V>
     }
 
     @Override
+    @Contract("_, false -> _; _, true -> !null")
     public final KeyedReference<InK, In> getInputReference(InK key, boolean createIfAbsent) {
         if (parent == null)
-            return null;
+            throw new AssertionError("Missing Parent");
         return parent.getReference(key, createIfAbsent);
     }
 
@@ -185,8 +186,7 @@ public abstract class ReferenceAtlas<InK, K, In, V>
                 .orElseGet(() -> advancer.findParentKey(parent, key));
         if (parent != null && fabK != null) {
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
-            if (inRef != null)
-                ref = advanceReference(inRef);
+            ref = advanceReference(inRef);
         } else if (createIfAbsent) ref = createEmptyRef(key);
         else return KeyedReference.emptyKey();
         if (putAccessor(key, ref))
