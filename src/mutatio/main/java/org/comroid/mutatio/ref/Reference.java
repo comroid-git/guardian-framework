@@ -1,5 +1,6 @@
 package org.comroid.mutatio.ref;
 
+import org.comroid.annotations.Upgrade;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.cache.SingleValueCache;
@@ -187,6 +188,16 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
 
     public static <T> Reference<T> future(CompletableFuture<T> future) {
         return new Reference<>(RefStackUtil.$future(future));
+    }
+
+    @Upgrade
+    public static <T> Reference<T> upgrade(RefStack<T> stack) {
+        return new Reference<>(stack);
+    }
+
+    @Upgrade
+    public static <T> Reference<T> upgrade(Rewrapper<T> rewrapper) {
+        return provided(rewrapper);
     }
     //endregion
 
