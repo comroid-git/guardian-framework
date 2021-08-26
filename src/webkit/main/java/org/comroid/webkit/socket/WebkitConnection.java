@@ -12,7 +12,7 @@ import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.MimeType;
 import org.comroid.restless.REST;
 import org.comroid.restless.exception.RestEndpointException;
-import org.comroid.restless.server.RestServer;
+import org.comroid.webkit.server.RestServer;
 import org.comroid.restless.socket.WebsocketPacket;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;

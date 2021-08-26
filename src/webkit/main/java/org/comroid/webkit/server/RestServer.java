@@ -1,4 +1,4 @@
-package org.comroid.restless.server;
+package org.comroid.webkit.server;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;

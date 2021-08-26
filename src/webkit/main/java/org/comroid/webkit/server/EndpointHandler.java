@@ -1,4 +1,4 @@
-package org.comroid.restless.server;
+package org.comroid.webkit.server;
 
 import org.comroid.restless.HTTPStatusCodes;
 import org.comroid.restless.REST;

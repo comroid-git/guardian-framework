@@ -5,7 +5,7 @@ import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.exception.RestEndpointException;
-import org.comroid.restless.server.EndpointHandler;
+import org.comroid.webkit.server.EndpointHandler;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
