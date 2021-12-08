@@ -12,12 +12,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class WebkitConfiguration implements ContextualProvider.Underlying {
-    private static final FutureReference<WebkitConfiguration> instance = new FutureReference<>();
+    private static final CompletableFuture<WebkitConfiguration> instance = new CompletableFuture<>();
 
     static {
         initialize(ContextualProvider.getRoot());
@@ -51,14 +53,18 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
     }
 
     public static WebkitConfiguration get() throws IllegalStateException {
-        if (!instance.future.isDone())
+        if (!instance.isDone())
             throw new IllegalStateException("Webkit was not initialized");
-        return instance.assertion();
+        try {
+            return instance.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Webkit was not initialized");
+        }
     }
 
     @Deprecated
     public static WebkitConfiguration initialize(ContextualProvider context) {
-        if (instance.future.isDone())
+        if (instance.isDone())
             throw new IllegalStateException("Configuration is already initialized");
 
         InputStream config = WebkitResourceLoader.getResource("config.xml");
@@ -72,10 +78,14 @@ public final class WebkitConfiguration implements ContextualProvider.Underlying 
             throw new RuntimeException("Could not find config.xml resource (" + WebkitResourceLoader.RESOURCE_PREFIX + "config.xml)", e);
         }
         Document dom = Jsoup.parse(data, "", Parser.xmlParser());
-        if (!instance.future.complete(new WebkitConfiguration(context, dom)))
+        if (!instance.isDone() && !instance.complete(new WebkitConfiguration(context, dom)))
             throw new RuntimeException("Could not initialize Webkit Configuration");
 
-        return instance.assertion("Initialization failed");
+        try {
+            return instance.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Webkit was not initialized");
+        }
     }
 
     public Stream<String> streamFrameNames() {
