@@ -82,6 +82,7 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         String host = headers.getFirst("X-forwarded-host");
         if (host == null)
             host = headers.getFirst("Host");
+        else isSecure = true;
         this.host = host;
         logger.info("Initializing new FrameBuilder for Host {} with {} props", host, pageProperties.size());
         logger.trace("FrameBuilder has properties:\n{}", pageProperties.entrySet()
