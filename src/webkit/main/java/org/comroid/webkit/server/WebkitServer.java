@@ -71,9 +71,11 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
         return socket.getActiveConnections().flatMap(WebkitConnection.class);
     }
 
-    public String getSocketHost() {
+    public String getSocketHost(String hostname) {
         InetSocketAddress address = socket.getAddress();
-        return address.getAddress().getHostAddress() + ':' + address.getPort() + "/websocket";
+        // fixme !!!!!!!!!!!!!!!!! what the fuck
+        String hostAddress = hostname == null ? address.getAddress().getHostAddress() : hostname;
+        return (hostAddress.equals("0.0.0.0") ? "de.comroid.org" : hostAddress) + ':' + address.getPort() + "/websocket";
     }
 
     @Deprecated
@@ -202,7 +204,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     @Override
     public Map<String, Object> findPageProperties(REST.Header.List headers) {
         Map<String, Object> map = pagePropertiesProvider.findPageProperties(headers);
-        map.put("wsHost", getSocketHost());
+        map.put("wsHost", getSocketHost(headers.getFirst("X-forwarded-host")));
         return map;
     }
 
