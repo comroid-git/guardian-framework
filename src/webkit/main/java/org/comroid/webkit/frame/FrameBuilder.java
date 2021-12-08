@@ -79,7 +79,10 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
             throw new RuntimeException("Could not load page frame", e);
         }
 
-        host = headers.getFirst("Host");
+        String host = headers.getFirst("X-forwarded-host");
+        if (host == null)
+            host = headers.getFirst("Host");
+        this.host = host;
         logger.info("Initializing new FrameBuilder for Host {} with {} props", host, pageProperties.size());
         logger.trace("FrameBuilder has properties:\n{}", pageProperties.entrySet()
                 .stream()
