@@ -73,7 +73,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
 
     public String getSocketHost() {
         InetSocketAddress address = socket.getAddress();
-        return address.getAddress().getHostName() + ':' + address.getPort() + "/websocket";
+        return address.getAddress().getHostAddress() + ':' + address.getPort() + "/websocket";
     }
 
     @Deprecated
