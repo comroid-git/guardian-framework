@@ -143,10 +143,14 @@ public abstract class WebkitConnection extends WebSocketConnection {
     }
 
     private void intoChangePanelCommand(UniObjectNode response, String target, Map<String, Object> pageProperties) {
-        pageProperties.put("frame", target);
+        String[] tSplit = target.split("/");
+        String frame = tSplit.length > 1 ? tSplit[0] : "main";
+        String panel = tSplit[tSplit.length - 1];
+
+        pageProperties.put("frame", frame);
 
         try (
-                InputStream is = WebkitConfiguration.get().getPanel(target);
+                InputStream is = WebkitConfiguration.get().getPanel(panel);
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr)
         ) {
