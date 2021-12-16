@@ -71,6 +71,12 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
         this.pageProperties = context.requireFromContext(PagePropertiesProvider.class).findPageProperties(headers);
+
+        // parse frame and panel from frameName
+        String[] fSplit = frameName.split("/");
+        frameName = fSplit.length > 1 ? fSplit[0] : "main";
+        panel = fSplit[fSplit.length - 1];
+
         pageProperties.put("frame", frameName);
 
         try {

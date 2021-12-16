@@ -143,6 +143,7 @@ public abstract class WebkitConnection extends WebSocketConnection {
     }
 
     private void intoChangePanelCommand(UniObjectNode response, String target, Map<String, Object> pageProperties) {
+        // parse frame and panel from target
         String[] tSplit = target.split("/");
         String frame = tSplit.length > 1 ? tSplit[0] : "main";
         String panel = tSplit[tSplit.length - 1];
