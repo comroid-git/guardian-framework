@@ -74,6 +74,7 @@ public final class WebkitServer implements ContextualProvider.Underlying, Closea
     public String getSocketHost(String hostname) {
         InetSocketAddress address = socket.getAddress();
         // fixme !!!!!!!!!!!!!!!!! what the fuck
+        // may need IPv6 to obtain public host address
         String hostAddress = hostname == null ? address.getAddress().getHostAddress() + ':' + address.getPort() : hostname;
         return (hostAddress.startsWith("0.0.0.0") ? "de.comroid.org" : hostAddress) /*+ ':' + address.getPort()*/ + "/websocket";
         //return address.getAddress().getHostAddress() /*+ ':' + address.getPort()*/ + "/websocket";
