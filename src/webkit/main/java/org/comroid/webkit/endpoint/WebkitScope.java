@@ -5,7 +5,6 @@ import org.comroid.restless.CommonHeaderNames;
 import org.comroid.restless.REST;
 import org.comroid.restless.endpoint.EndpointScope;
 import org.comroid.restless.exception.RestEndpointException;
-import org.comroid.webkit.server.EndpointHandler;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
@@ -13,6 +12,7 @@ import org.comroid.util.ReaderUtil;
 import org.comroid.webkit.config.WebkitResourceLoader;
 import org.comroid.webkit.frame.FrameBuilder;
 import org.comroid.webkit.model.PagePropertiesProvider;
+import org.comroid.webkit.server.EndpointHandler;
 import org.comroid.webkit.server.WebkitServer;
 import org.intellij.lang.annotations.Language;
 
@@ -40,14 +40,10 @@ public enum WebkitScope implements EndpointScope, EndpointHandler {
                 pageProperties.put("args", Arrays.asList(args));
             }
 
-            String frame = (requestPath.length > 0 && !requestPath[0].isEmpty()) ? requestPath[0] : "main";
-            String panel = (requestPath.length > 1 && !requestPath[1].isEmpty()) ? requestPath[1] : null;
-
+            String target = String.join("/", requestPath);
             String scheme = requestURI.getScheme();
             boolean secure = scheme != null && scheme.equals("https");
-            FrameBuilder frameBuilder = new FrameBuilder(context, frame, headers, false, secure);
-            if (panel != null)
-                frameBuilder.setPanel(panel);
+            FrameBuilder frameBuilder = new FrameBuilder(context, target, headers, false, secure);
             return new REST.Response(OK, "text/html", frameBuilder.toReader());
         }
 

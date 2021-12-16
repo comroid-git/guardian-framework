@@ -62,25 +62,34 @@ public final class FrameBuilder implements Builder<Document>, StringSerializable
         this(context, "main", headers, false, true);
     }
 
-    public FrameBuilder(ContextualProvider context, String frameName, REST.Header.List headers, boolean isError) {
-        this(context, frameName, headers, isError, true);
+    public FrameBuilder(ContextualProvider context, String target, REST.Header.List headers, boolean isError) {
+        this(context, target, headers, isError, true);
     }
 
-    public FrameBuilder(ContextualProvider context, String frameName, REST.Header.List headers, boolean isError, boolean isSecure) {
+    public FrameBuilder(ContextualProvider context, String target, REST.Header.List headers, boolean isError, boolean isSecure) {
         this.context = context;
         boolean isDebug = OS.isWindows; // fixme Wrong isDebug check
         this.isError = isError;
         this.pageProperties = context.requireFromContext(PagePropertiesProvider.class).findPageProperties(headers);
 
-        // parse frame and panel from frameName
-        String[] fSplit = frameName.split("/");
-        frameName = fSplit.length > 1 ? fSplit[0] : "main";
-        panel = fSplit[fSplit.length - 1];
+        // parse frame and panel from target
+        if (!target.equals("main")) {
+            String[] fSplit = target.split("/");
+            if (fSplit[0].equals("frame")) {
+                // load only frame
+                target = fSplit[fSplit.length - 1];
+            } else {
+                target = fSplit.length > 1 ? fSplit[0] : "main";
+                panel = fSplit[fSplit.length - 1];
+                if (panel.isEmpty())
+                    panel = "home";
+            }
+        }
 
-        pageProperties.put("frame", frameName);
+        pageProperties.put("frame", target);
 
         try {
-            this.frame = Jsoup.parse(findFrameData(frameName));
+            this.frame = Jsoup.parse(findFrameData(target));
         } catch (Throwable e) {
             throw new RuntimeException("Could not load page frame", e);
         }
