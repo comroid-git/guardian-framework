@@ -1,9 +1,6 @@
 package org.comroid.varbind.bind;
 
-import org.comroid.api.ContextualProvider;
-import org.comroid.api.Named;
-import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
+import org.comroid.api.*;
 import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.node.UniNode;
@@ -15,6 +12,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -186,6 +184,17 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
                         .map(GroupBind::getName)
                         .collect(Collectors.joining(";", "[", "]"))) + '.'
                 : "") + ownName;
+    }
+
+    public static <T extends DataContainer<? super T>> GroupBind<T> find(Class<T> type) {
+        return Stream.of(type.getFields())
+                .filter(fld -> Modifier.isStatic(fld.getModifiers()))
+                .filter(fld -> fld.getName().equalsIgnoreCase("type")
+                        || GroupBind.class.isAssignableFrom(fld.getType()))
+                .findAny()
+                .map(ThrowingFunction.rethrowing(fld -> fld.get(null), RuntimeException::new))
+                .map(Polyfill::<GroupBind<T>>uncheckedCast)
+                .orElseThrow(() -> new NoSuchElementException("No field matching Root GroupBind was found"));
     }
 
     @Override
