@@ -25,11 +25,14 @@ import org.comroid.uniform.model.Serializable;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.util.ReaderUtil;
+import org.comroid.varbind.DataContainerCache;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.comroid.varbind.container.DataContainerBase;
 import org.intellij.lang.annotations.MagicConstant;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -778,8 +781,32 @@ public final class REST implements ContextualProvider.Underlying {
             });
         }
 
+        @Experimental
+        public <ID, TX extends DataContainer<? super TX>> CompletableFuture<RefList<TX>> execute$autoCache(
+                DataContainerCache<ID, TX> cache
+        ) {
+            return execute$autoCache(cache, null);
+        }
+
+        @Experimental
+        public <ID, TX extends DataContainer<? super TX>> CompletableFuture<RefList<TX>> execute$autoCache(
+                DataContainerCache<ID, TX> cache, @Nullable String dataNodeName
+        ) {
+            return Polyfill.uncheckedCast(execute$autoCache(
+                    Polyfill.uncheckedCast(cache.getIdBind()),
+                    Polyfill.uncheckedCast(cache),
+                    dataNodeName
+            ));
+        }
+
         public <ID> CompletableFuture<RefList<T>> execute$autoCache(
-                VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
+        VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
+        ) {
+            return execute$autoCache(identifyBind, cache, null);
+        }
+
+        public <ID> CompletableFuture<RefList<T>> execute$autoCache(
+                VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache, @Nullable String dataNodeName
         ) {
             return execute$body().thenApply(serializable -> {
                 if (serializable == null)
@@ -788,6 +815,8 @@ public final class REST implements ContextualProvider.Underlying {
             }).thenApply(node -> {
                 if (node == null)
                     return Span.empty();
+                if (dataNodeName != null)
+                    node = node.get(dataNodeName);
                 if (node.isObjectNode()) {
                     return ReferenceList.of(cacheProduce(identifyBind, cache, node.asObjectNode()));
                 } else if (node.isArrayNode()) {

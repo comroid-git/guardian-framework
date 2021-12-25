@@ -31,6 +31,16 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     protected final VarBind<? super V, ?, ?, K> idBind;
     protected final String idColumn;
 
+    public VarBind<? super V, ?, ?, K> getIdBind() {
+        return idBind;
+    }
+
+    public DataContainerCache(
+        VarBind<? super V, ?, ?, K> idBind
+    ) {
+        this(100, idBind);
+    }
+
     public DataContainerCache(
         int largeThreshold,
         VarBind<? super V, ?, ?, K> idBind
