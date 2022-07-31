@@ -2,7 +2,6 @@ package org.comroid.uniform.cache;
 
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Provider;
-import org.comroid.mutatio.stack.RefStack;
 import org.jetbrains.annotations.Nullable;
 
 public class BasicCache<K, V> extends AbstractCache<K, V> {

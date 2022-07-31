@@ -1,7 +1,6 @@
 package org.comroid.webkit.config;
 
 import org.comroid.api.ContextualProvider;
-import org.comroid.mutatio.ref.FutureReference;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;

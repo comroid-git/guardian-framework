@@ -37,9 +37,9 @@ public interface Disposable extends AutoCloseable, PropertyHolder {
     @NonExtendable
     default List<? extends Throwable> dispose() {
         return Collections.unmodifiableList(Stream.concat(
-                getCloseables().stream().map(AutoCloseable.class::cast),
-                Stream.of(this::closeSelf)
-        )
+                        getCloseables().stream().map(AutoCloseable.class::cast),
+                        Stream.of(this::closeSelf)
+                )
                 .map(closeable -> {
                     try {
                         closeable.close();

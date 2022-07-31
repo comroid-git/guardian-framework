@@ -13,12 +13,12 @@ import java.util.stream.Stream;
 
 @MustExtend(UniValueNodeImpl.class)
 public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<Object> {
-    UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
-
     @Override
     default NodeType getNodeType() {
         return NodeType.VALUE;
     }
+
+    UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override
     default boolean isNull() {
@@ -49,4 +49,6 @@ public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<O
     default Stream<UniValueNode> streamNodes() {
         return Stream.of(this);
     }
+
+
 }

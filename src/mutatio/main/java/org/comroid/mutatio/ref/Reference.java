@@ -22,8 +22,16 @@ import java.util.function.*;
 
 @SuppressWarnings("rawtypes")
 public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
-    private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();    private static final Reference<?> EMPTY = Reference.create(false, null);
+    private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();
     private final boolean mutable;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final T get() throws ClassCastException {
+        return putIntoCache((T) get(0));
+    }
+
+    private static final Reference<?> EMPTY = Reference.create(false, null);
     private RefStack[] stack = new RefStack[0];
 
     @Internal
@@ -35,20 +43,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     @Override
     public boolean isMutable() {
         return mutable;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public final T get() throws ClassCastException {
-        return putIntoCache((T) get(0));
-    }
-
-    public final boolean set(T value) {
-        if (set(0, value)) {
-            putIntoCache(value);
-            return true;
-        }
-        return false;
     }
 
     //region Constructors
@@ -137,7 +131,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         this.mutable = mutable;
         this.stack = stack == null ? new RefStack[0] : stack;
     }
-    //endregion
 
     //region Static Methods
     public static <T> Reference<T> constant(@Nullable T of) {
@@ -155,6 +148,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public static <T> Reference<T> provided(Supplier<T> supplier) {
         return conditional(() -> true, supplier);
     }
+    //endregion
 
     public static <T> Reference<T> conditional(BooleanSupplier condition, Supplier<T> supplier) {
         RefStack stack = RefStackUtil.$conditional(condition, supplier);
@@ -194,7 +188,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public static <T> Reference<T> upgrade(Rewrapper<T> rewrapper) {
         return provided(rewrapper);
     }
-    //endregion
 
     //region RefStack Methods
     static RefStack[] $adjustStackSize(Ref ref, RefStack[] stack, int newSize) {
@@ -210,6 +203,17 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return stack;
     }
 
+    public final boolean set(T value) {
+        if (set(0, value)) {
+            putIntoCache(value);
+            return true;
+        }
+        return false;
+    }
+
+
+    //endregion
+
     @Override
     public RefStack[] stack() {
         return stack;
@@ -219,7 +223,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public void adjustStackSize(int newSize) {
         stack = $adjustStackSize(this, stack, newSize);
     }
-    //endregion
 
     //region RefOP Methods
     @Override
@@ -229,6 +232,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
             return it;
         });
     }
+    //endregion
 
     @Override
     public final <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
@@ -273,12 +277,12 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         RefStack stack = RefStackUtil.$or(stack(0, false), orElse);
         return new Reference<>(this, getExecutor(), false, stack);
     }
-    //endregion
 
     @Override
     public final String toString() {
         return ifPresentMapOrElseGet(String::valueOf, () -> "null");
     }
+    //endregion
 
     @Override
     public boolean equals(Object other) {
@@ -296,11 +300,11 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     protected final boolean doSet(T value) {
         return set(0, putIntoCache(value));
     }
-    //endregion
 
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
     }
+    //endregion
 
 
 }

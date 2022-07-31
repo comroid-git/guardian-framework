@@ -72,9 +72,9 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
     }
 
     public GroupBind(
-        String groupName,
-        @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
-) {
+            String groupName,
+            @Nullable BiFunction<ContextualProvider, UniNode, T> resolver
+    ) {
         this(ContextualProvider.getRoot(), groupName, resolver);
     }
 
@@ -225,8 +225,8 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
 
     public Stream<? extends VarBind<? super T, ?, ?, ?>> streamAllChildren() {
         return Stream.concat(
-                getParents().stream().flatMap(GroupBind::streamAllChildren),
-                children.stream())
+                        getParents().stream().flatMap(GroupBind::streamAllChildren),
+                        children.stream())
                 .map(Polyfill::<VarBind<? super T, ?, ?, ?>>uncheckedCast)
                 .distinct();
     }

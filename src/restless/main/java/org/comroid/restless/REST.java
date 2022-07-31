@@ -31,7 +31,6 @@ import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.comroid.varbind.container.DataContainerBase;
 import org.intellij.lang.annotations.MagicConstant;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
@@ -336,7 +335,7 @@ public final class REST implements ContextualProvider.Underlying {
         /**
          * Creates a non-empty response, using the given {@code body}.
          *
-         * @param body       the response body
+         * @param body the response body
          * @see Response#Response(int, Serializable, Header.List) superloaded
          */
         public Response(
@@ -504,8 +503,8 @@ public final class REST implements ContextualProvider.Underlying {
 
             if (data != null)
                 sb.append(new BufferedReader(data)
-                        .lines()
-                        .collect(Collectors.joining("\n")))
+                                .lines()
+                                .collect(Collectors.joining("\n")))
                         .append((char) 0x0D).append((char) 0x0A);
             else if (this.body != null)
                 sb.append(body.toSerializedString())
@@ -718,10 +717,10 @@ public final class REST implements ContextualProvider.Underlying {
                                 throw new RuntimeException("A problem occurred while handling response " + response, t);
                             }
                         }, rest.executor).exceptionally(t -> {
-                    logger.trace("An error occurred during request", t);
-                    execution.completeExceptionally(t);
-                    return null;
-                });
+                            logger.trace("An error occurred during request", t);
+                            execution.completeExceptionally(t);
+                            return null;
+                        });
             }
 
             return execution;
@@ -800,7 +799,7 @@ public final class REST implements ContextualProvider.Underlying {
         }
 
         public <ID> CompletableFuture<RefList<T>> execute$autoCache(
-        VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
+                VarBind<?, ?, ?, ID> identifyBind, Cache<ID, T> cache
         ) {
             return execute$autoCache(identifyBind, cache, null);
         }

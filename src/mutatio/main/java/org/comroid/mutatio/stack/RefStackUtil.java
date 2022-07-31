@@ -29,6 +29,11 @@ public final class RefStackUtil {
     public static <T> RefStack<T> $filter(RefStack<T> in, final Predicate<? super T> tester) {
         return new MutableStack<T>(in, "RefStack.filter()") {
             @Override
+            public boolean isMutable() {
+                return getParent().<RefStack<T>>cast().isMutable();
+            }
+
+            @Override
             protected T $get() {
                 T value = getParent().<RefStack<T>>cast().get();
                 if (!tester.test(value))
@@ -40,16 +45,16 @@ public final class RefStackUtil {
             protected boolean $set(T newValue) throws IllegalStateException {
                 return getParent().<RefStack<T>>cast().set(newValue);
             }
-
-            @Override
-            public boolean isMutable() {
-                return getParent().<RefStack<T>>cast().isMutable();
-            }
         };
     }
 
     public static <T> RefStack<T> $or(RefStack<T> in, final Supplier<? extends T> supplier) {
         return new MutableStack<T>(in, "RefStack.or()") {
+            @Override
+            public boolean isMutable() {
+                return getParent().<RefStack<T>>cast().isMutable();
+            }
+
             @Override
             protected T $get() {
                 return getParent().<RefStack<T>>cast().orElseGet(supplier);
@@ -58,11 +63,6 @@ public final class RefStackUtil {
             @Override
             protected boolean $set(T newValue) throws IllegalStateException {
                 return getParent().<RefStack<T>>cast().set(newValue);
-            }
-
-            @Override
-            public boolean isMutable() {
-                return getParent().<RefStack<T>>cast().isMutable();
             }
         };
     }

@@ -19,6 +19,33 @@ import java.util.function.*;
 public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index {
     //region RefStack Methods
 
+    //region ValueBox Methods
+    @Override
+    default T getValue() {
+        return get();
+    }
+
+    @Override
+    @Nullable
+    default ValueType<? extends T> getHeldType() {
+        return StandardValueType.typeOf(getValue());
+    }
+
+    @NotNull
+    @Internal
+    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
+        return any -> {
+            action.accept(any);
+            return true;
+        };
+    }
+
+    @NotNull
+    @Internal
+    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
+        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
+    }
+
     /**
      * Returns the index of this Reference.
      * Returns {@code -1} if there is no index.
@@ -38,6 +65,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     @Internal
     @SuppressWarnings("rawtypes")
     RefStack[] stack();
+    //endregion
 
     @Internal
     void adjustStackSize(int newSize);
@@ -71,7 +99,6 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     default boolean set(int stack, Object value) throws IndexOutOfBoundsException {
         return stack(stack, true).set(value);
     }
-    //endregion
 
     //region Accessor Methods
     @Override
@@ -89,6 +116,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
             return old;
         return null;
     }
+    //endregion
 
     /**
      * @return The new value if it could be set, else the previous value.
@@ -109,6 +137,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
         if (!isNull()) set(into(computor));
         return get();
     }
+    // endregion
 
     /**
      * @return The new value if it could be set, else the previous value.
@@ -127,20 +156,6 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
         set(into(computor));
         return old;
     }
-    //endregion
-
-    //region ValueBox Methods
-    @Override
-    default T getValue() {
-        return get();
-    }
-
-    @Override
-    @Nullable
-    default ValueType<? extends T> getHeldType() {
-        return StandardValueType.typeOf(getValue());
-    }
-    // endregion
 
     //region RefOPs Methods
     @Override
@@ -159,6 +174,7 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
     }
 
     <R> Ref<R> map(Function<? super T, ? extends R> mapper);
+    //endregion
 
     default <R> Ref<R> flatMap(Function<? super T, ? extends Rewrapper<? extends R>> mapper) {
         return map(mapper.andThen(Rewrapper::get));
@@ -166,22 +182,6 @@ public interface Ref<T> extends ValueCache<T>, Rewrapper<T>, ValueBox<T>, Index 
 
     default <R> Ref<R> flatMapOptional(Function<? super T, ? extends Optional<? extends R>> mapper) {
         return flatMap(wrapOpt2Ref(mapper));
-    }
-    //endregion
-
-    @NotNull
-    @Internal
-    static <T> Predicate<T> wrapPeek(Consumer<? super T> action) {
-        return any -> {
-            action.accept(any);
-            return true;
-        };
-    }
-
-    @NotNull
-    @Internal
-    static <T, R> Function<? super T, ? extends Reference<? extends R>> wrapOpt2Ref(Function<? super T, ? extends Optional<? extends R>> mapper) {
-        return mapper.andThen(opt -> opt.map(Reference::constant).orElseGet(Reference::empty));
     }
 
     /**

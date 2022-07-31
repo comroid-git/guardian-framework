@@ -71,7 +71,7 @@ public final class URIQueryEditor extends HashMap<String, Object> implements Wra
                 .collect(Collectors.joining("\n")));
         return entrySet().stream()
                 .map(entry -> String.format("%s=%s",
-                        entry.getKey(), entry.getValue())
+                                entry.getKey(), entry.getValue())
                         .replace(' ', '+'))
                 .collect(Collectors.joining("&"));
     }

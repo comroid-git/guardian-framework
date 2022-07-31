@@ -31,6 +31,10 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
         return overriddenSetter != null;
     }
 
+    protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
+        super(parent, autocomputor);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public final T get() throws ClassCastException {
@@ -43,10 +47,6 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
             return true;
         }
         return false;
-    }
-
-    protected ParameterizedReference(@Nullable ValueCache<?> parent, @Nullable Executor autocomputor) {
-        super(parent, autocomputor);
     }
 
     public final boolean setDefaultParameter(P param) {
@@ -109,7 +109,7 @@ public abstract class ParameterizedReference<P, T> extends ValueProvider<P, T> i
     }
 
     @Override
-    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper){
+    public <R> ParameterizedReference<P, R> map(Function<? super T, ? extends R> mapper) {
         return new Support.Mapped<>(this, mapper, getExecutor());
     }
 

@@ -1,7 +1,5 @@
 package org.comroid.mutatio.ref;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.concurrent.CompletableFuture;
 
 /**

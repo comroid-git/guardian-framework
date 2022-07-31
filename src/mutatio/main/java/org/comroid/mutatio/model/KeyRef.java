@@ -16,16 +16,16 @@ public interface KeyRef<K, V> extends Named, Ref<V>, Map.Entry<K, V> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    default K getKey() throws ClassCastException {
+        return (K) get(1);
+    }
+
+    @Override
     default V setValue(V value) {
         V prev = get();
 
         return set(value) ? prev : null;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    default K getKey() throws ClassCastException {
-        return (K) get(1);
     }
 
     default boolean setKey(K key) {

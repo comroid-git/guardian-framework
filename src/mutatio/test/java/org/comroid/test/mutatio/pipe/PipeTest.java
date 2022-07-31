@@ -5,7 +5,6 @@ import org.comroid.mutatio.ref.ReferenceList;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;

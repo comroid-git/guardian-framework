@@ -14,6 +14,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapper<T>, MutableState, Named, Index, Upgradeable {
+    //region Static Methods
+    private static final RefStack<?> EMPTY = new RefStack<>("EMPTY", -1, null, false);
+    private static final Map<Object, Map<Integer, RefStack<?>>> CONSTANTS = new ConcurrentHashMap<>();
     private final AtomicReference<T> value;
     private final AtomicBoolean mutable;
     private final int overridable;
@@ -41,30 +44,6 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         return Overridability.SETTER.isFlagSet(overridable);
     }
 
-    @Override
-    public final boolean setMutable(boolean state) {
-        mutable.set(state);
-        return true;
-    }
-
-    public final int index() {
-        return index;
-    }
-
-    public final T get() {
-        if (isUpToDate())
-            return getFromCache();
-        return putIntoCache(getter.get());
-    }
-
-    public final boolean set(T newValue) {
-        if (!isMutable() || !setter.test(newValue))
-            return false;
-        putIntoCache(newValue);
-        return true;
-    }
-    //endregion
-
     //region Constructors
     public RefStack(
             String name,
@@ -84,6 +63,7 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
     ) {
         this(null, name, index, initialValue, mutable, overridable);
     }
+    //endregion
 
     public RefStack(
             @Nullable ValueCache<?> parent,
@@ -153,11 +133,6 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         this.getter = Polyfill.<Supplier<? extends T>>notnullOr(getter, this::$get);
         this.setter = Polyfill.<Predicate<? super T>>notnullOr(setter, this::$set);
     }
-    //endregion
-
-    //region Static Methods
-    private static final RefStack<?> EMPTY = new RefStack<>("EMPTY", -1, null, false);
-    private static final Map<Object, Map<Integer, RefStack<?>>> CONSTANTS = new ConcurrentHashMap<>();
 
     public static <T> RefStack<T> create(int index, T value) {
         return new RefStack<>(String.format("RefStack[%d]", index), index, value, true);
@@ -170,10 +145,34 @@ public class RefStack<T> extends SingleValueCache.Abstract<T> implements Rewrapp
         return (RefStack<T>) CONSTANTS.computeIfAbsent(value, v -> new ConcurrentHashMap<>())
                 .computeIfAbsent(index, i -> new RefStack<>(String.format("Constant[%d](%s)", i, value), index, value, false));
     }
+    //endregion
 
     private static <T> RefStack<T> empty() {
         //noinspection unchecked
         return (RefStack<T>) EMPTY;
+    }
+
+    @Override
+    public final boolean setMutable(boolean state) {
+        mutable.set(state);
+        return true;
+    }
+
+    public final int index() {
+        return index;
+    }
+
+    public final T get() {
+        if (isUpToDate())
+            return getFromCache();
+        return putIntoCache(getter.get());
+    }
+
+    public final boolean set(T newValue) {
+        if (!isMutable() || !setter.test(newValue))
+            return false;
+        putIntoCache(newValue);
+        return true;
     }
     //endregion
 
