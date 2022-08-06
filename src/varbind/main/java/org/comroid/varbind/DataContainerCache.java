@@ -216,7 +216,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     @Experimental
     public final int reloadData(Connection connection, String table) throws SQLException {
         try (
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `" + table + "`;");
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateFrom(results);
@@ -231,7 +231,7 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     @Experimental
     public final int saveData(Connection connection, String table) throws SQLException {
         try (
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `" + table + "`;", Statement.RETURN_GENERATED_KEYS);
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateInto(results);
