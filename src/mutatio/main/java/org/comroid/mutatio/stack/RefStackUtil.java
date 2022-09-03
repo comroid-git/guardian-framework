@@ -68,7 +68,7 @@ public final class RefStackUtil {
     }
 
     public static <T, A, R> RefStack<R> $combine(RefStack<T> in, final Supplier<A> other, final BiFunction<T, A, R> accumulator) {
-        return new OutputStack<R>(null, "RefStack.combine()") {
+        return new OutputStack<R>(in, "RefStack.combine()") {
             @Override
             protected R $get() {
                 return getParent().<RefStack<T>>cast().accumulate(other, accumulator);

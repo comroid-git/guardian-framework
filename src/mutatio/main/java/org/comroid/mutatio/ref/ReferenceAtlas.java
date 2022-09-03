@@ -187,7 +187,8 @@ public abstract class ReferenceAtlas<InK, K, In, V>
         if (parent != null && fabK != null) {
             KeyedReference<InK, In> inRef = getInputReference(fabK, true);
             ref = advanceReference(inRef);
-        } else if (createIfAbsent) ref = createEmptyRef(key);
+        } else if (createIfAbsent)
+            ref = createEmptyRef(key);
         else return KeyedReference.emptyKey();
         if (putAccessor(key, ref))
             return Objects.requireNonNull(ref, "assertion: ref is null");
