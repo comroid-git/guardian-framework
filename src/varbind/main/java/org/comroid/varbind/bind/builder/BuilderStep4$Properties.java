@@ -22,6 +22,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
     private final Set<VarBind<? extends SELF, ?, ?, ?>> dependencies = new HashSet<>();
     private boolean required = false;
     private boolean ignoreInDB = false;
+    private boolean identifier = false;
     private Function<? super SELF, ? extends FINAL> defaultSupplier = null;
 
     @Override
@@ -45,6 +46,11 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
 
     public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> setIgnoreInDB(boolean ignoreInDB) {
         this.ignoreInDB = ignoreInDB;
+        return this;
+    }
+
+    public BuilderStep4$Properties<SELF, EXTR, REMAP, FINAL> setIdentifier(boolean identifier) {
+        this.identifier = identifier;
         return this;
     }
 
@@ -101,7 +107,7 @@ public class BuilderStep4$Properties<SELF extends DataContainer<? super SELF>, E
             throw new IllegalArgumentException("No Finishing method defined");
 
         Binding<SELF, EXTR, REMAP, FINAL> binding
-                = new Binding<>(group, fieldName, required, ignoreInDB, valueType, extractionMethod, resolver, finisher, defaultSupplier, dependencies);
+                = new Binding<>(group, fieldName, required, ignoreInDB, identifier, valueType, extractionMethod, resolver, finisher, defaultSupplier, dependencies);
         group.addChild(binding);
         return binding;
     }

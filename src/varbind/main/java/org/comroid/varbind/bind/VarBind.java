@@ -7,13 +7,12 @@ import org.comroid.mutatio.model.RefContainer;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;
 import org.comroid.varbind.container.DataContainer;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
-import static org.jetbrains.annotations.ApiStatus.*;
+import static org.jetbrains.annotations.ApiStatus.Experimental;
 
 public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, FINAL>
         extends Named, ValuePointer<EXTR> {
@@ -32,6 +31,8 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
     boolean isRequired();
 
     boolean ignoreInDB();
+
+    boolean identifier();
 
     Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies();
 

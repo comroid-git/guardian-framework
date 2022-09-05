@@ -26,6 +26,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final String fieldName;
     private final boolean required;
     private final boolean ignoreInDB;
+    private final boolean identifier;
     private final ValueType<EXTR> valueType;
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
@@ -53,6 +54,32 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         return ignoreInDB;
     }
 
+    Binding(
+            GroupBind<SELF> group,
+            String fieldName,
+            boolean required,
+            boolean ignoreInDB,
+            boolean identifier,
+            ValueType<EXTR> valueType,
+            ExtractionMethod extractionMethod,
+            BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
+            Function<? super RefContainer<?, REMAP>, ? extends FINAL> finisher,
+            Function<? super SELF, ? extends FINAL> defaultSupplier,
+            Set<VarBind<? extends SELF, ?, ?, ?>> dependencies
+    ) {
+        this.group = group;
+        this.fieldName = fieldName;
+        this.required = required;
+        this.ignoreInDB = ignoreInDB;
+        this.identifier = identifier;
+        this.valueType = valueType;
+        this.extractionMethod = extractionMethod;
+        this.remapper = remapper;
+        this.finisher = finisher;
+        this.defaultSupplier = defaultSupplier;
+        this.dependencies = dependencies;
+    }
+
     @Override
     public Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies() {
         return dependencies;
@@ -68,28 +95,9 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         return extractionMethod == ExtractionMethod.ARRAY;
     }
 
-    Binding(
-            GroupBind<SELF> group,
-            String fieldName,
-            boolean required,
-            boolean ignoreInDB,
-            ValueType<EXTR> valueType,
-            ExtractionMethod extractionMethod,
-            BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
-            Function<? super RefContainer<?, REMAP>, ? extends FINAL> finisher,
-            Function<? super SELF, ? extends FINAL> defaultSupplier,
-            Set<VarBind<? extends SELF, ?, ?, ?>> dependencies
-    ) {
-        this.group = group;
-        this.fieldName = fieldName;
-        this.required = required;
-        this.ignoreInDB = ignoreInDB;
-        this.valueType = valueType;
-        this.extractionMethod = extractionMethod;
-        this.remapper = remapper;
-        this.finisher = finisher;
-        this.defaultSupplier = defaultSupplier;
-        this.dependencies = dependencies;
+    @Override
+    public boolean identifier() {
+        return identifier;
     }
 
     @Override

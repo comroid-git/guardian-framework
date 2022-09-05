@@ -17,6 +17,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -85,6 +86,12 @@ public interface DataContainer<S extends DataContainer<? super S>>
     }
 
     Set<VarBind<? extends S, Object, ?, Object>> updateFrom(UniObjectNode node);
+
+    void updateFrom(Connection db, String table);
+
+    void updateInto(Connection db, String table);
+
+    void dropFrom(Connection db, String table);
 
     Set<VarBind<? extends S, Object, ?, Object>> initiallySet();
 

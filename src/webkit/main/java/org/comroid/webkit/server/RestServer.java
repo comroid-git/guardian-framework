@@ -262,10 +262,11 @@ public final class RestServer implements Startable, HttpHandler, Closeable, Cont
                     RestEndpointException e = (RestEndpointException) t;
                     logger.warn("A REST Endpoint exception was thrown: {}", e.getMessage(), e);
                     try {
-                        Response alternate = tryRecoverFrom(e, requestURI, INTERNAL_SERVER_ERROR, requestMethod, requestHeaders);
+                        Response alternate = tryRecoverFrom(e, requestURI, e.getStatusCode(), requestMethod, requestHeaders);
 
                         if (alternate != null && alternate.getStatusCode() == OK && e.getStatusCode() != OK)
                             response = alternate;
+                        else response = new Response(e.getStatusCode(), generateErrorNode(this, contentType, e));
                     } catch (Throwable t2) {
                         logger.debug("An error occurred during recovery", t2);
                     }

@@ -19,10 +19,12 @@ import org.comroid.util.ReflectionHelper;
 import org.comroid.varbind.annotation.RootBind;
 import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
+import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -154,6 +156,98 @@ public class DataContainerBase<S extends DataContainer<? super S>>
                 initialized.add(Polyfill.uncheckedCast(bind));
         });
         return Collections.unmodifiableSet(initialized);
+    }
+
+    @Override
+    @Experimental
+    public void updateFrom(Connection db, String table) {
+        VarBind<? super S, ?, ?, ?> idBind = getRootBind().getIdentifier().orElse(null);
+        if (idBind == null)
+            throw new RuntimeException("Cannot update data for " + this + " because no identifier was found");
+        Object id = getInputReference(idBind.getFieldName(), false).getValue().get(0);
+        try (
+                PreparedStatement statement = db.prepareStatement("SELECT * FROM `" + table + "` WHERE `" + idBind.getFieldName() + "` LIKE '" + id + "';");
+                ResultSet results = statement.executeQuery()
+        ) {
+            if (!results.next())
+                throw new SQLException("No results found with identifier " + id);
+
+            int operations = 0;
+
+            Iterator<? extends VarBind<? super S, ?, ?, ?>> binds = getRootBind().streamAllChildren().iterator();
+            while (binds.hasNext()) {
+                VarBind<? super S, ?, ?, ?> bind = binds.next();
+                if (bind.ignoreInDB())
+                    continue;
+                Object value = bind.getFrom(results);
+                if (Objects.equals(value, get(bind)))
+                    continue;
+                put(bind.getFieldName(), value);
+                operations++;
+            }
+
+            logger.trace("Loaded data from table {} in {} operations using connection {}", table, operations, db);
+        } catch (SQLFeatureNotSupportedException fnse) {
+            logger.debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while loading data from table", e);
+        }
+    }
+
+    @Override
+    @Experimental
+    public void updateInto(Connection db, String table) {
+        VarBind<? super S, ?, ?, ?> idBind = getRootBind().getIdentifier().orElse(null);
+        if (idBind == null)
+            throw new RuntimeException("Cannot update data for " + this + " because no identifier was found");
+        Object id = getInputReference(idBind.getFieldName(), false).getValue().get(0);
+        try (
+                PreparedStatement statement = db.prepareStatement("SELECT * FROM `" + table + "` WHERE `" + idBind.getFieldName() + "` LIKE '" + id + "';");
+                ResultSet results = statement.executeQuery()
+        ) {
+            if (!results.next())
+                throw new SQLException("No results found with identifier " + id);
+
+            int operations = 0;
+
+            Iterator<? extends VarBind<? super S, ?, ?, ?>> binds = getRootBind().streamAllChildren().iterator();
+            while (binds.hasNext()) {
+                VarBind<? super S, ?, ?, ?> bind = binds.next();
+                if (bind.ignoreInDB())
+                    continue;
+                Object value = bind.getFrom(results);
+                if (Objects.equals(value, get(bind)))
+                    continue;
+                bind.putInto(results, this);
+                operations++;
+            }
+
+            logger.trace("Saved data into table {} in {} operations using connection {}", table, operations, db);
+        } catch (SQLFeatureNotSupportedException fnse) {
+            logger.debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while loading data from table", e);
+        }
+    }
+
+    @Override
+    @Experimental
+    public void dropFrom(Connection db, String table) {
+        VarBind<? super S, ?, ?, ?> idBind = getRootBind().getIdentifier().orElse(null);
+        if (idBind == null)
+            throw new RuntimeException("Cannot drop entry" + this + " because no identifier was found");
+        Object id = getInputReference(idBind.getFieldName(), false).getValue().get(0);
+        try (
+                PreparedStatement statement = db.prepareStatement("DELETE FROM `" + table + "` WHERE `" + idBind.getFieldName() + "` LIKE '" + id + "';")
+        ) {
+            if (!statement.execute())
+                throw new SQLException("Could not drop row from table");
+            logger.trace("Dropped row from table {} in {} operations using connection {}", table, 1, db);
+        } catch (SQLFeatureNotSupportedException fnse) {
+            logger.debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while loading data from table", e);
+        }
     }
 
     @Override

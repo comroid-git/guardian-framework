@@ -282,4 +282,8 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
                 .findAny()
                 .orElse(null);
     }
+
+    public <R> Optional<? extends VarBind<? super T, ?, ?, ?>> getIdentifier() {
+        return streamAllChildren().filter(VarBind::identifier).findAny();
+    }
 }
