@@ -54,7 +54,7 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
 
     @Override
     public UniNode parse(@Nullable String data) {
-        if (data == null || data.equals("null"))
+        if (data == null || data.isEmpty() || data.equals("null"))
             return UniValueNode.NULL;
 
         DataStructureType<JSON, ? extends JSON, ? extends UniNode> type = typeOfData(data);
