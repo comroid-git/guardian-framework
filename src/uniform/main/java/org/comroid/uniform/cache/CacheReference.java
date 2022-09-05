@@ -17,10 +17,13 @@ public class CacheReference<K, V> extends KeyedReference<K, V> {
     private final org.comroid.mutatio.ref.Reference<CompletableFuture<V>> firstValueFuture = Reference.create();
     private final Object lock = Polyfill.selfawareObject();
 
+    /*
+    todo: why the FUCK did i do this
     {
         adjustStackSize(1);
         stack()[0] = new Accessor(null);
     }
+     */
 
     public CacheReference(K key) {
         super(key, true);
