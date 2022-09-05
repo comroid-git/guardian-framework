@@ -68,13 +68,6 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
         return createKey(mutable, key, null);
     }    //region Static Methods
 
-    @Override
-    public final boolean setKey(K key) {
-        return keyStack().set(key);
-    }
-
-    private final static KeyedReference<?, ?> EMPTY = createKey(false, null, null);
-
     public static <K, V> KeyedReference<K, V> createKey(boolean mutable, K key, @Nullable V value) {
         if (!mutable && (key == null && value == null) && EMPTY != null)
             return emptyKey();
@@ -93,6 +86,14 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
     }
 
     @Override
+    public final boolean setKey(K key) {
+        return keyStack().set(key);
+    }
+
+    private final static KeyedReference<?, ?> EMPTY = createKey(false, null, null);
+
+
+    @Override
     public final V setValue(V value) {
         RefStack<V> stack = valueStack();
         V prev = stack.get();
@@ -109,16 +110,16 @@ public class KeyedReference<K, V> extends Reference<V> implements KeyRef<K, V> {
         return this.stack(VALUE_INDEX, true);
     }
 
-
     public final void consume(BiConsumer<? super K, ? super V> consumer) {
         consumer.accept(getKey(), getValue());
     }
-    //endregion
+
 
     public interface Advancer<IK, IV, OK, OV> extends ReferenceOverwriter<IV, OV, KeyedReference<IK, IV>, KeyedReference<OK, OV>> {
         @Override
         KeyedReference<OK, OV> advance(KeyedReference<IK, IV> reference);
     }
+    //endregion
 
 
 }

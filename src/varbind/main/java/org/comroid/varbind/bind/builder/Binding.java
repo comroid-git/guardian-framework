@@ -50,8 +50,18 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
-    public boolean ignoreInDB() {
-        return ignoreInDB;
+    public Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies() {
+        return dependencies;
+    }
+
+    @Override
+    public GroupBind<SELF> getGroup() {
+        return group;
+    }
+
+    @Override
+    public boolean isListing() {
+        return extractionMethod == ExtractionMethod.ARRAY;
     }
 
     Binding(
@@ -81,18 +91,8 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
-    public Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies() {
-        return dependencies;
-    }
-
-    @Override
-    public GroupBind<SELF> getGroup() {
-        return group;
-    }
-
-    @Override
-    public boolean isListing() {
-        return extractionMethod == ExtractionMethod.ARRAY;
+    public boolean ignoreInDB() {
+        return ignoreInDB;
     }
 
     @Override

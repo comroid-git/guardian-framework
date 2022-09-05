@@ -24,6 +24,13 @@ import java.util.function.*;
 public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     private static final Map<Object, Reference<?>> CONSTANTS = new ConcurrentHashMap<>();
     private final boolean mutable;
+    private RefStack[] stack = new RefStack[0];
+
+    @Internal
+    @Deprecated
+    protected <X> X getFromParent() {
+        return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -32,13 +39,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     }
 
     private static final Reference<?> EMPTY = Reference.create(false, null);
-    private RefStack[] stack = new RefStack[0];
-
-    @Internal
-    @Deprecated
-    protected <X> X getFromParent() {
-        return getParent().into(ref -> ref.into(Polyfill::uncheckedCast));
-    }
 
     @Override
     public boolean isMutable() {
@@ -148,7 +148,6 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public static <T> Reference<T> provided(Supplier<T> supplier) {
         return conditional(() -> true, supplier);
     }
-    //endregion
 
     public static <T> Reference<T> conditional(BooleanSupplier condition, Supplier<T> supplier) {
         RefStack stack = RefStackUtil.$conditional(condition, supplier);
@@ -158,6 +157,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public static <T> FutureReference<T> later(CompletableFuture<T> future) {
         return new FutureReference<>(future);
     }
+    //endregion
 
     public static <T> Reference<T> create() {
         return create(null);
@@ -203,6 +203,7 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return stack;
     }
 
+
     public final boolean set(T value) {
         if (set(0, value)) {
             putIntoCache(value);
@@ -211,13 +212,13 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
         return false;
     }
 
-
-    //endregion
-
     @Override
     public RefStack[] stack() {
         return stack;
     }
+
+
+    //endregion
 
     @Override
     public void adjustStackSize(int newSize) {
@@ -232,13 +233,13 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
             return it;
         });
     }
-    //endregion
 
     @Override
     public final <X, R> Reference<R> combine(final Supplier<X> other, final BiFunction<T, X, R> accumulator) {
         RefStack stack = RefStackUtil.$combine(stack(0, false), other, accumulator);
         return new Reference<>(this, getExecutor(), false, stack);
     }
+    //endregion
 
     @Override
     public final <P, R> ParameterizedReference<P, R> addParameter(BiFunction<T, P, R> source) {
@@ -282,12 +283,12 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public final String toString() {
         return ifPresentMapOrElseGet(String::valueOf, () -> "null");
     }
-    //endregion
 
     @Override
     public boolean equals(Object other) {
         return other instanceof Reference && (contentEquals(((Reference<?>) other).get()) || other == this);
     }
+    //endregion
 
     //region ValueCache Methods
     @Override
@@ -304,6 +305,8 @@ public class Reference<T> extends ValueProvider.NoParam<T> implements Ref<T> {
     public interface Advancer<I, O> extends ReferenceOverwriter<I, O, Reference<I>, Reference<O>> {
         Reference<O> advance(Reference<I> ref);
     }
+
+
     //endregion
 
 

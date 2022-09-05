@@ -30,15 +30,15 @@ public interface VarBind<SELF extends DataContainer<? super SELF>, EXTR, REMAP, 
 
     boolean isRequired();
 
-    boolean ignoreInDB();
-
-    boolean identifier();
-
     Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies();
 
     GroupBind<SELF> getGroup();
 
     boolean isListing();
+
+    boolean ignoreInDB();
+
+    boolean identifier();
 
     @Experimental
     @SuppressWarnings("ConstantConditions")

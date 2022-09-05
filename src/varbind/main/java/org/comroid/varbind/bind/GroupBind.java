@@ -57,6 +57,10 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
         return serializationAdapter;
     }
 
+    public <R> Optional<? extends VarBind<? super T, ?, ?, ?>> getIdentifier() {
+        return streamAllChildren().filter(VarBind::identifier).findAny();
+    }
+
     @Experimental
     public GroupBind(
             String groupName
@@ -281,9 +285,5 @@ public final class GroupBind<T extends DataContainer<? super T>> implements Iter
                 .filter(bind -> bind.getFieldName().equals(name))
                 .findAny()
                 .orElse(null);
-    }
-
-    public <R> Optional<? extends VarBind<? super T, ?, ?, ?>> getIdentifier() {
-        return streamAllChildren().filter(VarBind::identifier).findAny();
     }
 }

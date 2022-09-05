@@ -18,7 +18,9 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 public class DataContainerCache<K, V extends DataContainer<? super V>>
@@ -62,18 +64,18 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
         while (results.next()) {
             GroupBind<? super V> group = findGroup_rec(idBind.getGroup(), results.getString("group"));
             if (group == null) {
-                logger.warn("Skipping entry "+idBind.getFrom(results)+" because group was not found: " + results.getString("group"));
+                logger.warn("Skipping entry " + idBind.getFrom(results) + " because group was not found: " + results.getString("group"));
                 continue;
             }
             Iterator<? extends VarBind<? super V, ?, ?, ?>> binds = group.streamAllChildren().iterator();
             K id = idBind.getFrom(results);
             V obj = get(id);
-            
+
             if (obj == null) {
                 // need to create object
                 BiFunction<ContextualProvider, UniNode, ? super V> ctor = group.getResolver().get();
                 if (ctor == null) {
-                    logger.warn("Skipping entry "+idBind.getFrom(results)+" because no constructor was found for group " + results.getString("group"));
+                    logger.warn("Skipping entry " + idBind.getFrom(results) + " because no constructor was found for group " + results.getString("group"));
                     continue;
                 }
                 SerializationAdapter serializer = getFromContext(SerializationAdapter.class).assertion("Unable to find serializer in context");

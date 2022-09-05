@@ -18,12 +18,12 @@ public interface UniValueNode extends Rewrapper<Object>, UniNode, ValuePointer<O
         return NodeType.VALUE;
     }
 
-    UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
-
     @Override
     default boolean isNull() {
         return getNodeType() == null;
     }
+
+    UniValueNode NULL = UniValueNode.create(null, StandardValueType.VOID, null);
 
     @Override
     default boolean isNonNull() {
