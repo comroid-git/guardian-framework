@@ -1,12 +1,11 @@
 package org.comroid.varbind;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
-import org.comroid.api.Rewrapper;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
-import org.comroid.mutatio.ref.ReferenceList;
-import org.comroid.mutatio.span.Span;
 import org.comroid.uniform.SerializationAdapter;
 import org.comroid.uniform.cache.BasicCache;
 import org.comroid.uniform.cache.Cache;
@@ -16,19 +15,17 @@ import org.comroid.varbind.bind.GroupBind;
 import org.comroid.varbind.bind.VarBind;
 import org.comroid.varbind.container.DataContainer;
 import org.jetbrains.annotations.ApiStatus.Experimental;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 public class DataContainerCache<K, V extends DataContainer<? super V>>
         extends BasicCache<K, V>
         implements Cache<K, V> {
+    private static final Logger logger = LogManager.getLogger();
     protected final VarBind<? super V, ?, ?, K> idBind;
-    protected final String idColumn;
 
     public VarBind<? super V, ?, ?, K> getIdBind() {
         return idBind;
@@ -52,130 +49,116 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
             int largeThreshold,
             VarBind<? super V, ?, ?, K> idBind
     ) {
-        this(context, largeThreshold, idBind, null);
-    }
-
-    public DataContainerCache(
-            ContextualProvider context,
-            int largeThreshold,
-            VarBind<? super V, ?, ?, K> idBind,
-            String idColumn
-    ) {
         super(context, largeThreshold);
 
         this.idBind = Polyfill.uncheckedCast(idBind);
-        this.idColumn = idColumn == null ? idBind.getFieldName() : idColumn;
     }
 
     @Experimental
+    @SuppressWarnings("rawtypes")
     public final int updateFrom(ResultSet results) throws SQLException {
-        return updateFrom(results, idColumn);
-    }
-
-    @Experimental
-    public final int updateFrom(final ResultSet results, String idColumn) throws SQLException {
         int c = 0;
-        idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
 
         while (results.next()) {
-            final K id = (K) results.getObject(idColumn, idBind.getHeldType().getTargetClass());
-            V container;
-            if (!containsKey(id) || (container = get(id)) == null) {
+            GroupBind<? super V> group = findGroup_rec(idBind.getGroup(), results.getString("group"));
+            if (group == null) {
+                logger.warn("Skipping entry "+idBind.getFrom(results)+" because group was not found: " + results.getString("group"));
+                continue;
+            }
+            Iterator<? extends VarBind<? super V, ?, ?, ?>> binds = group.streamAllChildren().iterator();
+            K id = idBind.getFrom(results);
+            V obj = get(id);
+            
+            if (obj == null) {
                 // need to create object
-                Rewrapper<? extends BiFunction<ContextualProvider, UniNode, V>> resolver = Polyfill.uncheckedCast(idBind.getGroup().getResolver());
-                if (resolver.isNull()) {
-                    getLogger().debug("Skipped updating data for ID {} because the corresponding object was not found in cache", id);
+                BiFunction<ContextualProvider, UniNode, ? super V> ctor = group.getResolver().get();
+                if (ctor == null) {
+                    logger.warn("Skipping entry "+idBind.getFrom(results)+" because no constructor was found for group " + results.getString("group"));
                     continue;
                 }
-                UniObjectNode data = copyBindsFromResultSet(this, idBind.getGroup(), results);
-                container = resolver.into(it -> it.apply(this, data));
-                put(id, container);
+                SerializationAdapter serializer = getFromContext(SerializationAdapter.class).assertion("Unable to find serializer in context");
+                UniObjectNode node = serializer.createObjectNode();
+
+                while (binds.hasNext()) {
+                    VarBind<? super V, ?, ?, ?> bind = binds.next();
+                    if (bind.ignoreInDB())
+                        continue;
+                    node.put(bind.getFieldName(), bind.getFrom(results));
+                    c++;
+                }
+
+                obj = Polyfill.uncheckedCast(ctor.apply(this, node));
+                add(obj);
+            } else {
+                while (binds.hasNext()) {
+                    VarBind<? super V, ?, ?, ?> bind = binds.next();
+                    if (bind.ignoreInDB())
+                        continue;
+                    obj.put(bind.getFieldName(), bind.getFrom(results));
+                    c++;
+                }
+            }
+        }
+
+        return c;
+    }
+
+    private @Nullable GroupBind<? super V> findGroup_rec(GroupBind<?> base, String name) {
+        GroupBind<? super V> result = null;
+        for (GroupBind<?> subgroup : base.getSubgroups()) {
+            result = findGroup_rec(subgroup, name);
+            if (result == null && subgroup.getName().equals(name))
+                result = Polyfill.uncheckedCast(subgroup);
+            if (result != null)
+                break;
+        }
+        return result;
+    }
+
+    @Experimental
+    public final int updateInto(final ResultSet results) throws SQLException {
+        int c = 0;
+        Set<K> remaining = new HashSet<>(keySet());
+
+        // update existing
+        while (results.next()) {
+            K id = idBind.getFrom(results);
+            V obj = get(id);
+
+            if (obj == null) {
+                logger.warn("Unable to find object with id {}. Skipping.", id);
                 continue;
             }
 
-            //noinspection unchecked
-            for (VarBind<?, Object, ?, Object> bind : container.keySet()) {
-                final String updateKey = bind.getFieldName();
-                //noinspection rawtypes
-                KeyedReference<String, ReferenceList> ref = container.getInputReference(updateKey, true);
+            c += exportInto(results, obj);
+            results.updateRow();
+            remaining.remove(id);
+        }
+        // insert nonexistent
+        for (K id : remaining) {
+            V obj = get(id);
 
-                if (bind.isListing()) {
-                    // expect array
-                    // fixme WILL fail with primitive types
-                    final Object[] array = (Object[]) results.getArray(updateKey).getArray();
-                    ref.compute(refs -> {
-                        if (refs == null)
-                            return Span.immutable(array);
-                        refs.clear();
-                        //noinspection unchecked
-                        refs.addAll(Arrays.asList(array));
-                        return refs;
-                    });
-                    c++;
-                } else {
-                    // expect object
-                    final Object object = results.getObject(updateKey, bind.getHeldType().getTargetClass());
-                    ref.compute(refs -> {
-                        if (refs == null)
-                            return Span.immutable(object);
-                        refs.clear();
-                        //noinspection unchecked
-                        refs.add(object);
-                        return refs;
-                    });
-                    c++;
-                }
+            if (obj == null) {
+                logger.warn("Unable to find object with id {}. Skipping.", id);
+                continue;
             }
+            results.moveToInsertRow();
+            c += exportInto(results, obj);
+            results.insertRow();
         }
         return c;
     }
 
-    private UniObjectNode copyBindsFromResultSet(ContextualProvider ctx, GroupBind<? super V> group, ResultSet results) throws SQLException {
-        UniObjectNode obj = ctx.getFromContext(SerializationAdapter.class)
-                .orElseThrow(() -> new NoSuchElementException("Missing SerializationAdapter"))
-                .createObjectNode();
-
-        for (VarBind<? super V, ?, ?, ?> bind : group.streamAllChildren().collect(Collectors.toList())) {
-            // fixme Handle arrays & lists & uninodes
-            Object object = results.getObject(bind.getFieldName(), bind.getHeldType().getTargetClass());
-            obj.put(bind.getFieldName(), object);
-        }
-
-        return obj;
-    }
-
-    @Experimental
-    public final int updateInto(ResultSet results) throws SQLException {
-        return updateInto(results, idColumn);
-    }
-
-    @Experimental
-    public final int updateInto(final ResultSet results, String idColumn) throws SQLException {
+    private int exportInto(ResultSet results, V obj) throws SQLException {
         int c = 0;
-        idColumn = Polyfill.notnullOr(idColumn, this.idColumn);
-
-        for (Map.Entry<K, V> entry : entrySet()) {
-            final K id = entry.getKey();
-            final V container = entry.getValue();
-
-            //noinspection unchecked
-            for (VarBind<?, Object, ?, Object> bind : container.keySet()) {
-                final String sendKey = bind.getFieldName();
-                //noinspection rawtypes
-                KeyedReference<String, ReferenceList> ref = container.getInputReference(sendKey, true);
-
-                if (bind.isListing()) {
-                    // expect array
-                    // todo
-                    getLogger().debug("Skipped updating data for ID {} because the cache currently cannot input arrays", id);
-                } else {
-                    // expect object
-                    final Object object = ref.ifPresentMap(refs -> refs.get(0));
-                    results.updateObject(sendKey, object);
-                    c++;
-                }
-            }
+        //noinspection unchecked
+        for (VarBind<?, Object, ?, Object> bind : obj.keySet()) {
+            if (bind.ignoreInDB())
+                continue;
+            bind.putInto(results, obj);
+            c++;
         }
+        results.updateString("group", obj.getRootBind().getName());
         return c;
     }
 
@@ -216,14 +199,14 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     @Experimental
     public final int reloadData(Connection connection, String table) throws SQLException {
         try (
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `" + table + "`;");
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateFrom(results);
-            getLogger().trace("Loaded data from table {} in {} operations using connection {}", table, operations, connection);
+            logger.trace("Loaded data from table {} in {} operations using connection {}", table, operations, connection);
             return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
-            getLogger().debug("Could not load data from table {} because the driver does not support this method", table, fnse);
+            logger.debug("Could not load data from table {} because the driver does not support this method", table, fnse);
             return -1;
         }
     }
@@ -231,14 +214,14 @@ public class DataContainerCache<K, V extends DataContainer<? super V>>
     @Experimental
     public final int saveData(Connection connection, String table) throws SQLException {
         try (
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + ";");
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM `" + table + "`;", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
                 ResultSet results = statement.executeQuery()
         ) {
             int operations = updateInto(results);
-            getLogger().trace("Saved data into table {} in {} operations using connection {}", table, operations, connection);
+            logger.trace("Saved data into table {} in {} operations using connection {}", table, operations, connection);
             return operations;
         } catch (SQLFeatureNotSupportedException fnse) {
-            getLogger().debug("Could not save data into table {} because the driver does not support this method", table, fnse);
+            logger.debug("Could not save data into table {} because the driver does not support this method", table, fnse);
             return -1;
         }
     }

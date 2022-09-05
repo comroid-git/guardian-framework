@@ -25,6 +25,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     private final GroupBind<SELF> group;
     private final String fieldName;
     private final boolean required;
+    private final boolean ignoreInDB;
     private final ValueType<EXTR> valueType;
     private final ExtractionMethod extractionMethod;
     private final BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper;
@@ -48,6 +49,11 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
     }
 
     @Override
+    public boolean ignoreInDB() {
+        return ignoreInDB;
+    }
+
+    @Override
     public Set<VarBind<? extends SELF, ?, ?, ?>> getDependencies() {
         return dependencies;
     }
@@ -66,6 +72,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
             GroupBind<SELF> group,
             String fieldName,
             boolean required,
+            boolean ignoreInDB,
             ValueType<EXTR> valueType,
             ExtractionMethod extractionMethod,
             BiFunction<? super SELF, ? super EXTR, ? extends REMAP> remapper,
@@ -76,6 +83,7 @@ public final class Binding<SELF extends DataContainer<? super SELF>, EXTR, REMAP
         this.group = group;
         this.fieldName = fieldName;
         this.required = required;
+        this.ignoreInDB = ignoreInDB;
         this.valueType = valueType;
         this.extractionMethod = extractionMethod;
         this.remapper = remapper;

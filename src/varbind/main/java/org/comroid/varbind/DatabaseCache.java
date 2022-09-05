@@ -17,7 +17,7 @@ public class DatabaseCache<K, V extends DataContainer<? super V>> extends DataCo
     }
 
     public DatabaseCache(ContextualProvider context, Connection connection, int largeThreshold, VarBind<? super V, K, ?, K> idBind, String idColumn) {
-        super(context, largeThreshold, idBind, idColumn);
+        super(context, largeThreshold, idBind);
         this.connection = connection;
     }
 
