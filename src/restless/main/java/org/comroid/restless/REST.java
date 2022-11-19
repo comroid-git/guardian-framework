@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.comroid.annotations.Upgrade;
 import org.comroid.api.Readable;
 import org.comroid.api.*;
-import org.comroid.common.io.FileHandle;
+import org.comroid.api.io.FileHandle;
 import org.comroid.mutatio.model.RefList;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceList;

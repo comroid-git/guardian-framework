@@ -1,7 +1,7 @@
 package org.comroid.spellbind.factory;
 
 import org.comroid.api.Invocable;
-import org.comroid.common.info.Dependent;
+import org.comroid.api.info.Dependent;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.spellbind.SpellCore;
 import org.comroid.spellbind.model.TypeFragment;

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.comroid.common.exception.AssertionException;
+import org.comroid.api.exception.AssertionException;
 import org.comroid.uniform.adapter.AbstractSerializationAdapter;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.model.ValueAdapter;

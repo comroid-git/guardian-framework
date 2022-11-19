@@ -4,7 +4,7 @@ import org.comroid.annotations.Upgrade;
 import org.comroid.api.ContextualProvider;
 import org.comroid.api.Serializer;
 import org.comroid.api.ValueType;
-import org.comroid.common.io.FileHandle;
+import org.comroid.api.io.FileHandle;
 import org.comroid.uniform.model.DataStructureType;
 import org.comroid.uniform.model.ValueAdapter;
 import org.comroid.uniform.node.UniArrayNode;

@@ -2,7 +2,7 @@ package org.comroid.webkit.oauth.client;
 
 import org.comroid.api.Named;
 import org.comroid.api.UUIDContainer;
-import org.comroid.common.io.FileHandle;
+import org.comroid.api.io.FileHandle;
 import org.comroid.uniform.Context;
 import org.comroid.webkit.oauth.model.UserInfoProvider;
 import org.comroid.webkit.oauth.resource.Resource;
