@@ -6,7 +6,7 @@ import org.comroid.api.ContextualProvider;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ThrowingFunction;
-import org.comroid.common.info.MessageSupplier;
+import org.comroid.api.info.MessageSupplier;
 import org.comroid.mutatio.adapter.BiStageAdapter;
 import org.comroid.mutatio.adapter.ReferenceStageAdapter;
 import org.comroid.mutatio.ref.*;

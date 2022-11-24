@@ -3,7 +3,7 @@ package org.comroid.uniform.node.impl;
 import org.comroid.api.Polyfill;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
-import org.comroid.common.info.MessageSupplier;
+import org.comroid.api.info.MessageSupplier;
 import org.comroid.mutatio.ref.KeyedReference;
 import org.comroid.mutatio.ref.Reference;
 import org.comroid.mutatio.ref.ReferenceMap;

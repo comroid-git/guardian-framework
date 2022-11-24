@@ -1,7 +1,7 @@
 package org.comroid.varbind;
 
-import org.comroid.common.io.FileHandle;
-import org.comroid.common.io.FileProcessor;
+import org.comroid.api.io.FileHandle;
+import org.comroid.api.io.FileProcessor;
 import org.comroid.uniform.Context;
 import org.comroid.uniform.node.UniNode;
 import org.comroid.uniform.node.UniObjectNode;

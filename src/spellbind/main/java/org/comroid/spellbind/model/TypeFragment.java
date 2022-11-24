@@ -2,7 +2,7 @@ package org.comroid.spellbind.model;
 
 import org.comroid.api.Rewrapper;
 import org.comroid.api.Specifiable;
-import org.comroid.common.exception.AssertionException;
+import org.comroid.api.exception.AssertionException;
 import org.comroid.spellbind.SpellCore;
 
 import java.util.Optional;
