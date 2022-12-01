@@ -10,8 +10,8 @@ apply plugin: 'java-library'
 apply from: "$parent.projectDir/gradle/vars.gradle"
 apply from: "$parent.projectDir/gradle/global.gradle"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 ext {
     projectDescription = "RESTful Website Kit"
@@ -22,7 +22,7 @@ dependencies {
         api project(':restless')
     } else {
         api project(':guardian:restless')
-        compileOnly project(':guardian:uniform').sourceSets.java8compat.output.classesDirs
+        compileOnly project(':guardian:uniform')
     }
 
     // jsoup HTML parser library @ https://jsoup.org/

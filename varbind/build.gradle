@@ -10,8 +10,8 @@ apply plugin: 'java-library'
 apply from: "$parent.projectDir/gradle/vars.gradle"
 apply from: "$parent.projectDir/gradle/global.gradle"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 ext {
     projectDescription = "Serialization Solution"
@@ -27,11 +27,6 @@ dependencies {
     }
 
     testImplementation 'com.alibaba:fastjson:1.2.71'
-}
-
-compileTestJava {
-    sourceCompatibility = 9
-    targetCompatibility = 9
 }
 
 apply from: "$parent.projectDir/gradle/publishing.gradle"

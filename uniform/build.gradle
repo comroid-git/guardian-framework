@@ -3,89 +3,43 @@ import java.util.concurrent.TimeUnit
 ext {
     buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
 }
-version = '0.31.0' + '.' + buildId
+version = '0.32.0' + '.' + buildId
 group 'org.comroid'
 
 apply plugin: 'java-library'
 apply from: "$parent.projectDir/gradle/vars.gradle"
 apply from: "$parent.projectDir/gradle/global.gradle"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 ext {
     projectDescription = "Java Uniform Adapters"
 }
 
-configurations {
-    main
-    java8compat {
-        extendsFrom main
-    }
-    java11compat {
-        extendsFrom main
-    }
-}
-
-sourceSets {
-    java8compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java8compat")
-    java11compat.java.srcDirs = files("$parent.projectDir/src/$artifactName/main/java11compat")
-}
-
-compileJava8compatJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-}
-
-compileJava11compatJava {
-    sourceCompatibility = 11
-    targetCompatibility = 11
-}
-
-jar {
-    from files(sourceSets.main.output.classesDirs,
-            sourceSets.java8compat.output.classesDirs,
-            sourceSets.java11compat.output.classesDirs)
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
 dependencies {
-    java8compatCompileOnly 'org.jetbrains:annotations:23.0.0'
-    java11compatCompileOnly 'org.jetbrains:annotations:23.0.0'
-
     if (isAutoDeploy) {
         api project(':core')
-
-        java8compatCompileOnly project(':uniform')
-        java11compatCompileOnly project(':uniform')
     } else {
         api project(':guardian:core')
-
-        java8compatCompileOnly project(':guardian:uniform')
-        java11compatCompileOnly project(':guardian:uniform')
     }
 
     // json adapter dependencies
-    java8compatCompileOnly 'com.alibaba:fastjson:1.2.71'
-    java8compatCompileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
-    java8compatCompileOnly 'org.json:json:20200518'
+    compileOnly 'com.alibaba:fastjson:1.2.71'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
+    compileOnly 'org.json:json:20200518'
 
     // logging dependencies
     implementation 'org.apache.logging.log4j:log4j-api:2.11.0'
-    java8compatImplementation 'org.apache.logging.log4j:log4j-api:2.11.0'
-    java11compatImplementation 'org.apache.logging.log4j:log4j-api:2.11.0'
 
 
-    java8compatCompileOnly 'com.alibaba:fastjson:1.2.71'
-    java8compatCompileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
-    java8compatCompileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.2'
+    compileOnly 'com.alibaba:fastjson:1.2.71'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    compileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.2'
     // jsoup HTML parser library @ https://jsoup.org/
-    java8compatCompileOnly 'org.jsoup:jsoup:1.13.1'
-    java8compatCompileOnly 'org.json:json:20200518'
+    compileOnly 'org.jsoup:jsoup:1.13.1'
+    compileOnly 'org.json:json:20200518'
 
-    testImplementation sourceSets.java8compat.output.classesDirs
-    testImplementation sourceSets.java11compat.output.classesDirs
     testImplementation 'com.alibaba:fastjson:1.2.70'
 }
 
