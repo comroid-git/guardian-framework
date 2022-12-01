@@ -42,9 +42,9 @@ public final class FastJSONLib extends AbstractSerializationAdapter<JSON, JSONOb
             }
 
             switch (type) {
-                case Type.Object:
+                case Object:
                     return getObjectType();
-                case Type.Array:
+                case Array:
                     return getArrayType();
             }
         }
