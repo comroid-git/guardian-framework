@@ -36,6 +36,7 @@ dependencies {
     compileOnly 'com.alibaba:fastjson:1.2.71'
     compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
     compileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.2'
+    compileOnly 'com.google.code.gson:gson:2.10'
     // jsoup HTML parser library @ https://jsoup.org/
     compileOnly 'org.jsoup:jsoup:1.13.1'
     compileOnly 'org.json:json:20200518'
