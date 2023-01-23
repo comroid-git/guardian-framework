@@ -2,6 +2,7 @@ package org.comroid.common.exception;
 
 import org.comroid.api.ThrowingRunnable;
 import org.comroid.api.ThrowingSupplier;
+import org.comroid.api.exception.AssertionException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
